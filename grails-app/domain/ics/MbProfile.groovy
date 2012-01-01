@@ -3,51 +3,50 @@ package ics
 class MbProfile {
 
     static constraints = {
-	    candidate()
-	    photo(nullable:true, maxSize: 512000 /* 500K */)
+	candidate()
+	photo(nullable:true, maxSize: 512000 /* 500K */)
 	initiatedBy(nullable: true)
-	profileStatus(nullable: true)
-	matchMakingStatus(nullable: true)
-	workflowStatus(nullable: true)
-	category(nullable: true)
-	severity(nullable: true)
-	priority(nullable: true)
-	photoType(nullable: true)
-	scstCategory(nullable: true)
-	nativePlace(nullable: true)
-	nativeState(nullable: true)
-	extraMaritalAffair(nullable: true)
+	profileStatus(nullable: true, maxSize: 20)
+	matchMakingStatus(nullable: true, maxSize: 20)
+	workflowStatus(nullable: true, maxSize: 20)
+	category(nullable: true, maxSize: 20)
+	severity(nullable: true, maxSize: 20)
+	priority(nullable: true, maxSize: 20)
+	photoType(nullable: true, maxSize: 20)
+	scstCategory(nullable: true, maxSize: 30)
+	nativePlace(nullable: true, maxSize: 40)
+	nativeState(nullable: true, maxSize: 40)
 	familyAddress(nullable: true)
-	candCounsellor(nullable: true)
-	candCounsellorAshram(nullable: true)
-	referrer(nullable: true)
-	referrerCenter(nullable: true)
-	referrerContact(nullable: true)
-	referrerEmail(nullable: true)
-	referrerRelation(nullable: true)
-	manglik(nullable: true)
-	horoscopeToBeMatched(nullable: true)
-	houseIs(nullable: true)
+	candCounsellor(nullable: true, maxSize: 127)
+	candCounsellorAshram(nullable: true, maxSize: 15)
+	referrer(nullable: true, maxSize: 127)
+	referrerCenter(nullable: true, maxSize: 40)
+	referrerContact(nullable: true, maxSize: 20)
+	referrerEmail(nullable: true, maxSize: 50)
+	referrerRelation(nullable: true, maxSize: 30)
+	manglik(nullable: true,maxSize: 10)
+	horoscopeToBeMatched(nullable: true, maxSize: 10)
+	houseIs(nullable: true, maxSize: 10)
 	houseArea(nullable: true)
 	otherProperty(nullable: true)
-	fatherIncome(nullable: true)
-	otherIncome(nullable: true)
-	parentsChanting(nullable: true)
-	parentsInitiation(nullable: true)
-	parentsSpMaster(nullable: true)
-	yourFamily(nullable: true)
-	parentsInfo(nullable: true)
-	eduCat(nullable: true)
-	eduQual(nullable: true)
-	occupationStatus(nullable: true)
-	companyName(nullable: true)
-	designation(nullable: true)
+	fatherIncome(nullable: true,maxSize: 30)
+	otherIncome(nullable: true, maxSize: 30)
+	parentsChanting(nullable: true, maxSize: 30)
+	parentsInitiation(nullable: true, maxSize: 30)
+	parentsSpMaster(nullable: true, maxSize: 127)
+	yourFamily(nullable: true, maxSize: 20)
+	parentsInfo(nullable: true,maxSize: 15)
+	eduCat(nullable: true,maxSize: 30)
+	eduQual(nullable: true,maxSize: 30)
+	occupationStatus(nullable: true,maxSize: 40)
+	companyName(nullable: true,maxSize: 60)
+	designation(nullable: true,maxSize: 30)
 	companyAddress(nullable: true)
 	introductionYear(nullable: true)
-	introductionCentre(nullable: true)
-	currentlyVisiting(nullable: true)
+	introductionCentre(nullable: true,maxSize: 30)
+	currentlyVisiting(nullable: true,maxSize: 30)
 	regularSince(nullable: true)
-	frequencyOfTempleVisits(nullable: true)
+	frequencyOfTempleVisits(nullable: true,maxSize: 30)
 	likesInKc(nullable: true)
 	dislikesInKc(nullable: true)
 	regulated(nullable: true)
@@ -61,57 +60,52 @@ class MbProfile {
 	chantingSince(nullable: true)
 	numberOfRounds(nullable: true)
 	chantingSixteenSince(nullable: true)
-	spiritualMaster(nullable: true)
+	spiritualMaster(nullable: true,maxSize: 127)
 	firstInitiation(nullable: true)
 	secondInitiation(nullable: true)
 	services(nullable: true)
 	interests(nullable: true)
 	remarks(nullable: true)
-	originPreference(nullable: true)
-	castePreference(nullable: true)
-	qualPreference(nullable: true)
-	devPreference(nullable: true)
-	devotionalCulture(nullable: true)
-	prefChanting(nullable: true)
+	prefChanting(nullable: true,maxSize: 40)
 	flexibleChanting(nullable: true)
-	prefSpMaster(nullable: true)
+	prefSpMaster(nullable: true,maxSize: 127)
 	flexibleSpMaster(nullable: true)
 	otherPreference(nullable: true)
-	prefCentre(nullable: true)
+	prefCentre(nullable: true,maxSize: 40)
 	flexibleCentre(nullable: true)
-	prefNationality(nullable: true)
+	prefNationality(nullable: true, maxSize: 40)
 	flexibleNationality(nullable: true)
-	prefOrigin(nullable: true)
+	prefOrigin(nullable: true, maxSize: 40)
 	flexibleOrigin(nullable: true)
-	prefVarna(nullable: true)
+	prefVarna(nullable: true,maxSize: 40)
 	flexibleVarna(nullable: true)
-	prefCategory(nullable: true)
+	prefCategory(nullable: true,maxSize: 40)
 	flexibleCategory(nullable: true)
-	prefCaste(nullable: true)
+	prefCaste(nullable: true,maxSize: 40)
 	flexibleCaste(nullable: true)
-	prefsubCaste(nullable: true)
+	prefsubCaste(nullable: true,maxSize: 40)
 	flexibleSubcaste(nullable: true)
-	prefeducationCategory(nullable: true)
+	prefeducationCategory(nullable: true,maxSize: 40)
 	flexibleEducationCat(nullable: true)
-	prefqualification(nullable: true)
+	prefqualification(nullable: true,maxSize: 40)
 	flexibleQualifications(nullable: true)
-	prefAgeDiff(nullable: true)
+	prefAgeDiff(nullable: true,maxSize: 40)
 	flexibleAgediff(nullable: true)
-	prefHeight(nullable: true)
+	prefHeight(nullable: true,maxSize: 40)
 	flexibleHeight(nullable: true)
-	prefLooks(nullable: true)
+	prefLooks(nullable: true,maxSize: 60)
 	flexibleLooks(nullable: true)
-	prefCandIncome(nullable: true)
+	prefCandIncome(nullable: true,maxSize: 40)
 	flexibleCandidateIncome(nullable: true)
-	prefLangKnown(nullable: true)
+	prefLangKnown(nullable: true,maxSize: 40)
 	flexibleLangknown(nullable: true)
-	prefManglik(nullable: true)
+	prefManglik(nullable: true,maxSize: 40)
 	flexibleManglik(nullable: true)
 	settleAbroadWorkingWife(nullable: true)
-	keenDevProfile(nullable: true)
-	primdepMB(nullable: true)
-	regotherMB(nullable: true)
-	parentsSearch(nullable: true)
+	keenDevProfile(nullable: true,maxSize: 80)
+	primdepMB(nullable: true,maxSize: 60)
+	regotherMB(nullable: true,maxSize: 60)
+	parentsSearch(nullable: true,maxSize: 60)
 	profileoutsideISKCON(nullable: true)
 	financialDiff(nullable: true)
 	physicalMental(nullable: true)
@@ -120,7 +114,10 @@ class MbProfile {
     otherExpectations(nullable:true)
     noFamilyMembers(nullable: true)
     otherFamilyMember(nullable: true)
-    languagesKnown(nullable: true)
+    languagesKnown(nullable: true,maxSize: 80)
+    maritalStatus(nullable:true,maxSize: 20)
+    devotionalCulture(nullable: true)
+    weight(nullable: true)
     }
 
     static mapping={
@@ -144,7 +141,6 @@ class MbProfile {
     
     String nativePlace
     String nativeState
-    Boolean extraMaritalAffair
     Address familyAddress
 
     //step1 fields
@@ -159,10 +155,12 @@ class MbProfile {
     String horoscopeToBeMatched
     String scstCategory
     String languagesKnown
+    String maritalStatus
+    Short weight
     
     //step2 fields
     String houseIs
-    Integer houseArea
+    Short houseArea
     Boolean otherProperty
     String fatherIncome
     String otherIncome
@@ -209,10 +207,6 @@ class MbProfile {
     String remarks
     //Expectations from prospects*/
 
-    String originPreference
-    String castePreference
-    String qualPreference
-    String devPreference
     String devotionalCulture
     String prefChanting
     Boolean flexibleChanting

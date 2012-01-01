@@ -103,8 +103,9 @@ class MbService {
 	try{         mbProfile.scstCategory=params.scstCategory } catch(Exception e){}
 	try{         mbProfile.candidate.caste=params.caste } catch(Exception e){}
 	try{         mbProfile.candidate.subCaste=params.subCaste } catch(Exception e){}
-	try{         mbProfile.candidate.height=Integer.parseInt(params.height) } catch(Exception e){}
-	try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
+	try{         mbProfile.candidate.height=(Integer.parseInt(params.heightInFt)*12) + Integer.parseInt(params.heightInInch) } catch(Exception e){}
+    try{         mbProfile.weight=params.weight } catch(Exception e){}
+    try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
     try{         mbProfile.languagesKnown=params.languagesKnown } catch(Exception e){}
 	try{         mbProfile.candidate.income=params.candidateIncome //change the type of the column in db
 	} catch(Exception e){}
@@ -114,10 +115,10 @@ class MbService {
 		if(params.addrline1) {
 			def candAddr = Address.findByIndividualAndCategory(mbProfile.candidate,'PresentAddress')
 			if(!candAddr) {
-			    mbProfile.candidate.address.add(helperService.createAddress([individual: mbProfile.candidate, category: 'PresentAddress', addressLine1: params.addrline1, addressLine2: params.addrline2, addressLine3: params.addrline3, 'cityname': params.city, 'statename': params.state, pincode: params.pincode]))
+			    mbProfile.candidate.address.add(helperService.createAddress([individual: mbProfile.candidate, category: 'PresentAddress', addressLine1: params.addrline1, addressLine2: '', addressLine3: '', 'cityname': params.city, 'statename': params.state, pincode: params.pincode]))
 			}
 			else
-			    helperService.updateAddress([id:candAddr?.id,individual:mbProfile.candidate,category:'PresentAddress',addressLine1:params.addrline1,addressLine2:params.addrline2,addressLine3:params.addrline3,'cityname':params.city,'statename':params.state,pincode:params.pincode])
+			    helperService.updateAddress([id:candAddr?.id,individual:mbProfile.candidate,category:'PresentAddress',addressLine1:params.addrline1,addressLine2:'',addressLine3:'','cityname':params.city,'statename':params.state,pincode:params.pincode])
 		}
          } catch(Exception e){}
         mbProfile.referrer=params.references
@@ -127,6 +128,7 @@ class MbService {
         def emailadd= EmailContact.findByIndividual(mbProfile.candidate)
         emailadd?.emailAddress=params.email
         emailadd?.save()
+    try{        mbProfile.maritalStatus = params.maritalStatus} catch(Exception e){}
     try{        mbProfile.personalInfo = params.personalInfo} catch(Exception e){}
         //step 2
         mbProfile.nativePlace=params.nativePlace
@@ -134,9 +136,9 @@ class MbService {
 
 	if(params.famaddrline1) {
 		if(!mbProfile.familyAddress)
-		    mbProfile.familyAddress = helperService.createAddress([individual:mbProfile.candidate,category:'FamilyAddress',addressLine1:params.famaddrline1,addressLine2:params.famaddrline2,addressLine3:params.famaddrline3,'cityname':params.permcity,'statename':params.familystate,pincode:params.permpincode])
+		    mbProfile.familyAddress = helperService.createAddress([individual:mbProfile.candidate,category:'FamilyAddress',addressLine1:params.famaddrline1,addressLine2:'',addressLine3:'','cityname':params.permcity,'statename':params.familystate,pincode:params.permpincode])
 		else
-		    helperService.updateAddress([id:mbProfile.familyAddress.id,individual:mbProfile.candidate,category:'FamilyAddress',addressLine1:params.famaddrline1,addressLine2:params.famaddrline2,addressLine3:params.famaddrline3,'cityname':params.permcity,'statename':params.familystate,pincode:params.permpincode])
+		    helperService.updateAddress([id:mbProfile.familyAddress.id,individual:mbProfile.candidate,category:'FamilyAddress',addressLine1:params.famaddrline1,addressLine2:'',addressLine3:'','cityname':params.permcity,'statename':params.familystate,pincode:params.permpincode])
         }
 
 	try{         mbProfile.houseIs = params.houseIs } catch(Exception e){}
@@ -164,9 +166,9 @@ class MbService {
 
 	if(params.compAddrLine1) {
 		if(!mbProfile.companyAddress)
-		    mbProfile.companyAddress = helperService.createAddress([individual:mbProfile.candidate,category:'CompanyAddress',addressLine1:params.compAddrLine1,addressLine2:params.compAddrLine2,addressLine3:params.compAddrLine3,'cityname':params.compCity,'statename':params.compState,pincode:params.compPin])
+		    mbProfile.companyAddress = helperService.createAddress([individual:mbProfile.candidate,category:'CompanyAddress',addressLine1:params.compAddrLine1,addressLine2:'',addressLine3:'','cityname':params.compCity,'statename':params.compState,pincode:params.compPin])
 		else
-		    helperService.updateAddress([id:mbProfile.companyAddress.id,individual:mbProfile.candidate,category:'CompanyAddress',addressLine1:params.compAddrLine1,addressLine2:params.compAddrLine2,addressLine3:params.compAddrLine3,'cityname':params.compCity,'statename':params.compState,pincode:params.compPin])
+		    helperService.updateAddress([id:mbProfile.companyAddress.id,individual:mbProfile.candidate,category:'CompanyAddress',addressLine1:params.compAddrLine1,addressLine2:'',addressLine3:'','cityname':params.compCity,'statename':params.compState,pincode:params.compPin])
         }
 
         //step4
@@ -182,7 +184,6 @@ class MbService {
 	try{         mbProfile.nonveg = (params.nonveg=='Yes') } catch(Exception e){}
 	try{         mbProfile.intoxication = (params.intoxication=='Yes') } catch(Exception e){}
 	try{         mbProfile.gambling = (params.gambling=='Yes') } catch(Exception e){}
-	try{         mbProfile.extraMaritalAffair = (params.extraMaritalAffair=='Yes') } catch(Exception e){}
 	try{         mbProfile.regDetails = params.regDetails } catch(Exception e){}
 	try{         mbProfile.regulated = (params.regulated=='Yes') } catch(Exception e){}
 	try{         mbProfile.regulatedSince = getYearFromDate(params.regulatedSince) } catch(Exception e){}
@@ -358,12 +359,13 @@ class MbService {
     relation should be harcoded/hidden var in the gsp or available from a select box
     totalNumberOfFamily members to capture the count*/
     def processFamilyDetails(Individual candidate, Map params) {
-    	def totalNumberOfFamily = 8
+    	def totalNumberOfFamily = 8,relationshipGroup = null
  /*   	try{
     		totalNumberOfFamily = new Integer(params.totalNumberOfFamily)
     	}
     	catch(Exception e){}*/
-    	def relationshipGroup = Relationship.findByIndividual2(candidate).relationshipGroup
+        if(Relationship.findByIndividual2(candidate))
+    	    relationshipGroup = Relationship.findByIndividual2(candidate).relationshipGroup
     	for(int i=1;i<=totalNumberOfFamily;i++)
     		{
     		//1. create individual

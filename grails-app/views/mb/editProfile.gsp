@@ -156,7 +156,7 @@
         <label for="counselorAshram">Counselor is a :</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="counselorAshram" from="${['NA', 'Grihastha', 'Brahmacari', 'Unmarried']}"
+        <g:select name="counselorAshram" from="${['NA', 'Grihastha', 'Brahmacari']}"
                   value="${mbProfile?.candCounsellorAshram}"/>
     </td>
 </tr>
@@ -209,10 +209,17 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="height">Height<br>(in cms):</label>
+        <label for="heightInFt">Height</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="height" from="${50..200}" value="${mbProfile?.candidate?.height}"/>
+        <g:select name="heightInFt" from="${2..7}" value="${(mbProfile?.candidate?.height?: 2)/12}"/><span>&nbsp;ft</span>
+        <g:select name="heightInInch" from="${0..11}" value="${(mbProfile?.candidate?.height?: 0)%12}"/><span>&nbsp;inches</span>
+    </td>
+    <td valign="top" class="name">
+        <label for="weight">Height</label>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="weight" from="${40..150}" value="${mbProfile?.weight}"/><span> Kg</span>
     </td>
     <td valign="top" class="name">
         <label for="motherTongue">Mother Tongue:</label>
@@ -222,6 +229,8 @@
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
                   value="${mbProfile?.candidate?.motherTongue ?: 'Marathi'}"/>
     </td>
+</tr>
+<tr class="prop">
     <td valign="top" class="name">
         <label for="languagesKnown">Languages <br>Known:</label>
     </td>
@@ -230,8 +239,6 @@
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
                   value="${mbProfile?.languagesKnown}"/>
     </td>
-</tr>
-<tr class="prop">
     <td valign="top" class="name">
         <label for="candidateIncome">Candidate's <br>Income(p.a):</label>
     </td>
@@ -247,34 +254,21 @@
         <g:select name="horoscopeToBeMatched" from="${['Yes', 'No', 'No Specific Choice']}"
                   value="${mbProfile?.horoscopeToBeMatched}"/>
     </td>
+
+</tr>
+<tr class="prop">
     <td valign="top" class="name">
         <label for="manglik">Manglik:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="manglik" from="${['No', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}"/>
     </td>
-</tr>
-<tr class="prop">
     <td valign="top" class="name">
-        <label for="addrline1">Present Address<br>Line 1:</label>
+        <label for="addrline1">Present Address</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="addrline1" placeholder="Enter Address here" required="required" maxLength="40"
+        <g:textArea name="addrline1" placeholder="Enter Address here" required="required" maxLength="40"
                      value="${candAddr?.addressLine1}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="addrline2">Address Line 2:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="addrline2" maxLength="40" placeholder="Continue Address here"
-                     value="${candAddr?.addressLine2}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="addrline3">Address Line 3:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="addrline3" maxLength="40" placeholder="Continue Address here"
-                     value="${candAddr?.addressLine3}"/>
     </td>
 </tr>
 <tr class="prop">
@@ -303,11 +297,12 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="references">References:</label>
+        <label for="maritalStatus">Marital Status:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="references" maxLength="80" placeholder="Enter a Reference person who knows you"
-                     value="${mbProfile?.referrer}"/>
+        <g:select name="maritalStatus" required="required"
+                  from="${['Never Married','Divorced']}"
+                  value="${mbProfile?.maritalStatus?: 'Never Married'}"/>
     </td>
     <td valign="top" class="name">
         <label for="contact">Contact Number:</label>
@@ -326,24 +321,27 @@
                      required="required"/>
     </td>
 </tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="references">References:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="references" maxLength="80" placeholder="Enter a Reference person who knows you"
+                     value="${mbProfile?.referrer}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="personalInfo">Any Personal or Important information you would like us to know :</label>
+    </td>
+    <td valign="top" class="value">
+        <!--<g:textArea name="personalInfo"
+                        placeholder="Enter any Personal information you would like us to know as a Marriage board"
+                        value="${mbProfile?.personalInfo}"/>-->
+        <g:textField name="personalInfo" maxLength="200"
+                     Placeholder="Enter any Personal information you would like us to know as a Marriage board"
+                     value="${mbProfile?.personalInfo}"/>
+    </td>
+</tr>
 </tbody>
-</table>
-<table>
-    <tbody>
-    <tr class="prop">
-        <td valign="top" class="name">
-            <label for="personalInfo">Any Personal or Important information you would like us to know :</label>
-        </td>
-        <td valign="top" class="value">
-            <!--<g:textArea name="personalInfo"
-                            placeholder="Enter any Personal information you would like us to know as a Marriage board"
-                            value="${mbProfile?.personalInfo}"/>-->
-            <g:textField name="personalInfo" maxLength="200"
-                         Placeholder="Enter any Personal information you would like us to know as a Marriage board"
-                         value="${mbProfile?.personalInfo}"/>
-        </td>
-    </tr>
-    </tbody>
 </table>
 </div>
 </div>
@@ -369,25 +367,11 @@
                   from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.nativeState}"/>
     </td>
-</tr>
-<tr class="prop">
     <td valign="top" class="name">
         <label for="famaddrline1">Present Address<br>of family:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="famaddrline1" maxLength="40" placeholder="Enter Address here" required="required" value="${mbProfile?.familyAddress?.addressLine1}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="famaddrline2">Address Line 2:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="famaddrline2" maxLength="40" placeholder="Continue Address here" value="${mbProfile?.familyAddress?.addressLine2}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="famaddrline3">Address Line 3:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="famaddrline3" maxLength="40" placeholder="Continue Address here" value="${mbProfile?.familyAddress?.addressLine3}"/>
+        <g:textArea name="famaddrline1" maxLength="40" placeholder="Enter Address here" required="required" value="${mbProfile?.familyAddress?.addressLine1}"/>
     </td>
 </tr>
 <tr class="prop">
@@ -731,7 +715,7 @@
                 </td>
                 <td valign="top" class="value">
                     <g:select name="eduCat"
-                              from="${['SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
+                              from="${['Below SSC','SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                               value="${mbProfile?.eduCat}"/>
                 </td>
             </tr>
@@ -774,29 +758,11 @@
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="compAddrLine1">Company Address Line 1:</label>
+                    <label for="compAddrLine1">Company Address</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="compAddrLine1" placeholder="Enter Address here"
+                    <g:textArea name="compAddrLine1" placeholder="Enter Address here"
                                  value="${mbProfile?.companyAddress?.addressLine1}"/>
-                </td>
-            </tr>
-            <tr class="prop">
-                <td valign="top" class="name">
-                    <label for="compAddrLine2">Company Address Line 2:</label>
-                </td>
-                <td valign="top" class="value">
-                    <g:textField name="compAddrLine2" placeholder="Enter Address here"
-                                 value="${mbProfile?.companyAddress?.addressLine2}"/>
-                </td>
-            </tr>
-            <tr class="prop">
-                <td valign="top" class="name">
-                    <label for="compAddrLine3">Company Address Line 3:</label>
-                </td>
-                <td valign="top" class="value">
-                    <g:textField name="compAddrLine3" placeholder="Enter Address here"
-                                 value="${mbProfile?.companyAddress?.addressLine3}"/>
                 </td>
             </tr>
             <tr class="prop">
@@ -925,13 +891,6 @@
                 </td>
                 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'legalName', 'errors')}">
                     <g:select name="gambling" from="${['No', 'Yes']}" value="${mbProfile?.gambling ? 'Yes':'No'}"/>
-                </td>
-                <td valign="top" class="name">
-                    <label for="extraMaritalAffair">Do you have any<br>extra-marital affairs:</label>
-                </td>
-                <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'legalName', 'errors')}">
-                    <g:select name="extraMaritalAffair" from="${['No', 'Yes']}"
-                              value="${mbProfile?.extraMaritalAffair ? 'Yes':'No'}"/>
                 </td>
             </tr>
             <tr class="prop">
@@ -1404,13 +1363,13 @@
             <tbody>
             <tr class="prop">
                 <td valign="top" class="value">
-                    <img name="fvimage" class="avatar"
-                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'fv'])}"/>
+                    <div style="text-align: center"><img name="fvimage" class="avatar"
+                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'fv'])}"/><br><br>
                     <g:form name="uploadImage" action="uploadImage" id="${mbProfile?.id}" method="post"
                             enctype="multipart/form-data">
                         <g:hiddenField name="type" value="fv"/>
-                        <label><b>Passport Size Image (max 100K)</b></label>
-                        <input type="file" name="imgFile" id="imgFile"/>
+                        <label><b>Passport Size Image (max 100K)</b></label><br><br>
+                        <input type="file" name="imgFile" id="imgFile"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
                             For best results, your image should have a width-to-height ratio of 4:5.
@@ -1419,13 +1378,13 @@
                     </g:form>
                 </td>
                 <td valign="top" class="value">
-                    <img name="svimage" class="avatar"
-                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'sv'])}"/>
+                    <div style="text-align: center"><img name="svimage" class="avatar"
+                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'sv'])}"/><br><br>
                     <g:form name="uploadImageSV" action="uploadImage" id="${mbProfile?.id}" method="post"
                             enctype="multipart/form-data">
                         <g:hiddenField name="type" value="sv"/>
-                        <label><b>Portfolio Image (max 500K)</b></label>
-                        <input type="file" name="imgFileSV" id="imgFileSV"/>
+                        <label><b>Portfolio Image (max 500K)</b></label><br><br>
+                        <input type="file" name="imgFileSV" id="imgFileSV"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
                             For best results, your image should have a width-to-height ratio of 4:5.

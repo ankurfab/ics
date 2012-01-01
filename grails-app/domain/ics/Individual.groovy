@@ -182,7 +182,7 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     String subCaste
     String egSurnames
     String income	//pa
-    Integer height	//inches
+    Short height	//inches
     boolean ownHouse	//false would mean staying rented house
     String houseDescription
     
@@ -201,6 +201,7 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
 	static mapping = {
 		donations sort:'donationDate'
 		fundCollections sort:'fundReceiptDate'
+
 	}
 
 
