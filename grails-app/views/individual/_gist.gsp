@@ -1,0 +1,44 @@
+<div>
+	<table>
+		<tr>
+			<td>
+				Address
+			</td>
+			<td>
+				${individualInstance.address}
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Phone nos
+			</td>
+			<td>
+				${individualInstance.voiceContact}
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Email
+			</td>
+			<td>
+				${individualInstance.emailContact}
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Category
+			</td>
+			<td>
+				${individualInstance.category}
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Status
+			</td>
+			<td>
+				${individualInstance.status}
+			</td>
+		</tr>
+	</table>
+</div>

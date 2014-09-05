@@ -1,0 +1,5 @@
+package ics
+
+enum Status {
+    OPEN, CLOSED, INPROGRESS, PARKED, WAITING, REJECTED, PURGED
+}
