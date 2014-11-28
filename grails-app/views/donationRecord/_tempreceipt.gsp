@@ -19,7 +19,7 @@ Address: <b>${(addr?.addressLine1?:"") + " " + (addr?.pincode?:"")}</b><br>
 <br>
 On Account Of: <b>${donationRecordInstance?.scheme}</b><br>
 <br>
-By: <b>${donationRecordInstance.mode} ${donationRecordInstance.mode?.name!="Cash"?(" No:"+donationRecordInstance?.transactionId+" Bank: "+donationRecordInstance?.paymentDetails):""}</b><br>
+By: <b>${donationRecordInstance.mode} ${donationRecordInstance.mode?.name!="Cash"?(" No:"+donationRecordInstance?.transactionId+" Bank: "+donationRecordInstance?.paymentDetails+" Branch: "+donationRecordInstance?.transactionDetails):""}</b><br>
 <br>
 <b>Note:</b>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

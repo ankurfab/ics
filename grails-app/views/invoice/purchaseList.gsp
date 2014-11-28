@@ -24,6 +24,7 @@
             <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
         </div>
         <div class="body">
+	    <g:hiddenField name="editurl" value="" />
 
 		<div id="dialogPrintInvoice" title="Print Invoice?">
 			<div id="divToPrint"></div>

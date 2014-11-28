@@ -186,6 +186,44 @@ class DataService {
     		return queryResult
 		
 	}
+	
+	//store the attribute names in a generic csv file
+	//@TODO: take care of dep,centre and other attributes
+	def storeHeader(String domainClassName,Object tokens) {
+		def attr
+		tokens.eachWithIndex{it,idx ->
+			attr = new Attribute()
+			attr.name = it
+			attr.position = idx
+			if(!attr.save())
+				attr.errors.allErrors.each {log.debug("exception in saving arrr:"+ it)}
+		}
+	}
+	
+	//store the attribute values in a generic csv file
+	def storeValues(String objectClassName,Long objectId, Object tokens) {
+		def attrList = Attribute.list()	//@TODO: hardcoded
+		def attrMap = [:]
+		attrList.each{
+			attrMap.put(it.position,it)
+		}
+		def attrValue,attr
+		tokens.eachWithIndex{it,idx ->
+			if(it) {
+				attr = attrMap.get(idx)
+				attrValue = new AttributeValue()
+				attrValue.objectClassName = objectClassName
+				attrValue.objectId = objectId
+				attrValue.attribute = attr
+				attrValue.value = it
+				attrValue.updator = attrValue.creator = 'system'
+				if(!attrValue.save())
+					attrValue.errors.allErrors.each {log.debug("exception in saving attrValue:"+ it)}
+			}
+		}
+	}
+	
+	
 
 
 }

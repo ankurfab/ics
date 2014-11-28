@@ -21,12 +21,15 @@
 		<r:layoutResources />
 	</head>
 	<body>
+	
+		
 		<div data-role="page" id="masterpage">
 
 		<div data-role="header" style="overflow:hidden;">
 		<h1>GITA Premiere League</h1>
 		    <a href="${createLink(controller:'assessment',action:'userDashboard')}" data-transition="flip" data-icon="home" class="ui-btn-left">Home</a>
 		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" class="ui-btn-right">Logout</a>
+
 		    <div data-role="navbar">
 			<ul>
 			    <li><a href="${createLink(controller:'assessment',action:'userStudy')}" data-transition="slide" data-icon="info">Study</a></li>
@@ -38,11 +41,13 @@
 		</div><!-- /header -->
 
 		  <div data-role="main" class="ui-content">
+			<g:render template='/includes/ajaxChangePassword'/>
 			<g:layoutBody/>
 		  </div>
 
 		  <div data-role="footer">
 		    <h1>Knowledge..Culture..Devotion</h1>
+		    <a href='#' onclick='showChangePassword(); return false;' data-transition="fade" data-icon="gear" class="ui-btn-right">ChangePassword</a>
 		  </div>
 		</div> 
 		<r:layoutResources />

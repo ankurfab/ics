@@ -60,9 +60,9 @@
             <g:if test="${flash.message}">
             <div class="message"><g:message code="${flash.message}" args="${flash.args}" default="${flash.message}" /></div>
             </g:if>
-            <!--<sec:ifAnyGranted roles="ROLE_PATRONCARE,ROLE_PATRONCARE_USER,ROLE_NVCC_ADMIN,ROLE_DUMMY">
+            <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
             ReceiptStatus:<g:select id="rcptStatus" name="rcptStatus" from="${['NOTGENERATED','GENERATED']}" value="NOTGENERATED" onchange="reloadGrid()"/>&nbsp;
-            </sec:ifAnyGranted>-->
+            </sec:ifAnyGranted>
             <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE,ROLE_NVCC_ADMIN,ROLE_DUMMY">
             Center:<g:select id="selectedcenter" name="selectedcenter" from="${ics.Centre.list()}" optionKey="name" value="${selectedcenter}"  noSelection="[ALL: 'ALL']" onchange="reloadGrid()"/>&nbsp;
             Donation Date(All records in this month) :<g:textField id="donationDate" name="donationDate" value="${donationDate}" onchange="reloadGrid()" />   <br/>
@@ -107,7 +107,14 @@
 
     jQuery("#donationRecord_list").jqGrid({
       url:'${createLink(controller:'donationRecord',action:'jq_alldonationrecord_list')}',      
-      postData:{selectedcenter:function(){return $("#selectedcenter").val();},donation_date:function(){return $("#donationDate").val();}},
+      postData:{
+      	selectedcenter:function(){return $("#selectedcenter").val();},
+      	donation_date:function(){return $("#donationDate").val();}
+      	<sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+		,
+		receiptReceivedStatus:function(){return $("#rcptStatus").val();}
+      	</sec:ifAnyGranted>
+      	},
       datatype: "json",
       colNames:['Scheme','Member','Amount','Mode','Donation Date','Comments','Payment Details','Transaction Id', 'Center', 'ReceiptReceivedStatus','Creator','RBNO','RNO','LinkedDonation','id'],
       colModel:[
@@ -162,7 +169,7 @@
     });
 
     function reloadGrid(){
-    $("#donationRecord_list").trigger("reloadGrid");    
+    $("#donationRecord_list").trigger("reloadGrid");  
     }
 
     </script>

@@ -7,6 +7,7 @@ class AssessmentService {
 
     def springSecurityService
     def individualService
+    def commsService
     
     //Generate a question paper for the specified assessment
     def generateQP(Map params) {
@@ -317,8 +318,21 @@ class AssessmentService {
     	if(!mock)
     		ia.save()
     	
-    	return (ia.score/totalMarks)*100 +" %"
+    	//For percent score: return (ia.score/totalMarks)*100 +" %"
     	
+    	//for grades
+    	def scorePct = (ia.score/totalMarks)*100
+    	def grade=""
+    	if(scorePct<=40)
+    		grade = "F"
+    	else if(scorePct<=55)
+    		grade = "C"
+    	else if(scorePct<=70)
+    		grade = "B"
+    	else
+    		grade = "A"
+
+	return "Grade: "+grade
     }
     
     def score(IndividualAssessmentQA iaqa) {
@@ -365,6 +379,8 @@ class AssessmentService {
 	def question
 	def iaqa
     	//countByIndividualAssessmentAndShownIsNull(ia) ==> not sure what is the error
+    	def numQ = IndividualAssessmentQA.createCriteria().list{eq('individualAssessment',ia) projections{count('id')}}[0]
+	def qNum = numQ +"/"+numQ
     	def numUnshownQ = IndividualAssessmentQA.createCriteria().list{eq('individualAssessment',ia) isNull('shown') projections{count('id')}}[0]
 	if(numUnshownQ>0)
 	{
@@ -391,6 +407,11 @@ class AssessmentService {
 			}
 		else
 			examover=true
+		
+		try{
+			qNum = ((numQ-numUnshownQ)+1) +"/"+numQ
+		}
+		catch(Exception e) {log.debug(e)}
 	}
 	
 	//if examover then get result
@@ -398,7 +419,7 @@ class AssessmentService {
 	if(examover)
 		result=getResult(ia)
 	
-	return [questionText: question?.questionText?:'', choice1: question?.choice1?:'', choice2: question?.choice2?:'', choice3: question?.choice3?:'', choice4: question?.choice4?:'',iaqaid:iaqa?.id,examover:examover,result:result]
+	return [questionText: question?.questionText?:'', choice1: question?.choice1?:'', choice2: question?.choice2?:'', choice3: question?.choice3?:'', choice4: question?.choice4?:'',qNum:qNum,time:ia?.questionPaper?.timeLimit?:'10:00',iaqaid:iaqa?.id,examover:examover,result:result]
     	
     }
     
@@ -469,23 +490,36 @@ class AssessmentService {
     }
     
     def setup(Map params) {
-    	log.debug("Inside assessment setup with params "+params)    	
-    	def er = EventRegistration.get(params.id)
-    	def ind = individualService.createIndividualFromER(er)
-    	def ia = new IndividualAssessment()
-    	ia.individual = ind
-    	ia.assessment = er.assessment
-    	ia.eventRegistration = er
-    	ia.status = 'READY'
-    	ia.creator = ia.updator = springSecurityService.principal.username
-    	if(!ia.save()) {
-	    ia.errors.allErrors.each {
-		log.debug("Errors in setuing up ia "+ it)
+    	log.debug("Inside assessment setup with params "+params)  
+    	def cnt=0,message
+	def idList = params.idlist.tokenize(',')
+	idList.each
+	{
+		def er = EventRegistration.get(it)
+		def ind = individualService.createIndividualFromER(er)
+		def ia = new IndividualAssessment()
+		ia.individual = ind
+		ia.assessment = er.assessment
+		ia.language = er.otherGuestType?.toUpperCase()
+		ia.eventRegistration = er
+		ia.status = 'READY'
+		ia.creator = ia.updator = springSecurityService.principal.username
+		if(!ia.save()) {
+		    ia.errors.allErrors.each {
+			log.debug("Errors in setuing up ia "+ it)
+			}		    
 		}
-	    return [status:'FAIL',message:ia.eventRegistration.name+' setup un-successfull!!']
+		else
+			{
+			cnt++
+			//send the email to candidate with userid
+			def template = Template.findByName("GPL Registration")
+			def body = commsService.fillTemplate(template,[er.name,er.assessment?.toString(),er.otherGuestType,er.regCode,er.arrivalDate?.format('dd-MM-yyyy HH:mm:ss'),ind?.loginid,ind?.loginid])
+			def depcp = DepartmentCP.findByDepartment(Department.findByName("GPL"))
+			commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:er.name,toEmail:er.email,emailsub:template.name,emailbody:body,type:template.type])
+			}
 	}
-	else
-		return [status:'OK',message:ia.eventRegistration.name+' setup successfully!!Loginid generate: '+ind?.loginid]
+	return [status:'OK',message:cnt+' registrations setup successfully!!']
     }
     
     //need to set relevant QP in IA

@@ -188,9 +188,9 @@
         <label for="category">Category:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="category"
+        <g:select name="scstCategory"
                   from="${['Open', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes', 'Others']}"
-                  value="${mbProfile?.candidate?.category ?: 'Open'}"/>
+                  value="${mbProfile?.scstCategory ?: 'Open'}"/>
     </td>
     <td valign="top" class="name">
         <label for="caste">Caste:</label>
@@ -228,7 +228,7 @@
     <td valign="top" class="value">
         <g:select name="languagesKnown"
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
-                  value="${mbProfile?.candidate?.otherLanguages}"/>
+                  value=""/>
     </td>
 </tr>
 <tr class="prop">
@@ -335,6 +335,9 @@
             <label for="personalInfo">Any Personal or Important information you would like us to know :</label>
         </td>
         <td valign="top" class="value">
+            <!--<g:textArea name="personalInfo"
+                            placeholder="Enter any Personal information you would like us to know as a Marriage board"
+                            value="${mbProfile?.candidate?.initiatedName}"/>-->
             <g:textField name="personalInfo" maxLength="200"
                          Placeholder="Enter any Personal information you would like us to know as a Marriage board"
                          value="${mbProfile?.personalInfo}"/>
@@ -453,16 +456,22 @@
 <!-- Start of family details comment-->
 <tr class="prop">
     <td valign="top" class="name">
+        <label for="numberbrother">No. of brothers:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="numberbrother" from="${0..9}" value="${mbProfile?.candidate?.initiatedName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="numbersister">No. of sisters:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="numbersister" from="${0..9}" value="${mbProfile?.candidate?.initiatedName}"/>
+    </td>
+    <td valign="top" class="name">
         <label for="noFamilyMembers">No. of family members <br> staying at home:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="noFamilyMembers" from="${0..30}" value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="familyDetails">Details:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textArea name="familyDetails" maxLength="150" value="${mbProfile?.candidate?.initiatedName}" placeholder="Enter details about the family members staying at home"/>
     </td>
 </tr>
 <tr class="prop">
@@ -471,21 +480,21 @@
     </td>
     <td valign="top" class="value">
         <g:textField name="fatherName" placeholder="Enter Father's legal Name"
-                     value="${mbProfile?.fatherName}"/>
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
         <label for="fatherEducation">Education:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="fatherEducation" placeholder="Enter Father's Education Name"
-                     value="${mbProfile?.fatherEducation}"/>
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
         <label for="fatherOccupation">Occupation:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="fatherOccupation" placeholder="Enter Father's Occupation here"
-                     value="${mbProfile?.fatherOccupation}"/>
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
 </tr>
 <tr class="prop">
@@ -494,159 +503,113 @@
     </td>
     <td valign="top" class="value">
         <g:textField name="motherName" placeholder="Enter Mother's legal Name"
-                     value="${mbProfile?.motherName}"/>
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
         <label for="motherEducation">Education:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="motherEducation" placeholder="Enter Mother's Education Name"
-                     value="${mbProfile?.motherEducation}"/>
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
         <label for="motherOccupation">Occupation:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="motherOccupation" placeholder="Enter Mother's Occupation here"
-                     value="${mbProfile?.motherOccupation}"/>
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="brother1Name">Brother's Name :</label>
+        <label for="brotherName1">Brother's Name :</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother1Name" placeholder="Enter Brother's legal Name"
-                     value="${mbProfile?.brother1Name}"/>
+        <g:textField name="brotherName1" placeholder="Enter Brother's legal Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="brother1Education">Education:</label>
+        <label for="brotherEducation1">Education:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother1Education" placeholder="Enter Brother's Education Name"
-                     value="${mbProfile?.brother1Education}"/>
+        <g:textField name="brotherEducation1" placeholder="Enter Brother's Education Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="brother1Occupation">Occupation:</label>
+        <label for="brotherOccupation1">Occupation:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother1Occupation" placeholder="Enter Brother's Occupation here"
-                     value="${mbProfile?.brother1Occupation}"/>
+        <g:textField name="brotherOccupation1" placeholder="Enter Brother's Occupation here"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="brother2Name">Brother's Name :</label>
+        <label for="brotherName2">Brother's Name :</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother2Name" placeholder="Enter Brother's legal Name"
-                     value="${mbProfile?.brother2Name}"/>
+        <g:textField name="brotherName2" placeholder="Enter Brother's legal Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="brother2Education">Education:</label>
+        <label for="brotherEducation2">Education:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother2Education" placeholder="Enter Brother's Education Name"
-                     value="${mbProfile?.brother2Education}"/>
+        <g:textField name="brotherEducation2" placeholder="Enter Brother's Education Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="brother2Occupation">Occupation:</label>
+        <label for="brotherOccupation2">Occupation:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother2Occupation" placeholder="Enter Brother's Occupation here"
-                     value="${mbProfile?.brother2Occupation}"/>
+        <g:textField name="brotherOccupation2" placeholder="Enter Brother's Occupation here"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="brother3Name">Brother's Name :</label>
+        <label for="sisterName1">Sister's Name :</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother3Name" placeholder="Enter Brother's legal Name"
-                     value="${mbProfile?.brother3Name}"/>
+        <g:textField name="sisterName1" placeholder="Enter Sister's legal Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="brother3Education">Education:</label>
+        <label for="sisterEducation1">Education:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother3Education" placeholder="Enter Brother's Education Name"
-                     value="${mbProfile?.brother3Education}"/>
+        <g:textField name="sisterEducation1" placeholder="Enter Sister's Education Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="brother3Occupation">Occupation:</label>
+        <label for="sisterOccupation1">Occupation:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="brother3Occupation" placeholder="Enter Brother's Occupation here"
-                     value="${mbProfile?.brother3Occupation3}"/>
+        <g:textField name="sisterOccupation1" placeholder="Enter Sister's Occupation here"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="sister1Name">Sister's Name :</label>
+        <label for="sisterName2">Sister's Name :</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="sister1Name" placeholder="Enter Sister's legal Name"
-                     value="${mbProfile?.sister1Name}"/>
+        <g:textField name="sisterName2" placeholder="Enter Sister's legal Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="sister1Education">Education:</label>
+        <label for="sisterEducation2">Education:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="sister1Education" placeholder="Enter Sister's Education Name"
-                     value="${mbProfile?.sister1Education}"/>
+        <g:textField name="sisterEducation2" placeholder="Enter Sister's Education Name"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="sister1Occupation">Occupation:</label>
+        <label for="sisterOccupation2">Occupation:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="sister1Occupation" placeholder="Enter Sister's Occupation here"
-                     value="${mbProfile?.sister1Occupation}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="sister2Name">Sister's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sister2Name" placeholder="Enter Sister's legal Name"
-                     value="${mbProfile?.sister2Name}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sister2Education">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sister2Education" placeholder="Enter Sister's Education Name"
-                     value="${mbProfile?.sister2Education}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sister2Occupation">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sister2Occupation" placeholder="Enter Sister's Occupation here"
-                     value="${mbProfile?.sister2Occupation}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="sister3Name">Sister's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sister3Name" placeholder="Enter Sister's legal Name"
-                     value="${mbProfile?.sister3Name}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sister3Education">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sister3Education" placeholder="Enter Sister's Education Name"
-                     value="${mbProfile?.sister3Education}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sister3Occupation">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sister3Occupation" placeholder="Enter Sister's Occupation here"
-                     value="${mbProfile?.sister3Occupation}"/>
+        <g:textField name="sisterOccupation2" placeholder="Enter Sister's Occupation here"
+                     value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
 </tr>
 <!--End of family details comment -->
@@ -1368,7 +1331,7 @@
 
     </td>
     <td valign="top" class="value">
-        <g:textArea name="otherExpectations" maxlength="200" value="${mbProfile?.otherExpectations}"/>
+        <g:textArea name="otherExpectations" maxlength="200" value="${mbProfile?.candidate?.initiatedName}"/>
     </td>
 </tr>
 

@@ -39,7 +39,26 @@
 		
 	}
 
+	function replaceSpecialCharAndTrim(str) {
+		if(str)
+			{
+			var retStr = str.replace(/[&\/\\#,+\-()$~%.'":*?<>{}]/g,' ');
+			return retStr.trim();
+			}
+		else
+			return "";
+	}
+
+
 		function validate() {  
+			var m = document.getElementById('mode.id');
+			var pm = m.options[m.selectedIndex];
+
+			$('#chequeNo').val(replaceSpecialCharAndTrim($('#chequeNo').val()));
+			$('#bankName').val(replaceSpecialCharAndTrim($('#bankName').val()));
+			$('#bankBranch').val(replaceSpecialCharAndTrim($('#bankBranch').val()));
+
+			//alert("validating.."+pm.text);
 
 			if(document.getElementById('amount').value == "" || document.getElementById('amount').value<=0)
 			{
@@ -48,8 +67,19 @@
 				return false;
 			
 			}
-			else
-				return true;
+			if (pm.text.search(/Cheque/)>-1 || pm.text.search(/Card/)>-1)
+			{
+				
+				
+				if(document.getElementById('chequeNo').value == "" || document.getElementById('chequeDate').value == "" || document.getElementById('bankName').value == "" || document.getElementById('bankBranch').value == "")
+				{
+					alert("Please provide complete payment details (no,date,bank,branch) !!");
+					document.getElementById('chequeNo').focus();
+					return false;
+
+				}
+			}
+			return true;
 		}
         
         $(document).ready(function()
@@ -353,6 +383,7 @@
 		                                </td>
 		                                <td valign="top" class="value ${hasErrors(bean: donationRecordInstance, field: 'chequeNo', 'errors')}">
 		                                    <g:textField name="chequeNo" value="${donationRecordInstance?.transactionId}" />
+		                                    Date: <g:textField name="chequeDate" value="${donationRecordInstance?.donationDate?.format('dd-MM-yyyy')}"/>
 		                                    Bank: <g:textField name="bankName" value="${donationRecordInstance?.paymentDetails}"/>		                                    
 		                                    Branch: <g:textField name="branchName" value="${donationRecordInstance?.transactionDetails}"/>		                                    
 		                                </td>

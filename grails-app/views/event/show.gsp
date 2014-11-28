@@ -10,9 +10,16 @@
     <body>
         <div class="nav">
             <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
-            <span class="menuButton"><g:link class="list" action="list"><g:message code="default.list.label" args="[entityName]" /></g:link></span>
+            <span class="menuButton"><g:link class="list" action="list">Event Calendar</g:link></span>
             <span class="menuButton"><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></span>
-            <span class="menuButton"><g:link class="create" controller="menuOrder" action="create">Place Menu Order</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="menuOrder" action="create" params="['eid':eventInstance?.id]">Place Menu Order</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="EventRegistration" action="list" params="['eid':eventInstance?.id]">EventRegistration</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="EventAccommodation" action="list" params="['eid':eventInstance?.id]">EventAccommodation</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="Trip" action="list" params="['eid':eventInstance?.id]">EventTransportation</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="eventPrasadam" action="list" params="['eid':eventInstance?.id]">EventPrasadam</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="eventSeva" action="list" params="['eid':eventInstance?.id]">EventService</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="helper" action="eventDashboard" params="['eid':eventInstance?.id]">EventDashboard</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="icsUser" action="list" params="['eid':eventInstance?.id]">EventUsers</g:link></span>
         </div>
         <div class="body">
             <h1><g:message code="default.show.label" args="[entityName]" /></h1>
@@ -92,6 +99,43 @@
                             <td valign="top" class="value">${fieldValue(bean: eventInstance, field: "comments")}</td>
                             
                         </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="regstartDate"><g:message code="event.regstartDate.label" default="Registration Start Date" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'regstartDate', 'errors')}">
+					<g:formatDate format="dd-MM-yyyy hh:mm:ss a" date="${eventInstance?.regstartDate}" />
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="regendDate"><g:message code="event.regendDate.label" default="Registration End Date" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'regendDate', 'errors')}">
+					<g:formatDate format="dd-MM-yyyy hh:mm:ss a" date="${eventInstance?.regendDate}" />
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="registrationMode"><g:message code="event.registrationMode.label" default="Registration Mode" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'registrationMode', 'errors')}">
+					${eventInstance?.registrationMode}
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="status"><g:message code="event.status.label" default="Status" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'status', 'errors')}">
+					${eventInstance?.status}
+                                </td>
+                            </tr>
+
                     
                         <tr class="prop">
                             <td valign="top" class="name"><g:message code="event.participants.label" default="Participants" /></td>

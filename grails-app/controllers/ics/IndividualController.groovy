@@ -1792,6 +1792,7 @@ def individualService
 			}
 		}
 
+		/*@TODO: BUGGY; HANDLE ROLE CHANGE SEPARATELY
 		//roles
 		//now recreate with fresh list
 		def rolelist = params.list("roles")
@@ -1816,7 +1817,7 @@ def individualService
 					println "Some error occurred in saving individualRole: "+individualRole
 				}
 			}
-		}
+		}*/
 
 
 		//services
@@ -4529,14 +4530,26 @@ def updateCultivator = {
 
 	def info() {
 		def ind = Individual.findByIcsid(params.icsid)
-		def addr,contact,email
+		def addr,contact,email,counsellor,counsellorid,counsellorName
 		if(ind)
 			{
 			addr = Address.findByCategoryAndIndividual('Correspondence',ind)
 			contact = VoiceContact.findByCategoryAndIndividual('CellPhone',ind)
 			email = EmailContact.findByCategoryAndIndividual('Personal',ind)
+			//clor
+			if(ind.category=='JivaDayaDistributor') {
+				counsellorid = ind.nvccId
+				counsellorName = ind.nvccIskconRef				
 			}
-		render([valid:ind?"yes":"no",name:ind?.toString(),id:ind?.id,address:(addr?.addressLine1?:"")+" "+(addr?.addressLine2?:"")+" "+(addr?.addressLine3?:""),city: addr?.city?.toString(), state: addr?.state?.toString(), country: addr?.country?.toString(), pin: addr?.pincode, contact:contact?.number,email:email?.emailAddress,pan:ind?.panNo,addrid:addr?.id,contactid:contact?.id,emailid:email?.id] as JSON)
+			else {
+				def counsellorReln = Relation.findByName('Councellee of')
+				def clorRship = Relationship.findWhere(individual1:ind,relation:counsellorReln,status:'ACTIVE')
+				counsellor = clorRship?.individual2
+				counsellorid = counsellor?.id
+				counsellorName = counsellor?.toString()
+				}
+			}
+		render([valid:ind?"yes":"no",name:ind?.toString(),id:ind?.id,address:(addr?.addressLine1?:"")+" "+(addr?.addressLine2?:"")+" "+(addr?.addressLine3?:""),city: addr?.city?.toString(), state: addr?.state?.toString(), country: addr?.country?.toString(), pin: addr?.pincode, contact:contact?.number,email:email?.emailAddress,pan:ind?.panNo,addrid:addr?.id,contactid:contact?.id,emailid:email?.id,counsellorid:counsellorid,counsellorName:counsellorName] as JSON)
 	}
 	
 	def donationSummary() {

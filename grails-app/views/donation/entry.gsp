@@ -38,8 +38,24 @@
 	    	}
 		
 	}
+	
+	function replaceSpecialCharAndTrim(str) {
+		if(str)
+			{
+			var retStr = str.replace(/[&\/\\#,+\-()$~%.'":*?<>{}]/g,' ');
+			return retStr.trim();
+			}
+		else
+			return "";
+	}
 
 		function validate() {  
+			var m = document.getElementById('mode.id');
+			var pm = m.options[m.selectedIndex];
+
+			$('#chequeNo').val(replaceSpecialCharAndTrim($('#chequeNo').val()));
+			$('#bankName').val(replaceSpecialCharAndTrim($('#bankName').val()));
+			$('#bankBranch').val(replaceSpecialCharAndTrim($('#bankBranch').val()));
 
 			if(document.getElementById('amount').value == "" || document.getElementById('amount').value<=0)
 			{
@@ -48,8 +64,18 @@
 				return false;
 			
 			}
-			else
-				return true;
+			if (pm.text.search(/Cheque/)>-1 || pm.text.search(/Card/)>-1)
+			{
+				
+				if(document.getElementById('chequeNo').value == "" || document.getElementById('chequeDate').value == "" || document.getElementById('bankName').value == "" || document.getElementById('bankBranch').value == "")
+				{
+					alert("Please provide complete payment details (no,date,bank,branch) !!");
+					document.getElementById('chequeNo').focus();
+					return false;
+
+				}
+			}
+			return true;
 		}
         
         $(document).ready(function()

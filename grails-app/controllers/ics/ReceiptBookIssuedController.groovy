@@ -677,4 +677,48 @@ def dataSource
 	def rbis = ReceiptBookIssued.findByReceiptBook(rb,[sort:"issueDate",order:"desc"])
 	render rbis as JSON
     }
+    
+    def status() {}
+    
+    def jq_status_list = {
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = ReceiptBook.createCriteria().list(max:maxRows, offset:rowOffset) {
+		if (params.bookSeries)
+			eq('bookSeries',params.bookSeries)
+		if (params.bookSerialNumber)
+			eq('bookSerialNumber',new Integer(params.bookSerialNumber))
+		if (params.status)
+			eq('status',params.status)
+
+		order(sortIndex, sortOrder)
+
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+	def donations = []
+      def jsonCells = result.collect {
+      		donations = Donation.createCriteria().list{donationReceipt{eq('receiptBook',it)}}
+      		
+            [cell: [
+            	    it.bookSeries,
+            	    it.bookSerialNumber,
+            	    ReceiptBookIssued.findByReceiptBook(it)?.issuedTo?.toString(),
+			donations.size(),
+			donations.collect{it.amount}.sum(),
+			it.status,
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+    
 }

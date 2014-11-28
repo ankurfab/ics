@@ -4,55 +4,53 @@ import java.util.zip.Adler32
 
 class HelperService {
 
-    def springSecurityService
-
     def serviceMethod() {
-
-
+    
+    
 
     }
-
+    
     def test(Centre centreInstance) {
-
+    
     	centreInstance.departments?.each{
     		if(it.name == 'Kitchen')
     			println centreInstance.toString() + " has a Kitchen!!"
     		}
     }
-
+    
     def getIngredients(MenuItem menuItemInstance) {
-
+    
         int i=0
-
+    
     	println "\n"+"Instructions before cooking:"
     	print "      "+menuItemInstance.recipe.preprocInstructions + "\n"
-
-    	println "\n"+"Ingredients:"
-
+    	
+    	println "\n"+"Ingredients:"    	
+    	
     	menuItemInstance.recipe.ingredients?.each{
-
+    	    			
     		println "\n" + menuItemInstance.recipe.ingredients.item[i]
     		print menuItemInstance.recipe.ingredients.qty[i] +"  "+menuItemInstance.recipe.ingredients.unit[i]
-
-    		i++
+    		 
+    		i++    	
     	}
     	println "\n"+"Cooking instructions:"
     	println "      "+ menuItemInstance.recipe.cookingInstructions + "\n"
-
-
+    	    	    
+    	    	
     	/*
     	recipe.preporc
-    	for each
+    	for each   
     		Qty=itemCountVar.qty/recipe.qty X Yqty .
-
-    		Println itemcountVar.item+' '+Qty
-
+    		
+    		Println itemcountVar.item+' '+Qty  
+    	
     	recipe.cookingInstructions
     	*/
-
-
+    	
+	
     }
-
+    
     def editStock(Map params) {
     	//first get the stock 
     	def stock = ItemStock.get(params.id)
@@ -343,6 +341,7 @@ def verifyChecksum(str,cksum)
             }
         return address
     }
+
 
 
 }

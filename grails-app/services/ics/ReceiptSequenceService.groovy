@@ -21,7 +21,7 @@ class ReceiptSequenceService {
     	if(!dep)
     		{
 		dep = IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('Receiver'),status:'VALID')?.department
-		log.debug("dep found outside session"+dep)
+		//log.debug("dep found outside session"+dep)
 		}
     	if(dep)
     		{

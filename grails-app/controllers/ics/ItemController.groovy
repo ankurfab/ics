@@ -641,6 +641,7 @@ def upload_image = {
     }
 
     def vsUserIssue() {
+    	log.debug("Inside vsUserIssue with params: "+params)
 	def items = []
 	def idList = params.idlist.tokenize(',')
 	idList.each{
@@ -650,6 +651,9 @@ def upload_image = {
     }
     
     def vsUserSubmitItemIssue() {
+    	log.debug("Inside vsUserSubmitItemIssue with params: "+params)
+    	itemService.createPurchaseList(params)
+    	render "submitted..."
     }
 
     def vsRequests() {
@@ -668,6 +672,8 @@ def upload_image = {
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
 	def result = Item.createCriteria().list(max:maxRows, offset:rowOffset) {
+		department{eq('name','VaishnavSamvardhan')} //@TODO: hardcoded
+		
 		if (params.name)
 			ilike('name',params.name)
 
@@ -705,10 +711,130 @@ def upload_image = {
             	    it.variety,
             	    it.brand,
             	    it.comments,
+            	    it.rate?:''
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
         render jsonData as JSON
         }
+
+
+    def upload() {
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+	    }
+	    else
+	    {
+	    def item
+	    def vsDepartment = null
+	    if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_VS_ADMIN'))
+	    	vsDepartment = Department.findByName('VaishnavSamvardhan')
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    //'Name','OtherNames','Category','SubCategory','Variety','Brand','Description','Rate'
+	    	try{
+	    	item = new Item()
+	    	item.name = tokens[0]
+	    	item.otherNames = tokens[1]
+	    	item.category = tokens[2]
+	    	item.subcategory = tokens[3]
+	    	item.variety = tokens[4]
+	    	item.brand = tokens[5]
+	    	item.comments = tokens[6]
+	    	item.rate = new BigDecimal(tokens[7])
+	    	item.department = vsDepartment
+	    	item.updator = item.creator = springSecurityService.principal.username
+	    	if(!item.save())
+				item.errors.allErrors.each {
+					println "Error in bulk saving item :"+it
+				}
+		else
+			log.debug(item.toString()+" saved!")
+		}
+		catch(Exception e) {
+			log.debug("Exception occurred in parsing tokens for upload items : "+e)
+		}
+	    }
+	    }
+	    
+	if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_VS_ADMIN'))
+	    	redirect (action: "vsUserItems")
+	else
+		redirect (action: "list")
+    }
+
+	def vsUser_jq_edititem_list = {
+	      log.debug('In vsUser_jq_edititem_list:'+params)
+	      def item = null
+	      def message = ""
+	      def state = "FAIL"
+	      def id
+
+	      // determine our action
+	      switch (params.oper) {
+		case 'add':
+		  // add item sent
+		  item = new Item(params)
+		  item.updator=item.creator=springSecurityService.principal.username
+		  item.department = Department.findByName('VaishnavSamvardhan')	//@TODO: hardcoded
+		  if (! item.hasErrors() && item.save()) {
+		    message = "Item Saved.."
+		    id = item.id
+		    state = "OK"
+		  } else {
+		    item.errors.allErrors.each {
+			log.debug(it)
+			}
+		    message = "Could Not Save Item"
+		  }
+		  break;
+		case 'del':
+		  	def idList = params.id.tokenize(',')
+		  	idList.each
+		  	{
+			  // check item exists
+			  item  = Item.get(it)
+			  if (item) {
+			    // delete item
+			    if(!item.delete())
+			    	{
+				    item.errors.allErrors.each {
+					log.debug("In jq_item_edit: error in deleting item:"+ it)
+					}
+			    	}
+			    else {
+				    message = "Deleted!!"
+				    state = "OK"
+			    }
+			  }
+		  	}
+		  break;
+		 default :
+		  // edit action
+		  // first retrieve the item by its ID
+		  item = Item.get(params.id)
+		  if (item) {
+		    // set the properties according to passed in parameters
+		    item.properties = params
+			  item.updator = springSecurityService.principal.username
+		    if (! item.hasErrors() && item.save()) {
+		      message = "Item  ${item.name} Updated"
+		      id = item.id
+		      state = "OK"
+		    } else {
+			    item.errors.allErrors.each {
+				println it
+				}
+		      message = "Could Not Update Item"
+		    }
+		  }
+		  break;
+ 	 }
+
+	      def response = [message:message,state:state,id:id]
+
+	      render response as JSON
+	    }
+
 
 }

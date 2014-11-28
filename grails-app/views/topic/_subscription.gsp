@@ -14,6 +14,14 @@
 		    <g:select name="topic.id" from="${ics.Topic.findAllByStatus('ACTIVE',[sort:'name'])}" optionKey="id" value=""   noSelection="['':'-Select Topic(s) to be subscribed-']" multiple="multiple"/>
 		</td>
 	    </tr>
+	    <tr class="prop">
+		<td valign="top" class="name">
+		    <label for="language">Language</label>
+		</td>
+		<td valign="top" class="value">
+		    <g:select name="language" from="${['ENGLISH','HINDI','MARATHI']}" value="ENGLISH"  />
+		</td>
+	    </tr>
 
 	</tbody>
     </table>

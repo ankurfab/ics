@@ -26,16 +26,18 @@
       url:'jq_commitment_list',
       editurl:'jq_edit_commitment',
       datatype: "json",
-      colNames:['CommittedBy','Scheme','DonationCommitment','CollectionCommitment','TotalCommitted','ECSMandate','CommittedOn','CommitmentTill','Id'],
+      colNames:['CommittedBy','Scheme','DonationCommitment','CollectionCommitment','TotalCommitted','ECSMandate','CommittedOn','CommitmentTill','Status','HoldTill','Id'],
       colModel:[
 	{name:'committedByName'},
 	{name:'schemeName'},
-	{name:'committedAmount'},
+	{name:'committedAmount', editable: true},
 	{name:'ccAmount'},
 	{name:'total'},
-	{name:'ecsMandate'},
+	{name:'ecsMandate', editable: true},
 	{name:'commitmentOn'},
 	{name:'commitmentTill'},
+    {name:'status',search:true},
+    {name:'holdTill',search:false},
 	{name:'id',hidden:true}
      ],
     rowNum:10,
@@ -52,6 +54,13 @@
     $("#commitment_list").jqGrid('filterToolbar',{autosearch:true});
     $("#commitment_list").jqGrid('navGrid',"#commitment_list_pager",{edit:false,add:false,del:true,search:false});
     $("#commitment_list").jqGrid('inlineNav',"#commitment_list_pager");
+	// add custom button to export the detail data to excel	
+	jQuery("#commitment_list").jqGrid('navGrid',"#commitment_list_pager").jqGrid('navButtonAdd',"#commitment_list_pager",{caption:"Download ECS Active", buttonicon:"ui-icon-disk",title:"Download",
+	       onClickButton : function () { 
+			var url = jQuery("#commitment_list").jqGrid('getGridParam', 'url');		
+			jQuery("#commitment_list").jqGrid('excelExport',{"url":url});
+	       }
+	       });
     });
 </script>
 

@@ -7,9 +7,11 @@
     </head>
     <body>
     
-    <div>
-    	Welcome ${individual?.toString()}
-    </div>
+	<g:each in="${ics.Content.findAllByLanguageAndCategory(ics.IndividualAssessment.findByIndividual(individual)?.language?:'ENGLISH','POST')?.htmlContent}">
+	    <div>
+		<p>${it}</p><br>
+	    </div>
+	</g:each>
 	
     </body>
 </html>

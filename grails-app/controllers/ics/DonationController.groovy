@@ -2253,7 +2253,7 @@ def jq_donation_list = {
 			params."collectedBy.id"= params."acCollector_id"
 		}
 		
-		params."receivedBy.id" = (session.individualid)?:13918	//todo: hardcoding
+		params."receivedBy.id" = (session.individualid)?:(Individual.findByLoginid(springSecurityService.principal.username)?.id)
 
 		def donor
 		def newDonor = false

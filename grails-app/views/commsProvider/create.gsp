@@ -28,10 +28,60 @@
                         
                             <tr class="prop">
                                 <td valign="top" class="name">
+                                    <label for="name"><g:message code="commsProvider.name" default="Name" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'name', 'errors')}">
+                                    <g:textField name="name" value="${fieldValue(bean: commsProviderInstance, field: 'name')}" />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
                                     <label for="type"><g:message code="commsProvider.type" default="Type" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'type', 'errors')}">
                                     <g:textField name="type" value="${fieldValue(bean: commsProviderInstance, field: 'type')}" />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="baseUrl"><g:message code="commsProvider.baseUrl" default="Base Url" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'baseUrl', 'errors')}">
+                                    <g:textField name="baseUrl" value="${fieldValue(bean: commsProviderInstance, field: 'baseUrl')}" />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="path"><g:message code="commsProvider.path" default="Path" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'path', 'errors')}">
+                                    <g:textField name="path" value="${fieldValue(bean: commsProviderInstance, field: 'path')}" />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="query"><g:message code="commsProvider.query" default="Query" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'query', 'errors')}">
+                                    <g:textField name="query" value="${fieldValue(bean: commsProviderInstance, field: 'query')}" />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="apikey"><g:message code="commsProvider.apikey" default="Apikey" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'apikey', 'errors')}">
+                                    <g:textField name="apikey" value="${fieldValue(bean: commsProviderInstance, field: 'apikey')}" />
 
                                 </td>
                             </tr>
@@ -62,16 +112,6 @@
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'pwd', 'errors')}">
                                     <g:textField name="pwd" value="${fieldValue(bean: commsProviderInstance, field: 'pwd')}" />
-
-                                </td>
-                            </tr>
-                        
-                            <tr class="prop">
-                                <td valign="top" class="name">
-                                    <label for="apikey"><g:message code="commsProvider.apikey" default="Apikey" />:</label>
-                                </td>
-                                <td valign="top" class="value ${hasErrors(bean: commsProviderInstance, field: 'apikey', 'errors')}">
-                                    <g:textField name="apikey" value="${fieldValue(bean: commsProviderInstance, field: 'apikey')}" />
 
                                 </td>
                             </tr>

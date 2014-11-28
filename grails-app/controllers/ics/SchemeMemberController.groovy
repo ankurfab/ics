@@ -913,4 +913,49 @@ def updateToBeCommunicatedOfMembers={
         render "All members have been updated with No for To Be Communicated."
 }
 
+//ONLY FOR ECS ACTIVE MEMBERS
+//this method copies ECS mandate values to corresponding scheme member ,make them Active etc.
+def checkECSMandateFromCommitment={
+// copying ecs mandate to scheme members
+   if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE')){
+        render "you can not perform this action!!"
+           return
+        }  
+    def role = helperService.getDonationUserRole()
+    def schemes = helperService.getSchemesForRole(role, session.individualid)
+    def result = Commitment.createCriteria().list{
+                'in'('scheme',schemes)
+                eq('status','ACTIVE')
+              }
+    //for each commitment ,find scheme member then update consumer number
+
+    //println result
+    def notfound=0
+    def noLinkedIndividuals=[]//all those individual which does not scheme member
+    result.each{
+      println it.ecsMandate
+      //find scheme member
+      def schemeMemberInstance = SchemeMember.findBySchemeAndMember(it.scheme,it.committedBy)
+      if(schemeMemberInstance != null){
+        schemeMemberInstance.counsumerNumber = it.ecsMandate
+      schemeMemberInstance.status= 'ACTIVE'
+      schemeMemberInstance.committedMode='ECS'
+      if(it.committedAmount != null)schemeMemberInstance.actualCurrentAmount= it.committedAmount /12
+      if (!schemeMemberInstance.save()) {
+
+                    schemeMemberInstance.errors.each {
+                        println it}
+            render "Scheme Member failed to get updated"
+           return
+         }  
+      }
+      else{
+        notfound = notfound +1
+        noLinkedIndividuals.add([it.scheme,it.committedBy])
+      }
+      
+    }
+    return [schemes:schemes , size:result.size(), notfound:notfound, noLinkedIndividuals:noLinkedIndividuals]
+
+}
 }

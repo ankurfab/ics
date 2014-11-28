@@ -18,12 +18,14 @@
 			<!-- pager will hold our paginator -->
 			<div id="purchaseList_list_pager" class="scroll" style="text-align:center;"></div>
 	    </div>
+    <sec:ifAnyGranted roles="ROLE_VS_USER">
             <div>
 			<!-- table tag will hold our grid -->
 			<table id="requiredItem_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 			<!-- pager will hold our paginator -->
 			<div id="requiredItem_list_pager" class="scroll" style="text-align:center;"></div>
 	    </div>
+    </sec:ifAnyGranted>
             <div>
 			<!-- table tag will hold our grid -->
 			<table id="purchasedItem_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
@@ -79,7 +81,7 @@
       colModel:[
 	{name:'item.name', search:true, editable: true,edittype:'select',editoptions:{value:'${ics.Item.list([sort:"name"])?.collect{it.id+':'+it.name}.join(';')}'}},
 	{name:'qty', search:true, editable: true},
-	{name:'unit', search:true, editable: true},
+	{name:'unit', search:true, editable: true,edittype:'select',editoptions:{value:'${ics.Unit.values()?.collect{it.toString()+':'+it.toString()}.join(';')}'}},
 	{name:'rate', search:true, editable: true},
 	{name:'id',hidden:true}
      ],
@@ -120,9 +122,9 @@
       datatype: "json",
       colNames:['Item','Quantity','Unit','Rate','Id'],
       colModel:[
-	{name:'item.name', search:true, editable: true},
+	{name:'item.name', search:true, editable: true,edittype:'select',editoptions:{value:'${ics.Item.list([sort:"name"])?.collect{it.id+':'+it.name}.join(';')}'}},
 	{name:'qty', search:true, editable: true},
-	{name:'unit', search:true, editable: true},
+	{name:'unit', search:true, editable: true,edittype:'select',editoptions:{value:'${ics.Unit.values()?.collect{it.toString()+':'+it.toString()}.join(';')}'}},
 	{name:'rate', search:true, editable: true},
 	{name:'id',hidden:true}
      ],
@@ -156,6 +158,9 @@
 		    cancel: true
 		}
     );
+    <sec:ifAnyGranted roles="ROLE_VS_ADMIN">
+    $("#purchasedItem_list").jqGrid('navGrid',"#purchasedItem_list_pager").jqGrid('navButtonAdd',"#purchasedItem_list_pager",{caption:"Issue", buttonicon:"ui-icon-cart", onClickButton:issue, position: "last", title:"Issue", cursor: "pointer"});
+    </sec:ifAnyGranted>
 
 
     });
@@ -171,6 +176,23 @@ function selectedPurchaseListName() {
 	var cellData = grid.jqGrid('getCell', sel_id, 'name');
 	return cellData;
 }
+	function issue() {
+		var answer = confirm("Are you sure?");
+		if (answer){
+			var id = $('#registration_list').jqGrid('getGridParam','selrow');
+			if(id) {
+				var url = "${createLink(controller:'assessment',action:'setup')}"+"?id="+id
+				$.getJSON(url, {}, function(data) {
+					alert(data.message);
+					jQuery("#registration_list").jqGrid().trigger("reloadGrid");
+				    });	
+			}
+			else
+				alert("Please select a row!!");
+		} else {
+		    return false;
+		}
+	}
 
 </script>
 

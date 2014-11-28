@@ -67,6 +67,7 @@ class DonationService {
 		donation.bankName = dr.paymentDetails
 		donation.bankBranch = dr.transactionDetails
 		donation.chequeNo = dr.transactionId
+		donation.chequeDate = dr.donationDate
 		if(dr.rbno && dr.rno)
 			{
 			//receiptBook = ReceiptBook.findBy
@@ -125,7 +126,10 @@ class DonationService {
 		dr.donatedBy = individualService.createIndividual(params)
 	dr.donorName = params.donorName
 	dr.scheme = Scheme.get(params.'scheme.id')
-	dr.donationDate = new Date()
+	if(params.chequeDate)
+		dr.donationDate = Date.parse('dd-MM-yyyy', params.chequeDate)
+	else
+		dr.donationDate = new Date()
 	dr.comments = params.comments
 	dr.mode = PaymentMode.get(params.'mode.id')
 	dr.amount = new BigDecimal(params.amount)
@@ -135,6 +139,14 @@ class DonationService {
 	dr.rbno = params.rbno
 	dr.rno = params.rno
 	dr.centre = IndividualCentre.findByIndividualAndStatus(Individual.findByLoginid(springSecurityService.principal.username),'ACTIVE')?.centre
+	try{
+	//if indcentre is null then try from scheme's centre
+	if(!dr.centre)
+		dr.centre = dr.scheme?.department?.centre
+	}
+	catch(Exception e){
+		log.debug(e)
+	}
 	dr.receiptReceivedStatus = "NOTGENERATED"
 	dr.updator=dr.creator=springSecurityService.principal.username    
     	if(!dr.save())
@@ -327,10 +339,38 @@ class DonationService {
 	    def query = "select s.name scheme,sum(amount) amount from donation d, scheme s where d.scheme_id=s.id and d.fund_receipt_Date>='"+from.format('yyyy-MM-dd HH:mm:ss')+"' and d.fund_receipt_Date<='"+till.format('yyyy-MM-dd HH:mm:ss')+"' group by s.name order by s.name"
 	    def sList = sql.rows(query)
 	    
-	    retMessage="<table><tr><td>Collection Summary From: "+from.format('dd-MM-yyyy HH:mm:ss')+"</td><td>Till: "+till.format('dd-MM-yyyy HH:mm:ss')+"</td></tr>"	    
+	    //scheme wise summary
+	    def total = 0
+	    retMessage="<table border='1'><tr><td><table border='1'><tr><td>Scheme Summary From: "+from.format('dd-MM-yyyy HH:mm:ss')+"</td><td>Till: "+till.format('dd-MM-yyyy HH:mm:ss')+"</td></tr>"	    
 	    sList.each{
-	    retMessage+="<tr><td>"+it.scheme+"</td><td>"+it.amount+"</td>"
+	    	retMessage+="<tr><td>"+it.scheme+"</td><td>"+it.amount+"</td></tr>"
+	    	total += it.amount
 	    }
+	    retMessage+="<tr><td>Total:</td><td>"+total+"</td></tr></table></td>"
+	    
+	    //mode wise summary
+	    query = "select m.name mode,sum(amount) amount from donation d, payment_mode m where d.mode_id=m.id and d.fund_receipt_Date>='"+from.format('yyyy-MM-dd HH:mm:ss')+"' and d.fund_receipt_Date<='"+till.format('yyyy-MM-dd HH:mm:ss')+"' group by m.name order by m.name"
+	    sList = sql.rows(query)
+	    
+	    total = 0
+	    retMessage+="<td><table border='1'><tr><td>Payment Mode Summary From: "+from.format('dd-MM-yyyy HH:mm:ss')+"</td><td>Till: "+till.format('dd-MM-yyyy HH:mm:ss')+"</td></tr>"	    
+	    sList.each{
+	    	retMessage+="<tr><td>"+it.mode+"</td><td>"+it.amount+"</td></tr>"
+	    	total += it.amount
+	    }
+	    retMessage+="<tr><td>Total:</td><td>"+total+"</td></tr></table></td></tr></table>"
+	    
+	    //receiver-mode wise summary
+	    query = "select if(initiated_name is not null and trim(initiated_name)!='',initiated_name,legal_name) receiver, m.name mode,sum(amount) amount from donation d, payment_mode m, individual i where d.received_by_id=i.id and d.mode_id=m.id and d.fund_receipt_Date>='"+from.format('yyyy-MM-dd HH:mm:ss')+"' and d.fund_receipt_Date<='"+till.format('yyyy-MM-dd HH:mm:ss')+"' group by receiver, m.name order by receiver,m.name"
+	    sList = sql.rows(query)
+	    
+	    total = 0
+	    retMessage+="<table border='1'><tr><td>Payment Mode Summary From: "+from.format('dd-MM-yyyy HH:mm:ss')+"</td><td>Till: "+till.format('dd-MM-yyyy HH:mm:ss')+"</td></tr>"	    
+	    sList.each{
+	    	retMessage+="<tr><td>"+it.receiver+"</td><td>"+it.mode+"</td><td>"+it.amount+"</td></tr>"
+	    	total += it.amount
+	    }
+	    retMessage+="<tr><td/><td>Total:</td><td>"+total+"</td></tr></table>"
 	    
 	    retMessage = retMessage.replaceAll("-General Donations","")
 	    

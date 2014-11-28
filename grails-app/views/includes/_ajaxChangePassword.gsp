@@ -62,7 +62,7 @@
 		<a href='javascript:void(0)' onclick='cancelChangePassword(); return false;'>Cancel</a>
 		</p>
 	</g:formRemote>
-	<div style='display: block; text-align: left;' id='changePasswordMessage'>HareKrishna</div>
+	<div style='display: block; text-align: left;' id='changePasswordMessage'></div>
 	</div>
 </div>
 

@@ -1,6 +1,7 @@
 package ics
 
 import org.codehaus.groovy.grails.plugins.springsecurity.*
+import grails.converters.JSON
 
 class VoucherController {
     def springSecurityService
@@ -129,4 +130,62 @@ class VoucherController {
             redirect(action: "list")
         }
     }
+
+    def jq_voucher_list = {
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+
+	def result = Voucher.createCriteria().list(max:maxRows, offset:rowOffset) {
+				
+	if(params.voucherDate)
+		eq('voucherDate',Date.parse('dd-MM-yyyy',params.voucherDate))
+
+	if(params.departmentCode)
+		departmentCode{ilike('name',params.departmentCode)}
+
+	if(params.voucherNo)
+		ilike('voucherNo',params.voucherNo)
+
+	if(params.description)
+		ilike('description',params.description)
+
+	if(params.amount)
+		eq('amount',new Integer(params.amount))
+
+	if(params.amountSettled)
+		eq('amountSettled',new Integer(params.amountSettled))
+
+	if(params.updator)
+		eq('updator',params.updator)
+
+	order(sortIndex, sortOrder)
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells
+      jsonCells = result.collect {
+            [cell: [
+            	    it.voucherDate?.format("dd-MM-yyyy"),
+            	    it.departmentCode?.toString(),
+            	    it.voucherNo,
+            	    it.description,
+            	    it.amount,
+            	    it.amountSettled,
+            	    it.updator,
+            	    it.lastUpdated?.format("dd-MM-yyyy HH:mm:ss"),
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+
+
 }

@@ -10,6 +10,7 @@ class PaymentReference {
 	    paymentDate()
 	    details(nullable:true,blank:true)
 	    department(nullable:true)
+	    ref(nullable:true,blank:true)
 
 	    dateCreated()
 	    creator()
@@ -24,6 +25,7 @@ class PaymentReference {
     Date paymentDate
     String details
     Department department
+    String ref
     
     Date dateCreated
     Date lastUpdated

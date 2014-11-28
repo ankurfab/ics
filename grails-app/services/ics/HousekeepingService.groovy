@@ -1334,7 +1334,7 @@ def config = ConfigurationHolder.config
 				}
 			
 			//now create the user
-			iu = new IcsUser(username: i.loginid, password: 'harekrishna', enabled: true, accountExpired: false, accountLocked: false, passwordExpired: false)
+			iu = new IcsUser(username: i.loginid, password: i.loginid, enabled: true, accountExpired: false, accountLocked: false, passwordExpired: false)
 			if(!iu.save(flush:true)) {
 				iu.errors.allErrors.each {
 					println it

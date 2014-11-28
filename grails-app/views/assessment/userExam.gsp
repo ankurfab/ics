@@ -69,6 +69,8 @@
 		$("#divChoice2").text(data.choice2);
 		$("#divChoice3").text(data.choice3);
 		$("#divChoice4").text(data.choice4);
+		$("#qNumText").text(data.qNum+" Question");
+		$("#timeText").text(data.time+" Remaining");
 		$("input[type='checkbox']").attr("checked",false).checkboxradio("refresh");
 		$("#iaqaid").val(data.iaqaid);
 		$("#divQuestionPanel").show();

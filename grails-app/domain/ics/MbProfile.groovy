@@ -3,128 +3,127 @@ package ics
 class MbProfile {
 
     static constraints = {
-        candidate()
-        initiatedBy()
-        familyAddress(nullable: true)
-        companyAddress(nullable: true)
-        prefCentre(nullable: true)
-        profileStatus(nullable: true)
-        matchMakingStatus(nullable: true)
-        workflowStatus(nullable: true)
-        category(nullable: true)
-        severity(nullable: true)
-        priority(nullable: true)
-        photo(nullable: true, maxSize: 512000 /* 500K */)
-        photoType(nullable: true)
-        originPreference(nullable: true)
-        castePreference(nullable: true)
-        qualPreference(nullable: true)
-        devPreference(nullable: true)
-        otherPreference(nullable: true)
-        manglik(nullable: true)
-        extraMaritalAffair(nullable: true)
-        nativePlace(nullable: true)
-        nativeState(nullable: true)
-        depLifelong(nullable: true)
-        devotionalCulture(nullable: true)
-        flexibleLangknown(nullable: true)
-        horoscopeToBeMatched(nullable: true)
-        keenDevProfile(nullable: true)
-        parentsChanting(nullable: true)
-        parentsInfo(nullable: true)
-        parentsInitiation(nullable: true)
-        parentsSearch(nullable: true)
-        parentsSpMaster(nullable: true)
-        personalInfo(nullable: true)
-        physicalMental(nullable: true)
-        prefAgeDiff(nullable: true)
-        prefCandIncome(nullable: true)
-        prefCaste(nullable: true)
-        prefCategory(nullable: true)
-        prefChanting(nullable: true)
-        prefHeight(nullable: true)
-        prefLangKnown(nullable: true)
-        prefLooks(nullable: true)
-        prefManglik(nullable: true)
-        prefNationality(nullable: true)
-        prefOrigin(nullable: true)
-        prefSpMaster(nullable: true)
-        prefVarna(nullable: true)
-        prefeducationCategory(nullable: true)
-        prefqualification(nullable: true)
-        prefsubCaste(nullable: true)
-        primdepMB(nullable: true)
-        profileoutsideISKCON(nullable: true)
-        regotherMB(nullable: true)
-        yourFamily(nullable: true)
-        candCounsellor(nullable: true)
-        candCounsellorAshram(nullable: true)
-        referrer(nullable: true)
-        referrerCenter(nullable: true)
-        referrerContact(nullable: true)
-        referrerEmail(nullable: true)
-        referrerRelation(nullable: true)
-        houseIs(nullable: true)
-        houseArea(nullable: true)
-        otherProperty(nullable: true)
-        otherIncome(nullable: true)
-        fatherIncome(nullable: true)
-        eduCat(nullable: true)
-        eduQual(nullable: true)
-        occupationStatus(nullable: true)
-        companyName(nullable: true)
-        designation(nullable: true)
-        frequencyOfTempleVisits(nullable: true)
-        likesInKc(nullable: true)
-        dislikesInKc(nullable: true)
-        introductionYear(nullable: true)
-        regulatedSince(nullable: true)
-        regDetails(nullable: true)
-        chantingSince(nullable: true)
-        chantingSixteenSince(nullable: true)
-        numberOfRounds(nullable: true)
-        spiritualMaster(nullable: true)
-        firstInitiation(nullable: true)
-        secondInitiation(nullable: true)
-        services(nullable: true)
-        interests(nullable: true)
-        remarks(nullable: true)
-        introductionCentre(nullable: true)
-        currentlyVisiting(nullable: true)
-        regularSince(nullable: true)
-        financialDiff(nullable: true)
-        otherExpectations(nullable: true)
-        fatherName(nullable: true)
-        fatherEducation(nullable: true)
-        fatherOccupation(nullable: true)
-        motherName(nullable: true)
-        motherEducation(nullable: true)
-        motherOccupation(nullable: true)
-        brother1Name(nullable: true)
-        brother1Education(nullable: true)
-        brother1Occupation(nullable: true)
-        brother2Name(nullable: true)
-        brother2Education(nullable: true)
-        brother2Occupation(nullable: true)
-        brother3Name(nullable: true)
-        brother3Education(nullable: true)
-        brother3Occupation(nullable: true)
-        sister1Name(nullable: true)
-        sister1Education(nullable: true)
-        sister1Occupation(nullable: true)
-        sister2Name(nullable: true)
-        sister2Education(nullable: true)
-        sister2Occupation(nullable: true)
-        sister3Name(nullable: true)
-        sister3Education(nullable: true)
-        sister3Occupation(nullable: true)
+	    candidate()
+	    photo(nullable:true, maxSize: 512000 /* 500K */)
+	initiatedBy(nullable: true)
+	profileStatus(nullable: true)
+	matchMakingStatus(nullable: true)
+	workflowStatus(nullable: true)
+	category(nullable: true)
+	severity(nullable: true)
+	priority(nullable: true)
+	photoType(nullable: true)
+	scstCategory(nullable: true)
+	nativePlace(nullable: true)
+	nativeState(nullable: true)
+	extraMaritalAffair(nullable: true)
+	familyAddress(nullable: true)
+	candCounsellor(nullable: true)
+	candCounsellorAshram(nullable: true)
+	referrer(nullable: true)
+	referrerCenter(nullable: true)
+	referrerContact(nullable: true)
+	referrerEmail(nullable: true)
+	referrerRelation(nullable: true)
+	manglik(nullable: true)
+	horoscopeToBeMatched(nullable: true)
+	houseIs(nullable: true)
+	houseArea(nullable: true)
+	otherProperty(nullable: true)
+	fatherIncome(nullable: true)
+	otherIncome(nullable: true)
+	parentsChanting(nullable: true)
+	parentsInitiation(nullable: true)
+	parentsSpMaster(nullable: true)
+	yourFamily(nullable: true)
+	parentsInfo(nullable: true)
+	eduCat(nullable: true)
+	eduQual(nullable: true)
+	occupationStatus(nullable: true)
+	companyName(nullable: true)
+	designation(nullable: true)
+	companyAddress(nullable: true)
+	introductionYear(nullable: true)
+	introductionCentre(nullable: true)
+	currentlyVisiting(nullable: true)
+	regularSince(nullable: true)
+	frequencyOfTempleVisits(nullable: true)
+	likesInKc(nullable: true)
+	dislikesInKc(nullable: true)
+	regulated(nullable: true)
+	teacoffee(nullable: true)
+	intoxication(nullable: true)
+	oniongarlic(nullable: true)
+	nonveg(nullable: true)
+	gambling(nullable: true)
+	regDetails(nullable: true)
+	regulatedSince(nullable: true)
+	chantingSince(nullable: true)
+	numberOfRounds(nullable: true)
+	chantingSixteenSince(nullable: true)
+	spiritualMaster(nullable: true)
+	firstInitiation(nullable: true)
+	secondInitiation(nullable: true)
+	services(nullable: true)
+	interests(nullable: true)
+	remarks(nullable: true)
+	originPreference(nullable: true)
+	castePreference(nullable: true)
+	qualPreference(nullable: true)
+	devPreference(nullable: true)
+	devotionalCulture(nullable: true)
+	prefChanting(nullable: true)
+	flexibleChanting(nullable: true)
+	prefSpMaster(nullable: true)
+	flexibleSpMaster(nullable: true)
+	otherPreference(nullable: true)
+	prefCentre(nullable: true)
+	flexibleCentre(nullable: true)
+	prefNationality(nullable: true)
+	flexibleNationality(nullable: true)
+	prefOrigin(nullable: true)
+	flexibleOrigin(nullable: true)
+	prefVarna(nullable: true)
+	flexibleVarna(nullable: true)
+	prefCategory(nullable: true)
+	flexibleCategory(nullable: true)
+	prefCaste(nullable: true)
+	flexibleCaste(nullable: true)
+	prefsubCaste(nullable: true)
+	flexibleSubcaste(nullable: true)
+	prefeducationCategory(nullable: true)
+	flexibleEducationCat(nullable: true)
+	prefqualification(nullable: true)
+	flexibleQualifications(nullable: true)
+	prefAgeDiff(nullable: true)
+	flexibleAgediff(nullable: true)
+	prefHeight(nullable: true)
+	flexibleHeight(nullable: true)
+	prefLooks(nullable: true)
+	flexibleLooks(nullable: true)
+	prefCandIncome(nullable: true)
+	flexibleCandidateIncome(nullable: true)
+	prefLangKnown(nullable: true)
+	flexibleLangknown(nullable: true)
+	prefManglik(nullable: true)
+	flexibleManglik(nullable: true)
+	settleAbroadWorkingWife(nullable: true)
+	keenDevProfile(nullable: true)
+	primdepMB(nullable: true)
+	regotherMB(nullable: true)
+	parentsSearch(nullable: true)
+	profileoutsideISKCON(nullable: true)
+	financialDiff(nullable: true)
+	physicalMental(nullable: true)
+	depLifelong(nullable: true)
+	personalInfo(nullable: true)
     }
 
-    static mapping = {
-        prefCentre ignoreNotFound: true
+    static mapping={
+        prefCentre ignoreNotFound:true
         companyAddress ignoreNotFound: true
     }
-
+    
     Individual candidate
     Individual initiatedBy  //removed assigned to as was not getting populated.
 
@@ -132,13 +131,13 @@ class MbProfile {
     String matchMakingStatus
     String workflowStatus
 
-    String category    //for future use...severity,priority should be properly used
-    String severity    //external commitment for eg having a counsellor..Level 1,2..n
-    String priority    //internal surrender Level1,2,3...
-
+    String category	//for future use...severity,priority should be properly used
+    String severity	//external commitment for eg having a counsellor..Level 1,2..n
+    String priority	//internal surrender Level1,2,3...
+    
     byte[] photo
     String photoType
-
+    
     String nativePlace
     String nativeState
     Boolean extraMaritalAffair
@@ -154,6 +153,8 @@ class MbProfile {
     String referrerRelation
     String manglik
     String horoscopeToBeMatched
+    String scstCategory
+    
     //step2 fields
     String houseIs
     Integer houseArea
@@ -165,30 +166,6 @@ class MbProfile {
     String parentsSpMaster
     String yourFamily
     String parentsInfo
-    String fatherName
-    String fatherEducation
-    String fatherOccupation
-    String motherName
-    String motherEducation
-    String motherOccupation
-    String brother1Name
-    String brother1Education
-    String brother1Occupation
-    String brother2Name
-    String brother2Education
-    String brother2Occupation
-    String brother3Name
-    String brother3Education
-    String brother3Occupation
-    String sister1Name
-    String sister1Education
-    String sister1Occupation
-    String sister2Name
-    String sister2Education
-    String sister2Occupation
-    String sister3Name
-    String sister3Education
-    String sister3Occupation
 
     //step 3 fields
     String eduCat
@@ -206,13 +183,13 @@ class MbProfile {
     String frequencyOfTempleVisits
     String likesInKc
     String dislikesInKc
-    Boolean regulated    //following 4 regulative principles
-    Boolean teacoffee    //yes means consuming
-    Boolean intoxication    //yes means consuming
-    Boolean oniongarlic    //yes means consuming
-    Boolean nonveg    //yes means consuming
-    Boolean gambling    //yes means consuming
-    String regDetails    //more info about not following regulative principles
+    Boolean regulated	//following 4 regulative principles
+    Boolean teacoffee	//yes means consuming
+    Boolean intoxication	//yes means consuming
+    Boolean oniongarlic	//yes means consuming
+    Boolean nonveg	//yes means consuming
+    Boolean gambling	//yes means consuming
+    String regDetails	//more info about not following regulative principles
     Integer regulatedSince
     Integer chantingSince
     Integer numberOfRounds
@@ -275,16 +252,14 @@ class MbProfile {
     String physicalMental
     String depLifelong
     String personalInfo
-    String otherExpectations
 
 
     Date dateCreated
     Date lastUpdated
     String creator
     String updator
-
-    static hasMany = [matches: MbProfileMatch]
-    static mappedBy = [matches: "candidate"]
-
-
+    
+    static hasMany = [matches:MbProfileMatch]
+    static mappedBy = [matches:"candidate"]
+    
 }

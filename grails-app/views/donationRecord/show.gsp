@@ -208,6 +208,13 @@
                 </div>
             </g:if>
             </sec:ifAnyGranted>
+            <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+            <g:if test="${donationRecordInstance?.receiptReceivedStatus =='GENERATED'}">
+                <div class="buttons">
+                    <span class="button"><g:actionSubmit class="delete" action="delete" value="${message(code: 'delete', 'default': 'Delete')}" onclick="return confirm('Are you sure? The linked donation would also be deleted. Please keep a printout of the donation as reference.');" /></span>
+                </div>
+            </g:if>
+            </sec:ifAnyGranted>
             </g:form>
         </div>
         <div id="commenteditdiv" title="Enter Comments">

@@ -5,7 +5,8 @@ import grails.converters.JSON
 
 class DonationRecordController {
     def springSecurityService
-
+    def housekeepingService 
+    def receiptSequenceService
     def helperService 
     def exportService
     def grailsApplication  //inject GrailsApplication
@@ -259,14 +260,20 @@ class DonationRecordController {
     }
 
     def delete = {
-         if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE,ROLE_PATRONCARE,ROLE_PATRONCARE_USER')){
+         if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE,ROLE_PATRONCARE,ROLE_PATRONCARE_USER,ROLE_NVCC_ADMIN')){
            render "The record is not available for viewing!!"
            return
         }
         def donationRecordInstance = DonationRecord.get(params.id)
         if (donationRecordInstance) {
             try {
+            	def donation = donationRecordInstance.donation
                 donationRecordInstance.delete()
+	         if (SpringSecurityUtils.ifAnyGranted('ROLE_NVCC_ADMIN')){
+	         	//need to delete the donation also
+	         	donation.delete()
+	         }
+                
                 flash.message = "donationRecord.deleted"
                 flash.args = [params.id]
                 flash.defaultMessage = "DonationRecord ${params.id} deleted"
@@ -605,7 +612,7 @@ class DonationRecordController {
              if(schemeMember || commitment){
                     println " COULD  FIND " +donorNameColumnValue+" :"+scheme
                     record.transactionDetails = donorIdColumnValue 
-                    record.scheme = scheme?:schemeMember.scheme
+                    record.scheme = scheme?:schemeMember?.scheme
                     record.schemeMember = schemeMember
                     record.donatedBy = schemeMember?.member?:commitment?.committedBy
                     record.centre = schemeMember?.centre
@@ -618,7 +625,7 @@ class DonationRecordController {
                     }
 
                     if(usepercentagededuction == true){                      
-                      if(record.amount != 0 && schemeMember.percentageDeductionUpper !=null && schemeMember.percentageDeductionLower!= null && schemeMember.percentageDeductionLower!=0){
+                      if(record.amount != 0 && schemeMember && schemeMember.percentageDeductionUpper !=null && schemeMember.percentageDeductionLower!= null && schemeMember.percentageDeductionLower!=0){
                         record.usepercentagededuction = schemeMember.percentageDeductionUpper +" Out Of " + schemeMember.percentageDeductionLower
                         record.amountafterdeduction = record.amount - (record.amount * schemeMember.percentageDeductionUpper)/ schemeMember.percentageDeductionLower
                       }
@@ -954,6 +961,10 @@ def donationRecordDataExportAsCVS={
                   ilike("transactionId",'%'+params.transactionId+'%')
                 }
 
+                if(params.receiptReceivedStatus){
+                  eq("receiptReceivedStatus",params.receiptReceivedStatus)
+                }
+
               }
       }
           
@@ -1020,7 +1031,7 @@ def donationRecordDataExportAsCVS={
       if(exportType =='Full Data')fields = ["Member","Amount","Scheme","Centre",
                                             "Mode","Donation Date",
                                             "Comments","Payment Details",
-                                            "Transaction Id"]
+                                            "Transaction Id","ReceiptBookNo","ReceiptNo","ReceiptStatus"]
       else if(exportType =='Summary Report'){
         fields = ["Centre"]
         resultlist.each{fields.add(it[0]?.format('MMM-yyyy')?.toString()+"-Total Amount") }
@@ -1047,6 +1058,9 @@ def donationRecordDataExportAsCVS={
               row[fields[6]] = record.comments
               row[fields[7]] = record.paymentDetails
               row[fields[8]] = record.transactionId
+              row[fields[9]] = record.rbno
+              row[fields[10]] = record.rno
+              row[fields[11]] = record.receiptReceivedStatus
 
               total = total + record.amount
             
@@ -1308,5 +1322,61 @@ def donationRecordDataForPC(){
 		def dr = DonationRecord.get(params.id)
 		render(template: "tempreceipt", model: [donationRecordInstance:dr])
 	}
+
+	def bulkPrintView() {
+	      log.debug("Inside bulkPrintView with params: "+params)
+	      if(params.fromDate)
+		params.fromDate = Date.parse('dd-MM-yyyy', params.fromDate)
+	      else
+		params.fromDate = new Date()
+
+	      params.fromDate.clearTime()
+
+	      def fromDate = params.fromDate.format('yyyy-MM-dd HH:mm:ss')	//'2014-05-01 00:00:00'
+
+	      if(params.toDate)
+		params.toDate = Date.parse('dd-MM-yyyy', params.toDate)
+	      else
+		params.toDate = new Date()
+
+	      params.toDate.clearTime()
+
+	      
+	      def toDate = params.toDate.format('yyyy-MM-dd')+' 23:59:59'	//'2014-05-01 00:00:00'
+	      
+	      def drList = []
+	      def drs = DonationRecord.createCriteria().list{
+	      	isNull('receiptReceivedStatus')
+	      	isNull('comments')
+	      	isNull('rbno')
+	      	isNull('rno')
+	      	gt('amount',new BigDecimal(0))
+	      	ge('donationDate',params.fromDate)
+	      	le('donationDate',params.toDate)
+	      	donatedBy{
+	      		order('legalName')
+	      	}
+	      	order('donationDate')
+	      	}
+	      	
+	      drs.each{dr->
+	      	dr.rbno = "ECS-"+housekeepingService.getFY()
+	      	dr.rno = receiptSequenceService.getNext("DONATION-ECS")
+	      	if(!dr.save())
+	      		dr.errors.allErrors.each {
+			             			log.debug(it)
+             			}
+             	else
+             		drList.add(dr)
+	      }
+	      //log.debug("bulkreceipt: "+drList)
+		render(template: "bulkreceipt", model: [drList:drList,printedBy:(params.authority?:'')])
+	      
+	}
+	
+	def bulkPrint() {
+	}
+
+
 }
 

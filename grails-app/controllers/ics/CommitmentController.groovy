@@ -1,8 +1,13 @@
 package ics
 import grails.converters.JSON
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 
 class CommitmentController {
     def springSecurityService
+    def reportService
 
     def index = { redirect(action: "list", params: params) }
 
@@ -120,6 +125,32 @@ class CommitmentController {
     }
 
     def jq_commitment_list = {
+	if(params.oper=="excel")
+	 {
+		def result = Commitment.createCriteria().list{
+			    projections {
+				groupProperty("ecsMandate")
+				sum("committedAmount")
+			    	eq('status','ACTIVE')
+			    }
+			}
+		response.contentType = 'application/zip'
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry("ECSData.csv"))
+			//header
+			zipOutputStream << "ECSMandateCode,Amount" 
+
+			result.each{ row ->
+				zipOutputStream << "\n"
+				zipOutputStream <<   row[0]+","+
+					  row[1]/12
+			}
+		}    		
+		return
+	}
+
+//					  (row.committedBy?.toString()?:'').replaceAll(',',';') +","+
+
       def sortIndex = params.sidx ?: 'id'
       def sortOrder  = params.sord ?: 'asc'
 
@@ -128,8 +159,9 @@ class CommitmentController {
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
+
 	def result = Commitment.createCriteria().list(max:maxRows, offset:rowOffset) {
-			eq('status','ACTIVE')
+			//eq('status','ACTIVE')
 			if(params.'committedBy.id')
 				{
 				committedBy{
@@ -151,8 +183,14 @@ class CommitmentController {
 					ilike('name',params.'schemeName')
 				}
 				}
+			/*if (SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_ECS'))
+				isNotNull('ecsMandate')*/
+				
 			if(params.ecsMandate)
 				ilike('ecsMandate',params.ecsMandate)
+
+			if(params.status)
+				ilike('status',params.status)
 				
 			if(params.sidx=='committedByName')
 				committedBy{order('legalName', sortOrder)}
@@ -176,7 +214,9 @@ class CommitmentController {
             	    (it.committedAmount?:0) + (it.ccAmount?:0),
             	    it.ecsMandate?:'',
             	    it.commitmentOn?.format("dd-MM-yyyy"),
-            	    it.commitmentTill?.format("dd-MM-yyyy")
+            	    it.commitmentTill?.format("dd-MM-yyyy"),
+            	    it.status,
+            	    it.holdTill?.format("dd-MMM-yyyy")
                 ], id: it.id]
         }
         }
@@ -189,7 +229,9 @@ class CommitmentController {
             	    (it.committedAmount?:0) + (it.ccAmount?:0),
             	    it.ecsMandate?:'',
             	    it.commitmentOn?.format("dd-MM-yyyy"),
-            	    it.commitmentTill?.format("dd-MM-yyyy")
+            	    it.commitmentTill?.format("dd-MM-yyyy"),
+            	    it.status,
+            	    it.holdTill?.format("dd-MMM-yyyy")
                 ], id: it.id]
         }}
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -207,7 +249,8 @@ class CommitmentController {
 		  params.commitmentOn = Date.parse('dd-MM-yyyy',params.commitmentOn)
 	  if(params.commitmentTill)
 		  params.commitmentTill = Date.parse('dd-MM-yyyy',params.commitmentTill)
-
+	  if(params.holdTill)
+		  params.holdTill = Date.parse('dd-MM-yyyy',params.holdTill)
 	      // determine our action
 	      switch (params.oper) {
 		case 'add':
@@ -215,7 +258,8 @@ class CommitmentController {
 		  comm = new Commitment(params)
 
 		comm.updator = comm.creator=springSecurityService.principal.username
-		comm.status = 'ACTIVE'
+		//comm.status = 'ACTIVE'
+		comm.status = params.status
 
 		  if (! comm.hasErrors() && comm.save()) {
 		    message = "Commitment Saved.."

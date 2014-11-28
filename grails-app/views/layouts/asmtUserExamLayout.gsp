@@ -26,8 +26,8 @@
 		<div data-role="header" style="overflow:hidden;">
 		
 		<h1>${(ia?.questionPaper?'':'MOCK ')+ia?.assessment?.name}</h1>
-		    <a href="${createLink(controller:'assessment',action:'userDashboard')}" data-transition="flip" data-icon="home" class="ui-btn-left">1/10</a>
-		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" class="ui-btn-right">10:00 Remaining</a>
+		    <a id="qNumText" href="#" data-transition="flip" data-icon="" class="ui-btn-left"></a>
+		    <a id="timeText" href="#" data-transition="fade" data-icon="" class="ui-btn-right"></a>
 		</div><!-- /header -->
 
 		  <div data-role="main" class="ui-content">

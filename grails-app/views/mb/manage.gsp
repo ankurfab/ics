@@ -41,6 +41,17 @@
             <div class="message">${flash.message}</div>
             </g:if>
 
+	<sec:ifAnyGranted roles="ROLE_MB_ADMIN">
+		<div>
+		Upload profiles in bulk: <br />
+		    <g:uploadForm action="upload">
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
+		</div>
+	</sec:ifAnyGranted>
+
+
 		<div id='message' class="message" style="display:none;"></div>
 
 		<g:form name="searchTab" action="list">

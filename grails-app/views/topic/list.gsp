@@ -54,6 +54,8 @@
     multiselect: true,
     caption:"Topic List",
     onSelectRow: function(ids) { 
+    	var sel = jQuery('#topic_list').jqGrid('getCell', ids, 'name');
+    	jQuery("#topicSubscription_list").jqGrid('setCaption',"Subscribers for Topic: "+sel);
     	jQuery("#topicSubscription_list").jqGrid('setGridParam',{url:"jq_topicSubscription_list?topicid="+ids}).trigger('reloadGrid');    	
     	}    
     });
@@ -65,9 +67,11 @@
       url:'jq_topicSubscription_list',
       editurl:'jq_edit_topicSubscription',
       datatype: "json",
-      colNames:['Name','SMS','Email','Post','Id'],
+      colNames:['Subscriber','Topic','Language','SMS','Email','Post','Id'],
       colModel:[
 	{name:'name', search:true, editable: true},
+	{name:'topic', search:true, editable: true},
+	{name:'language', search:true, editable: true},
 	{name:'viaSMS', search:true, editable: true, edittype:"checkbox",stype:'select', searchoptions: { value: ':All;true:TRUE;false:FALSE'}}, 
 	{name:'viaEmail', search:true, editable: true, edittype:"checkbox",stype:'select', searchoptions: { value: ':All;true:TRUE;false:FALSE'}},
 	{name:'viaPost', search:true, editable: true, edittype:"checkbox",stype:'select', searchoptions: { value: ':All;true:TRUE;false:FALSE'}},
@@ -82,10 +86,10 @@
     width: 1200,
     height: "100%",
     multiselect: false,
-    caption:"Topic TopicSubscription List"
+    caption:"Topic Subscription List"
     });
     $("#topicSubscription_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#topicSubscription_list").jqGrid('navGrid',"#topicSubscription_list_pager",{edit:false,add:false,del:false,search:false});
+    $("#topicSubscription_list").jqGrid('navGrid',"#topicSubscription_list_pager",{edit:false,add:false,del:true,search:false});
     //$("#topicSubscription_list").jqGrid('inlineNav',"#topicSubscription_list_pager");
 
 

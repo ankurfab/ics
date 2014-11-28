@@ -21,7 +21,7 @@
 			header: {
 			    left: 'prev,next today',
 			    center: 'title',
-			    right: 'month,agendaWeek,agendaDay'
+			    right: 'year,month,agendaWeek,agendaDay'
 			},
 			eventRender: function(event, element) {
 			    $(element).addClass(event.cssClass);
@@ -98,8 +98,9 @@
 
 	</script>
         <div class="nav">
-	    <sec:ifAnyGranted roles="ROLE_ADMIN,ROLE_COUNSELLOR,ROLE_EVENTADMIN,ROLE_KITCHEN_ADMIN,ROLE_NVCC_ADMIN,ROLE_TMC,ROLE_VOICE_ADMIN">
+	    <sec:ifAnyGranted roles="ROLE_ADMIN,ROLE_COUNSELLOR,ROLE_EVENTADMIN,ROLE_EVENT_MGR,ROLE_KITCHEN_ADMIN,ROLE_NVCC_ADMIN,ROLE_TMC,ROLE_VOICE_ADMIN">
             	<!--<input class="menuButton" type="BUTTON" id="btn_createEvent" value="New Event" />-->
+                <span class="menuButton"><g:link class="list" action="gridlist">GridView</g:link></span>
             	<span class="menuButton"><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></span>
             </sec:ifAnyGranted>
         </div>

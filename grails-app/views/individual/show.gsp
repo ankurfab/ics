@@ -601,7 +601,7 @@
 							</td>
 						</tr>
 
-						<g:each in="${individualInstance.donations}" status="i" var="d">
+						<g:each in="${individualInstance.donations?.sort{it.donationDate}?.reverse()}" status="i" var="d">
 							<tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
 
 								<td>

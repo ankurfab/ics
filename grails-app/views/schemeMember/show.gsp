@@ -200,7 +200,7 @@
                                 
                             </tr>
                             <tr class="prop">
-                                <td valign="top" class="name"><g:message code="schemeMember.actualCurrentAmount" default="Actual Current Amount" />:</td>
+                                <td valign="top" class="name"><g:message code="schemeMember.actualCurrentAmount" default="Actual Current Amount per month" />:</td>
                                 
                                 <td valign="top" class="value">${fieldValue(bean: schemeMemberInstance, field: "actualCurrentAmount")}</td>
                                 

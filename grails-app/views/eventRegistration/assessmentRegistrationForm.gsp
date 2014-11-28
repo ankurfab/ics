@@ -11,6 +11,12 @@
     <body>
         <div class="body">
             <h1>Registration Form</h1>
+            <div>Please fill in your details with proper mobile no, email and postal address. We will send you subsequent communications on these.
+            Furthermore, you can now pay the fees online for quicker processing.
+            If you have any queries/clarifications, please mention in the comments section at the end.
+            You will receive the registration code upon submitting  this form.
+            Please use that in all subsequent communications. Thank you.
+            </div>
             <g:if test="${flash.message}">
             <div class="message"><g:message code="${flash.message}" args="${flash.args}" default="${flash.defaultMessage}" /></div>
             </g:if>
@@ -65,7 +71,7 @@
                                     <label for="name">Address:</label>
                                 </td>
                                 <td valign="top" class="value">
-                                    <g:textArea name="address" value="${fieldValue(bean: eventRegistrationInstance, field: 'address')}" rows="5" columns="30" placeholder="Correspondence Address (The study material would be posted to this address)" required="true"/>
+                                    <g:textArea name="address" value="${fieldValue(bean: eventRegistrationInstance, field: 'address')}" rows="5" columns="30" placeholder="Correspondence Address (The study material would be posted to this address)" required="true" maxlength="255"/>
                                 </td>
                                 <td valign="top" class="name">
                                     <label for="year">AddressPincode:</label>
@@ -81,13 +87,13 @@
                                 </td>
                                 <td valign="top" class="value">
                                     <g:textField name="connectedIskconCenter" value="${fieldValue(bean: eventRegistrationInstance, field: 'connectedIskconCenter')}" placeholder="Name of the place where studying or working" required="true"/>
-                                    <g:textField name="centerLocation" value="${fieldValue(bean: eventRegistrationInstance, field: 'centerLocation')}" placeholder="Location" required="true"/>
+                                    <g:textField name="centerLocation" value="${fieldValue(bean: eventRegistrationInstance, field: 'centerLocation')}" placeholder="City" required="true"/>
                                 </td>
                                 <td valign="top" class="name">
-                                    <label for="year">Year / Working Since:</label>
+                                    <label for="year">Year in college/Working Since:</label>
                                 </td>
                                 <td valign="top" class="value">
-                                    <g:textField name="year" value="${fieldValue(bean: eventRegistrationInstance, field: 'year')}" placeholder="Studying in std or year. If working, working since." />
+                                    <g:textField name="year" value="${fieldValue(bean: eventRegistrationInstance, field: 'year')}" placeholder="NA if not a student or professional." />
                                 </td>
                             </tr>
                                                 
@@ -113,7 +119,7 @@
                                 <td valign="top" class="value">
 					<g:select name='assessment.id'
 					    noSelection="${['null':'Select One...']}"
-					    from="${ics.Assessment.findAllByDepartment(event?.department,[sort:'name'])}"
+					    from="${ics.Assessment.findAllByDepartmentAndStatus(event?.department,'SUBMITTED',[sort:'name'])}"
 					    optionKey="id"></g:select>
                                 </td>
                                 <td valign="top" class="name">
@@ -126,17 +132,17 @@
 
                             <tr class="prop">
                                 <td valign="top" class="name">
-                                    <label for="name">Do you want to paying online?:</label>
+                                    <label for="name">Please tick the box if you want to paying online?:</label>
                                 </td>
                                 <td valign="top" class="value">
-					<g:checkBox name="onlinePayment" value="${true}" />
+					<g:checkBox name="onlinePayment" value="${false}" />
                                 </td>
-                                <td><label for="name">If already paid, pls provide details:</label></td>
-                                <td><g:textField name="comments" value="${fieldValue(bean: eventRegistrationInstance, field: 'comments')}" placeholder="Comments"/></td>
+                                <td><label for="name">If already paid, pls provide details (Paid to whom, where, when, amount). You may also enter any other query aswell:</label></td>
+                                <td><g:textArea name="comments" value="${fieldValue(bean: eventRegistrationInstance, field: 'comments')}" placeholder="Comments" maxlength="255"/></td>
                             </tr>
 
                             <tr class="prop">
-                                <td></td>
+                                <td><g:checkBox name="agree" value="${false}" required="true"/>I agree to all the rules and regulations.</td>
                                 <td valign="top" class="name">
                                     <img src="${createLink(controller: 'simpleCaptcha', action: 'captcha')}"/>
                                 </td>
@@ -152,7 +158,7 @@
                     </table>
                 </div>
                 <div class="buttons">
-                    <span class="button"><g:submitButton name="create" class="save" value="Register" /></span>
+                    <span class="button"><g:submitButton name="create" class="save" value="Register" onclick=""/></span>
                 </div>
             </g:form>
         </div>
@@ -162,7 +168,7 @@
 		  $("#dob").datepicker({yearRange : "-100:+0",changeMonth: true,changeYear: true,dateFormat: 'dd-mm-yy'});
 		  $("#gplRegForm").validate();				  
 		
-	});
+	});	
 	</script>
 
     </body>

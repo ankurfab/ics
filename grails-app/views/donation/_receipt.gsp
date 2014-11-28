@@ -27,8 +27,8 @@
 Receipt No: <b>${donationInstance.nvccReceiptBookNo}-${donationInstance.nvccReceiptNo}</b>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Receipt Date: <b>${donationInstance.fundReceiptDate?.format("dd-MM-yyyy")}</b><br>
-Received with thanks a sum of Rs: <b>${donationInstance.amount}/-</b><br>
-<b>${EnglishNumberToWords.convert(donationInstance.amount?.toString())} Only</b><br>
+Received with thanks a sum of &#8377;<b>${donationInstance.amount}/-</b><br>
+<b>${org.apache.commons.lang.WordUtils.capitalize(EnglishNumberToWords.convert(donationInstance.amount?.toString()))} Only</b><br>
 From <b>${donationInstance.donatedBy.legalName}</b>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Ics Donor Id: <b>${donationInstance.donatedBy.icsid}</b><br>
@@ -76,8 +76,8 @@ crossed cheque/D.D./Credit/Debit card.
 Receipt No: <b>${donationInstance.nvccReceiptBookNo}-${donationInstance.nvccReceiptNo}</b>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Receipt Date: <b>${donationInstance.fundReceiptDate?.format("dd-MM-yyyy")}</b><br>
-Received with thanks a sum of Rs: <b>${donationInstance.amount}/-</b><br>
-<b>${EnglishNumberToWords.convert(donationInstance.amount?.toString())} Only</b><br>
+Received with thanks a sum of &#8377;<b>${donationInstance.amount}/-</b><br>
+<b>${org.apache.commons.lang.WordUtils.capitalize(EnglishNumberToWords.convert(donationInstance.amount?.toString()))} Only</b><br>
 From <b>${donationInstance.donatedBy.legalName}</b>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Ics Donor Id: <b>${donationInstance.donatedBy.icsid}</b><br>

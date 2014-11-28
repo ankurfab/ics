@@ -2,12 +2,57 @@
 
 
 
+<div class="fieldcontain ${hasErrors(bean: commsProviderInstance, field: 'name', 'error')} ">
+	<label for="name">
+		<g:message code="commsProvider.name.label" default="Name" />
+		
+	</label>
+	<g:textField name="name" value="${fieldValue(bean: commsProviderInstance, field: 'name')}" />
+
+</div>
+
 <div class="fieldcontain ${hasErrors(bean: commsProviderInstance, field: 'type', 'error')} ">
 	<label for="type">
 		<g:message code="commsProvider.type.label" default="Type" />
 		
 	</label>
 	<g:textField name="type" value="${fieldValue(bean: commsProviderInstance, field: 'type')}" />
+
+</div>
+
+<div class="fieldcontain ${hasErrors(bean: commsProviderInstance, field: 'baseUrl', 'error')} ">
+	<label for="baseUrl">
+		<g:message code="commsProvider.baseUrl.label" default="Base Url" />
+		
+	</label>
+	<g:textField name="baseUrl" value="${fieldValue(bean: commsProviderInstance, field: 'baseUrl')}" />
+
+</div>
+
+<div class="fieldcontain ${hasErrors(bean: commsProviderInstance, field: 'path', 'error')} ">
+	<label for="path">
+		<g:message code="commsProvider.path.label" default="Path" />
+		
+	</label>
+	<g:textField name="path" value="${fieldValue(bean: commsProviderInstance, field: 'path')}" />
+
+</div>
+
+<div class="fieldcontain ${hasErrors(bean: commsProviderInstance, field: 'query', 'error')} ">
+	<label for="query">
+		<g:message code="commsProvider.query.label" default="Query" />
+		
+	</label>
+	<g:textField name="query" value="${fieldValue(bean: commsProviderInstance, field: 'query')}" />
+
+</div>
+
+<div class="fieldcontain ${hasErrors(bean: commsProviderInstance, field: 'apikey', 'error')} ">
+	<label for="apikey">
+		<g:message code="commsProvider.apikey.label" default="Apikey" />
+		
+	</label>
+	<g:textField name="apikey" value="${fieldValue(bean: commsProviderInstance, field: 'apikey')}" />
 
 </div>
 
@@ -35,15 +80,6 @@
 		
 	</label>
 	<g:textField name="pwd" value="${fieldValue(bean: commsProviderInstance, field: 'pwd')}" />
-
-</div>
-
-<div class="fieldcontain ${hasErrors(bean: commsProviderInstance, field: 'apikey', 'error')} ">
-	<label for="apikey">
-		<g:message code="commsProvider.apikey.label" default="Apikey" />
-		
-	</label>
-	<g:textField name="apikey" value="${fieldValue(bean: commsProviderInstance, field: 'apikey')}" />
 
 </div>
 

@@ -35,7 +35,12 @@
 		window.location.href = "${createLink(controller:'helper',action:'clorDashboard')}";
 		</g:javascript>
 	</sec:ifAnyGranted>
-	<sec:ifNotGranted roles="ROLE_COUNSELLOR">
+	<sec:ifAnyGranted roles="ROLE_ASMT_USER">
+		<g:javascript>
+		window.location.href = "${createLink(controller:'assessment',action:'userDashboard')}";
+		</g:javascript>
+	</sec:ifAnyGranted>
+	<sec:ifNotGranted roles="ROLE_COUNSELLOR,ROLE_ASMT_USER">
 		<img src="${resource(dir:'images',file:'main.jpg')}" width="1250" height="500"/>
 	</sec:ifNotGranted>
       </sec:ifLoggedIn>

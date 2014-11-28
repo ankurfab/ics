@@ -7,14 +7,18 @@ class IndividualService {
 
     def serviceMethod() {
     }
-
-    
+    
     def createIndividual(Map params) {
-	log.debug("creTEW ind"+params)
-    def donor = new Individual(params)
+	params = formatDates(params)
+	def donor = new Individual(params)
 	donor.updator = donor.creator = springSecurityService.principal.username
-	donor.legalName = params.donorName
+	donor.legalName = params.donorName?:params.legalName
+	donor.legalName = donor.legalName?.trim()
+	
 	donor.initiatedName = params.initiatedName?.trim()
+	if(donor.initiatedName && (donor.initiatedName.size()<8))
+		donor.initiatedName = null
+
 	donor.panNo = params.donorPAN
 	log.debug("IndService:Creating new donor: "+donor)
 	if(!donor.save())
@@ -163,14 +167,17 @@ class IndividualService {
     	//first check for exact duplicate (on legalName or initiatedName)
     	if(!params.name)
     		return null
-    	def individuals = Individual.findAllByLegalNameOrInitiatedName(params.name,params.name)
-    	if(individuals.size()>0)
+    	//@TODO: this is buggy, duplicate check should be more strict
+    	//def individuals = Individual.findAllByLegalNameOrInitiatedName(params.name,params.name)
+    	def individuals = []
+    	if(individuals?.size()>0)
     		return individuals[0]
     	else
     		{
     		//create basic individual
     		def individual = new Individual(params)
-    		individual.legalName = params.name
+    		if(params.name)
+	    		individual.legalName = params.name
     		individual.updator = individual.creator = springSecurityService.principal.username
 		if(!individual.save())
 			{
@@ -210,22 +217,7 @@ class IndividualService {
 		individualInstance.category='VOICE'
 		
 		//date formatting
-		if(params.dob)
-			params.dob = Date.parse('dd-MM-yyyy', params.dob)
-		if(params.marriageAnniversary)
-			params.marriageAnniversary = Date.parse('dd-MM-yyyy', params.marriageAnniversary)
-		if(params.firstInitiation)
-			params.firstInitiation = Date.parse('dd-MM-yyyy', params.firstInitiation)
-		if(params.secondInitiation)
-			params.secondInitiation = Date.parse('dd-MM-yyyy', params.secondInitiation)			
-		if(params.introductionDate)
-			params.introductionDate = Date.parse('dd-MM-yyyy', params.introductionDate)
-		if(params.sixteenRoundsDate)
-			params.sixteenRoundsDate = Date.parse('dd-MM-yyyy', params.sixteenRoundsDate)
-		if(params.voiceDate)
-			params.voiceDate = Date.parse('dd-MM-yyyy', params.voiceDate)
-		if(params.joinAshram)
-			params.joinAshram = Date.parse('dd-MM-yyyy', params.joinAshram)
+		params = formatDates(params)
 			
 		//set the primitive fields
 		individualInstance.properties = params
@@ -860,6 +852,74 @@ class IndividualService {
 	return individual
     }
 
+    def createIndividualFromOrder(Map params) {
+	def ind = new Individual(params)
+	try{
+	ind.updator = ind.creator = springSecurityService.principal.username
+	}
+	catch(all) {
+		ind.updator = ind.creator = 'jdorder'
+	}
+	ind.legalName = params.distributorName
+	ind.category = "JivaDayaDistributor"
+	ind.nvccIskconRef = params.acClor
+	ind.nvccId= params.acClor_id
+	if(!ind.save())
+		ind.errors.allErrors.each {println it}
+	else
+		{
+		def vc = null
+		if(params.distributorContact)
+			{
+			vc = new VoiceContact(category:"CellPhone",number:params.distributorContact,individual:ind,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
+			if(!vc.save())
+				vc.errors.allErrors.each {println it}				
+			else
+				{
+				ind.voiceContact = []
+				ind.voiceContact.add(vc)
+				}
+			}
+		def ec = null
+		if(params.distributorEmail)
+			{
+			ec = new EmailContact(category:"Personal",emailAddress:params.distributorEmail,individual:ind,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
+			if(!ec.save())
+				ec.errors.allErrors.each {println it}				
+			else
+				{
+				ind.emailContact = []
+				ind.emailContact.add(ec)
+				}
+			}
+		//update icsid
+		ind.icsid = 100000+ind.id
+		if(!ind.save(flush:true))
+			ind.errors.allErrors.each {println it}			
+		}
+	return ind
+    }
+
+
+    def formatDates(Map params) {
+	if(params.dob)
+		try { params.dob = Date.parse('dd-MM-yyyy', params.dob) } catch (Exception e){params.dob=null}
+	if(params.marriageAnniversary)
+		try { params.marriageAnniversary = Date.parse('dd-MM-yyyy', params.marriageAnniversary) } catch (Exception e){params.marriageAnniversary=null}
+	if(params.firstInitiation)
+		try { params.firstInitiation = Date.parse('dd-MM-yyyy', params.firstInitiation) } catch (Exception e){params.firstInitiation=null}
+	if(params.secondInitiation)
+		try { params.secondInitiation = Date.parse('dd-MM-yyyy', params.secondInitiation)	 } catch (Exception e){params.secondInitiation=null}		
+	if(params.introductionDate)
+		try { params.introductionDate = Date.parse('dd-MM-yyyy', params.introductionDate) } catch (Exception e){params.introductionDate=null}
+	if(params.sixteenRoundsDate)
+		try { params.sixteenRoundsDate = Date.parse('dd-MM-yyyy', params.sixteenRoundsDate) } catch (Exception e){params.sixteenRoundsDate=null}
+	if(params.voiceDate)
+		try { params.voiceDate = Date.parse('dd-MM-yyyy', params.voiceDate) } catch (Exception e){params.voiceDate=null}
+	if(params.joinAshram)
+		try { params.joinAshram = Date.parse('dd-MM-yyyy', params.joinAshram) } catch (Exception e){params.joinAshram=null}
+	return params
+    }
     
  }
   

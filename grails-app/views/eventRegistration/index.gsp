@@ -4,8 +4,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="main" />
-        <g:set var="entityName" value="${message(code: 'eventRegistration.label', default: 'Registration For Opening of NVCC, Pune')}" />
-        <title>${entityName}</title>
+        <title>${eventRegistrationInstance?.event?.title} Registration</title>
     </head>
     <body>
         <div class="nav" role="navigation">
@@ -14,7 +13,7 @@
 		</ul>
 	</div>
 	<div class="body" width="100%">
-            <h1>${entityName}</h1>
+            <h1>Online registration for ${eventRegistrationInstance?.event?.title}</h1>
             <g:if test="${flash.message}">
             <div class="message">${flash.message}</div>
             </g:if>
@@ -24,21 +23,22 @@
             </div>
             </g:hasErrors>
             <g:form action="create" method="post">
-                <g:hiddenField name="eventName" value="RVTO" />
+                <g:hiddenField name="eventName" value="${eventRegistrationInstance?.event?.title}" />
+                <g:hiddenField name="eid" value="${eventRegistrationInstance?.event?.id}" />
                 <div class="dialog">
                 	<table>
                 	<tr>
 			<td>
                     <table>
                         <tbody>
-			    <tr class="prop" style="display:none">
+			    <tr class="prop" style="display:block">
 			        <td>&nbsp;</td>
                                 <td valign="top" class="name">
                                     <label for="name"><g:message code="eventRegistration.event.label" default="Event" /></label>
 				    <span class="required-indicator">*</span>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: eventRegistrationInstance, field: 'event', 'errors')}">
-                                    <g:select disabled="true" id="event" name="event.id" from="${ics.Event.list()}" optionKey="id" required="" value="${eventRegistrationInstance?.event?.id}" class="many-to-one"/>
+                                    <g:select disabled="false" id="event" name="event.id" from="${ics.Event.findAllByRegistrationMode('Public',[sort:'title'])}" optionKey="id" optionValue="title" required="" value="${eventRegistrationInstance?.event?.id}" class="many-to-one"/>
                                 </td>
                             </tr>
                         
@@ -94,7 +94,7 @@
                                         <g:submitButton name="verify" class="save" value="Submit" />
 				    </span>
 				    </div>
-				    <div>
+				    <div style="display:none">
 					<!--<h1 style="color:red">Due to overwhelming response of devotees, we have exceeded our Accommodation capacity. We are unable to provide Accommodation for the time being.<br>
 					For any details or clarification, kindly contact: Kiran pr - 09158164563/ Email - register@iskconpune.in
 					</h1>-->

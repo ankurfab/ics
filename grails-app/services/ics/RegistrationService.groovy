@@ -141,17 +141,17 @@ class RegistrationService {
 		 eventRegistrationInstance.arrivalFlightCarrier = null
 		 eventRegistrationInstance.arrivalTransportMode = null
 	} else if (!eventRegistrationInstance.arrivalTransportMode){
-		eventRegistrationInstance.arrivalTransportMode = EventRegistration$TransportMode.BUS
+		eventRegistrationInstance.arrivalTransportMode = TransportMode.BUS
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.BUS){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.BUS){
 		 eventRegistrationInstance.arrivalTrainNumber = null
 		 eventRegistrationInstance.arrivalTrainName = null
 		 eventRegistrationInstance.arrivalFlightNumber = null
 		 eventRegistrationInstance.arrivalFlightCarrier = null
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.TRAIN){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.TRAIN){
 		 eventRegistrationInstance.arrivalBusNumber = null
 		 eventRegistrationInstance.arrivalBusStation = null
 		 eventRegistrationInstance.arrivalFlightNumber = null
@@ -161,7 +161,7 @@ class RegistrationService {
 		 }
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.FLIGHT){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.FLIGHT){
 		 eventRegistrationInstance.arrivalBusNumber = null
 		 eventRegistrationInstance.arrivalBusStation = null
 		 eventRegistrationInstance.arrivalTrainNumber = null
@@ -180,17 +180,17 @@ class RegistrationService {
 		 eventRegistrationInstance.departureFlightCarrier = null
 		 eventRegistrationInstance.departureTransportMode = null
 	} else if (!eventRegistrationInstance.departureTransportMode){
-		eventRegistrationInstance.departureTransportMode = EventRegistration$TransportMode.BUS
+		eventRegistrationInstance.departureTransportMode = TransportMode.BUS
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.BUS){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.BUS){
 		 eventRegistrationInstance.departureTrainNumber = null
 		 eventRegistrationInstance.departureTrainName = null
 		 eventRegistrationInstance.departureFlightNumber = null
 		 eventRegistrationInstance.departureFlightCarrier = null
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.TRAIN){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.TRAIN){
 		 eventRegistrationInstance.departureBusNumber = null
 		 eventRegistrationInstance.departureBusStation = null
 		 eventRegistrationInstance.departureFlightNumber = null
@@ -200,7 +200,7 @@ class RegistrationService {
 		 }
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.FLIGHT){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.FLIGHT){
 		 eventRegistrationInstance.departureBusNumber = null
 		 eventRegistrationInstance.departureBusStation = null
 		 eventRegistrationInstance.departureTrainNumber = null

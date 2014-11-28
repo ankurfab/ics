@@ -4,7 +4,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="main" />
-        <title><g:message code="reminders.list" default="Reminders List" /></title>
+        <title><g:message code="reminders.list" default="Action List" /></title>
 	<r:require module="grid" />
     <r:require module="export"/>    
         <export:resource />
@@ -41,6 +41,11 @@
     <tr></tr>
     <tr>
       <td>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <g:link class="list" controller="schemeMember" action="checkECSMandateFromCommitment"><g:message code="schemeMember.update" default="Check Consumer Number of SchemeMembers With ECS Mandate From Commitment" /></g:link>
       </td>
     </tr>
     </tbody>

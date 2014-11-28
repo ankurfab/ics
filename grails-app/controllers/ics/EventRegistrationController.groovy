@@ -33,9 +33,9 @@ class EventRegistrationController {
     def index() {
 	def currentDate = new Date()
 
+	def event
 	if(params.eid)
 		{
-		def event
 		try
 			{
 			event = Event.get(params.eid)
@@ -45,13 +45,13 @@ class EventRegistrationController {
 			log.debug(e)
 			}
 		
-		if(!event || (currentDate<event.startDate) || (currentDate>event.endDate))
+		if(!event || (currentDate<event.regstartDate) || (currentDate>event.regendDate))
 			{
 			flash.message = "Online registrations not available! Please contact admin."
 			render(view: "message")
 			return
 			}
-		else
+		else if(event.department?.name=='GPL')
 			{
 			    //@TODO: hardcoded, show corresponding form as per category/course
 			    render(view: "assessmentRegistrationForm", model: [event: event])
@@ -61,12 +61,13 @@ class EventRegistrationController {
 		}
 	
 	//@TODO: Registration close can be derived from the Event (new field needed)
-	def regCloseDate = Date.parse('dd-MM-yyyy HH:mm', '04-02-2013 16:30')
-	if (currentDate<regCloseDate)
+	//def regCloseDate = Date.parse('dd-MM-yyyy HH:mm', '04-02-2013 16:30')
+	def regCloseDate = event?.regendDate
+	if (!regCloseDate || currentDate<regCloseDate)
 		{
 		def er = new EventRegistration()
-		def eventInstance = Event.findByTitle(params.eventName?:'RVTO')
-		er.event = eventInstance
+		if(event)
+			er.event = event
 		return [eventRegistrationInstance: er]
 		}
 	else
@@ -86,7 +87,13 @@ class EventRegistrationController {
     }
 
     def create() {
-	def regCloseDate = Date.parse('dd-MM-yyyy HH:mm', '04-02-2013 16:30')
+	if(params.'event.id'=='2')	//@TODO: hardcoded
+		{
+		redirect(action: "index", params: [eid: "2"])
+		return
+		}
+	//def regCloseDate = Date.parse('dd-MM-yyyy HH:mm', '04-02-2013 16:30')
+	def regCloseDate = Date.parse('dd-MM-yyyy HH:mm', '04-02-2023 16:30')//@TODO: remove hardcoding
 	def currentDate = new Date()
 	if (!SpringSecurityUtils.ifAnyGranted('ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_REGISTRATION_COORDINATOR,ROLE_EVENTADMIN') && currentDate>regCloseDate)
 		{
@@ -135,9 +142,9 @@ class EventRegistrationController {
 		def er = new EventRegistration()
 		er.name = params.name
 		er.event = Event.findByTitle(params.eventName?:'RVTO')
-		er.arrivalTransportMode = EventRegistration$TransportMode.BUS
+		er.arrivalTransportMode = TransportMode.BUS
 		er.arrivalBusStation = 'Shivaji Nagar'
-		er.departureTransportMode = EventRegistration$TransportMode.BUS
+		er.departureTransportMode = TransportMode.BUS
 		er.departureBusStation = 'Shivaji Nagar'
 		er.country = Country.findByName('India')
 		
@@ -161,9 +168,9 @@ class EventRegistrationController {
 		def er = new EventRegistration()
 		er.name = params.name
 		er.event = Event.findByTitle(params.eventName?:'RVTO')
-		er.arrivalTransportMode = EventRegistration$TransportMode.BUS
+		er.arrivalTransportMode = TransportMode.BUS
 		er.arrivalBusStation = 'Shivaji Nagar'
-		er.departureTransportMode = EventRegistration$TransportMode.BUS
+		er.departureTransportMode = TransportMode.BUS
 		er.departureBusStation = 'Shivaji Nagar'
 		er.country = Country.findByName('India')
 		return [eventRegistrationInstance: er]
@@ -379,14 +386,14 @@ class EventRegistrationController {
 		 eventRegistrationInstance.arrivalTransportMode = null
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.BUS){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.BUS){
 		 eventRegistrationInstance.arrivalTrainNumber = null
 		 eventRegistrationInstance.arrivalTrainName = null
 		 eventRegistrationInstance.arrivalFlightNumber = null
 		 eventRegistrationInstance.arrivalFlightCarrier = null
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.TRAIN){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.TRAIN){
 		 eventRegistrationInstance.arrivalBusNumber = null
 		 eventRegistrationInstance.arrivalBusStation = null
 		 eventRegistrationInstance.arrivalFlightNumber = null
@@ -396,7 +403,7 @@ class EventRegistrationController {
 		 }
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.FLIGHT){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.FLIGHT){
 		 eventRegistrationInstance.arrivalBusNumber = null
 		 eventRegistrationInstance.arrivalBusStation = null
 		 eventRegistrationInstance.arrivalTrainNumber = null
@@ -416,14 +423,14 @@ class EventRegistrationController {
 		 eventRegistrationInstance.departureTransportMode = null
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.BUS){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.BUS){
 		 eventRegistrationInstance.departureTrainNumber = null
 		 eventRegistrationInstance.departureTrainName = null
 		 eventRegistrationInstance.departureFlightNumber = null
 		 eventRegistrationInstance.departureFlightCarrier = null
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.TRAIN){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.TRAIN){
 		 eventRegistrationInstance.departureBusNumber = null
 		 eventRegistrationInstance.departureBusStation = null
 		 eventRegistrationInstance.departureFlightNumber = null
@@ -433,7 +440,7 @@ class EventRegistrationController {
 		 }
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.FLIGHT){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.FLIGHT){
 		 eventRegistrationInstance.departureBusNumber = null
 		 eventRegistrationInstance.departureBusStation = null
 		 eventRegistrationInstance.departureTrainNumber = null

@@ -23,15 +23,15 @@
                         
                    	    <g:sortableColumn property="id" title="Id" titleKey="commsProvider.id" />
                         
+                   	    <g:sortableColumn property="name" title="Name" titleKey="commsProvider.name" />
+                        
                    	    <g:sortableColumn property="type" title="Type" titleKey="commsProvider.type" />
                         
-                   	    <g:sortableColumn property="uri" title="Uri" titleKey="commsProvider.uri" />
+                   	    <g:sortableColumn property="baseUrl" title="Base Url" titleKey="commsProvider.baseUrl" />
                         
-                   	    <g:sortableColumn property="user" title="User" titleKey="commsProvider.user" />
+                   	    <g:sortableColumn property="path" title="Path" titleKey="commsProvider.path" />
                         
-                   	    <g:sortableColumn property="pwd" title="Pwd" titleKey="commsProvider.pwd" />
-                        
-                   	    <g:sortableColumn property="apikey" title="Apikey" titleKey="commsProvider.apikey" />
+                   	    <g:sortableColumn property="query" title="Query" titleKey="commsProvider.query" />
                         
                         </tr>
                     </thead>
@@ -41,15 +41,15 @@
                         
                             <td><g:link action="show" id="${commsProviderInstance.id}">${fieldValue(bean: commsProviderInstance, field: "id")}</g:link></td>
                         
+                            <td>${fieldValue(bean: commsProviderInstance, field: "name")}</td>
+                        
                             <td>${fieldValue(bean: commsProviderInstance, field: "type")}</td>
                         
-                            <td>${fieldValue(bean: commsProviderInstance, field: "uri")}</td>
+                            <td>${fieldValue(bean: commsProviderInstance, field: "baseUrl")}</td>
                         
-                            <td>${fieldValue(bean: commsProviderInstance, field: "user")}</td>
+                            <td>${fieldValue(bean: commsProviderInstance, field: "path")}</td>
                         
-                            <td>${fieldValue(bean: commsProviderInstance, field: "pwd")}</td>
-                        
-                            <td>${fieldValue(bean: commsProviderInstance, field: "apikey")}</td>
+                            <td>${fieldValue(bean: commsProviderInstance, field: "query")}</td>
                         
                         </tr>
                     </g:each>

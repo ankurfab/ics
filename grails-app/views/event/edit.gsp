@@ -12,13 +12,10 @@
 		      width: 350px !important;
 		</style>
 	
-	<link rel="stylesheet" href="${resource(dir: 'css/start', file: 'jquery-ui-1.8.18.custom.css')}" type="text/css">
-	<link rel="stylesheet" href="${resource(dir: 'css', file: 'timepicker.css')}" type="text/css">
+	<r:require module="dateTimePicker" />
     </head>
     <body>
 
-	    	<g:javascript src="jquery-ui-1.8.18.custom.min.js" />
-	    	<g:javascript src="jquery-ui-timepicker-addon.js" />
 	    	<script type="text/javascript">
 	            $(document).ready(function()
 	            {
@@ -60,6 +57,46 @@
 			    },
 			    dateFormat: 'dd-mm-yy'
 			});          	
+		$('#regstartDate').datetimepicker({
+		    onClose: function(dateText, inst) {
+			var regendDateTextBox = $('#regendDate');
+			if (regendDateTextBox.val() != '') {
+			    var testStartDate = new Date(dateText);
+			    var testEndDate = new Date(regendDateTextBox.val());
+			    if (testStartDate > testEndDate)
+				regendDateTextBox.val(dateText);
+			}
+			else {
+			    regendDateTextBox.val(dateText);
+			}
+		    },
+		    onSelect: function (selectedDateTime){
+			var start = $(this).datetimepicker('getDate');
+			$('#regendDate').datetimepicker('option', 'minDate', new Date(start.getTime()));
+		    },
+		    dateFormat: 'dd-mm-yy'
+		});
+		$('#regendDate').datetimepicker({
+		    onClose: function(dateText, inst) {
+			var regstartDateTextBox = $('#regstartDate');
+			if (regstartDateTextBox.val() != '') {
+			    var testStartDate = new Date(regstartDateTextBox.val());
+			    var testEndDate = new Date(dateText);
+			    if (testStartDate > testEndDate)
+				regstartDateTextBox.val(dateText);
+			}
+			else {
+			    regstartDateTextBox.val(dateText);
+			}
+		    },
+		    onSelect: function (selectedDateTime){
+			var end = $(this).datetimepicker('getDate');
+			$('#regstartDate').datetimepicker('option', 'maxDate', new Date(end.getTime()) );
+		    },
+		    dateFormat: 'dd-mm-yy'
+		});          	
+
+
 	            })
     	</script>
 
@@ -187,6 +224,48 @@
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'comments', 'errors')}">
                                     <g:textArea name="comments" value="${eventInstance?.comments}" />
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="regstartDate"><g:message code="event.regstartDate.label" default="Registration Start Date" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'regstartDate', 'errors')}">
+                                    <!--<g:datePicker name="regstartDate" precision="minute" value="${eventInstance?.regstartDate}" />-->
+                                    <!--<g:textField name="regstartDate" precision="day" value="${(eventInstance?.regstartDate?:new Date())?.format('dd-MM-yyyy')}"  />-->
+                                    <g:textField name="regstartDate" precision="minute" value="${(eventInstance?.regstartDate)}"  />
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="regendDate"><g:message code="event.regendDate.label" default="Registration End Date" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'regendDate', 'errors')}">
+                                    <!--<g:datePicker name="regendDate" precision="minute" value="${eventInstance?.regendDate}"  />-->
+                                    <!--<g:textField name="regendDate" precision="day" value="${(eventInstance?.regendDate?:new Date())?.format('dd-MM-yyyy')}"  />-->
+                                    <g:textField name="regendDate" precision="minute" value="${(eventInstance?.regendDate)}"  />
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="registrationMode"><g:message code="event.registrationMode.label" default="Registration Mode" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'registrationMode', 'errors')}">
+					<g:select name="registrationMode" from="${['ByInvitation','Counsellor','Counsellee','Devotee','WellWisher','Public']}" value="${eventInstance?.registrationMode}"
+						  noSelection="['':'-Choose Registration Mode-']"/>
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="status"><g:message code="event.status.label" default="Status" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'status', 'errors')}">
+					<g:select name="status" from="${['PARKED','OPEN','CLOSE','OVER','DELETED']}" value="${eventInstance?.status}"
+						  noSelection="['':'-Choose status-']"/>
                                 </td>
                             </tr>
                         

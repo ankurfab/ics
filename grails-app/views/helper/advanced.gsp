@@ -64,6 +64,7 @@
 	  <li><g:link controller="helper" action="donationBackup">Backup Donation</g:link></li>
 	  <li><g:link controller="individual" action="donorList">Donor List</g:link></li>
 	  <li><g:link controller="donationRecord" action="list">Donation Record List</g:link></li>
+	  <!--<li><g:link controller="donationRecord" action="bulkPrint">ECS Receipts</g:link></li>-->
 			              
           <br>
           Master Data Management

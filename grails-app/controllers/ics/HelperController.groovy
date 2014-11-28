@@ -10,6 +10,7 @@ import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry  
 import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
+import org.grails.mandrill.*
 
 class HelperController {
 //def searchableService
@@ -27,6 +28,7 @@ def grailsApplication  //inject GrailsApplication
 def helperService 
 def individualService
 def donationService
+def mandrillService
     
     def index = { 
 	def birthdayList = [], mAnniversaryList = []
@@ -5232,6 +5234,16 @@ def donationService
 							}
 					}
 				break
+			case "Farmer":
+				params.ids?.tokenize(',').each {
+						val=Farmer.get(it)?.mobileNo
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
 			default:
 				break
 				
@@ -5286,7 +5298,17 @@ def donationService
 				break
 			case "IndividualRole":
 				params.ids?.tokenize(',').each {
-						val=EmailContact.findByCategoryAndIndividual('Personal',IndividualRole.get(it)?.individual)?.number
+						val=EmailContact.findByCategoryAndIndividual('Personal',IndividualRole.get(it)?.individual)?.emailAddress
+						if(val)
+							{
+							emailList.add(val)
+							count++
+							}
+					}
+				break
+			case "Person":
+				params.ids?.tokenize(',').each {
+						val=Person.get(it)?.email
 						if(val)
 							{
 							emailList.add(val)
@@ -5301,6 +5323,108 @@ def donationService
 		def emailSet = emailList as Set
 		housekeepingService.sendGenericEMAIL(emailSet as List,params.emailfrom,params.emailsub,params.emailbody,params.ccSender,params.bccRecipients)
 		render([count:emailSet.size()] as JSON)
+	}
+	
+	def commsMandrill() {
+		log.debug("In commsMandrill:"+params)
+		def depcp = DepartmentCP.findByDepartment(Department.get(new Long(params.depid)))
+		def key = depcp?.cp?.apikey
+		//log.debug("Ping: "+mandrillService.ping(key))
+		//log.debug("Info: "+mandrillService.info(key))
+		def recpts = []
+		def emailList = []
+		def emails = ""
+		int count=0
+		def val=""
+		switch(params.entityName) {
+			case "EventRegistration":
+				params.ids?.tokenize(',').each {
+						val=EventRegistration.get(it)?.email
+						if(val)
+							{
+							emailList.add(val)
+							count++
+							}
+					}
+				break
+			case "EventSeva":
+				params.ids?.tokenize(',').each {
+						val=EventSeva.get(it)?.inchargeEmail
+						if(val)
+							{
+							emailList.add(val)
+							count++
+							}
+					}
+				break
+			case "Individual":
+				params.ids?.tokenize(',').each {
+						val=EmailContact.findByCategoryAndIndividual('Personal',Individual.get(it))?.emailAddress
+						if(val)
+							{
+							emailList.add(val)
+							count++
+							}
+					}
+				break
+			case "IndividualRole":
+				params.ids?.tokenize(',').each {
+						val=EmailContact.findByCategoryAndIndividual('Personal',IndividualRole.get(it)?.individual)?.emailAddress
+						if(val)
+							{
+							emailList.add(val)
+							count++
+							}
+					}
+				break
+			case "Person":
+				if(params.ids && params.ids!='null')
+					{
+					params.ids?.tokenize(',').each {
+						val=Person.get(it)
+						if(val?.email)
+							{
+							recpts.add(new MandrillRecipient(name:val?.name, email:val?.email))
+							count++
+							}
+						}
+					}
+				else
+					{
+					Person.findAllByCategory(session.individualid).each{
+						if(it.email) {
+							recpts.add(new MandrillRecipient(name:it?.name, email:it?.email))
+							count++
+							}
+						}
+					}
+				break
+			default:
+				break
+				
+		}
+		def emailSet = emailList as Set
+
+	def message
+	
+	if(params.htmlContent)
+		message = new MandrillMessage(
+			  html:params.emailbody,
+			  subject:params.emailsub,
+			  from_email:depcp?.sender,
+			  to:recpts)
+	else
+		message = new MandrillMessage(
+			  text:params.emailbody,
+			  subject:params.emailsub,
+			  from_email:depcp?.sender,
+			  to:recpts)
+		
+	//message.tags.add("test")
+
+		def ret = mandrillService.send(key,message)
+		log.debug(ret)
+		render([count:recpts.size()] as JSON)
 	}
 	
 	def eventCheckSMSBalance() {

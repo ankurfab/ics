@@ -5,6 +5,7 @@ import grails.converters.JSON
 class MbController {
 
     def MbService
+    def dataService
     
     def index = { redirect(action: "list", params: params) }
 
@@ -267,6 +268,9 @@ def showImage = {
 				}
 			}
 		}
+	if(params.attrValue)
+		ilike(params.attrName,'%'+params.attrValue+'%')
+	
 		order(sortIndex, sortOrder)
 	}
       
@@ -276,14 +280,86 @@ def showImage = {
       def jsonCells = result.collect {
             [cell: [
             	    it.candidate?.toString(),
-            	    it.candidate?.dob?.format('dd-MM-yyyy HH:mm:ss'),
+            	    it.candidate?.dob?.format('dd-MM-yyyy'),
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
         render jsonData as JSON
         }
     
-  def updateProfileStatus() {
+    def jq_prospects_list = {
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'asc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+    	Individual cand = Individual.get(session.individualid)
+    	def mbprofile = MbProfile.findByCandidate(cand)
+      
+      def totalRows = mbprofile?.matches?.size()
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = mbprofile?.matches?.findAll{it.candidateStatus==null || it.candidateStatus!='DECLINE'}?.sort{it.prospect?.candidate?.legalName}?.collect {
+            [cell: [
+            	    it.prospect?.candidate?.legalName,
+            	    it.prospect?.candidate?.initiatedName,
+            	    it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
+			it.prospect?.candidate?.pob,
+			it.prospect?.candidate?.dob?.format('HH:mm:ss'),
+			it.prospect?.candidate?.iskconCentre,
+			it.prospect.candCounsellor,
+			it.prospect?.candidate?.origin,
+			it.prospect?.candidate?.varna,
+			it.prospect.scstCategory,
+			it.prospect.candidate?.caste,
+			it.prospect.candidate?.subCaste,
+			it.prospect.candidate?.height,
+			it.prospect.candidate?.motherTongue,
+			it.prospect.candidate?.income,
+			it.prospect.eduCat,
+			it.prospect.eduQual,
+			it.prospect.regulated,
+			it.prospect.numberOfRounds,
+			it.prospect.chantingSixteenSince,
+			it.candidateStatus
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
+        render jsonData as JSON
+        }
+    
+    def jq_mbProspect_list = {
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'asc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+      def mbprofile = MbProfile.get(params.candidateid)
+      
+      def totalRows = mbprofile?.matches?.size()
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = mbprofile?.matches?.collect {
+            [cell: [
+            	    it.prospect?.candidate?.toString(),
+            	    it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
+            	    it.candidateStatus,
+            	    it.candidateReason,
+            	    it.mbStatus,
+            	    it.mbReason            	    
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
+        render jsonData as JSON
+        }
+
+    def updateProfileStatus() {
 	def retVal = MbService.updateProfileStatus(params)
 	if (retVal>0) {
 	    flash.message = "ProfileStatus updated succesfully..."
@@ -293,5 +369,66 @@ def showImage = {
 	}  	
 	    redirect(action: "manage")
   }
+  
+    def upload() {
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render(view: 'manage')
+		return
+	    }
+
+	    int i=-1
+	    def ts = new Date().format('dd-MM-yyyy HH:mm:ss')
+	    
+	    f.inputStream.toCsvReader().eachLine{ tokens ->
+	    	i++
+	    	if(i==0)
+	    		dataService.storeHeader('MB',tokens)
+	    	else
+	    		dataService.storeValues('MB-'+ts,new Long(i),tokens)
+	    }
+	    
+	    flash.message = i+' records processed!!'
+	    redirect (action: "manage")
+    }
+    
+    def createProfileFromAttrs() {
+	def idList = params.objectId.tokenize(',')
+	idList.each{
+		mbService.createProfileFromAttrs(params.objectClassName,new Long(it))
+    		}
+	redirect(action: "manage")
+    }
+    
+    def propose() {
+    	log.debug("proposing.."+params)
+	mbService.propose(params)
+	render([status:"OK"] as JSON)    	
+    }
+    
+    def prospects() {
+    }
+    
+    def prospectsNextStep() {
+    	def match = MbProfileMatch.get(params.matchid)
+    	switch(params.status) {
+    		case 'PROCEED':
+    			match.candidateStatus='PROCEED'
+    			break
+    		case 'DECLINE':
+    			match.candidateStatus='DECLINE'
+    			match.candidateReason = params.reason
+    			break
+    		default:
+    			break
+    	}
+    	if(!match.save())
+		match.errors.each { log.debug("match:"+it)}  
+	else
+		render([status:"OK"] as JSON)
+    	
+    }
+    
     
 }

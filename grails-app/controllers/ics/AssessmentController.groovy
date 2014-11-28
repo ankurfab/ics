@@ -192,11 +192,12 @@ class AssessmentController {
 			event{eq('id',new Long(params.eid))}
 			if(params.name)
 				ilike('name',params.name)
-			if(params.isMale)
+			if(params.isMale=='Male')
 				{
-				if(params.isMale=='M' || params.isMale=='m')
 					eq('isMale',true)
-				else
+				}
+			if(params.isMale=='Female')
+				{
 					eq('isMale',false)
 				}
 			if(params.contactNumber)
@@ -209,8 +210,15 @@ class AssessmentController {
 				ilike('connectedIskconCenter',params.connectedIskconCenter)
 			if(params.otherGuestType)
 				ilike('otherGuestType',params.otherGuestType)
+			if(params.assessment)
+				assessment{eq('name',params.assessment)}
 			if(params.arrivalDate)
 				eq('regCode',params.arrivalDate)
+			if(params.comments)
+				ilike('comments',params.comments)
+			if(params.paymentReference)
+				paymentReference{ilike('details',params.paymentReference)}
+				
 			order(sortIndex, sortOrder)
 	}
       
@@ -256,7 +264,6 @@ class AssessmentController {
 		  	def idList = params.id.tokenize(',')
 		  	idList.each
 		  	{
-			  // check vehicle exists
 			  registration  = EventRegistration.get(it)
 			  if (registration && !registration.paymentReference) {
 			    // delete vehicle if there is no payment
@@ -275,6 +282,27 @@ class AssessmentController {
 		  break;
 		 default :
 		  // edit action
+		  // first retrieve the eventRegistration by its ID
+		  def eventRegistration = EventRegistration.get(params.id)
+		  if (eventRegistration) {
+		    // set the properties according to passed in parameters
+		    params.dob = Date.parse('dd-MM-yyyy',params.dob)
+		    params.isMale = params.isMale=="Male"?true:false
+		    params.assessment = Assessment.findByName(params.assessment)
+		    
+		    eventRegistration.properties = params
+		    eventRegistration.updator = springSecurityService.principal.username
+		    if (! eventRegistration.hasErrors() && eventRegistration.save()) {
+		      message = "EventRegistration  ${eventRegistration.id} Updated"
+		      id = eventRegistration.id
+		      state = "OK"
+		    } else {
+			    eventRegistration.errors.allErrors.each {
+				println it
+				}
+		      message = "Could Not Update EventRegistration"
+		    }
+		  }
 		  break;
  	 }
 

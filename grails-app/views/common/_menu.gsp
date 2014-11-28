@@ -70,14 +70,32 @@
 			      
 			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR">
 				  <li><g:link controller="helper" action="clorDashboard">Dashboard</g:link></li>
-				  <!--<li><g:link controller="individual" action="cleelist">Individual Management</g:link></li>
-				  <li><g:link controller="helper" action="commitmentReport">Commitment Report (last 12 months)</g:link></li>
-				  <li><g:link controller="helper" action="donationReport">Donation Report (till date)</g:link></li>
-				  <li><g:link controller="event" action="list">Program Management</g:link></li>-->
+				  <li><g:link controller="individual" action="cleelist">Individual Management</g:link></li>
+				  <!--<li><g:link controller="helper" action="commitmentReport">Commitment Report (last 12 months)</g:link></li>
+				  <li><g:link controller="helper" action="donationReport">Donation Report (till date)</g:link></li>-->
+				  <li><g:link controller="mb" action="list">Marriage Board</g:link></li>
 			      </sec:ifAnyGranted>      
 			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR_GROUP">
 				  <li><g:link controller="relationshipGroup" action="show">Group</g:link></li>
 			      </sec:ifAnyGranted>      
+
+			<!-- Counsellee Based Roles Start-->
+		      	      <sec:ifAnyGranted roles="ROLE_COUNSELLEE">
+		      	      	  <li><g:link controller="sadhana" action="index">Sadahna</g:link></li>
+		      	      </sec:ifAnyGranted>
+			<!-- Counsellee Based Roles End-->
+
+			<!-- Counsellor/Counsellee Based Common Roles Start-->
+		      	      <sec:ifAnyGranted roles="ROLE_COUNSELLOR,ROLE_COUNSELLEE">
+		      	      	  <li><g:link controller="book" action="order">JivaDaya</g:link></li>
+		      	      	  <li><g:link controller="individualSeva" action="index">Seva</g:link></li>
+		      	      	  <li><g:link controller="menuOrder" action="list">Prasad</g:link></li>
+		      	      	  <li><g:link controller="event" action="list">Event</g:link></li>
+		      	      	  <li><g:link controller="individual" action="list">Search</g:link></li>
+		      	      </sec:ifAnyGranted>
+			<!-- Counsellor/Counsellee Based Common Roles End-->
+
+
 			      <sec:ifAnyGranted roles="ROLE_TMC">
 				  <li><g:link controller="individual" action="devoteelist">Devotees</g:link></li>
 				  <li><g:link controller="helper" action="tmcDashboard">Dashboard</g:link></li>
@@ -97,19 +115,19 @@
 				  <li><g:link controller="individual" action="list">Individual Master List</g:link></li>
 				  <li><g:link controller="individual" action="ccList">Counsellor-Counsellee Management</g:link></li>-->				  
 			      </sec:ifAnyGranted>     
-			      <sec:ifAnyGranted roles="ROLE_EVENTADMIN,ROLE_REGISTRATION_COORDINATOR">
+			      <sec:ifAnyGranted roles="ROLE_REGISTRATION_COORDINATOR">
 				  <li><g:link controller="EventRegistration" action="list">Registration</g:link></li>
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_EVENTPARTICIPANT">
 				  <li><g:link controller="EventRegistration" action="show">Registration</g:link></li>
 			      </sec:ifAnyGranted>  
-			      <sec:ifAnyGranted roles="ROLE_EVENTADMIN,ROLE_ACCOMMODATION_COORDINATOR">
+			      <sec:ifAnyGranted roles="ROLE_ACCOMMODATION_COORDINATOR">
 				  <li><g:link controller="EventAccommodation" action="list">Accommodation</g:link></li>
 			      </sec:ifAnyGranted>      
-			      <sec:ifAnyGranted roles="ROLE_EVENTADMIN,ROLE_TRANSPORTATION_COORDINATOR">
+			      <sec:ifAnyGranted roles="ROLE_TRANSPORTATION_COORDINATOR">
 				  <li><g:link controller="Trip" action="list">Transportation</g:link></li>
 			      </sec:ifAnyGranted>      
-			      <sec:ifAnyGranted roles="ROLE_EVENTADMIN,ROLE_PRASADAM_COORDINATOR">
+			      <sec:ifAnyGranted roles="ROLE_PRASADAM_COORDINATOR">
 				  <li><g:link controller="eventPrasadam" action="list">Prasadam</g:link></li>
 			      </sec:ifAnyGranted>      
 
@@ -126,16 +144,12 @@
 				  <li><g:link controller="EventPrasadam" action="list">VIP-Prasadam</g:link></li>
 			      </sec:ifAnyGranted>      
 
-			      <sec:ifAnyGranted roles="ROLE_EVENTADMIN,ROLE_VOLUNTEER_COORDINATOR">
+			      <sec:ifAnyGranted roles="ROLE_VOLUNTEER_COORDINATOR">
 				  <li><g:link controller="eventSeva" action="list">Service</g:link></li>
 			      </sec:ifAnyGranted>      
 
-			      <sec:ifAnyGranted roles="ROLE_EVENTADMIN">
-				  <li><g:link controller="icsUser" action="list">User</g:link></li>
-			      </sec:ifAnyGranted>      
-
-			      <sec:ifAnyGranted roles="ROLE_EVENTADMIN,ROLE_REGISTRATION_COORDINATOR,ROLE_ACCOMMODATION_COORDINATOR,ROLE_TRANSPORTATION_COORDINATOR,ROLE_PRASADAM_COORDINATOR,ROLE_VOLUNTEER_COORDINATOR,ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_ACCOMMODATION,ROLE_VIP_TRANSPORTATION,ROLE_VIP_PRASADAM">
-				  <li><g:link controller="helper" action="eventDashboard">Dashboard</g:link></li>
+			      <sec:ifAnyGranted roles="ROLE_REGISTRATION_COORDINATOR,ROLE_ACCOMMODATION_COORDINATOR,ROLE_TRANSPORTATION_COORDINATOR,ROLE_PRASADAM_COORDINATOR,ROLE_VOLUNTEER_COORDINATOR,ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_ACCOMMODATION,ROLE_VIP_TRANSPORTATION,ROLE_VIP_PRASADAM">
+				  <li><g:link controller="helper" action="eventDashboard">EventDashboard</g:link></li>
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_RVTO_COUNSELOR">
@@ -171,6 +185,10 @@
 			      <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE,ROLE_DONATION_HOD">
 					<li><g:link class="list" action="reports" controller="Helper">Reports</g:link></li>
 			      </sec:ifAnyGranted> 
+			      <sec:ifAnyGranted roles="ROLE_DONATION_ECS">
+					<li><g:link class="list" action="report" controller="commitment">ECS Donors</g:link></li>
+					<li><g:link class="list" action="uploadpaymentdata" controller="donationRecord">Upload ECS Donations</g:link></li>
+			      </sec:ifAnyGranted> 
 			<!-- Donation Roles End-->
 
 			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
@@ -205,6 +223,7 @@
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
 					<li><g:link controller="mb" action="editProfile">Profile</g:link></li>
+					<li><g:link controller="mb" action="prospects">Prospects</g:link></li>
 			      </sec:ifAnyGranted> 
 			<!-- Marriage Board Roles End-->
 
@@ -219,17 +238,54 @@
 			<!-- Atithi Based Roles End-->
 
 			<!-- VaishnavSamvardhan Based Roles Start-->
-		      	      <sec:ifAnyGranted roles="ROLE_VS_USER">
+		      	      <sec:ifAnyGranted roles="ROLE_VS_USER,ROLE_VS_ADMIN">
 		      	      	  <li><g:link controller="item" action="vsUserItems">Items</g:link></li>
-		      	      	  <li><g:link controller="item" action="vsRequests">Requests</g:link></li>
-		      	      	  <li><g:link controller="item" action="vsReports">Reports</g:link></li>
-		      	      </sec:ifAnyGranted>
-		      	      <sec:ifAnyGranted roles="ROLE_VS_ADMIN">
-		      	      	  <li><g:link controller="item" action="index">Item Management</g:link></li>
-		      	      	  <li><g:link controller="item" action="vsRequests">Request Management</g:link></li>
+		      	      	  <li><g:link controller="PurchaseList" action="index">Requests</g:link></li>
 		      	      	  <li><g:link controller="item" action="vsReports">Reports</g:link></li>
 		      	      </sec:ifAnyGranted>
 			<!-- VaishnavSamvardhan Based Roles End-->
+
+			<!-- AgroManagementSystem Based Roles Start-->
+		      	      <sec:ifAnyGranted roles="ROLE_AMS_ADMIN">
+		      	      	  <li><g:link controller="farmer" action="list">Profiles</g:link></li>
+		      	      	  <li><g:link controller="farmer" action="reports">Reports</g:link></li>
+		      	      	  <li><g:link controller="farmer" action="masterData">Master Data</g:link></li>
+		      	      </sec:ifAnyGranted>
+			<!-- AgroManagementSystem Based Roles End-->
+
+			<!-- Jivadaya Based Roles Start-->
+		      	      <sec:ifAnyGranted roles="ROLE_JIVADAYA_ADMIN">
+				  <li><g:link controller="individual" action="list">Individual Master</g:link></li>		      	      	  
+		      	      	  <li><g:link controller="book" action="gridlist">Book Master</g:link></li>
+		      	      	  <li><g:link controller="book" action="order">Order Management</g:link></li>
+		      	      	  <li><g:link controller="challan" action="inward">Inward Entry</g:link></li>
+		      	      	  <li><g:link controller="challan" action="outward">Challan Management</g:link></li>
+		      	      	  <li><g:link controller="book" action="campaign">Campaign Management</g:link></li>
+		      	      	  <li><g:link controller="book" action="scores">Scores</g:link></li>
+		      	      	  <li><g:link controller="book" action="reports">Reports</g:link></li>
+		      	      	  <li><g:link controller="book" action="dashboard">Dashboard</g:link></li>
+		      	      </sec:ifAnyGranted>
+		      	      <sec:ifAnyGranted roles="ROLE_JIVADAYA_CLERK">
+				  <li><g:link controller="individual" action="list">Individual Master</g:link></li>		      	      	  
+		      	      	  <li><g:link controller="book" action="gridlist">Book Master</g:link></li>
+		      	      	  <li><g:link controller="book" action="order">Order Management</g:link></li>
+		      	      	  <li><g:link controller="challan" action="outward">Challan Management</g:link></li>
+		      	      	  <li><g:link controller="book" action="scores">Scores</g:link></li>
+		      	      </sec:ifAnyGranted>
+		      	      <sec:ifAnyGranted roles="ROLE_JIVADAYA_USER">
+		      	      	  <li><g:link controller="book" action="team">Team</g:link></li>
+		      	      	  <li><g:link controller="book" action="order">Order</g:link></li>
+		      	      	  <li><g:link controller="book" action="settle">Settle</g:link></li>
+		      	      	  <li><g:link controller="book" action="scores">Scores</g:link></li>
+		      	      </sec:ifAnyGranted>
+			<!-- Jivadaya Based Roles End-->
+
+			<!-- EventManager Based Roles Start-->
+		      	      <sec:ifAnyGranted roles="ROLE_EVENTADMIN">
+		      	      	  <li><g:link controller="event" action="list">Events</g:link></li>
+		      	      </sec:ifAnyGranted>
+			<!-- EventManager Based Roles End-->
+
 
 		      </sec:ifLoggedIn>
 			</ul>
@@ -241,7 +297,7 @@
 				    <a href='#' onclick='showChangePassword(); return false;'><img src="${resource(dir:'images',file:'lock_edit.png')}"
 				    alt="Change Password" title="Change Password" /></a> 
 
-				    <sec:ifAnyGranted roles="ROLE_ADMIN,ROLE_NVCC_ADMIN,ROLE_EVENTADMIN">
+				    <sec:ifAnyGranted roles="ROLE_ADMIN">
 				    <a href='#' onclick='showResetPassword(); return false;'>
 				    <img src="${resource(dir:'images',file:'lock_break.png')}" alt="Reset Password" title="Reset Password" /></a>
 				    </sec:ifAnyGranted>

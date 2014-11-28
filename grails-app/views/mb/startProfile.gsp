@@ -58,7 +58,7 @@
                                     <label for="donorEmail">Email Address:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: mbProfileInstance, field: 'donorEmail', 'errors')}">
-                                    <g:textField name="donorEmail" type="email" size="50" value="" required="required"/>
+                                    <g:textField name="donorEmail" type="email" size="50" value="" />
 
                                 </td>
                             </tr>
@@ -112,7 +112,7 @@
                                     <label for="refEmail">Email Address:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: mbProfileInstance, field: 'refEmail', 'errors')}">
-                                    <g:textField name="refEmail" type="email" size="50" value="" required="required"/>
+                                    <g:textField name="refEmail" type="email" size="50" value="" />
 
                                 </td>
                             </tr>                        
@@ -121,7 +121,7 @@
                                     <label for="refReln">Relation to the referred candidate:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: mbProfileInstance, field: 'refEmail', 'errors')}">
-                                    <g:textField name="refReln" size="50" value="" required="required"/>
+                                    <g:textField name="refReln" size="50" value="" />
                                 </td>
                             </tr>
                         </tbody>

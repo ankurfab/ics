@@ -10,7 +10,7 @@
     <body>
         <div class="nav">
             <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
-	    <sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
+	    <sec:ifAnyGranted roles="ROLE_ACC_ADMIN,ROLE_ACC_VE">
              <span class="menuButton"><g:link class="list" action="list"><g:message code="voucher.list" default="Voucher List" /></g:link></span>
             </sec:ifAnyGranted>
         </div>

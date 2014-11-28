@@ -48,7 +48,7 @@ grails.project.dependency.resolution = {
 
         build ":tomcat:$grailsVersion"
         
-        compile ":spring-security-core:1.2.4"
+        //compile ":spring-security-core:1.2.4"
         compile ":simple-captcha:0.9.1"
         compile ":browser-detection:0.4.1"
         compile ":csv:0.3.1"
@@ -57,7 +57,7 @@ grails.project.dependency.resolution = {
         compile ":quartz:1.0.1"
         compile ":quartz-monitor:1.0"
         compile ":spring-mobile:0.5.1"
-	    compile ":grails-melody:1.51.0"
+	compile ":grails-melody:1.51.0"
 
         // Uncomment these for better performance in Live
         /*runtime ":zipped-resources:1.0"

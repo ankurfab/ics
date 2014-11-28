@@ -97,5 +97,26 @@ class ItemService {
     return normVal
     }
     
+    
+    def createPurchaseList(Map params) {
+    	def purchaseList = new PurchaseList()
+    	purchaseList.purchaseListDate = new Date()
+    	purchaseList.preparedBy = Individual.findByLoginid(springSecurityService.principal.username)
+    	purchaseList.name = "VS Request by "+purchaseList.preparedBy?.toString()+" on "+purchaseList.purchaseListDate
+    	purchaseList.status = "SUBMITTED"	//@TODO: need to make it consistent with kitchen
+    	purchaseList.department = Department.findByName('VaishnavSamvardhan')	//@TODO: hardcoding
+    	purchaseList.requiredItems = []
+    	purchaseList.purchasedItems = []
+    	purchaseList.creator = purchaseList.updator = springSecurityService.principal.username
+	def idList = params.idlist.tokenize(',')
+	idList.each{
+	  purchaseList.requiredItems.add(new PurchaseItem(item:Item.get(it),qty:params.('qtyitem'+it),unit:params.('unititem'+it)))
+	  purchaseList.purchasedItems.add(new PurchaseItem(item:Item.get(it),qty:params.('qtyitem'+it),unit:params.('unititem'+it)))
+	}
+	if(!purchaseList.save(flush:true))
+	    purchaseList.errors.allErrors.each {
+		log.debug("In createPurchaseList: error in saving purchaseList:"+ it)
+		}
+    }
         
 }

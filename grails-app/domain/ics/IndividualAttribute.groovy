@@ -3,9 +3,11 @@ package ics
 class IndividualAttribute {
 
     static constraints = {
+    	attrName(nullable:true)
     }
     
     Individual individual
+    Attribute attribute
     String attrName
     String attrValue
     

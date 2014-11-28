@@ -4,7 +4,11 @@ class RelationshipGroup {
     static constraints = {
     groupName()
     comments(nullable:true, blank:true)
+    category(nullable:true, blank:true)
+    status(nullable:true, blank:true)
     refid()
+    fromDate(nullable:true)
+    tillDate(nullable:true)
 
     dateCreated()
     creator()
@@ -13,7 +17,11 @@ class RelationshipGroup {
     }
     String groupName
     String comments
-    Integer refid
+    Integer refid	//@TODO: this should have been long
+    String category	//Family,BookDistribution etc
+    String status	//Active,Inactive,Deleted
+    Date fromDate	//group effective from
+    Date tillDate	//group effective till
 
     Date dateCreated
     Date lastUpdated
