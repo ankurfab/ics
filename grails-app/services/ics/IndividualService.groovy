@@ -7,9 +7,11 @@ class IndividualService {
 
     def serviceMethod() {
     }
-    
+
+    
     def createIndividual(Map params) {
-	def donor = new Individual(params)
+	log.debug("creTEW ind"+params)
+    def donor = new Individual(params)
 	donor.updator = donor.creator = springSecurityService.principal.username
 	donor.legalName = params.donorName
 	donor.initiatedName = params.initiatedName?.trim()

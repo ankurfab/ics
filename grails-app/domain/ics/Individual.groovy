@@ -7,10 +7,11 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     static constraints = {
 
 	title(nullable:true)
-        legalName(maxSize:127)
-        initiatedName(nullable:true,maxSize:127)
-        sanyasName(nullable:true,maxSize:127)
+    legalName(maxSize:127)
+    initiatedName(nullable:true,maxSize:127)
+    sanyasName(nullable:true,maxSize:127)
 	dob(nullable:true)
+    iskconCentre(nullable:true)
 	raashi(nullable:true)
 	gotra(nullable:true)
 	nakshatra(nullable:true)
@@ -22,8 +23,6 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
 	ashram(nullable:true)
 	varna(nullable:true)
 	profession(nullable:true)
-	companyName(nullable:true)
-	designation(nullable:true)
 	businessRemarks(nullable:true)
 	motherTongue(nullable:true)
 	literatureLanguagePreference(nullable:true)
@@ -43,15 +42,14 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
 	sanyasInitiation(nullable:true)
 	loginid(nullable:true,unique:true)
 	bloodGroup(nullable:true)
-	education(nullable:true)
 	nvccDonarCode(nullable:true)
 	nvccId(nullable:true)
 	nvccName(nullable:true)
 	nvccIskconRef(nullable:true)
 	nvccFamilyId(nullable:true)
 	nvccRelation(nullable:true)
-	    avatar(nullable:true, maxSize: 102400 /* 100K */)
-	    avatarType(nullable:true)
+    avatar(nullable:true, maxSize: 102400 /* 100K */)
+    avatarType(nullable:true)
 	introductionDate(nullable:true)
 	sixteenRoundsDate(nullable:true)
 	chantingSinceDate(nullable:true)
@@ -60,36 +58,35 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
 	firstInitiationStatus(nullable:true)
 	joinAshram(nullable:true)
 	religion(nullable:true)
-	eduCat(nullable:true)
-	eduQual(nullable:true)
 	merits(nullable:true)
 	skills(nullable:true)
-    	clean(nullable:true)
-    	externalRef(nullable:true)
-    	externalName(nullable:true)
-    	icsid(nullable:true)
-    	type(nullable:true)
-    	introductionMethod(nullable:true)
-	    frequencyOfTempleVisits(nullable:true)
-	    likesInKc(nullable:true)
-	    dislikesInKc(nullable:true)
-	    regulatedSince(nullable:true)
-	    regDetails(nullable:true)
-	    pob(nullable:true)
-	    otherLanguages(nullable:true)
-	    origin(nullable:true)
-	    caste(nullable:true)
-	    egSurnames(nullable:true)
-	    income(nullable:true)
-	    height(nullable:true)
-	    houseDescription(nullable:true)
-	
-	    dateCreated()
-	    creator()
-	    lastUpdated()
-	    updator()
+    clean(nullable:true)
+    externalRef(nullable:true)
+    externalName(nullable:true)
+    icsid(nullable:true)
+    type(nullable:true)
+    introductionMethod(nullable:true)
+    frequencyOfTempleVisits(nullable:true)
+    likesInKc(nullable:true)
+    dislikesInKc(nullable:true)
+    regulatedSince(nullable:true)
+    regDetails(nullable:true)
+    pob(nullable:true)
+    otherLanguages(nullable:true)
+    origin(nullable:true)
+    caste(nullable:true)
+    egSurnames(nullable:true)
+    income(nullable:true)
+    height(nullable:true)
+    nationality(nullable: true)
+    subCaste(nullable:true)
+    dateCreated()
+    creator()
+    lastUpdated()
+    updator()
 
     }
+    String nationality
 
     String legalName
     String initiatedName
@@ -97,12 +94,12 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     Date dob
     String pob	//place of birth
     boolean isMale = true
+    String iskconCentre
     String category
     String status
     String ashram
     String varna
     String profession
-    String companyName
     String nvccDonarCode
     String nvccId
     String nvccName
@@ -110,7 +107,6 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     String nvccFamilyId
     String nvccRelation
     Title title
-    String designation
     String motherTongue
     String raashi
     String gotra
@@ -135,7 +131,6 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     Date sanyasInitiation
     String loginid
     String bloodGroup
-    String education
     Date introductionDate
     String introductionMethod
     Date sixteenRoundsDate
@@ -145,8 +140,6 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     String firstInitiationStatus
     Date joinAshram
     String religion
-    String eduCat
-    String eduQual
     String merits
     String skills
     byte[] avatar
@@ -174,11 +167,11 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     String otherLanguages
     String origin
     String caste
+    String subCaste
     String egSurnames
-    Integer income	//pa
+    String income	//pa
     Integer height	//inches
-    boolean ownHouse	//false would mean staying rented house
-    String houseDescription
+    
     
     Date dateCreated
     Date lastUpdated

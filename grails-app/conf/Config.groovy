@@ -188,6 +188,7 @@ grails.hibernate.cache.queries = true
 environments {
     development {
         grails.logging.jul.usebridge = true
+        grails.plugins.springsecurity.active = true
         jasper.dir.reports = '/reports'
     }
     production {
@@ -393,4 +394,4 @@ mandrill {
 	//    port = ""
 	//}
 }
-
+

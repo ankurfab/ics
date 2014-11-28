@@ -29,7 +29,7 @@ class MbController {
         def retVal = MbService.initiateProfile(params)
         if (retVal>0) {
             flash.defaultMessage = "MB profile creation initiated succesfully..."
-            redirect(action: "search")
+            render(view: "manage")
         }
         else {
             flash.defaultMessage = "Some error occurred..Pls contact admin with errorcode MB"+retVal
@@ -208,8 +208,8 @@ def showImage = {
 
 
     def jq_mbManageProfile_list = {
-      def sortIndex = params.sidx ?: 'regNum'
-      def sortOrder  = params.sord ?: 'asc'
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'desc'
 
       def maxRows = Integer.valueOf(params.rows)
       def currentPage = Integer.valueOf(params.page) ?: 1
@@ -247,8 +247,19 @@ def showImage = {
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
+      def mbprofile = MbProfile.get(params.'mbProfile.id')
+
 	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
-		if(params.name) {
+		eq('workflowStatus','APPROVED')
+        if(mbprofile)
+        {
+            ne('id',mbprofile.id)
+            if(mbprofile.candidate?.isMale)
+                candidate{eq('isMale',false)}
+            else
+                candidate{eq('isMale',true)}
+        }
+        if(params.name) {
 			candidate{
 				or{
 					ilike('legalName',params.name)

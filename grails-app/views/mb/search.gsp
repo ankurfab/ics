@@ -19,41 +19,48 @@
 		<div id='message' class="message" style="display:none;"></div>
 		
 		<div>
-			Matchmaking for?<g:select name="user.company.id"
-				  from="${ics.MbProfile.createCriteria().list{eq('workflowStatus','APPROVED')}.collect{it.candidate.id+':'+it.candidate.toString()}.join(';')}"/>
+			Matchmaking for?<g:select name="mbprofileid"
+				  from="${ics.MbProfile.createCriteria().list{eq('workflowStatus','APPROVED')}}"
+                  noSelection="${['null':'Select One...']}"
+                  optionKey="id" optionValue="candidate"
+            />
 		</div>
 
 			<fieldset>
-			<table id="quickSearchTab">
-				<tr>
-					<td>Gender</td>
-					<td>
-						<g:select name="gender" from="${['MALE','FEMALE']}" value="'MALE'"/>					
-					</td>
-					<td>Candidate Name</td>
-					<td>
-						<g:textField name="candidateName" value="" />					
-					</td>
-				</tr>
-			</table>
-			<table id="professionalSearchTab">
-				<tr>
-					<td>Income</td>
-					<td>
-						<g:textField name="income" value="" />						
-					</td>
-					<td>Occupation</td>
-					<td>
-						<g:textField name="occupation" value="" />					
-					</td>
-				</tr>
-				<tr>
-					<td>
-					<input id="btnSearch" type="submit" value="Search">
-					</td>
-					<td></td>
-				</tr>
-			</table>
+            <table id="expectationsTab">
+                <tr>
+                    <td>Chanting Preference</td>
+                    <td>
+                        <g:select name="prefChanting"
+                                  from="${['No specific choice', 'Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds', 'Above 16 rounds', 'Others']}"
+                                  value=""/>
+                    </td>
+                    </td>
+                    <td>Category Preference</td>
+                    <td>
+                        <g:select name="prefCategory"
+                                  from="${['Open', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes', 'Others']}"
+                                  value=""/>
+                    </td>
+                    <td>Income Preference</td>
+                    <td>
+                        <g:select name="prefCandIncome"
+                                  from="${['No Specific Choice', 'Receiving Stipend', 'Above 1 lakh', 'Above 2 lakhs', 'Above 3 lakhs', 'Above 4 lakhs', 'Above 5 lakhs', 'Above 6 lakhs', 'Above 7 lakhs', 'Above 8 lakhs', 'Above 9 lakhs', 'Above 10 lakhs', 'Above 11 lakhs', 'Above 12 lakhs', 'Above 13 lakhs', 'Above 14 lakhs', 'Above 15 lakhs', 'Above 16 lakhs', 'Others']}"
+                                  value=""/>
+                    </td>
+                    <td>Manglik Preference</td>
+                    <td>
+                        <g:select name="Manglik" from="${['Not Manglik', 'Low', 'Medium', 'High', 'No Specific Choice']}"
+                                  value=""/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input id="btnSearch" type="submit" value="Search">
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
 			</fieldset>
 		
             <div>
@@ -104,7 +111,7 @@
 	.click(function( event ) {
 		event.preventDefault();
 
-			var query = "name="+$('#candidateName').val();
+			var query = "mbProfile.id="+$('#mbprofileid').val();
 			    
 			jQuery("#profile_list").jqGrid('setGridParam',{url:"jq_mbProfile_list?"+query}).trigger("reloadGrid");
 		

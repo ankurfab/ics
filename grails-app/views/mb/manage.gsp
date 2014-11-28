@@ -177,7 +177,7 @@
 		    sortorder: "desc",
 		    width: 1250,
 		    height: "100%",
-		    caption:"Registration List"
+		    caption:"MB Profile List"
 		    });
 
 		    $("#mbProfile_list").jqGrid('filterToolbar',{autosearch:true});

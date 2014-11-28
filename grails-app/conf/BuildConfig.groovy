@@ -44,7 +44,7 @@ grails.project.dependency.resolution = {
         runtime ":resources:1.1.6"
 	
 
-	    //runtime ":jquery-validation-ui:1.4"
+	//runtime ":jquery-validation-ui:1.4"
 
         build ":tomcat:$grailsVersion"
         
