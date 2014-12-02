@@ -185,7 +185,7 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="category">Category:</label>
+        <label for="scstCategory">Category:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="scstCategory"
@@ -228,7 +228,7 @@
     <td valign="top" class="value">
         <g:select name="languagesKnown"
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
-                  value=""/>
+                  value="${mbProfile?.languagesKnown}"/>
     </td>
 </tr>
 <tr class="prop">
@@ -337,7 +337,7 @@
         <td valign="top" class="value">
             <!--<g:textArea name="personalInfo"
                             placeholder="Enter any Personal information you would like us to know as a Marriage board"
-                            value="${mbProfile?.candidate?.initiatedName}"/>-->
+                            value="${mbProfile?.personalInfo}"/>-->
             <g:textField name="personalInfo" maxLength="200"
                          Placeholder="Enter any Personal information you would like us to know as a Marriage board"
                          value="${mbProfile?.personalInfo}"/>
@@ -456,171 +456,224 @@
 <!-- Start of family details comment-->
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="numberbrother">No. of brothers:</label>
+        <label for="relativeName1">Father's Name :</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="numberbrother" from="${0..9}" value="${mbProfile?.candidate?.initiatedName}"/>
+        <g:textField name="relativeName1" placeholder="Enter Father's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.legalName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="numbersister">No. of sisters:</label>
+        <label for="relativeEducation1">Education:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="numbersister" from="${0..9}" value="${mbProfile?.candidate?.initiatedName}"/>
+        <g:textField name="relativeEducation1" placeholder="Enter Father's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.education}"/>
     </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession1">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession1" placeholder="Enter Father's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName1" value="Father"/>
+    <g:hiddenField name="relativeId1" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.id}"/>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="relativeName2">Mother's Name :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeName2" placeholder="Enter Mother's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.legalName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeEducation2">Education:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeEducation2" placeholder="Enter Mother's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.education}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession2">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession2" placeholder="Enter Mother's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName2" value="Mother"/>
+    <g:hiddenField name="relativeId2" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.id}"/>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="relativeName3">Brother's Name :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeName3" placeholder="Enter Brother's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[0]?.individual1?.legalName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeEducation3">Education:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeEducation3" placeholder="Enter Brother's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[0]?.individual1?.education}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession3">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession3" placeholder="Enter Brother's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[0]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName3" value="Brother"/>
+    <g:hiddenField name="relativeId3" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[0]?.individual1?.id}"/>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="relativeName4">Brother's Name :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeName4" placeholder="Enter Brother's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[1]?.individual1?.legalName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeEducation4">Education:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeEducation4" placeholder="Enter Brother's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[1]?.individual1?.education}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession4">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession4" placeholder="Enter Brother's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[1]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName4" value="Brother"/>
+    <g:hiddenField name="relativeId4" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[1]?.individual1?.id}"/>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="relativeName5">Brother's Name :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeName5" placeholder="Enter Brother's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[2]?.individual1?.legalName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeEducation5">Education:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeEducation5" placeholder="Enter Brother's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[2]?.individual1?.education}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession5">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession5" placeholder="Enter Brother's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[2]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName5" value="Brother"/>
+    <g:hiddenField name="relativeId5" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Brother'))[2]?.individual1?.id}"/>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="relativeName6">Sister's Name :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeName6" placeholder="Enter Sister's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[0]?.individual1?.legalName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeEducation6">Education:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeEducation6" placeholder="Enter Sister's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[0]?.individual1?.education}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession6">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession6" placeholder="Enter Sister's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[0]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName6" value="Sister"/>
+    <g:hiddenField name="relativeId6" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[0]?.individual1?.id}"/>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="relativeName7">Sister's Name :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeName7" placeholder="Enter Sister's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[1]?.individual1?.legalName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeEducation7">Education:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeEducation7" placeholder="Enter Sister's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[1]?.individual1?.education}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession7">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession7" placeholder="Enter Sister's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[1]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName7" value="Sister"/>
+    <g:hiddenField name="relativeId7" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[1]?.individual1?.id}"/>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="relativeName8">Sister's Name :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeName8" placeholder="Enter Sister's legal Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[2]?.individual1?.legalName}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeEducation8">Education:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeEducation8" placeholder="Enter Sister's Education Name"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[2]?.individual1?.education}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="relativeProfession8">Occupation:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="relativeProfession8" placeholder="Enter Sister's Occupation here"
+                     value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[2]?.individual1?.profession}"/>
+    </td>
+    <g:hiddenField name="relationName8" value="Sister"/>
+    <g:hiddenField name="relativeId8" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Sister'))[2]?.individual1?.id}"/>
+</tr>
+
+<!--End of family details comment -->
+<tr class="prop">
     <td valign="top" class="name">
         <label for="noFamilyMembers">No. of family members <br> staying at home:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="noFamilyMembers" from="${0..30}" value="${mbProfile?.candidate?.initiatedName}"/>
+        <g:select name="noFamilyMembers" from="${0..30}" value="${mbProfile?.noFamilyMembers}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="otherFamilyMember">Details about the family members <br>(in case of more members) :</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textArea name="otherFamilyMember"
+                    placeholder="Enter any Personal information you would like us to know as a Marriage board"
+                    value="${mbProfile?.otherFamilyMember}"/>
     </td>
 </tr>
 <tr class="prop">
-    <td valign="top" class="name">
-        <label for="fatherName">Father's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="fatherName" placeholder="Enter Father's legal Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="fatherEducation">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="fatherEducation" placeholder="Enter Father's Education Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="fatherOccupation">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="fatherOccupation" placeholder="Enter Father's Occupation here"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="motherName">Mother's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="motherName" placeholder="Enter Mother's legal Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="motherEducation">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="motherEducation" placeholder="Enter Mother's Education Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="motherOccupation">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="motherOccupation" placeholder="Enter Mother's Occupation here"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="brotherName1">Brother's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="brotherName1" placeholder="Enter Brother's legal Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="brotherEducation1">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="brotherEducation1" placeholder="Enter Brother's Education Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="brotherOccupation1">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="brotherOccupation1" placeholder="Enter Brother's Occupation here"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="brotherName2">Brother's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="brotherName2" placeholder="Enter Brother's legal Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="brotherEducation2">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="brotherEducation2" placeholder="Enter Brother's Education Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="brotherOccupation2">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="brotherOccupation2" placeholder="Enter Brother's Occupation here"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="sisterName1">Sister's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sisterName1" placeholder="Enter Sister's legal Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sisterEducation1">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sisterEducation1" placeholder="Enter Sister's Education Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sisterOccupation1">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sisterOccupation1" placeholder="Enter Sister's Occupation here"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="sisterName2">Sister's Name :</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sisterName2" placeholder="Enter Sister's legal Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sisterEducation2">Education:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sisterEducation2" placeholder="Enter Sister's Education Name"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="sisterOccupation2">Occupation:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="sisterOccupation2" placeholder="Enter Sister's Occupation here"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
-</tr>
-<!--End of family details comment -->
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="otherFamilyMember">Any Other Family <br>members at home:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="otherFamilyMember" placeholder="Enter any other Family members staying at Home"
-                     value="${mbProfile?.candidate?.initiatedName}"/>
-    </td>
+
     <td valign="top" class="name">
         <label for="parentsInfo">Are Parents favourable?:</label>
     </td>
@@ -635,8 +688,6 @@
                   from="${['Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8', 'Between 9 to 12', 'Between 13 to 15', 'Chant 16 rounds', 'Above 16 rounds']}"
                   value="${mbProfile?.parentsChanting}"/>
     </td>
-</tr>
-<tr class="prop">
     <td valign="top" class="name">
         <label for="parentsInitiation">Parents Initiation<br> Status:</label>
     </td>
@@ -645,6 +696,9 @@
                   from="${['Not Initiated', 'Aspiring for Initiation', 'In the Initiation List', 'First Initiated', 'Second Initiated', 'One parent is Initiated', 'Both are initiated']}"
                   value="${mbProfile?.parentsInitiation}"/>
     </td>
+</tr>
+<tr class="prop">
+
     <td valign="top" class="name">
         <label for="parentsSpMaster">If Parents are <br>initiated, by whom?:</label>
     </td>
@@ -939,14 +993,14 @@
                 </td>
                 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
                     <g:textField name="firstInitiation" id="firstInitiation" placeholder="Format of DD/MM/YYYY"
-                                 value="${mbProfile?.firstInitiation?.format('dd/MM/yyyy')}" required="required"/>
+                                 value="${mbProfile?.firstInitiation?.format('dd/MM/yyyy')}"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="secondInitiation">Date of 2nd Initiation:</label>
                 </td>
                 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}" colspan="2">
                     <g:textField name="secondInitiation" id="secondInitiation" placeholder="Format of DD/MM/YYYY"
-                                 value="${mbProfile?.secondInitiation?.format('dd/MM/yyyy')}" required="required"/>
+                                 value="${mbProfile?.secondInitiation?.format('dd/MM/yyyy')}"/>
                 </td>
             </tr>
             <tr class="prop">
@@ -1331,7 +1385,7 @@
 
     </td>
     <td valign="top" class="value">
-        <g:textArea name="otherExpectations" maxlength="200" value="${mbProfile?.candidate?.initiatedName}"/>
+        <g:textArea name="otherExpectations" maxlength="200" value="${mbProfile?.otherExpectations}"/>
     </td>
 </tr>
 
@@ -1355,7 +1409,7 @@
                     <g:form name="uploadImage" action="uploadImage" id="${mbProfile?.id}" method="post"
                             enctype="multipart/form-data">
                         <g:hiddenField name="type" value="fv"/>
-                        <label><b>Front View Image (max 100K)</b></label>
+                        <label><b>Passport Size Image (max 100K)</b></label>
                         <input type="file" name="imgFile" id="imgFile"/>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
@@ -1370,7 +1424,7 @@
                     <g:form name="uploadImageSV" action="uploadImage" id="${mbProfile?.id}" method="post"
                             enctype="multipart/form-data">
                         <g:hiddenField name="type" value="sv"/>
-                        <label><b>Side View Image (max 500K)</b></label>
+                        <label><b>Portfolio Image (max 500K)</b></label>
                         <input type="file" name="imgFileSV" id="imgFileSV"/>
 
                         <div style="font-size:0.8em; margin: 1.0em;">

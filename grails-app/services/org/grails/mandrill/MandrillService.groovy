@@ -26,7 +26,7 @@ class MandrillService {
 
 		def path = "messages/send.json"
 		def query =  [key:key,message:message]
-		def data = JSON.parse(httpWrapperService.postText(BASE_URL, path ,query)).collect { new SendResponse(it) }
+		//def data = JSON.parse(httpWrapperService.postText(BASE_URL, path ,query)).collect { new SendResponse(it) }
 		return data
 	}
 
@@ -34,7 +34,7 @@ class MandrillService {
 		def path = "messages/send-template.json"
 		def query =  [key:key, template_name:templateName,
 			template_content:templateContent, message:message]
-		def data = JSON.parse(httpWrapperService.postText(BASE_URL, path ,query)).collect { new SendResponse(it) }
+		//def data = JSON.parse(httpWrapperService.postText(BASE_URL, path ,query)).collect { new SendResponse(it) }
 		return data
 	}
 

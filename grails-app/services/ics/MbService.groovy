@@ -105,7 +105,7 @@ class MbService {
 	try{         mbProfile.candidate.subCaste=params.subCaste } catch(Exception e){}
 	try{         mbProfile.candidate.height=Integer.parseInt(params.height) } catch(Exception e){}
 	try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
-        //TODO Languages known
+    try{         mbProfile.languagesKnown=params.languagesKnown } catch(Exception e){}
 	try{         mbProfile.candidate.income=params.candidateIncome //change the type of the column in db
 	} catch(Exception e){}
 	try{         mbProfile.horoscopeToBeMatched=params.horoscopeToBeMatched } catch(Exception e){}
@@ -127,7 +127,7 @@ class MbService {
         def emailadd= EmailContact.findByIndividual(mbProfile.candidate)
         emailadd?.emailAddress=params.email
         emailadd?.save()
-        //TODO more info block
+    try{        mbProfile.personalInfo = params.personalInfo} catch(Exception e){}
         //step 2
         mbProfile.nativePlace=params.nativePlace
         mbProfile.nativeState=params.nativeState
@@ -144,7 +144,11 @@ class MbService {
 	try{         mbProfile.otherProperty = params.otherProperty } catch(Exception e){}
 	try{         mbProfile.fatherIncome = params.fatherIncome } catch(Exception e){}
 	try{         mbProfile.otherIncome = params.otherIncome } catch(Exception e){}
-        // TODO family members and borthers and sisters not done.
+
+                 processFamilyDetails(mbProfile.candidate,params)
+
+    try{         mbProfile.noFamilyMembers = Integer.parseInt(params.noFamilyMembers) } catch(Exception e){}
+    try{         mbProfile.otherFamilyMember = params.otherFamilyMember } catch(Exception e){}
 	try{         mbProfile.parentsInfo = params.parentsInfo } catch(Exception e){}
 	try{         mbProfile.parentsChanting = params.parentsChanting } catch(Exception e){}
 	try{         mbProfile.parentsInitiation = params.parentsInitiation } catch(Exception e){}
@@ -228,6 +232,7 @@ class MbService {
 	try{         mbProfile.prefCandIncome=params.prefCandIncome } catch(Exception e){}
 	try{         mbProfile.prefLangKnown=params.prefLangKnown } catch(Exception e){}
 	try{         mbProfile.prefManglik=params.prefManglik } catch(Exception e){}
+    try{         mbProfile.otherExpectations=params.otherExpectations } catch(Exception e){}
 
         //step 6
 	try{         mbProfile.keenDevProfile=params.keenDevProfile } catch(Exception e){}
@@ -348,59 +353,68 @@ class MbService {
     		}    	
     }
     
-    //generic method to create family members of the candidate. TODO:It will update them if already exists
-    //it assumes all params viz relation,name, education , occupation are sent as numbered params
-    //relation should be harcoded/hidden var in the gsp or available from a select box
-    //totalNumberOfFamily members to capture the count
-    def createFamilyMembers(MbProfile candidate, Map params) {
-    	def totalNumberOfFamily = 0
-    	try{
+ /*   generic method to create family members of the candidate.
+    it assumes all params viz relation,name, education , occupation are sent as numbered params
+    relation should be harcoded/hidden var in the gsp or available from a select box
+    totalNumberOfFamily members to capture the count*/
+    def processFamilyDetails(Individual candidate, Map params) {
+    	def totalNumberOfFamily = 8
+ /*   	try{
     		totalNumberOfFamily = new Integer(params.totalNumberOfFamily)
     	}
-    	catch(Exception e){}
-    	def relationshipGroup = null
-    	for(int i=0;i<totalNumberOfFamily;i++)
+    	catch(Exception e){}*/
+    	def relationshipGroup = Relationship.findByIndividual2(candidate).relationshipGroup
+    	for(int i=1;i<=totalNumberOfFamily;i++)
     		{
     		//1. create individual
     		if(params.('relativeName'+i))
     			{
-    			def relative = individualService.createBasicIndividual([legalName:params.('relativeName'+i), education:params.('relativeEducation'+i), profession:params.('relativeProfession'+i)])
-    			//2. create relationship
-    			if(relative && params.('relationName'+i))
-    				{
-    				def relation = Relation.findByName(params.('relationName'+i))
-    				if(relation)
-    					{
-    					//create relationshipGroup for the 1st time only
-    					if(!relationshipGroup)
-    						{
-    						relationshipGroup = new RelationshipGroup()
-    						relationshipGroup.refid = candidate.id
-    						relationshipGroup.groupName = 'Family of '+candidate.toString()
-    						relationshipGroup.category = 'Family'
-    						relationshipGroup.status = 'ACTIVE'
-    						relationshipGroup.updator = relationshipGroup.creator = springSecurityService.principal.username
-    						if(!relationshipGroup.save())
-    							relationshipGroup.errors.each { log.debug("Exception in creating RG:"+it)}
-    						}
-    					//now create relationship
-    					if(relationshipGroup)
-    						{
-						def relationship = new Relationship()
-						relationship.individual1 = relative
-						relationship.individual2 = candidate
-						relationship.relationshipGroup = relationshipGroup
-						relationship.relation = relation
-						relationship.status = 'ACTIVE'
-						relationship.updator = relationship.creator = springSecurityService.principal.username
-    						if(!relationship.save())
-    							relationship.errors.each { log.debug("Exception in creating Relationship:"+it)}						
-						
-    						}
-    					}
-    				}
-    			}    		
-    		}
+                if(params.('relativeId'+i))
+                {
+                    Individual.findById(params.('relativeId'+i)).legalName = params.('relativeName'+i)
+                    Individual.findById(params.('relativeId'+i)).education = params.('relativeEducation'+i)
+                    Individual.findById(params.('relativeId'+i)).profession = params.('relativeProfession'+i)
+                }
+                else
+                {
+                    def relative = individualService.createBasicIndividual([name: params.('relativeName' + i), education: params.('relativeEducation' + i), profession: params.('relativeProfession' + i)])
+                    //create relationship
+                    if (relative && params.('relationName' + i))
+                    {
+                        def relation = Relation.findByName(params.('relationName' + i))
+                        if (relation)
+                        {
+                            //create relationshipGroup for the 1st time only
+                            if (!relationshipGroup)
+                            {
+                                relationshipGroup = new RelationshipGroup()
+                                relationshipGroup.refid = candidate.id
+                                relationshipGroup.groupName = 'Family of ' + candidate.toString()
+                                relationshipGroup.category = 'Family'
+                                relationshipGroup.status = 'ACTIVE'
+                                relationshipGroup.updator = relationshipGroup.creator = springSecurityService.principal.username
+                                if (!relationshipGroup.save())
+                                    relationshipGroup.errors.each { log.debug("Exception in creating RG:" + it) }
+                            }
+                            //now create relationship
+                            if(relationshipGroup)
+                            {
+                                def relationship = new Relationship()
+                                relationship.individual1 = relative
+                                relationship.individual2 = candidate
+                                relationship.relationshipGroup = relationshipGroup
+                                relationship.relation = relation
+                                relationship.status = 'ACTIVE'
+                                relationship.updator = relationship.creator = springSecurityService.principal.username
+                                if (!relationship.save())
+                                    relationship.errors.each { log.debug("Exception in creating Relationship:" + it) }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

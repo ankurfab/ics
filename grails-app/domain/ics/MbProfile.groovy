@@ -117,6 +117,10 @@ class MbProfile {
 	physicalMental(nullable: true)
 	depLifelong(nullable: true)
 	personalInfo(nullable: true)
+    otherExpectations(nullable:true)
+    noFamilyMembers(nullable: true)
+    otherFamilyMember(nullable: true)
+    languagesKnown(nullable: true)
     }
 
     static mapping={
@@ -154,6 +158,7 @@ class MbProfile {
     String manglik
     String horoscopeToBeMatched
     String scstCategory
+    String languagesKnown
     
     //step2 fields
     String houseIs
@@ -166,6 +171,8 @@ class MbProfile {
     String parentsSpMaster
     String yourFamily
     String parentsInfo
+    Integer noFamilyMembers
+    String otherFamilyMember
 
     //step 3 fields
     String eduCat
@@ -252,6 +259,7 @@ class MbProfile {
     String physicalMental
     String depLifelong
     String personalInfo
+    String otherExpectations
 
 
     Date dateCreated
