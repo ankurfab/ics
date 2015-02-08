@@ -17,3 +17,5 @@ stacktrace.log
 /target-eclipse/
 *.iml
 .idea
+
+*.ipr
