@@ -189,7 +189,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="scstCategory"
-                  from="${['Open', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes', 'Others']}"
+                  from="${['General', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes']}"
                   value="${mbProfile?.scstCategory ?: 'Open'}"/>
     </td>
     <td valign="top" class="name">
@@ -216,7 +216,7 @@
         <g:select name="heightInInch" from="${0..11}" value="${(mbProfile?.candidate?.height?: 0)%12}"/><span>&nbsp;inches</span>
     </td>
     <td valign="top" class="name">
-        <label for="weight">Height</label>
+        <label for="weight">Weight</label>
     </td>
     <td valign="top" class="value">
         <g:select name="weight" from="${40..150}" value="${mbProfile?.weight}"/><span> Kg</span>
@@ -267,7 +267,7 @@
         <label for="addrline1">Present Address</label>
     </td>
     <td valign="top" class="value">
-        <g:textArea name="addrline1" placeholder="Enter Address here" required="required" maxLength="40"
+        <g:textArea name="addrline1" placeholder="Enter Address here" required="required" maxLength="100"
                      value="${candAddr?.addressLine1}"/>
     </td>
 </tr>
@@ -371,7 +371,7 @@
         <label for="famaddrline1">Present Address<br>of family:</label>
     </td>
     <td valign="top" class="value">
-        <g:textArea name="famaddrline1" maxLength="40" placeholder="Enter Address here" required="required" value="${mbProfile?.familyAddress?.addressLine1}"/>
+        <g:textArea name="famaddrline1" maxLength="100" placeholder="Enter Address here" required="required" value="${mbProfile?.familyAddress?.addressLine1}"/>
     </td>
 </tr>
 <tr class="prop">
@@ -460,8 +460,6 @@
         <g:textField name="relativeProfession1" placeholder="Enter Father's Occupation here"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.profession}"/>
     </td>
-    <g:hiddenField name="relationName1" value="Father"/>
-    <g:hiddenField name="relativeId1" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.id}"/>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
@@ -1015,7 +1013,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefChanting"
-                  from="${['No specific choice', 'Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds', 'Above 16 rounds']}"
+                  from="${['Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds', 'Above 16 rounds']}"
                   value="${mbProfile?.prefChanting}"/>
     </td>
     <td valign="top" class="name">
@@ -1102,10 +1100,10 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefvarna">Preferred<br> Varna:</label>
+        <label for="prefVarna">Preferred<br> Varna:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefvarna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra', 'No Specific Choice']}"
+        <g:select name="prefVarna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra','Not Known']}"
                   value="${mbProfile?.prefVarna}"/>
     </td>
     <td valign="top" class="name">
@@ -1216,7 +1214,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefAgeDiff"
-                  from="${['No specific choice', 'More or less same', '6 months', '1 year', '2 years', '3 years', '4 years', '5 years', '6 years', '7 years', '8 years', '9 years', '10 years']}"
+                  from="${['More or less same', '6 months', '1 year', '2 years', '3 years', '4 years', '5 years', '6 years', '7 years', '8 years', '9 years', '10 years']}"
                   value="${mbProfile?.prefAgeDiff}"/>
     </td>
     <td valign="top" class="name">
@@ -1235,7 +1233,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefHeight"
-                  from="${['No specific choice', 'less than 5 feet', 'Between 5 to 5.4', 'Between 5.5 to 5.8', 'Between 5.9 to 6.0', 'Above 6 feet']}"
+                  from="${['less than 5 feet', 'Between 5 to 5.4', 'Between 5.5 to 5.8', 'Between 5.9 to 6.0', 'Above 6 feet']}"
                   value="${mbProfile?.prefHeight}"/>
     </td>
     <td valign="top" class="name">
@@ -1272,7 +1270,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefCandIncome"
-                  from="${['No Specific Choice', 'Receiving Stipend', 'Above 1 lakh', 'Above 2 lakhs', 'Above 3 lakhs', 'Above 4 lakhs', 'Above 5 lakhs', 'Above 6 lakhs', 'Above 7 lakhs', 'Above 8 lakhs', 'Above 9 lakhs', 'Above 10 lakhs', 'Above 11 lakhs', 'Above 12 lakhs', 'Above 13 lakhs', 'Above 14 lakhs', 'Above 15 lakhs', 'Above 16 lakhs']}"
+                  from="${['Above 1 lakh', 'Above 2 lakhs', 'Above 3 lakhs', 'Above 4 lakhs', 'Above 5 lakhs', 'Above 6 lakhs', 'Above 7 lakhs', 'Above 8 lakhs', 'Above 9 lakhs', 'Above 10 lakhs', 'Above 11 lakhs', 'Above 12 lakhs', 'Above 13 lakhs', 'Above 14 lakhs', 'Above 15 lakhs', 'Above 16 lakhs']}"
                   value="${mbProfile?.prefCandIncome}"/>
     </td>
     <td valign="top" class="name">
@@ -1309,7 +1307,7 @@
         <label for="prefManglik">Manglik<br>preferences:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefManglik" from="${['Not Manglik', 'Low', 'Medium', 'High', 'No Specific Choice']}"
+        <g:select name="prefManglik" from="${['Not Manglik', 'Low', 'Medium', 'High']}"
                   value="${mbProfile?.prefManglik}"/>
     </td>
     <td valign="top" class="name">
@@ -1597,26 +1595,23 @@
         $("#dob").datepicker({
             changeMonth: true,
             changeYear: true,
-            yearRange: '1965:2200',
+            yearRange: '1975:2050',
             dateFormat: 'dd/mm/yy',
-            minDate: new Date(1965, 10 - 1, 25),
-            maxDate: '-17Y'
+            minDate: new Date(1975, 10 - 1, 25)
         });
         $("#firstInitiation").datepicker({
             changeMonth: true,
             changeYear: true,
-            yearRange: '1965:2200',
+            yearRange: '1975:2050',
             dateFormat: 'dd/mm/yy',
-            minDate: new Date(1965, 10 - 1, 25),
-            maxDate: '-6Y'
+            minDate: new Date(1965,10 - 1, 25)
         });
         $("#secondInitiation").datepicker({
             changeMonth: true,
             changeYear: true,
-            yearRange: '1965:2200',
+            yearRange: '1975:2050',
             dateFormat: 'dd/mm/yy',
-            minDate: new Date(1965, 10 - 1, 25),
-            maxDate: '-6Y'
+            minDate: new Date(1975, 10 - 1, 25)
         });
 
         $("#isMale").change(function(){

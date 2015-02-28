@@ -19,18 +19,19 @@
 
 		<div id='message' class="message" style="display:none;"></div>
 		
-		<div>
+		%{--<div>
 			Matchmaking for?<g:select name="mbprofileid"
 				  from="${ics.MbProfile.createCriteria().list{'in'('workflowStatus',['APPROVED','INPROGRESS']) candidate{order('legalName', 'asc')}}}"
                   noSelection="${['null':'Select One...']}"
                   optionKey="id" optionValue="candidate"
             />
-		</div>
+		</div>--}%
 
 <g:set var="mbclass" value="${new DefaultGrailsDomainClass(ics.MbProfile.class)}" />
 <g:set var="mbproperties" value="${mbclass.persistentProperties}" />
-
-	<fieldset>
+<g:form name="expectationsForm" id="expectationsForm">
+    <g:hiddenField name="mbProfileId" value="5"/>
+	%{--<fieldset>
             <table id="genericSearchTab">
                 <tr>
                     <td>Attribute</td>
@@ -45,37 +46,317 @@
 		    </td>
 		  </tr>
 		</table>
-	</fieldset>
-
-
-
+	</fieldset>--}%
 			<fieldset>
-            <table id="expectationsTab">
-                <tr>
-                    <td>Chanting Preference</td>
-                    <td>
+            <table id="searchExpectations">
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefChanting">Preferably Chanting:</label>
+                    </td>
+                    <td valign="top" class="value">
                         <g:select name="prefChanting"
-                                  from="${['No specific choice', 'Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds', 'Above 16 rounds', 'Others']}"
-                                  value=""/>
+                                  from="${['Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds', 'Above 16 rounds']}"
+                                  value="${mbProfile?.prefChanting}"/>
                     </td>
-                    <td>Category Preference</td>
-                    <td>
-                        <g:select name="prefCategory"
-                                  from="${['Open', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes', 'Others']}"
-                                  value=""/>
+                    <td valign="top" class="name">
+                        <label for="flexibleChanting">Flexible :</label>
                     </td>
-                    <td>Income Preference</td>
                     <td>
-                        <g:select name="prefCandIncome"
-                                  from="${['No Specific Choice', 'Receiving Stipend', 'Above 1 lakh', 'Above 2 lakhs', 'Above 3 lakhs', 'Above 4 lakhs', 'Above 5 lakhs', 'Above 6 lakhs', 'Above 7 lakhs', 'Above 8 lakhs', 'Above 9 lakhs', 'Above 10 lakhs', 'Above 11 lakhs', 'Above 12 lakhs', 'Above 13 lakhs', 'Above 14 lakhs', 'Above 15 lakhs', 'Above 16 lakhs', 'Others']}"
-                                  value=""/>
+                        <g:radioGroup name="flexibleChanting" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleChanting}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
                     </td>
-                    <td>Manglik Preference</td>
+                    <td valign="top" class="name">
+                        <label for="prefSpMaster">Preferred Aspiring Spiritual Master:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:textField name="prefSpMaster" placeholder="Enter Name of Preferred aspiring Spiritual Master of Partner"
+                                     maxlength="40" value="${mbProfile?.prefSpMaster}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleSpMaster">Flexible :</label>
+                    </td>
                     <td>
-                        <g:select name="Manglik" from="${['Not Manglik', 'Low', 'Medium', 'High', 'No Specific Choice']}"
-                                  value=""/>
+                        <g:radioGroup name="flexibleSpMaster" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleSpMaster}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
                     </td>
                 </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefCentre">Preferred Centre:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:textField name="prefCentre" placeholder="Enter ISKCON Centre Name here" value="${mbProfile?.prefCentre}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleCentre">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name='flexibleCentre' labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleCentre}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="prefNationality">Preferred Nationality:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefNationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.prefNationality}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleNationality">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleNationality" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleNationality}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefOrigin">Preferred Origin (State):</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefOrigin" multiple="multiple"
+                                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                                  value="${mbProfile?.prefOrigin}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleOrigin">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleOrigin" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleOrigin}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="prefVarna">Preferred  Varna:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefVarna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra','Not Known']}" multiple="multiple"
+                                  value="${mbProfile?.prefVarna}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleVarna">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleVarna" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleVarna}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefCategory">Preferred Category:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefCategory"
+                                  from="${['General', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes']}"
+                                  value="${mbProfile?.prefCategory}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleCategory">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleCategory" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleCategory}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="prefCaste">Preferred Caste:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:textField name="prefCaste" placeholder="Enter preferred Caste here" value="${mbProfile?.prefCaste}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleCaste">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleCaste}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefSubCaste">Preferred Sub-Caste:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:textField name="prefSubCaste" placeholder="Enter preferred Sub Caste" value="${mbProfile?.prefsubCaste}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleSubcaste">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleSubcaste" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleSubcaste}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="prefeducationCategory">Preferred Education Category:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefeducationCategory"
+                                  from="${['SSC(or equivalent)&above', 'HSC(or equivalent)&above', 'Diploma &above', 'Graduate &above', 'Post Graduate&above', 'Doctorate']}"
+                                  value="${mbProfile?.prefeducationCategory}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleEducationCat">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleEducationCat" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleEducationCat}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefCandIncome">Preferred Candidate Income:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefCandIncome"
+                                  from="${['Receiving Stipend', 'Above 1 lakh', 'Above 2 lakhs', 'Above 3 lakhs', 'Above 4 lakhs', 'Above 5 lakhs', 'Above 6 lakhs', 'Above 7 lakhs', 'Above 8 lakhs', 'Above 9 lakhs', 'Above 10 lakhs', 'Above 11 lakhs', 'Above 12 lakhs', 'Above 13 lakhs', 'Above 14 lakhs', 'Above 15 lakhs', 'Above 16 lakhs']}"
+                                  value="${mbProfile?.prefCandIncome}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleCandidateIncome">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleCandidateIncome" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleCandidateIncome}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="prefLangKnown">Preferred Languages Known:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefLangKnown" multiple="multiple"
+                                  from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
+                                  value="${mbProfile?.prefLangKnown}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleLangknown">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleLangknown" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleLangknown}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefAgeDiff">Preferred Age difference:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefAgeDiff"
+                                  from="${['More or less same', '6 months', '1 year', '2 years', '3 years', '4 years', '5 years', '6 years', '7 years', '8 years', '9 years', '10 years']}"
+                                  value="${mbProfile?.prefAgeDiff}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleAgediff">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleAgediff" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleAgediff}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="prefHeight">Preferred Height:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefHeight"
+                                  from="${['less than 5 feet', 'Between 5 to 5.4', 'Between 5.5 to 5.8', 'Between 5.9 to 6.0', 'Above 6 feet']}"
+                                  value="${mbProfile?.prefHeight}" optionKey=""/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleHeight">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleHeight" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleHeight}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefqualification">Preferred Qualifications:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:textField name="prefqualification" placeholder="Enter your qualification here"
+                                     value="${mbProfile?.prefqualification}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleQualifications">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleQualifications" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleQualifications}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="prefLooks">Preferred Looks:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:textField name="prefLooks" placeholder="Enter any specific looks you prefer"
+                                     value="${mbProfile?.prefLooks}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleLooks">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleLooks" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleLooks}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefManglik">Manglik preferences:</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select name="prefManglik" from="${['Not Manglik', 'Low', 'Medium', 'High']}" multiple="multiple"
+                                  value="${mbProfile?.prefManglik}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleManglik">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleManglik" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleManglik}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                    <g:if test="${mbProfile?.candidate?.isMale}">
+                        <td valign="top" class="name">
+                            <label for="settleAbroadWorkingWife">Do you want a working wife</label>
+                        </td>
+                    </g:if>
+                    <g:else>
+                        <td valign="top" class="name">
+                            <label for="settleAbroadWorkingWife">Are you open to Settle Abroad after marriage</label>
+                        </td>
+                    </g:else>
+                    <td valign="top" class="value">
+                        <g:select name="settleAbroadWorkingWife" from="${['Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
+                    </td>
+                </tr>
+</g:form>
                 <tr>
                     <td>
                         <input id="btnSearch" type="submit" value="Search">
@@ -84,7 +365,7 @@
                 </tr>
             </table>
 			</fieldset>
-		
+
             <div>
 			<!-- table tag will hold our grid -->
 			<table id="profile_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
@@ -100,89 +381,88 @@
 		
 
 <script type="text/javascript">
-  $(document).ready(function () {		    
-
-    jQuery("#profile_list").jqGrid({
-      url:'jq_mbProfile_list',
-      postData:{
-      	'mbProfile.id':function(){return $('#mbprofileid').val();},
-      	attrName:function(){return $('#attrName').val();},
-      	attrValue:function(){return $('#attrValue').val();},
-      	},
-      datatype: "json",
-      colNames:['Name','DoB','Id'],
-      colModel:[
-	{name:'name'},
-	{name:'dob'},
-	{name:'id',hidden:true}
-     ],
-    rowNum:10,
-    rowList:[10,20,30,40,50,100,200],
-    pager: '#profile_list_pager',
-    viewrecords: true,
-    sortname: 'id',
-    sortorder: "asc",
-    width: 1200,
-    height: "100%",
-    multiselect: true,
-    caption:"Profile Search Result"
-    });
-    $("#profile_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#profile_list").jqGrid('navGrid',"#profile_list_pager",{edit:false,add:false,del:true,search:false});
-    $("#profile_list").jqGrid('inlineNav',"#profile_list_pager",
-	    { 
-	       edit: false,
-	       add: false,
-	       save: false,
-	       cancel: false,
-	    });
-    $("#profile_list").jqGrid('navGrid',"#profile_list_pager").jqGrid('navButtonAdd',"#profile_list_pager",{caption:"Propose", buttonicon:"ui-icon-person", onClickButton:propose, position: "last", title:"Propose", cursor: "pointer"});
-
-    jQuery("#prospect_list").jqGrid({
-      url:'jq_mbProspect_list',
-      postData:{
-      	candidateid:function(){return $('#mbprofileid').val();},
-      	},
-      datatype: "json",
-      colNames:['Name','DoB','CandidateStatus','CandidateReason','MbStatus','MbReason','Id'],
-      colModel:[
-	{name:'name'},
-	{name:'dob'},
-	{name:'candidateStatus'},
-	{name:'candidateReason'},
-	{name:'mbStatus'},
-	{name:'mbReason'},
-	{name:'id',hidden:true}
-     ],
-    rowNum:10,
-    rowList:[10,20,30,40,50,100,200],
-    pager: '#prospect_list_pager',
-    viewrecords: true,
-    sortname: 'id',
-    sortorder: "asc",
-    width: 1200,
-    height: "100%",
-    multiselect: true,
-    caption:"Prospect List"
-    });
-    $("#prospect_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager",{edit:false,add:false,del:true,search:false});
-    $("#prospect_list").jqGrid('inlineNav',"#prospect_list_pager",
-	    { 
-	       edit: false,
-	       add: false,
-	       save: false,
-	       cancel: false,
-	    });
-
-
+  $(document).ready(function () {
+      $('#mbprofileid').change(function() {
+          $.ajax({
+             url:'/ics/mb/search',
+             data:{id: $(this).val()}
+          });
+      });
 
 	 $( "#btnSearch" )
 	.button()
 	.click(function( event ) {
 		event.preventDefault();
-		jQuery("#profile_list").jqGrid().trigger("reloadGrid");
-		jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
+                 $("#profile_list").jqGrid('GridUnload');
+                 $("#profile_list").jqGrid('GridUnload');
+                 jQuery("#profile_list").jqGrid({
+                     url:'jq_mbProfile_list',
+                     postData: $('#expectationsForm').serialize()+"&sidx=id&sord=asc&rows=10&page=1",
+                     datatype: "json",
+                     colNames:['Name','DoB','Id'],
+                     colModel:[
+                         {name:'name'},
+                         {name:'dob'},
+                         {name:'id',hidden:true}
+                     ],
+                     rowNum:10,
+                     rowList:[10,20,30,40,50,100,200],
+                     pager: '#profile_list_pager',
+                     viewrecords: true,
+                     sortname: 'id',
+                     sortorder: "asc",
+                     width: 1200,
+                     height: "100%",
+                     multiselect: true,
+                     caption:"Profile Search Result"
+                 });
+                 $("#profile_list").jqGrid('filterToolbar',{autosearch:true});
+                 $("#profile_list").jqGrid('navGrid',"#profile_list_pager",{edit:false,add:false,del:true,search:false});
+                 $("#profile_list").jqGrid('inlineNav',"#profile_list_pager",
+                         {
+                             edit: false,
+                             add: false,
+                             save: false,
+                             cancel: false
+                         })
+                 $("#profile_list").jqGrid('navGrid',"#profile_list_pager").jqGrid('navButtonAdd',"#profile_list_pager",{caption:"Propose", buttonicon:"ui-icon-person", onClickButton:propose, position: "last", title:"Propose", cursor: "pointer"});
+
+                 jQuery("#prospect_list").jqGrid({
+                     url:'jq_mbProspect_list',
+                     postData:{
+                         candidateid:function(){return $('#mbprofileid').val();},
+                     },
+                     datatype: "json",
+                     colNames:['Name','DoB','CandidateStatus','CandidateReason','MbStatus','MbReason','Id'],
+                     colModel:[
+                         {name:'name'},
+                         {name:'dob'},
+                         {name:'candidateStatus'},
+                         {name:'candidateReason'},
+                         {name:'mbStatus'},
+                         {name:'mbReason'},
+                         {name:'id',hidden:true}
+                     ],
+                     rowNum:10,
+                     rowList:[10,20,30,40,50,100,200],
+                     pager: '#prospect_list_pager',
+                     viewrecords: true,
+                     sortname: 'id',
+                     sortorder: "asc",
+                     width: 1200,
+                     height: "100%",
+                     multiselect: true,
+                     caption:"Prospect List"
+                 });
+                 $("#prospect_list").jqGrid('filterToolbar',{autosearch:true});
+                 $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager",{edit:false,add:false,del:true,search:false});
+                 $("#prospect_list").jqGrid('inlineNav',"#prospect_list_pager",
+                         {
+                             edit: false,
+                             add: false,
+                             save: false,
+                             cancel: false
+                         })
 	});
 
 

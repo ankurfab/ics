@@ -120,10 +120,12 @@ class MbController {
             redirect(action: "list")
         }
     }
-    
+
     def search() {
+        def mbProfile = MbProfile.findById(5)
+        [mbProfile: mbProfile]
     }
-    
+
     def manage() {
     }
 
@@ -240,6 +242,7 @@ def showImage = {
         }
 
     def jq_mbProfile_list = {
+        log.debug(params)
       def sortIndex = params.sidx ?: 'id'
       def sortOrder  = params.sord ?: 'asc'
 
@@ -248,32 +251,82 @@ def showImage = {
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
-      def mbprofile = MbProfile.get(params.'mbProfile.id')
+      def mbprofile = MbProfile.get(params.mbProfileId)
 
 	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
 		eq('workflowStatus','APPROVED')
         if(mbprofile)
         {
             ne('id',mbprofile.id)
+
+            //check for opposite gender
             if(mbprofile.candidate?.isMale)
                 candidate{eq('isMale',false)}
             else
                 candidate{eq('isMale',true)}
+
+            //check for chanting preference
+            if(params.flexibleChanting){
+
+            }
+
+            if(params.flexibleSpMaster=="false"){
+               and {eq('spiritualMaster',params.prefSpMaster,[ignoreCase: true])}
+            }
+
+            if(params.flexibleCentre=="false"){
+                def valList = params.prefCentre.split(',')
+               and {candidate{'in'('iskconCentre',valList)}}
+            }
+
+            if(params.flexibleNationality=="false"){
+               and {candidate{eq('nationality',params.prefNationality,[ignoreCase: true])}}
+            }
+
+            if(params.flexibleOrigin=="false"){
+                and {candidate{'in'('origin',params.prefOrigin)}}
+            }
+
+            if(params.flexibleVarna=="false"){
+               and {candidate{'in'('varna',params.prefVarna)}}
+            }
+
+            if(params.flexibleCategory=="false"){
+                and {eq('scstCategory',params.prefCategory,[ignoreCase: true])}
+            }
+
+            if(params.flexibleCaste=="false"){
+                def valList = params.prefCaste.split(',')
+                and {candidate{'in'('caste',valList)}}
+            }
+
+            if(params.flexibleSubcaste=="false"){
+                def valList = params.prefSubCaste.split(',')
+                and {candidate{'in'('subCaste',valList)}}
+            }
+
+            if(params.flexibleLangknown=="false"){
+                and {'in'('languagesKnown',params.prefLangKnown)}
+            }
+
+            if(params.flexibleEducationCat){}
+
+            if(params.flexibleAgediff){}
+
+            if(params.flexibleHeight=="false"){}
+
+            if(params.flexibleCandidateIncome){}
+
+            if(params.flexibleManglik=="false"){
+                and {'in'('manglik',params.prefManglik)}
+            }
+
+            if(params.flexibleQualifications){}
+
+            order(sortIndex, sortOrder)
         }
-        if(params.name) {
-			candidate{
-				or{
-					ilike('legalName',params.name)
-					ilike('initiatedName',params.name)
-				}
-			}
-		}
-	if(params.attrValue)
-		ilike(params.attrName,'%'+params.attrValue+'%')
-	
-		order(sortIndex, sortOrder)
 	}
-      
+
       def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
 

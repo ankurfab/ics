@@ -52,6 +52,7 @@ input, select, textarea {
 }
 select {
    padding: 2px 2px 2px 0;
+    width: 100%;
 }
 textarea {
 	width: 250px;
@@ -246,12 +247,26 @@ th.desc a {
 .prop {
     padding: 5px;
 }
+
+
 .prop .name {
-	padding: 5px;
+    padding: 5px;
     text-align: right;
     width: 195px;
-	vertical-align: middle;
 }
+
+#searchExpectations .prop .name {
+	padding: 5px 0 0 10px;
+    text-align: left;
+    max-width: 35px;
+	vertical-align: middle;
+    width: auto;
+}
+
+#searchExpectations input[type="text"] {
+    width: 100%;
+}
+
 .prop .value {
     text-align: left;
     /*width: 300px;*/

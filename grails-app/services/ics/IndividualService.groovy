@@ -1,13 +1,13 @@
 package ics
 import org.codehaus.groovy.grails.plugins.springsecurity.*
 
+
 class IndividualService {
     def springSecurityService
     def housekeepingService
-
     def serviceMethod() {
     }
-    
+
     def createIndividual(Map params) {
 	params = formatDates(params)
 	def donor = new Individual(params)
@@ -57,6 +57,8 @@ class IndividualService {
 			}
 
 		def addr = null
+        if(!params.donorAddress && params.addrline1)
+            params.donorAddress = params.addrline1
 		if(params.donorAddress)
 			{
 			addr = new Address(individual:donor,addressLine1:params.donorAddress,city:city,state:state,country:country,pincode:params.donorPin,category:'Correspondence',creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
@@ -69,6 +71,8 @@ class IndividualService {
 				}
 			}
 		def vc = null
+        if(!params.donorContact && params.contact)
+            params.donorContact = params.contact
 		if(params.donorContact)
 			{
 			vc = new VoiceContact(category:"CellPhone",number:params.donorContact,individual:donor,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
@@ -81,6 +85,8 @@ class IndividualService {
 				}
 			}
 		def ec = null
+        if(!params.donorEmail && params.email)
+            params.donorEmail = params.email
 		if(params.donorEmail)
 			{
 			ec = new EmailContact(category:"Personal",emailAddress:params.donorEmail,individual:donor,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
@@ -909,7 +915,7 @@ class IndividualService {
 	if(params.firstInitiation)
 		try { params.firstInitiation = Date.parse('dd-MM-yyyy', params.firstInitiation) } catch (Exception e){params.firstInitiation=null}
 	if(params.secondInitiation)
-		try { params.secondInitiation = Date.parse('dd-MM-yyyy', params.secondInitiation)	 } catch (Exception e){params.secondInitiation=null}		
+		try { params.secondInitiation = Date.parse('dd-MM-yyyy', params.secondInitiation)	 } catch (Exception e){params.secondInitiation=null}
 	if(params.introductionDate)
 		try { params.introductionDate = Date.parse('dd-MM-yyyy', params.introductionDate) } catch (Exception e){params.introductionDate=null}
 	if(params.sixteenRoundsDate)
@@ -920,7 +926,4 @@ class IndividualService {
 		try { params.joinAshram = Date.parse('dd-MM-yyyy', params.joinAshram) } catch (Exception e){params.joinAshram=null}
 	return params
     }
-    
  }
-  
-

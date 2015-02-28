@@ -24,7 +24,7 @@ class MbProfile {
 	referrerContact(nullable: true, maxSize: 20)
 	referrerEmail(nullable: true, maxSize: 50)
 	referrerRelation(nullable: true, maxSize: 30)
-	manglik(nullable: true,maxSize: 10)
+	manglik(nullable: true,maxSize: 20)
 	horoscopeToBeMatched(nullable: true, maxSize: 10)
 	houseIs(nullable: true, maxSize: 10)
 	houseArea(nullable: true)

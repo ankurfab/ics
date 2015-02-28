@@ -104,7 +104,7 @@ class MbService {
 	try{         mbProfile.candidate.caste=params.caste } catch(Exception e){}
 	try{         mbProfile.candidate.subCaste=params.subCaste } catch(Exception e){}
 	try{         mbProfile.candidate.height=(Integer.parseInt(params.heightInFt)*12) + Integer.parseInt(params.heightInInch) } catch(Exception e){}
-    try{         mbProfile.weight=params.weight } catch(Exception e){}
+    try{         mbProfile.weight=Integer.parseInt(params.weight) } catch(Exception e){}
     try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
     try{         mbProfile.languagesKnown=params.languagesKnown } catch(Exception e){}
 	try{         mbProfile.candidate.income=params.candidateIncome //change the type of the column in db
