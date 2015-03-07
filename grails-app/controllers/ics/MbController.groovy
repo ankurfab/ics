@@ -276,7 +276,8 @@ def showImage = {
 		    }
 
 		    if(params.flexibleSpMaster=="false" && params.prefSpMaster){
-		       and {eq('spiritualMaster',params.prefSpMaster,[ignoreCase: true])}
+                def valList = params.prefSpMaster.split(',')
+                and {'in'('spiritualMaster',valList)}
 		    }
 
 		    if(params.flexibleCentre=="false" && params.prefCentre){
@@ -314,13 +315,55 @@ def showImage = {
 			and {'in'('languagesKnown',params.prefLangKnown)}
 		    }
 
-		    if(params.flexibleEducationCat){}
+            if(params.flexibleEducationCat=="false"){
+                def eduCatList = ['SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']
+                if(params.prefeducationCategory=="HSC(or equivalent)&above"){
+                    eduCatList.subList(0,0).clear()
+                }
+                    else if(params.prefeducationCategory=="Diploma &above"){
+                    eduCatList.subList(0,2).clear()
+                }
+                else if(params.prefeducationCategory=="Graduate &above"){
+                    eduCatList.subList(0,3).clear()
+                }
+                else if(params.prefeducationCategory=="Post Graduate&above"){
+                    eduCatList.subList(0,4).clear()
+                }
+                else if(params.prefeducationCategory=="Doctorate"){
+                    eduCatList.subList(0,5).clear()
+                }
+                and {'in'('eduCat',eduCatList)}
+            }
 
-		    if(params.flexibleAgediff){}
+            if(params.flexibleAgediff){
 
-		    if(params.flexibleHeight=="false"){}
+            }
 
-		    if(params.flexibleCandidateIncome){}
+            if(params.flexibleHeight=="false"){
+                def heightList=[] as List
+
+                if(params.prefHeight.contains("less than 5 feet")) {
+                    heightList.add((24..60).collect())
+                }
+                if(params.prefHeight.contains("Between 5 to 5.4")) {
+                    heightList.add((61..64).collect())
+                }
+                if(params.prefHeight.contains("Between 5.5 to 5.8")) {
+                    heightList.add((64..68).collect())
+                }
+                if(params.prefHeight.contains("Between 5.9 to 6.0")) {
+                    heightList.add((68..72).collect())
+                }
+                if(params.prefHeight.contains("Above 6 feet")) {
+                    heightList.add((73..90).collect())
+                }
+                heightList = heightList.flatten()
+                and {candidate{'in'('height',heightList)}}
+            }
+
+            if(params.flexibleCandidateIncome){
+
+            }
 
 		    if(params.flexibleManglik=="false" && params.prefManglik){
 			and {'in'('manglik',params.prefManglik)}

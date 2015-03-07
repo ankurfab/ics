@@ -288,7 +288,7 @@
                         <label for="prefHeight">Preferred Height:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefHeight"
+                        <g:select name="prefHeight" multiple="multiple"
                                   from="${['less than 5 feet', 'Between 5 to 5.4', 'Between 5.5 to 5.8', 'Between 5.9 to 6.0', 'Above 6 feet']}"
                                   value="${mbProfile?.prefHeight}" optionKey=""/>
                     </td>
