@@ -10,8 +10,10 @@ class QuestionController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def list = {
-        params.max = Math.min(params.max ? params.max.toInteger() : 10,  100)
-        [questionInstanceList: Question.list(params), questionInstanceTotal: Question.count()]
+        params.max = 200
+        def course = Course.get(params.'course.id')
+        def courses = Course.findAllByDepartment(IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('AssessmentAdmin'),status:'VALID')?.department)
+        [questionInstanceList: course?Question.findAllByCourse(course,params):[], questionInstanceTotal: Question.count(), courses:courses, course:course]
     }
 
     def create = {

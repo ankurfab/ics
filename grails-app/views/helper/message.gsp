@@ -15,6 +15,9 @@
             </g:if>
             <g:form controller="helper" action="sendmessage" method="post" >
                 <g:hiddenField name="via" value="${via}" />
+                <g:hiddenField name="entityName" value="${entityName}" />
+                <g:hiddenField name="depid" value="${depid}" />
+                <g:hiddenField name="ids" value="${ids}" />
                 <div class="dialog">
                     <table>
                         <tbody>

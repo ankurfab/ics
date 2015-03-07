@@ -117,7 +117,7 @@
 		});
 		
 		$( "#donorName" ).autocomplete({
-			source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",
+			source: "${createLink(controller:'individual',action:'allIndividualsFuzzyAsJSON_JQ')}",
 			minLength: 3,
 			  select: function(event, ui) { // event handler when user selects a company from the list.
 			   $("#icsid").val(100000+ui.item.id); // update the hidden field.

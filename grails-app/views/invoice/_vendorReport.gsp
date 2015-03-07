@@ -4,6 +4,7 @@
 			<th>Vendor</th>
 			<th>Invoice Date</th>
 			<th>Invoice Number</th>
+			<th>Invoice Status</th>
 			<th>Donation Amount</th>
 			<th>Cash Amount</th>
 			<th>Credit Amount</th>
@@ -21,6 +22,7 @@
 			<td>${invoice.preparedBy}</td>
 			<td>${invoice.invoiceDate?.format('dd-MM-yy')}</td>
 			<td>${invoice.invoiceNumber}</td>
+			<td>${invoice.status}</td>
 			<td>${invoice.mode=='DONATION'?invoice.invoiceAmount:''}</td>
 			<g:set var="donationTotal" value="${donationTotal+(invoice.mode=='DONATION'?invoice.invoiceAmount:0)}" />
 			<td>${invoice.mode=='CASH'?invoice.invoiceAmount:''}</td>
@@ -35,6 +37,7 @@
 		</tr>
 		</g:each>
 		<tr>
+			<td></td>
 			<td></td>
 			<td></td>
 			<td>Totals:</td>

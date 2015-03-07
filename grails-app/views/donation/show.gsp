@@ -124,7 +124,7 @@
                             
                         </tr>
                      
-			<g:if test="${(donationInstance?.mode).toString() == 'Cheque'}">
+			<g:if test="${(donationInstance?.mode).toString() != 'Cash'}">
 				<tr>
 					<td valign="top" class="name"><b>Cheque No</b></td>
 
@@ -348,6 +348,7 @@
 					<li><a href="#BulkDonationFields">DonorInformation</a></li>
 					<li><a href="#NVCCFields">NVCCFields</a></li>
 					<li><a href="#RecordInfo">RecordInfo</a></li>
+					<li><a href="#PaymentInfo">PaymentInfo</a></li>
 				</ul>
 				<div id="BulkDonationFields">
 					<table border="0" cellspacing="0" cellpadding="0">
@@ -451,6 +452,36 @@
 						</tbody>
 					</table>
 				</div>				
+
+				<div id="PaymentInfo">
+					<table border="0" cellspacing="0" cellpadding="0">
+						<tbody bgcolor="lavender">
+
+							<tr>
+								<td valign="top" class="name"><b>Bank Name</b></td>
+
+								<td valign="top" class="value">${donationInstance?.bankName}</td>
+
+								<td valign="top" class="name"><b>Bank Branch</b></td>
+
+								<td valign="top" class="value">${donationInstance?.bankBranch}</td>
+
+								<td valign="top" class="name"><b>Cheque No</b></td>
+
+								<td valign="top" class="value">${donationInstance?.chequeNo}</td>
+
+								<td valign="top" class="name"><b>Cheque Date</b></td>
+
+								<td valign="top" class="value">${donationInstance?.chequeDate}</td>
+
+								<td>&nbsp;</td>
+
+								<td>&nbsp;</td>                            
+							</tr>
+						</tbody>
+					</table>
+				</div>				
+
 			</div>
 			</div>
 			
@@ -510,7 +541,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
         </div>
 	<g:if test="${donationInstance.receiptImage}">
 	  <img src="${createLink(controller:'donation', action:'receiptImage_image', id:donationInstance?.id)}" />

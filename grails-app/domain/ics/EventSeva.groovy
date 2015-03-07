@@ -6,14 +6,21 @@ class EventSeva {
 	    comments(nullable:true,blank:true)
 	    requiredFrom(nullable:true,blank:true)
 	    requiredTill(nullable:true,blank:true)
-    	    seva(unique:['event'])
+    	    incharge(nullable:true)
     	    inchargeEmail(nullable:true,blank:true,email:true)
+    	    onlyBrahmachariRequired(nullable:true)
+    	    onlyPrjiRequired(nullable:true)
+    	    onlyMatajiRequired(nullable:true)
     }
     
     int maxRequired = 0
     int maxPrjiRequired = 0
     int maxMatajiRequired = 0
     int maxBrahmachariRequired = 0
+    
+    Boolean onlyBrahmachariRequired
+    Boolean onlyPrjiRequired
+    Boolean onlyMatajiRequired
     
     int totalOpted = 0
     int prjiOpted = 0
@@ -25,6 +32,7 @@ class EventSeva {
     int matajiAllotted = 0
     int brahmachariAllotted = 0
 
+    Individual incharge
     String inchargeName=""
     String inchargeContact=""
     String inchargeEmail=""

@@ -94,14 +94,6 @@
 				${challan.settleDate?.format('dd-MM-yyyy HH:mm')}
 			</td>
 		</tr>
-		<tr>
-			<td>
-				Comments
-			</td>
-			<td colspan="3">
-				${challan?.comments}
-			</td>
-		</tr>
 	</table>
 </div>
 
@@ -152,9 +144,43 @@
      <g:render template="printPaymentReference" model="['challan':challan,'paymentReference':paymentReference]" />
 </g:if>
 
-<g:if test="${bookOrder}">
+<g:if test="${bookOrder?.team?.comments}">
      <div><table border="1"><tr>
      	<td>Team Members</td>
      	<td>${bookOrder.team?.comments}</td>
      	</tr></table></div>
 </g:if>
+
+<g:if test="${challan.paymentReferences?.size()>0}">
+     <div>
+     Payment History
+     <table border="1">
+     	<thead>
+     	<tr>
+		<td>Date</td>
+		<td>Amount</td>
+		<td>Details</td>
+     	</tr>
+     	</thead>
+     	<tbody>
+		<g:each in="${challan.paymentReferences?.sort{it.id}}" status="i" var="payref">
+			<tr>
+				<td>${payref.paymentDate?.format('dd-MM-yyyy')}</td>
+				<td>${payref.amount}</td>
+				<td>${payref.details}</td>
+			</tr>
+		</g:each>
+     	</tbody>
+     </table>
+     </div>
+</g:if>
+
+<g:if test="${challan?.comments}">
+     <div><table border="1"><tr>
+     	<td>Comments</td>
+     	<td><b>${challan?.comments}</b></td>
+     	</tr></table></div>
+</g:if>
+
+
+

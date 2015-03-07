@@ -1,5 +1,7 @@
 package ics
 
+import grails.converters.JSON
+
 class EventParticipantController {
     def springSecurityService
 
@@ -394,6 +396,53 @@ class EventParticipantController {
 			ep.errors.each{println it}
     	}
     	redirect(action: "list")
+    }
+
+    def markConfirmed() {
+    	params.idlist?.tokenize(',')?.each{
+    		def ep = EventParticipant.get(it)
+    		ep.confirmed = true 
+		if(!ep.save())
+			ep.errors.each{println it}
+    	}
+      def response = [message:"OK"]
+      render response as JSON    	
+    }
+
+    def markInvited() {
+    	params.idlist?.tokenize(',')?.each{
+    		def ep = EventParticipant.get(it)
+    		ep.invited = true 
+		if(!ep.save())
+			ep.errors.each{println it}
+    	}
+      def response = [message:"OK"]
+      render response as JSON    	
+    }
+
+    
+    def markAttended() {
+    	params.idlist?.tokenize(',')?.each{
+    		def ep = EventParticipant.get(it)
+    		ep.attended = true 
+		if(!ep.save())
+			ep.errors.each{println it}
+    	}
+      def response = [message:"OK"]
+      render response as JSON    	
+    }
+
+    def updateComments() {
+    	if(params.comments) {
+		params.epids?.tokenize(',')?.each{
+			def ep = EventParticipant.get(it)
+			ep.comments += params.comments 
+			if(!ep.save())
+				ep.errors.each{println it}
+		}
+    	}
+      def response = [message:"OK"]
+      render response as JSON    	
     }
 
 

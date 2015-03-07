@@ -412,7 +412,7 @@ var $dialog = $('<div></div>')
 					<label for="ashram"><b>Ashram</b></label>
 				</td>
 				<td valign="top">
-					<g:select name="ashram" from="${['Not decided','Gauranga Sabha','Nityananda Sabha','Brahmachari','Grahastha','Vanaprastha','Sanyasi']}" value="${individualInstance?.ashram}" noSelection="['':'-Choose-']"/>                                  
+					<g:select name="ashram" from="${['Brahmachari','Grahastha','Vanaprastha','Sanyas','Other']}" value="${individualInstance?.ashram}" noSelection="['':'-Choose-']"/>                                  
 				</td>
 				<td valign="top">
 					<label for="firstInitiationStatus"><b>First Initiation Status</b></label>

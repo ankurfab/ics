@@ -133,6 +133,8 @@ class ChallanController {
       log.debug("Inside jq_challan_list with params : "+params)
       def sortIndex = params.sidx ?: 'id'
       def sortOrder  = params.sord ?: 'desc'
+      
+      def refstr="JDCHLN"
 
       def maxRows = Integer.valueOf(params.rows)
       def currentPage = Integer.valueOf(params.page) ?: 1
@@ -141,16 +143,22 @@ class ChallanController {
       
 	def result = Challan.createCriteria().list(max:maxRows, offset:rowOffset) {
 		eq('type',params.type)
-		if (params.refNo)
-			eq('refNo',params.refNo)
+		if (params.refNo) {
+			if(params.refNo.contains('/'))
+				refstr = refstr+"FY"
+			else
+				refstr = refstr+housekeepingService.getFY()+"/"
+				
+			eq('refNo',refstr+params.refNo)				
+		}
 		if (params.issueDate)
-			ge('issueDate',Date.parse('dd-MM-yyyy',params.issueDate))
+			le('issueDate',Date.parse('dd-MM-yyyy',params.issueDate))
 		if (params.settleDate)
 			ge('settleDate',Date.parse('dd-MM-yyyy',params.settleDate))
 		if (params.from)
 			issuedBy{or{ilike('legalName',params.from) ilike('initiatedName',params.from)}}
-		if (params.to)
-			issuedTo{or{ilike('legalName',params.to) ilike('initiatedName',params.to)}}
+		if (params.issuedTo)
+			issuedTo{or{ilike('legalName',params.issuedTo) ilike('initiatedName',params.issuedTo)}}
 		if (params.dueDate)
 			le('dueDate',Date.parse('dd-MM-yyyy',params.dueDate))
 		if (params.challanAmount)
@@ -654,6 +662,10 @@ class ChallanController {
 		def challan = Challan.get(params.challanid)
 		bookService.createTeam(challan,params.teamMembers)
 		render([status:"OK"] as JSON)
+	}
+	
+	def search() {
+	render challanService.search(params)
 	}
 
 }

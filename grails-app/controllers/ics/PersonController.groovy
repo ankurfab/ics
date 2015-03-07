@@ -159,6 +159,11 @@ class PersonController {
             return
         }
         
+        if(personInstance.matchedIndividual) {
+        	redirect(controller:"individual",action:"show",id:personInstance.matchedIndividual?.id)
+        	return
+        }
+        
         
         def mnameInds,snameInds
 	def mfatherInds, sfatherInds

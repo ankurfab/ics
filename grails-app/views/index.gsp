@@ -40,7 +40,17 @@
 		window.location.href = "${createLink(controller:'assessment',action:'userDashboard')}";
 		</g:javascript>
 	</sec:ifAnyGranted>
-	<sec:ifNotGranted roles="ROLE_COUNSELLOR,ROLE_ASMT_USER">
+	<sec:ifAnyGranted roles="ROLE_ASMT_USERUV">
+		<g:javascript>
+		window.location.href = "${createLink(controller:'assessment',action:'verify')}";
+		</g:javascript>
+	</sec:ifAnyGranted>
+	<sec:ifAnyGranted roles="ROLE_CC_OWNER,ROLE_CCAT_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
+		<g:javascript>
+		window.location.href = "${createLink(controller:'project',action:'index')}";
+		</g:javascript>
+	</sec:ifAnyGranted>
+	<sec:ifNotGranted roles="ROLE_COUNSELLOR,ROLE_ASMT_USER,ROLE_ASMT_USERUV">
 		<img src="${resource(dir:'images',file:'main.jpg')}" width="1250" height="500"/>
 	</sec:ifNotGranted>
       </sec:ifLoggedIn>

@@ -3,6 +3,10 @@ package ics
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 import org.springframework.dao.DataIntegrityViolationException
 import grails.converters.JSON
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 
 class ItemController {
 
@@ -189,6 +193,13 @@ class ItemController {
       def currentPage = Integer.valueOf(params.page) ?: 1
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+	if(params.oper=="excel" )
+		{
+			maxRows = 100000
+			rowOffset = 0
+			sortIndex = "name"
+			sortOrder = "asc"
+		}
 
 	def result = Item.createCriteria().list(max:maxRows, offset:rowOffset) {
 		if (params.name)
@@ -218,24 +229,61 @@ class ItemController {
       
       def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
-
-      def jsonCells = result.collect {
-            [cell: [
-            	    it.name,
-            	    it.otherNames,
-            	    it.category,
-            	    it.subcategory,
-            	    it.variety,
-            	    it.brand,
-            	    it.comments,
-            	    it.updator,
-            	    it.lastUpdated?.format('dd-MM-yyyy HH:mm'),
-            	    it.creator,
-            	    it.dateCreated?.format('dd-MM-yyyy HH:mm')
-                ], id: it.id]
-        }
-        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
-        render jsonData as JSON
+      
+	if(params.oper=="excel")
+	 {
+		response.contentType = 'application/zip'
+		def ts = new Date().format('ddMMyyyyHHmmSS')
+		def fname = "item_"+ts+".csv"
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry(fname))
+			//header
+			zipOutputStream << "Id,Name,OtherNames,Category,SubCategory,Variety,Brand,Description,Rate,Tax,Vendors,Consumers,NumVC,QtyPurchased,QtySold,Stock" 
+			def numv,numc,pq,sq
+			result.each{ row ->
+				numv = itemService.numVendors(row)
+				numc = itemService.numConsumers(row)
+				pq = itemService.purchasedQuantity(row)
+				sq = itemService.soldQuantity(row)
+				zipOutputStream << "\n"
+				zipOutputStream <<   row.id +","+(row.name?.replaceAll(',',';')?:'') +","+
+					    (row.otherNames?.replaceAll(',',';')?:'') +","+
+					    (row.category?.replaceAll(',',';')?:'') +","+
+					    (row.subcategory?.replaceAll(',',';')?:'') +","+
+					    (row.variety?.replaceAll(',',';')?:'') +","+
+					    (row.brand?.replaceAll(',',';')?:'') +","+
+					    (row.comments?.replaceAll(',',';')?:'') +","+
+					    (row.rate?:'') +","+
+					    (row.taxRate?:'') +","+
+					    numv +","+
+					    numc +","+
+					    (numv+numc) +","+
+					    pq +","+
+					    sq +","+
+					    (pq-sq)
+			}
+		}
+	 	return
+	 }
+	else {
+	      def jsonCells = result.collect {
+		    [cell: [
+			    it.name,
+			    it.otherNames,
+			    it.category,
+			    it.subcategory,
+			    it.variety,
+			    it.brand,
+			    it.comments,
+			    it.updator,
+			    it.lastUpdated?.format('dd-MM-yyyy HH:mm'),
+			    it.creator,
+			    it.dateCreated?.format('dd-MM-yyyy HH:mm')
+			], id: it.id]
+		}
+		def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+		render jsonData as JSON
+        	}
         }
 
     	def jq_edit_item = {
@@ -571,6 +619,44 @@ class ItemController {
             [cell: [
             	    it.invoice?.preparedBy?.toString(),
             	    it.invoice?.invoiceDate?.format('dd-MM-yyyy'),
+            	    it.invoice?.invoiceNumber,
+            	    it.qty,
+            	    it.unitSize,
+            	    it.unit?.toString(),
+            	    it.rate,
+            	    it.taxRate,
+            	    it.description
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+    
+    def jq_itemTaker_list = {
+      def sortIndex = params.sidx ?: 'invoiceDate'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = InvoiceLineItem.createCriteria().list(max:maxRows, offset:rowOffset) {
+		invoice{eq('type','SALES') order(sortIndex, sortOrder)}
+		if(params.'item.id')
+			item{eq('id',new Long(params.'item.id'))}
+		else
+			item{eq('id',new Long(-1))}
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = result.collect {
+            [cell: [
+            	    it.invoice?.personTo,
+            	    it.invoice?.invoiceDate?.format('dd-MM-yyyy'),
+            	    it.invoice?.invoiceNumber,
             	    it.qty,
             	    it.unitSize,
             	    it.unit?.toString(),
@@ -836,5 +922,14 @@ def upload_image = {
 	      render response as JSON
 	    }
 
-
+	def updateRate() {
+		def result = itemService.updateRate(params)
+		render result
+	}
+	
+	def merge() {
+		def result = itemService.merge(params)
+		render result
+	}
+	
 }

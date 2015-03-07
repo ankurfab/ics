@@ -83,7 +83,7 @@
                                     <label for="department"><g:message code="assessment.department" default="Department" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: assessmentInstance, field: 'department', 'errors')}">
-                                    <g:select name="department.id" from="${ics.Department.list()}" optionKey="id" value="${assessmentInstance?.department?.id}" noSelection="['null': '']" />
+                                    <g:select name="department.id" from="${ics.Department.list([sort:'name'])}" optionKey="id" value="${assessmentInstance?.department?.id}" noSelection="['null': '']" />
 
                                 </td>
                             </tr>

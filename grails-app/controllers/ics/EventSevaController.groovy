@@ -130,6 +130,10 @@ def dataSource
 
       def result = EventSeva.createCriteria().list(max:maxRows, offset:rowOffset) {
             //createAlias "sn", "seva.name"
+            if(params."event.id")
+            	event{eq('id',new Long(params."event.id"))}
+            if(params."seva.id")
+            	seva{eq('id',new Long(params."seva.id"))}
             if(params."seva.name")
             	seva{ilike('name',"%"+params."seva.name"+"%")}
             if(params.inchargeName)
@@ -150,6 +154,7 @@ def dataSource
 
       def jsonCells = result.collect {
             [cell: [
+            	    it.event.title,
             	    it.seva.name,
                     it.inchargeName,
                     it.inchargeContact,
@@ -178,6 +183,23 @@ def dataSource
 	      // determine our action
 	      switch (params.oper) {
 		case 'add':
+		  if(params.'seva.id' && params.'event.id')
+		  	{
+			    params.remove('seva.name')
+			    eventSeva = new EventSeva(params)
+			    eventSeva.updator=eventSeva.creator=springSecurityService.principal.username
+			  if (! eventSeva.hasErrors() && eventSeva.save()) {
+			    message = "EventSeva Saved.."
+			    id = eventSeva.id
+			    state = "OK"
+			  } else {
+			    eventSeva.errors.allErrors.each {
+				log.debug("Error in adding eventSeva"+it)
+				}
+			    message = "Could Not Save EventSeva"
+			  }		  	
+		  	}
+		  else {
 		  def seva = new Seva()
 		  seva.name=params."seva.name"?.trim()
 		  seva.category="RVTO"
@@ -205,6 +227,7 @@ def dataSource
 			}
 		    message = "Could Not Save Seva"
 		  }
+		 }
 		  break;
 		case 'del':
 		  	def idList = params.id.tokenize(',')
@@ -930,4 +953,32 @@ def dataSource
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
         render jsonData as JSON
         }
+
+    def setIncharge() {
+      log.debug("Inside EventSeva.setIncharge "+params)
+      if(params.indid) {
+      	def ind = Individual.get(params.indid)
+      	params.idlist?.tokenize(',').each {
+	      try{
+	      def eventSeva = EventSeva.get(it)
+	      if(eventSeva) {
+	      	eventSeva.incharge = ind
+	      	eventSeva.inchargeName = ind.toString()
+	      	eventSeva.inchargeContact = VoiceContact.findByCategoryAndIndividual('CellPhone',ind)?.number
+	      	eventSeva.inchargeEmail = EmailContact.findByCategoryAndIndividual('Personal',ind)?.emailAddress
+	      	if(!eventSeva.save())
+			    eventSeva.errors.allErrors.each {
+				log.debug("setIncharge: Error in updating es "+ it)
+				}
+		}
+		}
+		catch(Exception e)  {
+			log.debug("Exception in setIncharge:"+e)
+		}
+	      }
+      	}
+	render([status:"OK"] as JSON)
+	}
+
+
 }

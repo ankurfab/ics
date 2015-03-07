@@ -36,7 +36,7 @@ class ChallanService {
             def saleValue = (it.status=='SETTLED')?(challanAmount - returnValue):'' 
             
             [cell: [
-            	    it.refNo,
+            	    it.refNo.substring(8),
             	    it.issueDate.format('dd-MM-yyyy'),
             	    it.issuedTo?.toString(),
             	    it.status,
@@ -56,15 +56,25 @@ class ChallanService {
     }
     
     def addPaymentReference(Map params) {
+	  log.debug("addPaymentReference: "+params) 
 	      //parse date
 	      if(params.paymentDate)
 	      	params.paymentDate = Date.parse('dd-MM-yyyy', params.paymentDate)
 	      else
 	      	params.paymentDate = new Date()
+
+	      if(params.instrumentDate) {
+	      	try{	       
+	      		params.instrumentDate = Date.parse('dd-MM-yyyy', params.instrumentDate)
+	      	}
+	      	catch(Exception e){params.instrumentDate=null}
+	     }
 	      
 	  def message,id,state
 	  def challan = Challan.get(params.'challan.id')
 	  def payRef = new PaymentReference(params)
+	  if(params.instrumentNo)
+		  payRef.details = payRef.details+" ("+(params.bankName?:'')+"/"+(params.bankBranch?:'')+"/"+(params.instrumentDate?.format('dd-MM-yyyy')?:'')+"/"+(params.instrumentNo?:'')+")"
 	  payRef.ref = "JDCHLNPMNT"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Challan-Payment")
 	  payRef.updator=payRef.creator=springSecurityService.principal.username
 	  if (! payRef.hasErrors() && payRef.save()) {
@@ -82,7 +92,7 @@ class ChallanService {
 	    else {
 	    	//autocreate donation record
 	    	try{
-	    		createDonationRecord(challan,payRef)
+	    		createDonationRecord(challan,payRef,params)
 	    		}
 	    	catch(Exception e){
 	    		log.debug("ChallanService.addPaymentReference: Some exception occured while creating donation record"+e)
@@ -200,7 +210,7 @@ class ChallanService {
     		challan.settleBy = params.individual
 
     		if(params.amountDue && (new BigDecimal(params.amountDue))>0)
-    			paymentReference = addPaymentReference(['challan.id':params.challanid,amount:params.amountDue,'mode.id':params.'mode.id',details:params.details,paymentTo:challan.settleBy])
+    			paymentReference = addPaymentReference(['challan.id':params.challanid,amount:params.amountDue,'mode.id':params.'mode.id',instrumentNo:params.instrumentNo,instrumentDate:params.instrumentDate,bankName:params.bankName,bankBranch:params.bankBranch,details:params.details,paymentTo:challan.settleBy])
     			
     		//capture team members
     		if(params.teamMembers)
@@ -285,7 +295,7 @@ class ChallanService {
     }
     
     //post the payment to the DR
-    def createDonationRecord(Challan challan, PaymentReference payRef) {
+    def createDonationRecord(Challan challan, PaymentReference payRef,Map params) {
     	def dr = new DonationRecord()
     	dr.donatedBy = Individual.findByLegalName('Jivadaya Collection')
     	dr.donationDate = new Date()
@@ -294,9 +304,9 @@ class ChallanService {
     	dr.centre = Centre.findByName('Pune')	//@TODO: hardcodings here
     	dr.mode = payRef.mode
     	if(dr.mode?.name?.toUpperCase()!='CASH') {
-	    	dr.paymentDetails = payRef.details?.replaceAll('[^a-zA-Z0-9]+',' ')	//bankname field
-		dr.transactionId = '000000'	//chq no
-		dr.transactionDetails = 'NA'	//branch name
+	    	dr.paymentDetails = params.bankName	//bankname field
+		dr.transactionId = params.instrumentNo	//chq no
+		dr.transactionDetails = params.bankBranch	//branch name
     	}
     	def (rbno, rno) = payRef.ref.tokenize( '/' )
     	dr.rbno = rbno
@@ -348,6 +358,52 @@ class ChallanService {
     		bookService.updateBookStock(cli.book,cli.returnedQuantity,'increment')
     	}
     }
+    
+    def search(Map params) {
+    	def result = ""
+    	switch(params.type) {
+    		case "P":
+    			result = searchPayment(params)
+    			break
+    		case "PR":
+    			result = searchChallan(params)
+    			break
+    		default:
+    			break
+    	}
+    	return result
+    }
+    
+    def searchPayment(Map params) {
+    	def result=""
+    	//get the actual donation amount
+    	def tokens = params.query.tokenize('-')
+    	def donation = Donation.findByNvccReceiptBookNoAndNvccReceiptNo(tokens[0],tokens[1])
+    	result = donation?.toString()+";"
+    	
+    	//now get the challans
+    	def prs = PaymentReference.findAllByModeAndDetails(PaymentMode.findByName('AgainstDonation'),params.query)
+    	prs.each{pr->
+    		result += searchChallan([pr:pr])
+    	}
+    	return result    		
+    }
+    
+    def searchChallan(Map params) {
+    	def result=""
+    	if(!params.pr) {
+    		params.pr = PaymentReference.findByRef(params.query)
+    	}
+	def challan = Challan.createCriteria().get{
+		paymentReferences{
+			eq('id',params.pr.id)
+		}
+	}
+	if(challan)
+		result += challan.refNo+"-"+challan.issuedTo.toString()+"-"+params.pr.amount+";"
+    	return result    		
+    }
+    
 
 
 }

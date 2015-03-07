@@ -56,7 +56,7 @@
           <li><g:link controller="receiptBookIssued" action="list">Receipt Book Management</g:link></li>
           <li><g:link controller="individualRole" action="list">Role Management</g:link></li>
           <li><g:link controller="motd" action="index">Message of the Day</g:link></li>
-          <li><g:link controller="eventParticipant" action="list">Event Management</g:link></li>
+          <li><g:link controller="event" action="gridlist">Event Management</g:link></li>
           <li><g:link controller="helper" action="verificationStats">Data Management</g:link></li>
 	  <li><g:link controller="helper" action="assignCultivator">Assign Cultivator</g:link></li>
 	  <li><g:link controller="helper" action="individualBackup">Backup Individual</g:link></li>
@@ -137,6 +137,13 @@
 	        		<div>
 				Upload ids for bulk login creation: <br />
 				    <g:uploadForm action="uploadForLogin">
+					<input type="file" name="myFile" />
+					<input type="submit" value="Upload"/>
+				    </g:uploadForm>
+				</div>
+	        		<div>
+				Upload Custom Form Template: <br />
+				    <g:uploadForm action="uploadCustomForm">
 					<input type="file" name="myFile" />
 					<input type="submit" value="Upload"/>
 				    </g:uploadForm>

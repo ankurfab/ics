@@ -215,7 +215,7 @@ class RoleController {
 	      render response as JSON
 	    }
 	    
-	def gridList() {}
+	def gridlist() {}
 
 
 }

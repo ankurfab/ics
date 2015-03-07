@@ -27,7 +27,10 @@ class InvoiceService {
 		{
 		//check if existing individual or new
 		try{
-			invoice.preparedBy = Individual.get(params.from)
+			if(params.'from.id')
+				invoice.preparedBy = Individual.get(params.'from.id')
+			else
+				invoice.preparedBy = Individual.findByLegalNameAndCategory(params.from,'VENDOR')
 		}
 		catch(Exception e)
 		{}
@@ -211,8 +214,8 @@ class InvoiceService {
     def vendorReport(Map params) {
 	def invoices = Invoice.createCriteria().list{
 			eq('type','PURCHASE')
-			ne('status','DRAFT')
-			ne('status','CANCELLED')
+			/*ne('status','DRAFT')
+			ne('status','CANCELLED')*/
 			if(params.vendorid)
 				preparedBy{eq('id',new Long(params.vendorid))}
 			if(params.from)
@@ -225,6 +228,71 @@ class InvoiceService {
 			order("invoiceDate", "asc")
 			}
 	return invoices	
+    }
+
+    def salesReport(Map params) {
+	def invoices = Invoice.createCriteria().list{
+			eq('type','SALES')
+			/*ne('status','DRAFT')
+			ne('status','CANCELLED')*/
+			if(params.consumer)
+				eq('personTo',params.consumer)
+			if(params.from)
+				ge('invoiceDate',params.from)
+			if(params.to)
+				le('invoiceDate',params.to)
+			order("personTo", "asc")
+			order("invoiceDate", "asc")
+			}
+	return invoices	
+    }
+
+    def stockReport(Map params) {
+	def items = Item.createCriteria().list{
+			if(params.itemid)
+				eq('id',new Long(params.itemid))
+			order("name")
+			}
+	def stock = []
+	def itemstock = [:]
+
+    	if(!params.from)
+    		params.from = new Date()-30
+    	def fromDate = params.from.format('yyyy-MM-dd HH:mm:ss')
+
+    	if(!params.to)
+    		params.to = new Date()
+    	def toDate = params.to.format('yyyy-MM-dd HH:mm:ss')
+
+	def purchaseQuery = "select sum(qty) totalQty, round(sum(ili.qty*(1+(ifnull(ili.tax_rate,0)/100))*ili.rate),2) worth from invoice i, invoice_line_item ili where ili.invoice_id=i.id and i.type='PURCHASE' and i.invoice_date>='"+fromDate+"' and i.invoice_date<='"+toDate+"' and ili.item_id="
+	def salesQuery = "select sum(qty) totalQty, round(sum(ili.qty*(1+(ifnull(ili.tax_rate,0)/100))*ili.rate),2) worth from invoice i, invoice_line_item ili where ili.invoice_id=i.id and i.type='SALES' and i.invoice_date>='"+fromDate+"' and i.invoice_date<='"+toDate+"' and ili.item_id="
+	def sql = new Sql(dataSource);
+	def query,results
+	
+	items.each{
+		itemstock = ['ITEM':it]
+		//calculate qty purchased in period		
+		//calculate amount purchased in period
+		query = purchaseQuery+it.id
+		//log.debug("Purchase Query:"+query)
+		results = sql.rows(query)
+		//log.debug("Purchase Results:"+results)
+		itemstock.put('PURCHASE',[results[0]?.totalQty?:0,results[0]?.worth?:0])
+		
+		//calculate qty sold in period
+		//calculate amount sold in period
+		query = salesQuery+it.id
+		//log.debug("Sales Query:"+query)
+		results = sql.rows(query)
+		//log.debug("Sales Results:"+results)
+		itemstock.put('SALES',[results[0]?.totalQty?:0,results[0]?.worth?:0])
+		
+		stock.add(itemstock)
+	}
+	sql.close()
+
+	//log.debug("stock:"+stock)
+	return stock	
     }
 
     def paymentReport(Map params) {
@@ -242,6 +310,27 @@ class InvoiceService {
 			order("invoiceDate", "asc")
 			}
 	return invoices	
+    }
+    
+    //eg usage
+    //http://localhost:8080/ics/invoice/fillGaps?type=SALES&numbering=FY1415/&gaps=1,110
+    def fillGaps(Map params) {
+    	def invoice
+    	params.gaps.tokenize(',').each{
+    		invoice = new Invoice()
+    		invoice.type = params.type
+    		invoice.invoiceNumber = params.numbering+it
+    		invoice.invoiceDate = new Date()
+    		invoice.preparedBy = Individual.findByLoginid(springSecurityService.principal.username)
+    		invoice.status = 'DRAFT'
+    		invoice.creator = invoice.updator = springSecurityService.principal.username
+    		if(!invoice.save()) {
+		    invoice.errors.allErrors.each {
+			log.debug("In fillGaps: exception"+ it)
+			}
+    		}    		
+    	}
+    	return "OK"    	
     }
     
     

@@ -115,7 +115,7 @@
 					$(el).datepicker({dateFormat:'dd-mm-yy',defaultDate: new Date()}); 
 				  }}
 	},
-	{name:'to', search:true, editable: false,
+	{name:'issuedTo', search:true, editable: false,
 		editoptions:{ 
 				  dataInit:function(el){ 
 					$(el).autocomplete({source:'${createLink(controller:'challan',action:'allDevoteesAsJSON_JQ')}',
@@ -679,6 +679,11 @@ $(document).on('mouseover', 'a.lex', function(event) {
 	      $.post(url, data , function(returnData){
 			  $('#amount').val('');
 			  $('#details').val('');
+			  $('#instrumentNo').val('');
+			  $('#instrumentDate').val('');
+			  $('#bankName').val('');
+			  $('#bankBranch').val('');
+			  
 			  jQuery("#payment_list").jqGrid().trigger("reloadGrid");
 			  jQuery("#challan_list").jqGrid().trigger("reloadGrid");
 			  // insert returned html 

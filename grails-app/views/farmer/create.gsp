@@ -81,6 +81,12 @@
 				<g:select name="education" from="${["Uneducated","Primary","Below SSC","SSC","HSC","Graduate","Post Graduate"]}" value="${farmerInstance?.education}"
 					  noSelection="['':'-- Please Select Education--']"/>
                                 </td>
+                                <td valign="top" class="name">
+                                    <label for="gender"><g:message code="farmer.gender" default="Gender" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'gender', 'errors')}">
+					<g:select name="gender" from="${["Male","Female"]}" value="${farmerInstance?.gender}"/>
+                                </td>
                             </tr>
 
                             <tr class="prop">
@@ -105,6 +111,15 @@
                                     <g:textField name="panCardNo" value="${fieldValue(bean: farmerInstance, field: 'panCardNo')}" />
 
                                 </td>
+                                <td valign="top" class="name">
+                                    <label for="electionCardNo"><g:message code="farmer.electionCardNo" default="Election Card No" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'electionCardNo', 'errors')}">
+                                    <g:textField name="electionCardNo" value="${fieldValue(bean: farmerInstance, field: 'electionCardNo')}" />
+
+                                </td>
+                            </tr>
+                            <tr class="prop">
                                 <td valign="top" class="name">
                                     <label for="category"><g:message code="farmer.category" default="Category" />:</label>
                                 </td>
@@ -225,7 +240,7 @@
                                     <label for="irrigationType"><g:message code="farmer.irrigationType" default="Irrigation Type" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'irrigationType', 'errors')}">
-                                    <g:select name="irrigationType" from="${farmerInstance.constraints.irrigationType.inList}" value="${farmerInstance.irrigationType}" valueMessagePrefix="farmer.irrigationType"  />
+                                    <g:select name="irrigationType" from="${farmerInstance.constraints.irrigationType.inList}" value="${farmerInstance.irrigationType}" valueMessagePrefix="farmer.irrigationType"/>
 
                                 </td>
                                 <td/>
@@ -340,7 +355,12 @@
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'numHybridCows', 'errors')}">
                                     <g:textField name="numHybridCows" value="${fieldValue(bean: farmerInstance, field: 'numHybridCows')}" />
-
+                                </td>
+                                <td valign="top" class="name">
+                                    <label for="numBuffaloes"><g:message code="farmer.numBuffaloes" default="Num Buffaloes" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'numBuffaloes', 'errors')}">
+                                    <g:textField name="numBuffaloes" value="${fieldValue(bean: farmerInstance, field: 'numBuffaloes')}" />
                                 </td>
                             </tr>
                         

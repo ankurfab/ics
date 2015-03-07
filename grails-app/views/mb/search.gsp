@@ -18,6 +18,7 @@
             </g:if>
 
 		<div id='message' class="message" style="display:none;"></div>
+	<h1>Match making for ${mbProfile?.candidate}</h1>
 		
 		%{--<div>
 			Matchmaking for?<g:select name="mbprofileid"
@@ -30,7 +31,8 @@
 <g:set var="mbclass" value="${new DefaultGrailsDomainClass(ics.MbProfile.class)}" />
 <g:set var="mbproperties" value="${mbclass.persistentProperties}" />
 <g:form name="expectationsForm" id="expectationsForm">
-    <g:hiddenField name="mbProfileId" value="5"/>
+    <g:hiddenField name="mbProfileId" value="${mbProfile?.id}"/>
+    <g:hiddenField name="mbprofileid" value="${mbProfile?.id}"/>
 	%{--<fieldset>
             <table id="genericSearchTab">
                 <tr>
@@ -47,7 +49,16 @@
 		  </tr>
 		</table>
 	</fieldset>--}%
-			<fieldset>
+
+	<!--Ignore Expectations:<g:checkBox name="showAll" value="${false}" />-->
+	<!--Flexibile on all expectations:<g:checkBox name="checkboxAllFlexible" value="${false}" />-->
+	<!--Flexibile on no expectations:<g:checkBox name="checkboxNoneFlexible" value="${false}" />-->
+	
+	Flexibile: <g:radioGroup name="radioFlex" labels="['All','None' ]" values="['ALL','NONE']" >
+	<span>${it.radio} ${it.label}</span>
+	</g:radioGroup>
+
+	<fieldset>
             <table id="searchExpectations">
                 <tr class="prop">
                     <td valign="top" class="name">
@@ -401,7 +412,9 @@
                      datatype: "json",
                      colNames:['Name','DoB','Id'],
                      colModel:[
-                         {name:'name'},
+                         {name:'name',
+			formatter:'showlink', 
+             		formatoptions:{baseLinkUrl:'show'}},                         
                          {name:'dob'},
                          {name:'id',hidden:true}
                      ],
@@ -435,7 +448,9 @@
                      datatype: "json",
                      colNames:['Name','DoB','CandidateStatus','CandidateReason','MbStatus','MbReason','Id'],
                      colModel:[
-                         {name:'name'},
+                         {name:'name',
+			formatter:'showlink', 
+             		formatoptions:{baseLinkUrl:'show'}},                                                  
                          {name:'dob'},
                          {name:'candidateStatus'},
                          {name:'candidateReason'},
@@ -484,6 +499,33 @@
 		    return false;
 		}
 	}
+  
+      $('#checkboxAllFlexible').change(function() {
+          if($(this).is(":checked")) {
+          	$("input:radio[name^=flexible][value ='true']").prop('checked', true);
+          }
+          else
+          	$("input:radio[name^=flexible][value ='false']").prop('checked', true);
+    });
+
+      $('#checkboxNoneFlexible').change(function() {
+          if($(this).is(":checked")) {
+          	$("input:radio[name^=flexible][value ='false']").prop('checked', true);
+          }
+    });
+    
+    
+    $('input:radio[name=radioFlex]').change(
+        function(){
+            var toggleValue = $('input[name=radioFlex]:checked').val()
+            //alert('changed val:'+toggleValue);   
+            if(toggleValue=='ALL')
+            	$("input:radio[name^=flexible][value ='true']").prop('checked', true);
+            if(toggleValue=='NONE')
+            	$("input:radio[name^=flexible][value ='false']").prop('checked', true);
+        }
+    );          
+
   
   });
 </script>

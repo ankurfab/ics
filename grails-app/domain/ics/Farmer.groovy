@@ -29,10 +29,11 @@ class Farmer {
 	dairy()
 	numDesiCows(nullable:true)
 	numHybridCows(nullable:true)
+	numBuffaloes(nullable:true)
 	anyOtherBusiness()
 	otherBusinessDetails(nullable:true,blank:true)
 	irrigationFacility()
-	irrigationType  inList: ["None","Well", "Bore-Well", "Canal", "Lift"]
+	irrigationType  inList: ["None","Well", "Bore-Well", "Canal", "Lift","Farm Pond"]
 	microIrrigationType  inList: ["None","Drip", "Sprinkler","Both"]
 	areaUnderDrip(nullable:true)
 	areaUnderSprinkler(nullable:true)
@@ -49,6 +50,7 @@ class Farmer {
 	receiptBookNo(nullable:true,blank:true)
 	receiptNo(nullable:true,blank:true)
 	folioNo(nullable:true,blank:true)
+	gender(nullable:true,blank:true)
 	    avatar(nullable:true, maxSize: 102400 /* 100K */)
 	    avatarType(nullable:true)
     }
@@ -56,6 +58,7 @@ class Farmer {
 	String	firstName
 	String	middleName
 	String	lastName
+	String gender
 	String	address
 	Village	village
 	Taluka	taluka
@@ -70,6 +73,7 @@ class Farmer {
 	String	mobileNo
 	String	adharcardNo
 	String	panCardNo
+	String	electionCardNo
 	Boolean	shareHolder
 	BigDecimal	shareAmount
 	String	shareCertificateNo
@@ -81,6 +85,7 @@ class Farmer {
 	Boolean	dairy
 	Integer	numDesiCows
 	Integer	numHybridCows
+	Integer	numBuffaloes
 	Boolean	anyOtherBusiness
 	String	otherBusinessDetails
 	Boolean	irrigationFacility

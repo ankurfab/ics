@@ -305,14 +305,14 @@
                                </tr>
                         	
                                <tr>
-            <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+            <!--<sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
                                 <td valign="top">
                                     <label for="category"><b><g:message code="individual.category.label" default="Category" /></b></b></label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: individualInstance, field: 'category', 'errors')}">
 					<g:select multiple="multiple" name="category" from="${ics.DevoteeCategory.list(sort:'name')}" value="${individualInstance?.category}" noSelection="['':'-Choose Category-']" tabindex="4"/>
                                 </td>
-            </sec:ifAnyGranted>
+            </sec:ifAnyGranted>-->
                                 <td></td>
                                 <td></td>
             <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_PATRONCARE,ROLE_PATRONCARE_USER">
@@ -768,7 +768,7 @@
 								<label for="ashram"><b>Ashram</b></label>
 							</td>
 							<td valign="top">
-								<g:select name="ashram" from="${['Brahmachari','Grahastha','Vanaprastha','Sanyasi']}" value="${individualInstance?.ashram}" noSelection="['':'-Choose-']"/>                                  
+								<g:select name="ashram" from="${['Brahmachari','Grahastha','Vanaprastha','Sanyas','Other']}" value="${individualInstance?.ashram}" noSelection="['':'-Choose-']"/>                                  
 							</td>
 							<td valign="top">
 								<label for="firstInitiationStatus"><b>First Initiation Status</b></label>

@@ -35,7 +35,7 @@
 		      url:'jq_course_list',
 		      editurl:'jq_edit_course',
 		      datatype: "json",
-		      colNames:['Name','Description','Type','Category','id'],
+		      colNames:['Name','Description','Type','Category','Instructor','id'],
 		      colModel:[
 			{name:'name', editable:true},
 			{name:'description', editable:true},
@@ -47,6 +47,7 @@
 				      'custom_value'   : autocomplete_value
    					 }*/
 			},
+			{name:'instructor', editable:true},
 			{name:'id',hidden:true}
 		     ],
 		    rowNum:10,

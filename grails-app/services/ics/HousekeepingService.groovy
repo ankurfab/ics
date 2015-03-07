@@ -35,8 +35,8 @@ def config = ConfigurationHolder.config
 	{
 		getSession().individualname = individual.toString()
 		getSession().individualid = individual.id
-		getSession().individualemail = EmailContact.findByIndividual(individual)?.emailAddress
-		getSession().individualphone = VoiceContact.findByIndividual(individual)?.number
+		getSession().individualemail = EmailContact.findByIndividualAndCategory(individual,'Personal')?.emailAddress
+		getSession().individualphone = VoiceContact.findByIndividualAndCategory(individual,'CellPhone')?.number
 		getSession().showall = false
 	}
 	getSession().isReceiver = null
@@ -45,7 +45,7 @@ def config = ConfigurationHolder.config
 	println "Authorities:"+authorities
 	authorities.each{if(it=='ROLE_ADMIN') getSession().isAdmin = true}
 	println "session.individualid:"+session.individualid
-	println "getSession().individualid:"+getSession().individualid
+	println "getSession().individualid:"+(getSession().individualid?:'')+":"+(getSession().individualphone?:'')+":"+(getSession().individualemail?:'')
 	println "RequestContextHolder.currentRequestAttributes().getSession()?.user="+RequestContextHolder.currentRequestAttributes().getSession()?.user
 	
 	//access log
@@ -2025,6 +2025,26 @@ def config = ConfigurationHolder.config
 		return fy	
 	}
 	
+	def getFY(Date date) {
+		//@TODO: hardcoded for 1-Apr 31-Mar FY
+		if(!date)
+			date = new Date()
+		def now = date
+		//get day and month
+		def day = now.format('dd')
+		def month = new Integer(now.format('MM'))
+		def year = new Integer(now.format('yy'))
+		
+		def fy = "FY"
+		
+		if(month<=3)
+			fy+=(year-1)+""+year
+		else
+			fy+=year+""+(year+1)
+			
+		return fy	
+	}
+
 	def getFamily(Long indId) {
 		//first check if head of family
 		def headRG = RelationshipGroup.findByRefid(indId)

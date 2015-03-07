@@ -121,7 +121,20 @@
                                     <label for="category"><g:message code="event.category.label" default="Category" /></label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'category', 'errors')}">
-                                    <g:textField name="category" value="${eventInstance?.category}" />
+                                    <g:select name="category"
+				              from="${ics.Event.createCriteria().list{projections{distinct('category')}}}"
+				              value="${eventInstance?.category}"/>                                    
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="type"><g:message code="event.type.label" default="Type" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'type', 'errors')}">
+                                    <g:select name="type"
+				              from="${ics.Event.createCriteria().list{projections{distinct('type')}}}"
+				              value="${eventInstance?.type}"/>                                    
                                 </td>
                             </tr>
                         

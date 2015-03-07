@@ -53,6 +53,11 @@ class BookService {
     		order.status='Fulfilled'
     		order.orderDate = new Date()
     		order.save()
+    		if(params.quick)
+    			{
+    			challan.status='PREPARED'
+    			challan.save()
+    			}
     	}
     	return order
     }
@@ -64,7 +69,7 @@ class BookService {
     	challan.issuedBy = Individual.findByLoginid(springSecurityService.principal.username)
     	challan.issueDate = new Date()
     	challan.type = "OUTWARD"
-    	challan.status = "DRAFT"
+ 	challan.status = "DRAFT"    	
     	challan.totalAmount = order.lineItems?.sum{it.requiredQuantity*it.book.sellPrice}
     	
     	if(!challan.save())
@@ -320,8 +325,8 @@ class BookService {
 	
 	def scores() {
 		def sql = new Sql(dataSource)
-		def query = """select date_format(q.settle_date,'%D %b`%y') date,q.*,(q.Small*0.25+q.Medium*0.5+q.Big*1+q.MahaBig*2) BookPoints  from
-			(SELECT  P.team_id,P.settle_date,P.distributor,
+		def query = """select date_format(q.settle_date,'%D %b`%y') date,q.*,(q.SmallPoint+q.MediumPoint+q.BigPoint+q.MahaBigPoint) BookPoints  from
+			(SELECT  P.challan_id,P.dist_id,P.settle_date,P.distributor,
 			    SUM(
 				CASE 
 				    WHEN P.category='Small' 
@@ -346,11 +351,39 @@ class BookService {
 			    SUM(
 				CASE 
 				    WHEN P.category='MahaBig' 
-				    THEN P.numdist
+				    THEN truncate(P.numdist* (P.point/2),0)
 				    ELSE 0
 				END
-			    ) AS 'MahaBig'
-			FROM    (select bo.team_id,c.settle_date,ifnull(i.initiated_name,i.legal_name) distributor,b.category,sum((cli.issued_quantity-cli.returned_quantity)) numdist from challan c, challan_line_item cli, book b, individual i,book_order bo where bo.challan_id=c.id and c.issued_to_id=i.id and c.id=cli.challan_id and c.status='SETTLED' and cli.book_id=b.id group by settle_date,distributor,b.category having numdist >0 order by c.settle_date desc) P
+			    ) AS 'MahaBig',
+			    SUM(
+				CASE 
+				    WHEN P.category='Small' 
+				    THEN P.numdist * P.point
+				    ELSE 0
+				END
+			    ) AS 'SmallPoint',
+			    SUM(
+				CASE 
+				    WHEN P.category='Medium' 
+				    THEN P.numdist  * P.point
+				    ELSE 0
+				END
+			    ) AS 'MediumPoint',
+			    SUM(
+				CASE 
+				    WHEN P.category='Big' 
+				    THEN P.numdist  * P.point
+				    ELSE 0
+				END
+			    ) AS 'BigPoint',
+			    SUM(
+				CASE 
+				    WHEN P.category='MahaBig' 
+				    THEN P.numdist * P.point
+				    ELSE 0
+				END
+			    ) AS 'MahaBigPoint'
+			FROM    (select c.id challan_id,i.id dist_id,c.settle_date,ifnull(i.initiated_name,i.legal_name) distributor,b.category,b.point,sum((cli.issued_quantity-cli.returned_quantity)) numdist from challan c, challan_line_item cli, book b, individual i where c.issued_to_id=i.id and c.id=cli.challan_id and c.status='SETTLED' and cli.book_id=b.id group by settle_date,distributor,b.category having numdist >0 order by c.settle_date desc) P
 			GROUP BY P.settle_date,P.distributor order by P.settle_date desc) q;"""
 		def result = sql.rows(query)
 		sql.close()
@@ -448,7 +481,17 @@ class BookService {
 	}
 	
 	def getTeam(Challan challan) {
-		  return BookOrder.findByChallan(challan)?.team?.comments
+		  def bo =  BookOrder.findByChallan(challan)
+		  def team=""
+		  if(bo)
+		   team = bo.team?.comments
+		  else {
+		  	//check if rg exists w/o bo, use the latest one
+		  	def rgs = RelationshipGroup.findAllByCategoryAndRefid('JIVADAYA',challan.issuedTo?.id,[max: 1, sort: "id", order: "desc"])
+		  	if(rgs?.size()>0)
+		  		team = rgs[0].comments
+		  }
+		  return team
 	}
 
 }

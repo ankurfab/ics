@@ -8,6 +8,7 @@ class Course {
 	    name()
 	    description()
 	    department(nullable:true)
+	    instructor(nullable:true)
     }
     
     String category
@@ -15,6 +16,7 @@ class Course {
     String name
     String description
     Department department
+    Individual instructor
     
     Date dateCreated
     Date lastUpdated
@@ -22,7 +24,7 @@ class Course {
     String updator 
     
     String toString() {
-	name
+	category+"/"+type+"/"+name
 	}
     
 }

@@ -43,13 +43,14 @@
       url:'jq_farmer_list',
       editurl:'jq_edit_farmer',
       datatype: "json",
-      colNames:['FirstName','MiddleName','LastName','Village','Taluka','District','Post','Pincode','Caste','MobileNo','ShareAmount','ShareCertificateNo','IrrigatedLand','NonIrrigatedLand','TotalLand','DesiCows','HybridCows','OtherBusinessDetails','Drip','Sprinkler','IrrigationType','FarmingProcess','Crops','Category','ReceiptBookNo','ReceiptNo','Id'],
+      colNames:['FirstName','MiddleName','LastName','Gender','Village','Taluka','District','Post','Pincode','Caste','MobileNo','ShareAmount','ShareCertificateNo','IrrigatedLand','NonIrrigatedLand','TotalLand','DesiCows','HybridCows','Buffaloes','OtherBusinessDetails','Drip','Sprinkler','IrrigationType','FarmingProcess','Crops','Category','ReceiptBookNo','ReceiptNo','Id'],
       colModel:[
 	{name:'firstName', search:true, formatter:'showlink', 
              		formatoptions:{baseLinkUrl:'${createLink(controller:'farmer',action:'show',target:'#')}'}
 	},
 	{name:'middleName', search:true},
 	{name:'lastName', search:true},
+	{name:'gender', search:true},
 	{name:'village', search:true},
 	{name:'taluka', search:true},
 	{name:'district', search:true},
@@ -64,6 +65,7 @@
 	{name:'areaOfTotalLand', search:true},
 	{name:'numDesiCows', search:true},
 	{name:'numHybridCows', search:true},
+	{name:'numBuffaloes', search:true},
 	{name:'otherBusinessDetails', search:true},
 	{name:'areaUnderDrip', search:true},
 	{name:'areaUnderSprinkler', search:true},

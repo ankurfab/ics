@@ -129,7 +129,13 @@ class CourseController {
                 ilike('category',params.category)
             if (params.type)
                 ilike('type',params.type)
-
+	if (params.instructor)
+		instructor{
+			or {
+				ilike('legalName',params.instructor)
+				ilike('initiatedName',params.instructor)
+			   }
+			}
             order(sortIndex, sortOrder)
       }
       def totalRows = courses.totalCount
@@ -139,7 +145,8 @@ class CourseController {
             [cell: [it.name,
             	it.description,
             	it.type,
-            	it.category
+            	it.category,
+            	it.instructor?.toString()
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]

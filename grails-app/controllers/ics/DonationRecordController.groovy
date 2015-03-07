@@ -147,6 +147,17 @@ class DonationRecordController {
            render "The record is not available for viewing!!"
            return
         }*/
+        def schemes = helperService.getSchemesForRole(helperService.getDonationUserRole(),session.individualid)
+        def drscheme=donationRecordInstance.scheme
+        def disableedit=true
+        schemes.each{scheme->
+          if(scheme?.name==drscheme?.name){
+            disableedit=false
+          }
+        }
+
+        
+        //if does not belong to your scheme ,then can not edit or delete the record
 
                  if (SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_COORDINATOR')){
                     def membercentre= donationRecordInstance.centre
@@ -158,7 +169,7 @@ class DonationRecordController {
                     }
                  }
 
-            return [donationRecordInstance: donationRecordInstance]
+            return [donationRecordInstance: donationRecordInstance, disableedit:disableedit]
         }
     }
 
@@ -366,7 +377,7 @@ class DonationRecordController {
     def recordlist = []
     def count = 0
     def schemeMember
-    def scheme = Scheme.findById(params.scheme)
+    def scheme = null
     def uploadtype = params.uploadtype
     def paymentmode
     def donorId
@@ -544,7 +555,8 @@ class DonationRecordController {
             	{
             	record.expectedamount=record.amount
             	record.amount=0
-            	record.comments = "ECS Failure Code: "+memberdetails_1_ColumnValue+" ECS Failure Reason: "+memberdetails_2_ColumnValue
+              record.comments = 'PLEASE UPDATE REASON HERE'
+            	record.paymentDetails = "BOUNCED::ECS Failure Code: "+memberdetails_1_ColumnValue+" ECS Failure Reason: "+memberdetails_2_ColumnValue
             	}
             	
             record.mode = PaymentMode.findByName(paymentmode)
@@ -558,7 +570,7 @@ class DonationRecordController {
             record.paymentDetails = record.paymentDetails + "Details::"+donorNameColumnValue+",Amount="+ amountColumnValue + ",payment mode="+ paymentmode+",donorid="+donorIdColumnValue+",txn="+txnIdColumnValue+",bank="+bankNameColumnValue+",date="+donationDateColumnValue
             record.transactionId = "Receipt No:"+ txnIdColumnValue
             record.reference= bankNameColumnValue
-            record.scheme= scheme
+            
             record.donationDate = Date.parse(donationDateFormat,donationDateColumnValue)
 
             if(memberdetails_1_ColumnName!= null || memberdetails_2_ColumnName!= null)
@@ -571,106 +583,18 @@ class DonationRecordController {
                       record.memberdetails =  record.memberdetails +"  "+memberdetails_2_ColumnValue
               }
 
-            donorId = donorIdColumnValue
-            schemeMember = null            
-            if(donorId != null) {
-            	if(scheme)
-	                schemeMember = SchemeMember.findByExternalNameAndSchemeAndCounsumerNumber(donorNameColumnValue,scheme,donorId)
-	        else
-	        	schemeMember = SchemeMember.findByExternalNameAndCounsumerNumber(donorNameColumnValue,donorId)
-             }
+            donorId = donorIdColumnValue.replace("'","")
+
+            record.transactionDetails = donorId
+
+            def commitment = Commitment.findByEcsMandate(donorId)
+
+            println "################################commitment"
+            println commitment
+
+            if(commitment != null)record.donatedBy  = commitment.committedBy
             
-            def commitment=null
-            
-            if(schemeMember == null){            
-              schemeMember = SchemeMember.findByExternalNameAndScheme(donorNameColumnValue,scheme)
-                  
-              if(schemeMember == null){
-                  //try just by donorId w/o scheme
-                  //first by id and then by name
-		    if(donorId != null)
-			schemeMember = SchemeMember.findByExternalNameAndCounsumerNumber(donorNameColumnValue,donorId)
-		    if(schemeMember == null)            
-		      schemeMember = SchemeMember.findByExternalName(donorNameColumnValue)
-		    if(schemeMember == null)            
-		      schemeMember = SchemeMember.findByCounsumerNumber(donorId)
-		    //try as per commitment
-		    if(!schemeMember)
-		    	{
-		    	commitment = Commitment.findByStatusAndEcsMandate('ACTIVE',donorId)
-		    	}
-		      
-              if(schemeMember == null && !commitment){
-                  println " COULD NOT FIND " +donorNameColumnValue+" :"+scheme
-                  record.donatedBy = null  
-                  errorflag = true  
-                  record.donorName= donorNameColumnValue
-                  record.consumberNumber =donorIdColumnValue
-                  }
-              }
-            }
-             if(schemeMember || commitment){
-                    println " COULD  FIND " +donorNameColumnValue+" :"+scheme
-                    record.transactionDetails = donorIdColumnValue 
-                    record.scheme = scheme?:schemeMember?.scheme
-                    record.schemeMember = schemeMember
-                    record.donatedBy = schemeMember?.member?:commitment?.committedBy
-                    record.centre = schemeMember?.centre
-                    if(updatedonorid == true){
-                      //updating consumer number or donor id
-                      if(donorId != schemeMember.counsumerNumber){
-                        schemeMember.counsumerNumber = donorId
-                        schemeMember.save()
-                      }
-                    }
-
-                    if(usepercentagededuction == true){                      
-                      if(record.amount != 0 && schemeMember && schemeMember.percentageDeductionUpper !=null && schemeMember.percentageDeductionLower!= null && schemeMember.percentageDeductionLower!=0){
-                        record.usepercentagededuction = schemeMember.percentageDeductionUpper +" Out Of " + schemeMember.percentageDeductionLower
-                        record.amountafterdeduction = record.amount - (record.amount * schemeMember.percentageDeductionUpper)/ schemeMember.percentageDeductionLower
-                      }
-                      else {
-                         record.amountafterdeduction = record.amount
-                      }
-                    }
-                    else{
-                       record.amountafterdeduction = record.amount
-                    }
-
-                   if(record.memberdetails != null && record.memberdetails !='' && usememberdetails == true){
-                    def comments
-                      println "SAVING MEMBER DETAILS"
-                      if(record.schemeMember.comments == null)
-                          comments= record.memberdetails
-                      else {
-                          println "APPENDING MEMBER COMMENTS"
-                          
-                        if(record.schemeMember.comments.size()< (4000 - record.memberdetails.size()))
-                          comments = record.schemeMember.comments
-                        else 
-                          comments = record.schemeMember.comments.substring(0,4000 - record.memberdetails.size() *2)
-
-                        if(memberdetails_1_ColumnValue!= null && !comments.contains(memberdetails_1_ColumnValue)){
-                          comments = comments +":"+ memberdetails_1_ColumnValue
-                        }
-                        if(memberdetails_2_ColumnValue!= null && !comments.contains(memberdetails_2_ColumnValue)){
-                          comments = comments +":"+ memberdetails_2_ColumnValue
-                        }
-                      }
-                      record.schemeMember.comments = comments
-                     
-                      if (!record.schemeMember.save()) {
-                        record.schemeMember.errors.each {
-                            println it
-                        }
-                      }
-                    }
-                    
-
-             }
-
-            
-            arecord = DonationRecord.findByTransactionIdAndScheme(record.transactionId,scheme)
+            arecord = DonationRecord.findByTransactionId(record.transactionId)
             if(arecord){
                 // already this record is created
                 record.alreadyExist = 'found'
@@ -685,8 +609,7 @@ class DonationRecordController {
         if(record.donatedBy != null){
             samemonthdonations = DonationRecord.createCriteria().list(){   
                                  
-                    eq('donatedBy',record.donatedBy)                                
-                    eq('scheme',scheme)  
+                    eq('donatedBy',record.donatedBy)                                                    
                     gt('donationDate',firstdate)
                     lt('donationDate',lastdate)
                         
@@ -730,65 +653,155 @@ class DonationRecordController {
             def secondcentrecount =0
             for(record in recordlist){
                 if(record.donatedBy != null && record.alreadyExist==null){
-                    record.amount = record.amountafterdeduction 
+                    
                     scount++
                     record.updator=springSecurityService.principal.username
                     record.creator=springSecurityService.principal.username
 
-                    //logic for creating donation for second centre
-                    def secondrecord = null
-                    def schemeMember = SchemeMember.findById(record.schemeMember?.id)
-                    println "scheme member id===" + schemeMember?.id
-                    if(schemeMember?.secondcentre!=null){
-                        if(record.amount != 0 && schemeMember.percentageDeductionSecondCentreUpper !=null && schemeMember.percentageDeductionSecondCentreUpper > 0
-                           && schemeMember.percentageDeductionSecondCentreLower!= null && schemeMember.percentageDeductionSecondCentreLower > 0){
-                          // creating new record
-                         secondrecord = new DonationRecord()
-                         secondrecord.donatedBy = record.donatedBy
-                         secondrecord.scheme = record.scheme
-                         secondrecord.centre= schemeMember.secondcentre
-                         secondrecord.donationDate = record.donationDate
-                         secondrecord.comments = record.comments
-                         secondrecord.mode = record.mode
-                         secondrecord.paymentDetails = record.paymentDetails
-                         secondrecord.updator=springSecurityService.principal.username
-                        secondrecord.creator=springSecurityService.principal.username
-                        secondrecord.transactionId = record.transactionId
-                        secondrecord.reference = record.reference
-
-                         secondrecord.amount = (record.amount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower
-                         record.amount = record.amount - secondrecord.amount
-
-                         println "creating second donation record for "+ schemeMember?.externalName
-                         println "first record of amount "+ record.amount
-                         println "second record of amount "+ secondrecord.amount 
-                      }
-                    }
-
                     
-                    if (!record.save()) {
-                    record.errors.each {
-                        println it
-                    }
-                  }
-                  if(secondrecord != null){
-                     if (!secondrecord.save()) {
-                        secondrecord.errors.each {
-                            println it
-                        }
-                    }
-                    secondcentrecount++
-                  }
                 
                 //  try splitting the record into multiple records on the basis of commitment
-		donationService.split(record)                
+		            donationService.split(record)                
                 }
                 //println record
             }
             session.data = null
-            flash.message = count +'  Records were in File , '+ scount +' Donation Records are created, '+ secondcentrecount +" Donation Record for second centre created." 
+            flash.message = count +'  Records were in File  '
         }
         
+    }
+    
+    //create formal Donation entries from DonationRecords which don't have the corresponding donation in the first place
+    def createDonationFromDR() {
+    	render donationService.createDonationFromDR(params)
+    }
+
+/*
+this method will first fetch all those donation records which have center as null
+then loop on such records then find corresponding scheme member and copy the center from there
+*/
+    def updateDonationRecordWithEmptyCenterBySchemeMemberCenter={
+      if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE')){
+           render "you not authorized to do this action!!"
+           return
+        }
+        def schemes= helperService.getSchemesForRole('ROLE_DONATION_EXECUTIVE',session.individualid)
+
+        def recordsWithEmptyCenter = DonationRecord.createCriteria().list(){                     
+            'in'("scheme",schemes)
+            isNull("centre")
+        }  
+
+        for(record in recordsWithEmptyCenter){
+          def schemeMemberInstance = SchemeMember.findBySchemeAndMember(record.scheme, record.donatedBy)
+          if(schemeMemberInstance != null){
+            record.centre = schemeMemberInstance.centre
+             if (!record.save()) {
+                    record.errors.each {
+                        println it
+                      }
+              }
+          }
+        }  
+
+        render "All Records (having no center) have been updated with centers."
+
+    }
+
+/*
+this will update all scheme members with their commitent mode
+first fetch all scheme members
+iterate over all of them ,find for each last made donation and update commitment mode based on that
+this is expensive operation
+*/
+    def updateSchemeMembersCommitmentMode={
+        if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE')){
+        render "you can not perform this action!!"
+           return
+        }
+        def role = helperService.getDonationUserRole()
+        def schemes = helperService.getSchemesForRole(role, session.individualid)  
+        def members = SchemeMember.createCriteria().list(){
+           'in'("scheme",schemes)
+        }
+        members.each{member->
+            //fetch the last payment done by this member
+            member.committedMode = null
+            def individual = member.member
+            if(individual != null){
+              def latestdonationrecord = DonationRecord.createCriteria().list(){              
+                eq('donatedBy', individual)
+                isNotNull("mode")
+                order("donationDate","desc")
+                maxResults(1)
+              }
+
+              latestdonationrecord.each{record->
+                //there will be only one record
+                if(record.mode.name.contains("ECS")){
+                  member.committedMode="ECS"
+                }
+                if(record.mode.name.contains("Cash") || record.mode.name.contains("Card") || record.mode.name.contains("Cheque")){
+                  member.committedMode="CASH"
+                }
+                if(record.mode.name.contains("NEFT") || record.mode.name.contains("RTGS") || record.mode.name.contains("Transfer")){
+                  member.committedMode="E-PAYMENT"
+                }
+
+              }
+
+            }
+
+            //record.save()
+              if (!member.save()) {
+              member.errors.each {
+                  println it
+              }
+            }
+        } 
+
+         render "All Scheme Members are update with Commitment mode based on their last payment"
+    }
+
+/*
+it will list all those individuals who have given donation Record but not having scheme membership
+*/
+    def findDonationRecordsHavingNoSchemeMember={
+      if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE')){
+        render "you can not perform this action!!"
+           return
+        }  
+    def role = helperService.getDonationUserRole()
+    def schemes = helperService.getSchemesForRole(role, session.individualid)
+
+    def individualshavingscheme = SchemeMember.createCriteria().list(){
+        projections{
+          property("member")
+        }
+        'in'("scheme",schemes)
+    }
+
+    def fromDate = null
+
+    println "fromdate ====" +params.fromDate
+    
+    if(params.fromDate != 'undefined' && params.fromDate !='' && params.fromDate != null){
+      fromDate = Date.parse('dd-MM-yyyy', params.fromDate)
+    }
+
+    def individualsHavingNoScheme = DonationRecord.createCriteria().list(){
+      projections{          
+          groupProperty("donatedBy")
+          sum("amount","sumamount")
+        }
+       not{ 'in' ("donatedBy", individualshavingscheme)}
+       'in'("scheme",schemes)
+       if(fromDate != null)ge("donationDate", fromDate)
+       order("sumamount","desc")
+    }
+    
+    return [schemes:schemes , size:individualsHavingNoScheme.size(), individuals:individualsHavingNoScheme, fromDate:params.fromDate]
+
     }
 
     def createzeropaymentrecords={
@@ -1212,7 +1225,7 @@ def donationRecordDataWithFilters(){
                     sqlRestriction "month(donation_date) = "+((donationDate.month).toInteger() +1) + "  AND year(donation_date) = "+((donationDate.getAt(Calendar.YEAR)).toInteger())                        
                 } 
                 
-                if(params.receiptReceivedStatus){
+                if(params.receiptReceivedStatus!= null && params.receiptReceivedStatus !='ALL'){
                   ilike("receiptReceivedStatus",params.receiptReceivedStatus+'%')
                 }
 
@@ -1344,12 +1357,14 @@ def donationRecordDataForPC(){
 	      
 	      def toDate = params.toDate.format('yyyy-MM-dd')+' 23:59:59'	//'2014-05-01 00:00:00'
 	      
-	      def drList = []
+	      
+	      //first update any miised records with rbno/rno
 	      def drs = DonationRecord.createCriteria().list{
 	      	isNull('receiptReceivedStatus')
 	      	isNull('comments')
 	      	isNull('rbno')
 	      	isNull('rno')
+	      	isNull('donation')	//to prevent synced drs with donations
 	      	gt('amount',new BigDecimal(0))
 	      	ge('donationDate',params.fromDate)
 	      	le('donationDate',params.toDate)
@@ -1359,6 +1374,8 @@ def donationRecordDataForPC(){
 	      	order('donationDate')
 	      	}
 	      	
+	      log.debug("bulkPrintView: found #drs:"+drs.size())
+	      	
 	      drs.each{dr->
 	      	dr.rbno = "ECS-"+housekeepingService.getFY()
 	      	dr.rno = receiptSequenceService.getNext("DONATION-ECS")
@@ -1366,15 +1383,44 @@ def donationRecordDataForPC(){
 	      		dr.errors.allErrors.each {
 			             			log.debug(it)
              			}
-             	else
-             		drList.add(dr)
 	      }
+	      
+	      //now get all the drs in the period
+	      drs = DonationRecord.createCriteria().list{
+	      	isNull('receiptReceivedStatus')
+	      	isNull('comments')
+	      	isNull('donation')	//to prevent synced drs with donations
+	      	gt('amount',new BigDecimal(0))
+	      	ge('donationDate',params.fromDate)
+	      	le('donationDate',params.toDate)
+	      	donatedBy{
+	      		order('legalName')
+	      	}
+	      	order('donationDate')
+	      	}
+	      	
+	      log.debug("bulkPrintView: found (with rbno,rno) #drs:"+drs.size())
+
+	      def drList = []
+	      	
+	      drs.each{dr->
+           		drList.add(dr)
+	      }
+	      
 	      //log.debug("bulkreceipt: "+drList)
 		render(template: "bulkreceipt", model: [drList:drList,printedBy:(params.authority?:'')])
 	      
 	}
 	
 	def bulkPrint() {
+		if(params.idlist) {
+	      		def drList = []
+			params.idlist.tokenize(',').each {
+				drList.add(DonationRecord.get(it))
+			}
+			render(template: "bulkreceipt", model: [drList:drList,printedBy:Individual.get(params.authorityid)])
+			return
+		}
 	}
 
 

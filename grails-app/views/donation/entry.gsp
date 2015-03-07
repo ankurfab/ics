@@ -280,6 +280,12 @@
             <g:if test="${donationInstance?.id}">
 		<span class="menuButton"><g:link class="create" controller="giftIssued" action="createfordonation" params="['donation.id': donationInstance?.id]">IssueGift</g:link></span>
 	    </g:if>
+            <sec:ifAnyGranted roles="ROLE_BACKOFFICE,ROLE_DUMMY">
+		<span class="menuButton"><g:link class="list" controller="costCenter" action="list">CostCenters</g:link></span>
+            </sec:ifAnyGranted>		    
+            <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+		<span class="menuButton"><g:link class="list" controller="donation" action="bulkPrint">BulkPrint</g:link></span>
+            </sec:ifAnyGranted>		    
 	</div>
         <div class="body">
             <h1>Donation Entry</h1>
@@ -303,7 +309,7 @@
                                     <label for="icsid">Donor's IcsId:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: donationInstance, field: 'donorName', 'errors')}">
-                                    <g:textField id="icsid" name="icsid" value="${donationInstance?.donatedBy?.icsid}" size="8" />
+                                    <g:textField id="icsid" name="icsid" value="${id?(100000+new Long(id)):donationInstance?.donatedBy?.icsid}" size="8" />
                                 </td>
                             </tr>
 
@@ -557,6 +563,17 @@
                     <span class="button"><g:submitButton name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}" onclick="return confirm('${message(code: 'delete.confirm', 'default': 'Are you sure?')}');"/></span>
                 </div>
             </g:form>
+
+
+	    <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+		<div>
+		Upload donations in bulk: <br />
+		    <g:uploadForm action="uploadbulkdonation">
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
+		</div>
+	    </sec:ifAnyGranted>
 
 
         </div>

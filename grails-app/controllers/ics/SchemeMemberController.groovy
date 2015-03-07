@@ -426,6 +426,34 @@ class SchemeMemberController {
         
       } 
 
+       def committedmode = null
+      if(params.committedmode != null && params.committedmode != '0' && params.committedmode !='undefined') {
+
+        committedmode = params.committedmode
+        
+      } 
+
+      def toBeSMS = null
+      if(params.toBeSMS != null && params.toBeSMS != 'ALL' && params.toBeSMS !='undefined') {
+
+        toBeSMS = params.toBeSMS
+        
+      }
+
+       def rankvalue = null
+      if(params.rankvalue != null && params.rankvalue != 'ALL' && params.rankvalue !='undefined') {
+
+        rankvalue = params.int("rankvalue")
+        
+      } 
+
+      def PercentageDeduction=null
+      if(params.PercentageDeduction != null && params.PercentageDeduction != '' && params.PercentageDeduction !='undefined') {
+
+        PercentageDeduction = params.PercentageDeduction
+        
+      } 
+
 	def result
 	def ir
         if (SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_COORDINATOR'))
@@ -460,6 +488,23 @@ class SchemeMemberController {
           if(memberstatus != null) eq('status',memberstatus)
           if(isProfileComplete != null)eq('isProfileComplete',profileCompleteFlag)
           if(toBeCommunicated != null) eq('toBeCommunicated',toBeCommunicated)
+          if(toBeSMS!= null) eq('toBeSMS',toBeSMS)
+          if(rankvalue != null){
+              if(rankvalue < 4){
+                eq('star',rankvalue)
+              }
+              else{
+                ge('star',rankvalue)
+              }
+          }
+          if(PercentageDeduction!= null){
+            and{
+              isNotNull("percentageDeductionSecondCentreUpper")
+              gt("percentageDeductionSecondCentreUpper",0)
+              isNotNull("percentageDeductionSecondCentreLower")
+              gt("percentageDeductionSecondCentreLower",0)
+            }
+          }
 				}
 			}
         	}
@@ -488,7 +533,25 @@ class SchemeMemberController {
             if(memberstatus != null) eq('status',memberstatus)
             if(isProfileComplete != null)eq('isProfileComplete',profileCompleteFlag)
             if(giftPrefferedLanguage != null )eq('giftPrefferedLanguage',giftPrefferedLanguage)
+            if(committedmode != null )eq('committedMode',committedmode)
             if(toBeCommunicated != null) eq('toBeCommunicated',toBeCommunicated)
+             if(toBeSMS!= null) eq('toBeSMS',toBeSMS)
+          if(rankvalue != null){
+              if(rankvalue < 4){
+                eq('star',rankvalue)
+              }
+              else{
+                ge('star',rankvalue)
+              }
+          }
+          if(PercentageDeduction!= null){
+            and{
+              isNotNull("percentageDeductionSecondCentreUpper")
+              gt("percentageDeductionSecondCentreUpper",0)
+              isNotNull("percentageDeductionSecondCentreLower")
+              gt("percentageDeductionSecondCentreLower",0)
+            }
+          }
             if(names != null) {
               member{
               or{
@@ -529,12 +592,15 @@ class SchemeMemberController {
             [cell: [
             	    it.scheme?.name,
             	    it.member?.toString(),
+                  it.member?.legalName,
+                  it.star,
             	    it.status,
+                  it.committedMode,
             	    it.comments,
             	    it.recentCommunication,
                     it.addressTheConcern,
                     (it.secondcentre == null)? (it.centre?.name):(it.centre?.name +" / "+ it.secondcentre?.name) ,
-                  (it.percentageDeductionUpper != null && it.percentageDeductionLower!= null)? (it.percentageDeductionUpper +" Out of "+it.percentageDeductionLower):"",
+                  (it.percentageDeductionSecondCentreUpper != null && it.percentageDeductionSecondCentreLower!= null)? (it.percentageDeductionSecondCentreUpper +" Out of "+it.percentageDeductionSecondCentreLower):"",
                     it.isProfileComplete,
                     it.toBeCommunicated
                 ], id: it.id]
@@ -627,6 +693,7 @@ def schemeMemberDataExportAsCVS={
     def selectedcenter = params.selectedcenter
     def giftchannel= params.giftchannel
     def exportType= params.exportType
+
     println "##############"+ params.member
     if(memberstatus == 'ALL') memberstatus = null
     if(giftchannel=='ALL') giftchannel= null
@@ -642,6 +709,25 @@ def schemeMemberDataExportAsCVS={
       if(params.toBeCommunicated != 'undefined' && params.toBeCommunicated=='Yes'){
         toBeCommunicated = 'Yes'
       }
+
+    def committedmode = null
+    if(params.committedmode != null && params.committedmode != '0' && params.committedmode !='undefined') {
+       committedmode = params.committedmode
+    }
+
+    def toBeSMS = null
+      if(params.toBeSMS != null && params.toBeSMS != 'ALL' && params.toBeSMS !='undefined') {
+
+        toBeSMS = params.toBeSMS
+        
+      }
+
+       def rankvalue = null
+      if(params.rankvalue != null && params.rankvalue != 'ALL' && params.rankvalue !='undefined') {
+
+        rankvalue = params.int("rankvalue")
+        
+      } 
 
     memberRecordSummary = SchemeMember.createCriteria().list(){
       'in'('scheme',schemes)
@@ -667,6 +753,20 @@ def schemeMemberDataExportAsCVS={
       if(giftPrefferedLanguage != null){
       	eq('giftPrefferedLanguage',giftPrefferedLanguage)
       }
+
+      if(committedmode != null){
+         eq('committedMode',committedmode)
+      }
+
+       if(toBeSMS!= null) eq('toBeSMS',toBeSMS)
+          if(rankvalue != null){
+              if(rankvalue < 4){
+                eq('star',rankvalue)
+              }
+              else{
+                ge('star',rankvalue)
+              }
+          }
       
     }
 
@@ -926,6 +1026,7 @@ def checkECSMandateFromCommitment={
     def result = Commitment.createCriteria().list{
                 'in'('scheme',schemes)
                 eq('status','ACTIVE')
+                isNotNull("ecsMandate")
               }
     //for each commitment ,find scheme member then update consumer number
 
@@ -958,4 +1059,237 @@ def checkECSMandateFromCommitment={
     return [schemes:schemes , size:result.size(), notfound:notfound, noLinkedIndividuals:noLinkedIndividuals]
 
 }
+/*
+this method find all those donation records which have no center set ,and if there is no scheme member then it sets to default center
+pass as parameter
+*/
+def updateDonationRecordWithDefaultCenter={
+   if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE')){
+           render "you not authorized to do this action!!"
+           return
+        }
+
+        println "running updateDonationRecordWithDefaultCenter"
+        def schemes= helperService.getSchemesForRole('ROLE_DONATION_EXECUTIVE',session.individualid)
+
+        def centre= Centre.findById(params."centre.id")
+
+        def recordsWithEmptyCenter = DonationRecord.createCriteria().list(){                     
+            'in'("scheme",schemes)
+            isNull("centre")
+        }  
+
+        for(record in recordsWithEmptyCenter){
+          def schemeMemberInstance = SchemeMember.findBySchemeAndMember(record.scheme, record.donatedBy)
+          if(schemeMemberInstance == null){
+            record.centre = centre
+             if (!record.save()) {
+                    record.errors.each {
+                        println it
+                      }
+              }
+          }
+        }  
+
+        render "All Records (having no center and no scheme member) have been updated with center " + centre.name
+
+}
+
+/*
+active ,-all members having commitment and ecs mandate not null and active commitment are marked active for that scheme
+iregular --all such members ,which commitment mode is not ECS , and number of donation given in previous one year is less then 10 are marked irregular.
+in-active --those not marked as prospect ,and suspended and not given any donation or the last donation given by them is more than 1 year oldm then mark them in-active 
+  or if there donation frequency is yearly or half yearly then mark them irregular , but not given more than 2 years then mark them also in-active
+*/
+ def updateSchemeMembersStatus={
+
+    if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE')){
+           render "you not authorized to do this action!!"
+           return
+        }
+
+        println "running updateSchemeMembersStatus"
+        def schemes= helperService.getSchemesForRole('ROLE_DONATION_EXECUTIVE',session.individualid)
+        //first making ECS members active
+        def schemeCommitments = Commitment.createCriteria().list{             
+               eq('status','ACTIVE')
+               isNotNull("ecsMandate")
+               'in'('scheme',schemes)
+          }
+          schemeCommitments.each{commitment->
+            def schemeMember = SchemeMember.findBySchemeAndMember(commitment.scheme, commitment.committedBy)
+            if(schemeMember != null){
+              schemeMember.status = "ACTIVE"
+              if (!schemeMember.save()) {
+                    schemeMember.errors.each {
+                        println it
+                      }
+              }
+            }
+          }
+          //now making members irregular
+          def individualGivingViaECS = Commitment.createCriteria().list{   
+              projections{
+                property("committedBy")
+              }          
+               eq('status','ACTIVE')
+               isNotNull("ecsMandate")
+               'in'('scheme',schemes)
+          }
+
+          def nonECSSchemeMembers = SchemeMember.createCriteria().list(){               
+              'in'('scheme',schemes)
+              not{ 'in' ("member", individualGivingViaECS)}
+              not{'in'("status",["PROSPECT","NOTINTERESTED","SUSPENDED"])}
+              not{'in'("committedFrequency", ["HALFYEARLY","YEARLY"])}
+          }
+
+          def today = new Date()
+          def oneyearbackdate = today - 365
+          nonECSSchemeMembers.each{member->
+              member.status="INACTIVE"
+              //find donation from such members within last one year
+              def noOfdonations = DonationRecord.createCriteria().list(){
+                  projections{
+                    rowCount()
+                  }
+                'in'('scheme',schemes)
+                eq("donatedBy", member.member)
+                ge("donationDate",oneyearbackdate)
+              }
+              //if no of donations are more than 10 then make active ,
+              //if less then 10 but greater than 0 ,then make them irregular
+              if(noOfdonations[0] > 10) member.status="ACTIVE"
+              if(noOfdonations[0] > 0 && noOfdonations[0] <=10) member.status="IRREGULAR"
+              if (!member.save()) {
+                    member.errors.each {
+                        println it
+                      }
+              }
+          }
+          // if such members which have yearly or half yearly set ,but not given for more than two year will be marked inactive
+           def twoyearbackdate = today - 730
+           def nonECSSchemeMembersYearly = SchemeMember.createCriteria().list(){               
+              'in'('scheme',schemes)
+              not{ 'in' ("member", individualGivingViaECS)}
+              not{'in'("status",["PROSPECT","NOTINTERESTED","SUSPENDED"])}
+              'in'("committedFrequency", ["HALFYEARLY","YEARLY"])
+          }
+          nonECSSchemeMembersYearly.each{member->
+               member.status="INACTIVE"
+              //find donation from such members within last two year
+              def noOfdonations = DonationRecord.createCriteria().list(){
+                  projections{
+                    rowCount()
+                  }
+                'in'('scheme',schemes)
+                eq("donatedBy", member.member)
+                ge("donationDate",twoyearbackdate)
+              }
+              //if no of donations are more than 10 then make active ,
+              //if less then 10 but greater than 0 ,then make them irregular
+              if(noOfdonations[0] > 0) member.status="IRREGULAR"
+              
+              if (!member.save()) {
+                    member.errors.each {
+                        println it
+                      }
+              }
+          }
+
+          // if any propspect member has given donation within one month ,make him also irregular status
+            def onemonthbackdate = today - 30
+           def nonECSSchemeMembersProspects = SchemeMember.createCriteria().list(){               
+              'in'('scheme',schemes)
+              not{ 'in' ("member", individualGivingViaECS)}
+              'in'("status",["PROSPECT","NOTINTERESTED","SUSPENDED"])
+          }
+          nonECSSchemeMembersProspects.each{member->
+               
+              //find donation from such members within last two year
+              def noOfdonations = DonationRecord.createCriteria().list(){
+                  projections{
+                    rowCount()
+                  }
+                'in'('scheme',schemes)
+                eq("donatedBy", member.member)
+                ge("donationDate",onemonthbackdate)
+              }
+              //if no of donations are more than 10 then make active ,
+              //if less then 10 but greater than 0 ,then make them irregular
+              if(noOfdonations[0] > 0) member.status="IRREGULAR"
+              
+              if (!member.save()) {
+                    member.errors.each {
+                        println it
+                      }
+              }
+          }
+
+
+          render "Status of All Scheme Members of your scheme is updated "
+
+ }
+
+ def updateSchemeMembersStars={
+     if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE')){
+           render "you not authorized to do this action!!"
+           return
+        }
+
+        println "running updateSchemeMembersStars"
+        def schemes= helperService.getSchemesForRole('ROLE_DONATION_EXECUTIVE',session.individualid)
+
+         def schemeMembers = SchemeMember.createCriteria().list(){               
+              'in'('scheme',schemes)              
+          }
+
+          def today = new Date()
+          def oneyearbackdate = today - 400
+
+          schemeMembers.each{schemeMember->
+              schemeMember.star= 0
+              def individual = schemeMember.member
+              if(individual != null){
+                //find all the donatiions sum for this member within one year
+                 def totaldonations = DonationRecord.createCriteria().list(){
+                      projections{
+                        sum("amount")
+                      }
+                    'in'('scheme',schemes)
+                    eq("donatedBy", schemeMember.member)
+                    ge("donationDate",oneyearbackdate)
+               }
+               if(totaldonations != null && totaldonations[0] != null )
+               {
+                  if(totaldonations[0] ==0){
+                  schemeMember.star= 0
+                 }
+                 else{
+                  //divide by 12
+                  schemeMember.star = Math.floor(totaldonations[0]/12000f)
+                  
+                 } 
+               }
+               
+
+                if (!schemeMember.save()) {
+                    schemeMember.errors.each {
+                        println it
+                      }
+              }
+              }
+          }
+
+          render "All Scheme Members are given Stars "
+
+ }
+
+	def syncdonation() {
+		def query="insert into donation_record (version,amount,creator,date_created,donated_by_id,donation_date,last_updated,mode_id,scheme_id,updator,donation_id,payment_details) select 0,amount,creator,date_created,donated_by_id,donation_date,last_updated,mode_id,scheme_id,updator,id,comments from donation d where scheme_id=(select id from scheme where name='EASY') and not exists (select 1 from donation_record dr where dr.donation_id=d.id);"
+		def sql = new Sql(dataSource);
+		sql.execute(query)
+		sql.close()
+		render "OK"
+	}
 }

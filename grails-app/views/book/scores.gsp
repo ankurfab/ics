@@ -25,11 +25,27 @@
 			<th>BookPoints</th>			
 		</tr>
 		<g:each var="score" in="${scores}">
+		<!-- find the team -->
+		<g:set var="team" value=""/>
+		<g:set var="bo" value="${ics.BookOrder.createCriteria().get{challan{eq('id',score.challan_id)}}}" /> 
+		<g:if test="${bo}">
+			<g:set var="team" value="${bo.team?.comments}"/>
+		</g:if>
+		<g:if test="${!bo}">
+			<g:set var="rgs" value="${ics.RelationshipGroup.createCriteria().list(max:1){
+					eq('category','JIVADAYA')
+					eq('refid',score.dist_id.toInteger())
+					order('id','desc')
+					}}"/>
+			<g:if test="${rgs.size()>0}">
+				<g:set var="team" value="${rgs[0].comments}"/>
+			</g:if>
+		</g:if>
 		<tr>
 			<td>${score.date}</td>
 			<td>${score.distributor+" "}
-				<g:if test="${score.team_id}">
-				(${ics.RelationshipGroup.get(score.team_id)?.comments})
+				<g:if test="${team}">
+				(${team})
 				</g:if>
 			</td>
 			<td>${score.Small}</td>

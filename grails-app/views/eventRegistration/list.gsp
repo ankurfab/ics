@@ -33,6 +33,11 @@
 		</style>		
 	</head>
 	<body>
+		<g:javascript src="tinymce/tinymce.min.js" />    
+
+		<g:render template="/common/apisms" />
+		<g:render template="/common/mandrillemail" />
+
 		<div class="nav">
 		    <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
 		    <sec:ifAnyGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_REGISTRATION_COORDINATOR,ROLE_EVENTADMIN">
@@ -50,6 +55,7 @@
 		<div id='message' class="message" style="display:none;"></div>
 
 		<g:form name="searchTab" action="list">
+			Registrations for Event:<g:select id="eventid" name="eventid" from="${ics.Event.list(['sort':'title'])}" optionKey="id" optionValue="title" onchange="gridReload()" value="${params.eid}"/>
 			<table class="searchForm" id="searchTab">
 				<tr>	
 					<td class="searchLabel"><label>Verification Status:</label></td>
@@ -104,13 +110,24 @@
 		<table id="eventRegistration_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 		<!-- pager will hold our paginator -->
 		<div id="eventRegistration_list_pager" class="scroll" style="text-align:center;"></div>
-		
-	        <sec:ifAnyGranted roles="ROLE_REGISTRATION_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_COORDINATOR">
+
+	        <sec:ifAnyGranted roles="ROLE_EVENTADMIN,ROLE_REGISTRATION_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_COORDINATOR">
 		<div><input class="menuButton" type="BUTTON" id="btnSMS" value="SMS" gridName="#eventRegistration_list" entityName="EventRegistration"/>
 		<input class="menuButton" type="BUTTON" id="btnEMAIL" value="EMAIL" gridName="#eventRegistration_list" entityName="EventRegistration"/></div>
 		</sec:ifAnyGranted>
+
+	        <sec:ifAnyGranted roles="ROLE_EVENTADMIN">
+		<div>
+		Upload accommodation allotment in bulk: <br />
+		    <g:uploadForm controller="EventRegistration" action="bulkAccoAllot">
+			<g:hiddenField name="eid" value="${params.eid}" />
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
+		</div>            
+		</sec:ifAnyGranted>
 		
-	        <sec:ifAnyGranted roles="ROLE_REGISTRATION_COORDINATOR,ROLE_ACCOMMODATION_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_COORDINATOR,ROLE_VIP_ACCOMMODATION,ROLE_EVENTADMIN">
+	        <!--<sec:ifAnyGranted roles="ROLE_REGISTRATION_COORDINATOR,ROLE_ACCOMMODATION_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_COORDINATOR,ROLE_VIP_ACCOMMODATION,ROLE_EVENTADMIN">
 		<div>
 		<table><tr><td>Download Registration Data(With Acco)
 		<export:formats formats="['excel']" controller="helper" action="eventRegWithAccoReport"/>
@@ -122,7 +139,7 @@
 		<export:formats formats="['excel']" controller="helper" action="eventAccoCheckinReport"/></td>
 		</tr></table>
 		</div>
-		</sec:ifAnyGranted>
+		</sec:ifAnyGranted>-->
 
 		<div>
 			<table>
@@ -137,23 +154,25 @@
 			</table>
 		</div>
 
-		<g:render template="/common/sms" />
-		<g:render template="/common/email" />
-
 		<script type="text/javascript">// <![CDATA[
 		  /* when the page has finished loading.. execute the follow */
 		  $(document).ready(function () {		    
 		    jQuery("#eventRegistration_list").jqGrid({
 		      url:'jq_eventRegistration_list',
+		      postData:{
+				eventid:function(){return $("#eventid").val();}
+			},
 		      datatype: "json",
-		      colNames:['Name','Temple/Center','Country','PhoneNumber','Registration Code','Registered By','Registration Date','Arrival Date','Departure Date','Registered','Arrived','CheckedIn','Accommodation','Last Updated By','Last Updated On','defArr','ns','rc','ac','cc','ta','id'],
+		      colNames:['Name','Temple/Center','Country','PhoneNumber','Email','Status','Registration Code','Registered By','Registration Date','Arrival Date','Departure Date','Registered','Arrived','CheckedIn','Accommodation','Last Updated By','Last Updated On','defArr','ns','rc','ac','cc','ta','id'],
 		      colModel:[
 			{name:'name', search:true,
 			formatter:'showlink', 
-             		formatoptions:{baseLinkUrl:'show'}},
+             		formatoptions:{baseLinkUrl:'registrationDetails'}},
 			{name:'connectedIskconCenter', search:true},
 			{name:'country', search:true},
 			{name:'contactNumber', search:true},
+			{name:'email', search:true},
+			{name:'status', search:true},
 			{name:'regCode', search:true},
 			{name:'creator', search:true},
 			{name:'dateCreated', search:false},
@@ -222,11 +241,23 @@
 
 		    $("#eventRegistration_list").jqGrid('filterToolbar',{autosearch:true});
 		    $("#eventRegistration_list").jqGrid('navGrid',"#eventRegistration_list_pager",
-			{add:false,edit:false,del:false, search: false}, // which buttons to show?
+			{add:false,edit:false,del:true, search: false}, // which buttons to show?
 			{},         // edit options
 			{},  // add options
 			{}          // delete options
 		    );
+
+    <sec:ifAnyGranted roles="ROLE_REGISTRATION_COORDINATOR,ROLE_ACCOMMODATION_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_COORDINATOR,ROLE_VIP_ACCOMMODATION,ROLE_EVENTADMIN">
+	// add custom button to export the detail data to excel	
+	$("#eventRegistration_list").jqGrid('navGrid',"#eventRegistration_list_pager").jqGrid('navButtonAdd',"#eventRegistration_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+	       onClickButton : function () { 
+			var url = "${createLink(controller:'eventRegistration',action:'export')}"+"?eid="+$("#eventid").val();		
+			jQuery("#eventRegistration_list").jqGrid('excelExport',{"url":url});
+	       }
+	       });
+     </sec:ifAnyGranted>      
+
+
 
 	        });
 

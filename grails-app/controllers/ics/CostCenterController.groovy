@@ -8,6 +8,7 @@ class CostCenterController {
     def dataSource
     def reportService
     def commsService
+    def financeService
 
     def index = { redirect(action: "list", params: params) }
 
@@ -15,7 +16,7 @@ class CostCenterController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def list = {
-        params.max = Math.min(params.max ? params.max.toInteger() : 10,  100)
+        params.max = 200
         [costCenterInstanceList: CostCenter.list(params), costCenterInstanceTotal: CostCenter.count()]
     }
 
@@ -169,6 +170,10 @@ class CostCenterController {
     	log.debug("In statementReport with params: "+params)
     	
     	def cc = CostCenter.get(params.'costCenter.id')
+    	def ccat
+    	if(params.'costCategory.id')
+    		ccat = CostCategory.get(params.'costCategory.id')
+    		
      	def fd='',td=''
     	if(params.fromDate)
     		fd = Date.parse('dd-MM-yyyy', params.fromDate)
@@ -185,7 +190,129 @@ class CostCenterController {
  	td.clearTime()
 
 	
-	def result = reportService.ccStatement(cc,fd,td)
-    	[department: cc,fd:fd, td: td, balance:cc.budget?:0, records: result]
+	def result
+	
+	if(ccat)
+		result = reportService.costCategoryStatement(ccat,fd,td)
+	else
+		result = reportService.ccStatement(cc,fd,td)
+    	[ccat:ccat, cc: cc,fd:fd, td: td, balance:cc?.budget?:0, records: result]
     }
+
+    def budget(){}
+    
+    def jq_budget_list = {
+      def sortIndex = "name"
+      def sortOrder  = params.sord ?: 'asc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = CostCenter.createCriteria().list(max:maxRows, offset:rowOffset) {
+		if (params.vertical)
+			costCategory{ilike('name',params.vertical)}
+
+		if (params.department)
+			ilike('name',params.department)
+
+		costCategory{order("name")}
+		order(sortIndex, sortOrder)
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = result.collect {
+            if(!it.budget)
+            	it.budget = 0
+            [cell: [
+            	    it.costCategory.name,
+            	    it.name,
+            	    it.budget*12,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget,
+            	    it.budget
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+
+	def jq_edit_budget = {
+	      log.debug('In jq_budget_edit:'+params)
+	      def cc = null
+	      def message = ""
+	      def state = "FAIL"
+	      def id
+
+	      // determine our action
+	      switch (params.oper) {
+		case 'add':
+		  break;
+		case 'del':
+		  break;
+		 default :
+		  // edit action
+		  // first retrieve the cc by its ID
+		  cc = CostCenter.get(params.id)
+		  if (cc) {
+		    // set the properties according to passed in parameters
+		    try{
+		    	cc.budget = new Long(params.budget)/12
+		    }
+		    catch(Exception e){
+		    	log.debug(e)
+		    	cc.budget = 0
+		    	}
+		    cc.updator = springSecurityService.principal.username
+		    if (! cc.hasErrors() && cc.save()) {
+		      message = "Budget Updated"
+		      id = cc.id
+		      state = "OK"
+		    } else {
+			    cc.errors.allErrors.each {
+				println it
+				}
+		      message = "Could Not Update Budget"
+		    }
+		  }
+		  break;
+ 	 }
+
+	      def response = [message:message,state:state,id:id]
+
+	      render response as JSON
+	    }    
+	
+	//http://localhost:8080/ics/costCenter/populateStats?year=2014
+	def populateStats() {
+		def result = financeService.populateStats(params)
+		render result
+	}
+	
+	//http://localhost:8080/ics/costCenter/createStatsAttributes?year=2014
+	def createStatsAttributes() {
+		def result = financeService.createStatsAttributes(params)
+		render result
+	}
+	
+	def summary(){
+		[year:params.year]
+	}
+	
+	def budgetchart()  {
+		render(template: "budget", model: [book: ''])
+	}
+
 }

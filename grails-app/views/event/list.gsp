@@ -92,7 +92,33 @@
 				
 			}
 		});
+
+        $('#category').change(function(){
+            var selected = $('#category').val();
+            var events = {
+                  url: 'list.json',
+                  type: 'POST',
+                  data: {
+                    category: selected
+                  }
+            }
+            $('#calendar').fullCalendar('removeEventSource', events);
+            $('#calendar').fullCalendar('addEventSource', events);
+        });
 		    
+        $('#type').change(function(){
+            var selected = $('#type').val();
+            var events = {
+                  url: 'list.json',
+                  type: 'POST',
+                  data: {
+                    type: selected
+                  }
+            }
+            $('#calendar').fullCalendar('removeEventSource', events);
+            $('#calendar').fullCalendar('addEventSource', events);
+        });
+
 	    });
 
 
@@ -105,6 +131,36 @@
             </sec:ifAnyGranted>
         </div>
         <div class="body">
+
+            <h1>Calendar of Programs and Events</h1>
+                <div class="dialog">
+                    <table>
+                        <tbody>
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    Category
+                                </td>
+                                <td valign="top" class="value">
+                                    <g:select name="category"
+				              from="${ics.Event.createCriteria().list{projections{distinct('category')}}}"
+				              noSelection="['':'-Choose Category-']"
+				              value=""/>
+                                </td>
+                                <td valign="top" class="name">
+                                    Type
+                                </td>
+                                <td valign="top" class="value">
+                                    <g:select name="type"
+				              from="${ics.Event.createCriteria().list{projections{distinct('type')}}}"
+				              noSelection="['':'-Choose Type-']"				              
+				              value=""/>
+                                </td>
+                            </tr>                                                
+                        </tbody>
+                    </table>
+                </div>                
+
+
             
             <div id='calendar'></div>
 

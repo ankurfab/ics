@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 class AccommodationService {
 
     def springSecurityService
+    def helperService
 
     def serviceMethod() {
     }
@@ -580,5 +581,35 @@ class AccommodationService {
 		places += it.eventAccommodation?.toString() + " "+it.numberCheckedin+"(P"+it.numberofPrabhujisCheckedin+" M"+it.numberofMatajisCheckedin+" C"+it.numberofChildrenCheckedin+" B"+it.numberofBrahmacharisCheckedin+"),"
 		}
 	    return places    
+    }
+    
+    //@TODO: hardcoding for event/eventregistrations
+    def bulkAccoAllot(Object tokens) {
+    	//format
+    	//personname, place1name,place1room,place2name,place2room
+    	
+    	//check if valid allotment
+    	if(tokens[0] && tokens[2] && tokens[2]!='NA') {
+    		//first find the person
+    		def person = Person.findByNameAndReference(tokens[0],'EventRegistration')
+    		if(person) {
+    			log.debug("Allotting  for :"+tokens[0])
+    			def er = EventRegistration.get(new Long(person.category))
+			Map amap = [category:'EVENTACCOMMODATION',type:person.id,place0:tokens[1],place0_room:tokens[2],place1:tokens[3],place1_room:tokens[4]]
+			log.debug(amap)
+			helperService.storeAV(amap)
+			//update the er status
+			er.accommodationAllotmentStatus = AccommodationAllotmentStatus.ALLOTEMENT_COMPLETE
+			if(!er.save())
+				er.errors.allErrors.each {log.debug("bulkAccoAllot:cant update er status:"+it)}
+			else
+				log.debug("Allotted for erid:"+er.id+" person:"+person.name)
+    		}
+    		else
+    			log.debug("Could not find  for :"+tokens[0])
+    		
+    	}
+    	return "done"
+    	
     }
 }

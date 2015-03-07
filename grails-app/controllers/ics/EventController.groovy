@@ -5,6 +5,8 @@ import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 
 class EventController {
     def springSecurityService
+    def individualService
+    def eventService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -15,7 +17,13 @@ class EventController {
     def list = {
         params.max = Math.min(params.max ? params.int('max') : 10, 100)
         
-        def eventInstanceList = Event.list(params)
+        def eventInstanceList = Event.createCriteria().list{
+        		isNull('course')
+        		if(params.category)
+        			eq('category',params.category)
+        		if(params.type)
+        			eq('type',params.type)
+        	}
 
         withFormat {
             html {
@@ -239,9 +247,42 @@ class EventController {
 	def result = Event.createCriteria().list(max:maxRows, offset:rowOffset) {
 		if (params.title)
 			ilike('title',params.title)
-
 		if (params.description)
 				ilike('description',params.description)
+		if (params.venue)
+				ilike('description',params.description)
+		if (params.contactPerson)
+				contactPerson{
+					or {
+						ilike('legalName',params.contactPerson)
+						ilike('initiatedName',params.contactPerson)
+					   }
+					}
+		if (params.startDate)
+				ge('startDate',Date.parse('dd-MM-yyyy', params.startDate))
+		if (params.endDate)
+				le('endDate',Date.parse('dd-MM-yyyy', params.endDate))
+		if (params.comments)
+				ilike('comments',params.comments)
+		if (params.category)
+				eq('category',params.category)
+		if (params.instructor)
+				course{
+					instructor{
+						or {
+							ilike('legalName',params.instructor)
+							ilike('initiatedName',params.instructor)
+						   }
+						}
+					}
+		if (params.type)
+				eq('type',params.type)
+		if (params.course)
+				course{ilike('name',params.course)}
+		if (params.registrationMode)
+				eq('registrationMode',params.registrationMode)
+		if (params.status)
+				eq('status',params.status)
 		order(sortIndex, sortOrder)
 
 	}
@@ -252,7 +293,20 @@ class EventController {
       def jsonCells = result.collect {
             [cell: [
             	    it.title,
-            	    it.description
+            	    it.description,
+            	    it.venue,
+            	    it.contactPerson?.toString(),
+            	    it.startDate?.format('dd-MM-yyyy HH:mm'),
+            	    it.endDate?.format('dd-MM-yyyy HH:mm'),
+            	    it.comments,
+            	    it.category,
+            	    it.type,
+            	    it.physicalAttendance,
+            	    it.virtualAttendance,
+            	    it.course?.name,
+            	    it.course?.instructor?.toString(),
+            	    it.registrationMode,
+            	    it.status,
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -347,6 +401,28 @@ class EventController {
 		
 	def result = EventParticipant.createCriteria().list(max:maxRows, offset:rowOffset) {
 		eq('event',event)
+		if(params.invited=='yes')
+			eq('invited',true)
+		if(params.invited=='no')
+			eq('invited',false)
+		if(params.confirmed=='yes')
+			eq('confirmed',true)
+		if(params.confirmed=='no')
+			eq('confirmed',false)
+		if(params.attended=='yes')
+			eq('attended',true)
+		if(params.attended=='no')
+			eq('attended',false)
+		if(params.comments)
+			ilike('comments',params.comments)
+		if(params.regCode)
+			eq('regCode',params.regCode)
+		if(params.role)
+			eq('role',params.role)
+		if(params.flgAddressPrinted=='yes')
+			eq('flgAddressPrinted',true)
+		if(params.flgAddressPrinted=='no')
+			eq('flgAddressPrinted',false)
 
 		order(sortIndex, sortOrder)
 
@@ -355,9 +431,25 @@ class EventController {
       def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
 
+      def indDetails
       def jsonCells = result.collect {
+            indDetails = individualService.getDetails(it.individual.id)
             [cell: [
             	    it.individual?.toString(),
+            	    it.individual?.isMale?'Male':'Female',
+            	    it.individual?.dob?.format('dd-MM-yyyy'),
+            	    /*individualService.getFamily(it.individual),
+            	    individualService.getCounsellor(it.individual),*/
+            	    indDetails.familyof,
+            	    indDetails.counsellor,
+            	    it.invited?'yes':'no',
+            	    it.confirmed?'yes':'no',
+            	    it.attended?'yes':'no',
+            	    it.comments,
+            	    it.regCode,
+            	    it.role,
+            	    it.comments,
+            	    it.flgAddressPrinted?'yes':'no',
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -401,7 +493,7 @@ class EventController {
 		  	idList.each
 		  	{
 			  // check participant exists
-			  participant  = Participant.get(it)
+			  participant  = EventParticipant.get(it)
 			  if (participant) {
 			    // delete participant
 			    if(!participant.delete())
@@ -420,7 +512,7 @@ class EventController {
 		 default :
 		  // edit action
 		  // first retrieve the participant by its ID
-		  participant = Participant.get(params.id)
+		  participant = EventParticipant.get(params.id)
 		  if (participant) {
 		    // set the properties according to passed in parameters
 		    participant.properties = params
@@ -444,5 +536,141 @@ class EventController {
 	      render response as JSON
 	    }      
 
+
+    def jq_detail_list = {
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'asc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def event = null
+	if(params.eventid)
+		event=Event.get(params.eventid)
+		
+	def result = EventDetail.createCriteria().list(max:maxRows, offset:rowOffset) {
+		eq('event',event)
+		if(params.category)
+			eq('category',params.category)
+		if(params.type)
+			eq('type',params.type)
+		if(params.details)
+			ilike('details',params.details)
+		order(sortIndex, sortOrder)
+
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = result.collect {
+            [cell: [
+            	    it.category,
+            	    it.type,
+            	    it.details
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+
+	def jq_edit_detail = {
+	      def detail = null
+	      def message = ""
+	      def state = "FAIL"
+	      def id
+
+		def event = null
+		if(params.eventid)
+			event=Event.get(params.eventid)
+
+	      // determine our action
+	      switch (params.oper) {
+		case 'add':
+		  // add detail sent
+		  detail = new EventDetail(params)
+		  detail.event = event
+		  detail.updator=detail.creator=springSecurityService.principal.username
+		  if (! detail.hasErrors() && detail.save()) {
+		    message = "Detail Saved.."
+		    id = detail.id
+		    state = "OK"
+		  } else {
+		    detail.errors.allErrors.each {
+			log.debug(it)
+			}
+		    message = "Could Not Save Detail"
+		  }
+		  break;
+		case 'del':
+		  	def idList = params.id.tokenize(',')
+		  	idList.each
+		  	{
+			  // check detail exists
+			  detail  = EventDetail.get(it)
+			  if (detail) {
+			    // delete detail
+			    if(!detail.delete())
+			    	{
+				    detail.errors.allErrors.each {
+					log.debug("In jq_detail_edit: error in deleting detail:"+ it)
+					}
+			    	}
+			    else {
+				    message = "Deleted!!"
+				    state = "OK"
+			    }
+			  }
+		  	}
+		  break;
+		 default :
+		  // edit action
+		  // first retrieve the detail by its ID
+		  detail = EventDetail.get(params.id)
+		  if (detail) {
+		    // set the properties according to passed in parameters
+		    detail.properties = params
+			  detail.updator = springSecurityService.principal.username
+		    if (! detail.hasErrors() && detail.save()) {
+		      message = "Detail  ${detail.id} Updated"
+		      id = detail.id
+		      state = "OK"
+		    } else {
+			    detail.errors.allErrors.each {
+				println it
+				}
+		      message = "Could Not Update Detail"
+		    }
+		  }
+		  break;
+ 	 }
+
+	      def response = [message:message,state:state,id:id]
+
+	      render response as JSON
+	    }      
+
+
+	def bulkUploadParticipants() {
+		def response = eventService.bulkUploadParticipants(params)
+		render response as JSON
+	}
+	
+	//assign event_participant roles to all the specified participants
+	def setupParticipants() {
+		render eventService.setupParticipants(params)
+	}
+	
+	def inviteByRole() {
+		render eventService.inviteByRole(params)
+	}
+	
+	//utility method to setup master data for yatra like events
+	def setupMasterData() {
+		def response = eventService.setupMasterData(params)
+		render response as JSON
+	}
 
 }

@@ -83,7 +83,11 @@
 				<g:select name="mode.id" from="${ics.PaymentMode.findAllByInperson(true,[sort:'name'])}" optionKey="id" value="${ ics.PaymentMode.findByNameAndInperson('Cash',true)?.id}"   noSelection="['':'-Select Payment Mode-']"/>
 			</td>
 			<td>
-				<g:textField name="details" placeholder="Payment Details"/>
+				<g:textField name="instrumentNo" placeholder="Instrument No"/>
+				<g:textField name="instrumentDate" placeholder="Instrument Date(dd-mm-yyyy)"/>
+				<g:textField name="bankName" placeholder="Bank Name"/>
+				<g:textField name="bankBranch" placeholder="Bank Branch"/>
+				<g:textField name="details" placeholder="Payment Comments"/>
 			</td>
 		</tr>
 	</table>
@@ -214,6 +218,13 @@ function calculateSum(cls) {
 	});
     return tot;
 }
+
+	$("#instrumentDate").datepicker({
+		yearRange : "-1:+0",
+		changeMonth : true,
+		changeYear : true,
+		dateFormat : 'dd-mm-yy'
+	});
 
     });
 </script>

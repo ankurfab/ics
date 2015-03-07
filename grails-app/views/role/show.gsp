@@ -12,7 +12,7 @@
             <span class="menuButton"><a class="home" href="${createLink(uri: '/')}">Home</a></span>
             <span class="menuButton"><g:link class="list" action="list"><g:message code="default.list.label" args="[entityName]" /></g:link></span>
             <span class="menuButton"><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></span>
-	    <span class="menuButton"><g:link class="create" controller="helper" action="message" params="[entity: 'Role',id: roleInstance?.id, via:'SMS']">Send SMS Message</g:link></span>
+	    <span class="menuButton"><g:link class="create" controller="helper" action="message" params="[entityName: 'Role',ids: roleInstance?.id, via:'SMS',depid:ics.Department.findByName('TMC')?.id]">Send SMS Message</g:link></span>
 	    <span class="menuButton"><g:link class="create" controller="helper" action="message" params="[entity: 'Role',id: roleInstance?.id, via:'EMAIL']">Send Email Message</g:link></span>
         </div>
         <div class="body">

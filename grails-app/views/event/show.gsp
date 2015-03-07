@@ -12,6 +12,8 @@
             <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
             <span class="menuButton"><g:link class="list" action="list">Event Calendar</g:link></span>
             <span class="menuButton"><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></span>
+            <span class="menuButton"><g:link class="create" controller="EventDetail" action="create" params="['event.id':eventInstance?.id]">EventDetails</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="Event" action="gridlist" params="['event.id':eventInstance?.id]">EventParticipants</g:link></span>
             <span class="menuButton"><g:link class="create" controller="menuOrder" action="create" params="['eid':eventInstance?.id]">Place Menu Order</g:link></span>
             <span class="menuButton"><g:link class="create" controller="EventRegistration" action="list" params="['eid':eventInstance?.id]">EventRegistration</g:link></span>
             <span class="menuButton"><g:link class="create" controller="EventAccommodation" action="list" params="['eid':eventInstance?.id]">EventAccommodation</g:link></span>
@@ -41,6 +43,13 @@
                             <td valign="top" class="name"><g:message code="event.category.label" default="Category" /></td>
                             
                             <td valign="top" class="value">${fieldValue(bean: eventInstance, field: "category")}</td>
+                            
+                        </tr>
+                    
+                        <tr class="prop">
+                            <td valign="top" class="name"><g:message code="event.type.label" default="Type" /></td>
+                            
+                            <td valign="top" class="value">${fieldValue(bean: eventInstance, field: "type")}</td>
                             
                         </tr>
                     

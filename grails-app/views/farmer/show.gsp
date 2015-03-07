@@ -75,6 +75,13 @@
                                     ${fieldValue(bean: farmerInstance, field: 'education')}
 
                                 </td>
+                                <td valign="top" class="name">
+                                    <label for="gender"><g:message code="farmer.gender" default="Gender" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'gender', 'errors')}">
+                                    ${fieldValue(bean: farmerInstance, field: 'gender')}
+
+                                </td>
                             </tr>
 
                             <tr class="prop">
@@ -99,6 +106,16 @@
                                     ${fieldValue(bean: farmerInstance, field: 'panCardNo')}
 
                                 </td>
+                                <td valign="top" class="name">
+                                    <label for="electionCardNo"><g:message code="farmer.electionCardNo" default="Election Card No" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'electionCardNo', 'errors')}">
+                                    ${fieldValue(bean: farmerInstance, field: 'electionCardNo')}
+
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
                                 <td valign="top" class="name">
                                     <label for="category"><g:message code="farmer.category" default="Category" />:</label>
                                 </td>
@@ -316,6 +333,13 @@
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'numHybridCows', 'errors')}">
                                     ${fieldValue(bean: farmerInstance, field: 'numHybridCows')}
+
+                                </td>
+                                <td valign="top" class="name">
+                                    <label for="numBuffaloes"><g:message code="farmer.numBuffaloes" default="Num Buffaloes" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: farmerInstance, field: 'numBuffaloes', 'errors')}">
+                                    ${fieldValue(bean: farmerInstance, field: 'numBuffaloes')}
 
                                 </td>
                             </tr>

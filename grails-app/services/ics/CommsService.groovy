@@ -115,9 +115,9 @@ class CommsService {
 		ret = mandrillService.send(params.key,message)
 		log.debug("Mandrill mail "+ret?.status+":"+params.toName+":"+params.toEmail)
 		}
-		catch(Exception e) {log.debug(e)}
+		catch(Exception e) {log.debug("EXCEPTION IN sendMandrill :"+e)}
 		
-		return ret?.status
+		return ret?.status?:''
 	}
 	
 	def sendSms(String baseUrl,String path,Map<String,String> query) {
@@ -156,5 +156,49 @@ class CommsService {
     	log.debug("SMS sent status: "+ret)
     	
     }
+    
+    def genericComms(Map params) {
+    	switch(params.commsType) {
+    		case "EMAIL":
+    			genericEmailComms(params)
+    			break
+    		case "SMS":
+    			genericSmsComms(params)
+    			break
+    		default:
+    			break
+    	}
+    	return "OK"
+    }
+
+    @Async
+    def genericSmsComms(Map params) {
+	def template = Template.get(params.tid)
+	def depcp = DepartmentCP.get(params.depcpid)
+	def total=0,success=0
+	params.indids?.tokenize(',').each {
+		total++
+		try{
+			def individual = Individual.get(it)
+			def loginid = Eval.x( individual, "x.${'loginid'}" )
+			def body = fillTemplate(template,[individual.toString(),loginid])
+			log.debug("sending genericSmsComms:"+body)
+			sendSms(depcp.cp,VoiceContact.findByCategoryAndIndividual('CellPhone',individual)?.number,body)
+			success++
+		}
+		catch(Exception e){
+			log.debug(e)
+			}
+	}
+	log.debug("genericSmsComms:"+success+"/"+total)
+    }
+
+    @Async
+    def genericEmailComms(Map params) {
+	def template = Template.findByCodeAndCategory("EPSETUP","EMAIL")
+	def body = commsService.fillTemplate(template,[ep.individual.toString(),loginid])
+	commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:ep.individual.toString(),toEmail:EmailContact.findByCategoryAndIndividual('Personal',ep.individual)?.emailAddress,emailsub:template.name,emailbody:body,type:template.type])
+    }
+
 
 }

@@ -13,6 +13,7 @@ class Book {
     sellPrice(nullable:true)
     stock(nullable:true)
     reorderLevel(nullable:true)
+    point(nullable:true)
     }
     
     String name
@@ -28,6 +29,7 @@ class Book {
     Integer reorderLevel
     Boolean orderable=true
     Boolean returnable=false
+    BigDecimal point
     
     Date dateCreated
     Date lastUpdated

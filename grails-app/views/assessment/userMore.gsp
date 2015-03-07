@@ -7,7 +7,7 @@
     </head>
     <body>
     
-	<g:each in="${ics.Content.findAllByLanguageAndCategory(ics.IndividualAssessment.findByIndividual(individual)?.language?:'ENGLISH','POST')?.htmlContent}">
+	<g:each in="${ics.Content.findAllWhere(department:(er?.event?.department?:ics.Department.findByName('GPL')),language:ics.IndividualAssessment.findByIndividual(individual)?.language?:'ENGLISH',category:'POST')?.htmlContent}">
 	    <div>
 		<p>${it}</p><br>
 	    </div>

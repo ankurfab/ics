@@ -4,17 +4,29 @@ Incase more than one EMAIL buttons are required, pls preserve the id naming patt
 Also modify the gridName and entityName accordingly
 <input class="menuButton" type="BUTTON" id="btnEMAIL" value="EMAIL" gridName="#eventRegistration_list" entityName="EventRegistration" departmentId="${ics.Department.findByName('Guest Reception Department')?.id}"/>
 -->
+<script>tinymce.init({selector:'textarea.emailbody'});</script>
+
+
 
 <div id="dialogEmailForm" title="EMAIL" gridName="" entityName="" departmentId="">
 	<form>
 	<fieldset>
 		<table>
+		<tr>
+		<td><label for="cc">From</label></td>
+		<td><input type="text" name="from" id="from" maxlength="255" size="100" value="${session.individualemail?:''}" ></td>
+		</tr>
+		<tr>
 		<td><label for="emailsub">Subject</label></td>
-		<td><input type="text" name="emailsub" id="emailsub" maxlength="255" size="100" class="text ui-widget-content ui-corner-all"></td>
+		<td><input type="text" name="emailsub" id="emailsub" maxlength="255" size="100" ></td>
 		</tr>
 		<tr>
 		<td><label for="emailbody">Body</label></td>
-		<td><textarea rows="3" cols="80" name="emailbody" id="emailbody" maxlength="4096" class="text ui-widget-content ui-corner-all"></textarea></td>
+		<td><textarea rows="3" cols="80" name="emailbody" id="emailbody" maxlength="4096" class="emailbody"></textarea></td>
+		</tr>
+		<tr>
+		<td><label for="cc">CC</label></td>
+		<td><input type="text" name="cc" id="cc" maxlength="255" size="100" ></td>
 		</tr>
 		<tr>
 		<td>HTML Content<g:checkBox name="htmlContent" id="htmlContent" checked="true"/></td>
@@ -53,20 +65,26 @@ Also modify the gridName and entityName accordingly
 			modal: true,
 			buttons: {
 				"Send": function() {
+					var from = $('#from').val();
 					var emailsub = $('#emailsub').val();
 					var emailbody = $('#emailbody').val();
+					if(!emailbody)
+						emailbody = tinymce.get('emailbody').getContent();
+					var cc = $('#cc').val();
 					var htmlContent = $('#htmlContent').attr('checked')?'true':'false';
 					var idlist = jQuery($(this).attr('gridName')).jqGrid('getGridParam','selarrrow')
 					if(idlist=="")
 						idlist = jQuery($(this).attr('gridName')).jqGrid('getGridParam','selrow')
 					
 					var url = "${createLink(controller:'helper',action:'commsMandrill')}"+"?entityName="+$(this).attr('entityName')+"&depid="+$(this).attr('departmentId')
-					$.getJSON(url, {'ids':""+idlist,'emailsub':emailsub,'emailbody':emailbody,'htmlContent':htmlContent}, function(data) {
+					$.ajaxSetup({ scriptCharset: "utf-8" , contentType: "application/json; charset=utf-8"});
+					$.getJSON(url, {'ids':""+idlist,'from':from,'emailsub':emailsub,'emailbody':emailbody,'cc':cc,'htmlContent':htmlContent}, function(data) {
 						alert("Sent EMAIL: "+data.count);
 					    });	
 
 					$('#emailsub').val('');
 					$('#emailbody').val('');
+					$('#cc').val('');
 					$( this ).attr('gridName','');
 					$( this ).attr('entityName','');
 					$( this ).dialog( "close" );
@@ -74,12 +92,14 @@ Also modify the gridName and entityName accordingly
 				Cancel: function() {
 					$('#emailsub').val('');
 					$('#emailbody').val('');
+					$('#cc').val('');
 					$( this ).dialog( "close" );
 				}
 			},
 			close: function() {
 					$('#emailsub').val('');
 					$('#emailbody').val('');
+					$('#cc').val('');
 			}
 		});
     });

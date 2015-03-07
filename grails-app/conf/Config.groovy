@@ -49,6 +49,10 @@ grails.mime.types = [ html: ['text/html','application/xhtml+xml'],
 grails.resources.adhoc.patterns = ['/images/*', '/css/*', '/js/*', '/plugins/*']
 
 grails.resources.modules = {
+    jqbarcode {
+        resource url:'/js/jquery-barcode.min.js'
+    }
+
     jqmobile {
         resource url:'/js/jquery.mobile-1.4.2.min.js'
         resource url: '/css/jquery.mobile-1.4.2.min.css'

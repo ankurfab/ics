@@ -9,7 +9,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8">
-		<title><g:layoutTitle default="GPL: Gita Premiere League"/></title>
+		<title><g:layoutTitle default="${er?.event?.title?:'GITA Premiere League'}"/></title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="shortcut icon" href="${resource(dir: 'images', file: 'lotus.ico')}" type="image/x-icon">
 		<link rel="apple-touch-icon" href="${resource(dir: 'images', file: 'apple-touch-icon.png')}">
@@ -26,15 +26,15 @@
 		<div data-role="page" id="masterpage">
 
 		<div data-role="header" style="overflow:hidden;">
-		<h1>GITA Premiere League</h1>
+		<h1>${er?.event?.title?:'GITA Premiere League'}</h1>
 		    <a href="${createLink(controller:'assessment',action:'userDashboard')}" data-transition="flip" data-icon="home" class="ui-btn-left">Home</a>
-		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" class="ui-btn-right">Logout</a>
+		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" class="ui-btn-right" data-ajax="false">Logout</a>
 
 		    <div data-role="navbar">
 			<ul>
 			    <li><a href="${createLink(controller:'assessment',action:'userStudy')}" data-transition="slide" data-icon="info">Study</a></li>
-			    <li><a href="${createLink(controller:'assessment',action:'userExam')}" data-transition="slide" data-icon="clock">Practise</a></li>
-			    <li><a href="${createLink(controller:'assessment',action:'userExam')}" data-transition="slide" data-icon="check">Test</a></li>
+			    <li><a href="${createLink(controller:'assessment',action:'userExam',params:[examtype:'MOCK'])}" data-transition="slide" data-icon="clock">Practise</a></li>
+			    <li><a href="${createLink(controller:'assessment',action:'userExam',params:[examtype:'ACTUAL'])}" data-transition="slide" data-icon="check">Test</a></li>
 			    <li><a href="${createLink(controller:'assessment',action:'userMore')}" data-transition="slide" data-icon="eye">More</a></li>
 			</ul>
 		    </div><!-- /navbar -->

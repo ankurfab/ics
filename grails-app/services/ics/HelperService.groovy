@@ -4,6 +4,8 @@ import java.util.zip.Adler32
 
 class HelperService {
 
+    def springSecurityService
+
     def serviceMethod() {
     
     
@@ -341,7 +343,94 @@ def verifyChecksum(str,cksum)
             }
         return address
     }
+    
+    def storeAV(Map params) {
+    	def attribute,attributeValue
+    	params.each{ k, v -> 
+		attribute = new Attribute()
+		attribute.name=k
+		attribute.category=params.category
+		attribute.type=params.type
+		if(!attribute.save()) {
+		    attribute.errors.allErrors.each {
+				log.debug("Exception in saving attr"+it)
+			    }
+		}
+		else {
+			attributeValue = new AttributeValue()
+			attributeValue.attribute = attribute
+			attributeValue.value = v
+			attributeValue.objectClassName="TMP"	//@TODO: add null constraint
+			attributeValue.objectId=new Long(1)	//@TODO: add null constraint
+			attributeValue.updator=attributeValue.creator="system"
+			if(!attributeValue.save()) {
+			    attributeValue.errors.allErrors.each {
+					log.debug("Exception in saving attrvalue"+it)
+				    }
+			}
+			else
+				log.debug("saved av:"+attribute.name+":"+attributeValue.value)
 
+		}
+    	}
+    }
+    
+    def uploadCustomForm(Object tokens) {
+    	//tokens order as below
+    	//DomainClassName,DomainClassId,Category,Type,Name,DisplayName,Position
+    	def attribute
+	attribute = new Attribute()
+	attribute.domainClassName=tokens[0]
+	attribute.domainClassAttributeName=tokens[1]
+	attribute.category=tokens[2]
+	attribute.type=tokens[3]
+	attribute.name=tokens[4]
+	attribute.displayName=tokens[5]
+	attribute.position=tokens[6]?new Integer(tokens[6]):null
+	if(!attribute.save()) {
+	    attribute.errors.allErrors.each {
+			log.debug("uploadCustomForm:Exception in saving attr"+it)
+		    }
+	return false
+	}
+	return true    	
+    }
+
+    def saveCustomForm(Object params) {
+    	//tokens order as below
+    	//DomainClassName,DomainClassId,Category,Type,Name,DisplayName,Position
+	def items = Attribute.findAllWhere(domainClassName:params.domainClassName,domainClassAttributeName:params.domainClassId,category:'ITEM')
+    	
+    	def user=""
+    	try{
+    		user = springSecurityService.principal.username
+    	}
+    	catch(Exception e){
+    		user="anonymous"
+    	}
+    	
+    	def attributeValue
+    	items.each{item->
+		try{
+			if(params.(item.name)) {
+				attributeValue = new AttributeValue()
+				attributeValue.attribute  = item
+				attributeValue.objectClassName = params.customEntityName
+				attributeValue.objectId = new Long(params.customEntityId)
+				attributeValue.value = params.(item.name)
+				attributeValue.creator = attributeValue.updator = user
+				if(!attributeValue.save()) {
+				    attributeValue.errors.allErrors.each {
+						log.debug("saveCustomForm:Exception in saving attrv"+it)
+					    }
+				}
+			}
+		}
+		catch(Exception e){log.debug(e)}
+	}
+	
+	return true    	
+    }
 
 
 }

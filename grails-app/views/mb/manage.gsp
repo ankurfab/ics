@@ -134,7 +134,7 @@
 		    jQuery("#mbProfile_list").jqGrid({
 		      url:'jq_mbManageProfile_list',
 		      datatype: "json",
-		      colNames:['ICSid','Name','Temple/Centre','PhoneNumber','ProfileStatus','MatchMakingStatus','WorkflowStatus','id'],
+		      colNames:['ICSid','Name','Temple/Centre','PhoneNumber','ProfileStatus','WorkflowStatus','MatchMakingStatus','id'],
 		      colModel:[
 			{name:'icsid', search:true},
 			{name:'name', search:true,
@@ -143,7 +143,6 @@
 			{name:'centre', search:true},
 			{name:'contactNumber', search:true},
 			{name:'profileStatus', search:true},
-			{name:'matchMakingStatus', search:true},
 			{name:'workflowStatus',search:true,sortable:false,
 				cellattr: function(rowId, value, rowObject, colModel, arrData) {
 							//alert(rowObject[20]+" : "+rowObject[17]);
@@ -154,6 +153,7 @@
 								}
 							}
 				},
+			{name:'matchMakingStatus', search:true},
 			{name:'id',hidden:true}
 		     ],
 		    rowNum:10,
@@ -198,6 +198,18 @@
 			{},  // add options
 			{}          // delete options
 		    );
+	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Match", buttonicon:"ui-icon-zoomin", onClickButton:match, position: "last", title:"Match", cursor: "pointer"});
+
+		 function match()  {
+			var id = $('#mbProfile_list').jqGrid('getGridParam','selrow');
+			if(id) {
+				var url = "${createLink(controller:'mb',action:'search')}"+"?id="+id
+				window.open(url,"_self")
+			}
+			else
+				alert("Please select a row!!");
+
+		 }
 
 	        });
 
@@ -207,6 +219,7 @@
 		    });
 		});
 
+		 
 		 function afterSubmitEvent(response, postdata) {
 			var success = true;
 

@@ -281,7 +281,7 @@
 		if (answer){
 			var orderid = $('#order_list').jqGrid('getGridParam','selrow');
 			if(orderid) {
-				var url = "${createLink(controller:'book',action:'orderIssue')}"+"?orderid="+orderid
+				var url = "${createLink(controller:'book',action:'orderIssue')}"+"?orderid="+orderid+"&quick=true"
 				$.getJSON(url, {}, function(data) {
 					//alert(data.message);
 					jQuery("#order_list").jqGrid().trigger("reloadGrid");

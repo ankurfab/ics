@@ -21,10 +21,12 @@
             autoOpen:false
             });
 
+<g:if test="${disableedit==false}">
             $("#commentsvalue").click(function(){
                 $( "#commenteditdiv" ).dialog("open");
             });
             });
+</g:if>
 
              $(document).ready(function() {
             $( "#resolvediv" ).dialog({
@@ -158,6 +160,13 @@
                                 <td valign="top" class="value">${fieldValue(bean: donationRecordInstance, field: "receiptReceivedStatus")}</td>
                                 
                             </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="donationRecord.expectedamount" default="Expected amount (in case of Bounce)" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: donationRecordInstance, field: "expectedamount")}</td>
+                                
+                            </tr>
                             
                             <tr class="prop">
                                 <td valign="top" class="name"><g:message code="donationRecord.dateCreated" default="Date Created" />:</td>
@@ -192,12 +201,14 @@
                 </div>
             <g:if test="${donationRecordInstance?.receiptReceivedStatus == null || donationRecordInstance?.receiptReceivedStatus =='NOTGENERATED'}">
             <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE">
+                <g:if test="${disableedit==false}">
                 <div class="buttons">
                     <span class="button"><g:actionSubmit class="edit" action="edit" value="${message(code: 'edit', 'default': 'Edit')}" /></span>
                     <span class="button"><g:actionSubmit class="delete" action="delete" value="${message(code: 'delete', 'default': 'Delete')}" onclick="return confirm('${message(code: 'delete.confirm', 'default': 'Are you sure?')}');" /></span>
                     <span class="button"><g:actionSubmit class="edit"  value="${message(code: 'move', 'default': 'Move To Another Member')}" onclick="openresolveBox('${donationRecordInstance?.donatedBy?.encodeAsHTML()}','${donationRecordInstance?.donatedBy?.id}','${donationRecordInstance?.id}');return false;" /></span>
 
                 </div>
+                </g:if>
             </sec:ifAnyGranted>
             </g:if>
             <sec:ifAnyGranted roles="ROLE_PATRONCARE,ROLE_PATRONCARE_USER">
@@ -217,7 +228,8 @@
             </sec:ifAnyGranted>
             </g:form>
         </div>
-        <div id="commenteditdiv" title="Enter Comments">
+
+        <div id="commenteditdiv" title="Enter Comments" style="display:none">
         <p>Enter Donation Record Comments here.</p>
         <g:form>
              <g:hiddenField name="id" value="${donationRecordInstance?.id}" />
@@ -244,7 +256,7 @@
         </g:form>
         </div>
         
-        <div id="resolvediv" title="Resolve Member">
+        <div id="resolvediv" title="Resolve Member" style="display:none">
         <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE">
         <p>Resolve Members by Their external Names.</p>
         <g:form>

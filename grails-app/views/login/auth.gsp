@@ -106,9 +106,6 @@
 			<p>
 				<label for='password'><g:message code="springSecurity.login.password.label"/>:</label>
 				<input type='password' class='text_' name='j_password' id='password'/>
-                <p style="margin: -25px 0 -10px 16px">
-                    <a href="" >Forgot Password?</a>
-                </p>
 			</p>
 
 			<p id="remember_me_holder">

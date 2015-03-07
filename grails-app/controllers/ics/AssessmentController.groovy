@@ -9,6 +9,8 @@ class AssessmentController {
 
     def springSecurityService
     def assessmentService
+    def individualService
+    def registrationService
     def invoiceService
 
     def index = { redirect(action: "list", params: params) }
@@ -17,11 +19,13 @@ class AssessmentController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def registrations = {
+    	[events:Event.findAllByDepartment(IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('AssessmentAdmin'),status:'VALID')?.department,[sort:'title'])]
     }
 
     def list = {
         params.max = Math.min(params.max ? params.max.toInteger() : 10,  100)
-        [assessmentInstanceList: Assessment.list(params), assessmentInstanceTotal: Assessment.count()]
+        def department = IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('AssessmentAdmin'),status:'VALID')?.department
+        [assessmentInstanceList: Assessment.findAllByDepartment(department,params), assessmentInstanceTotal: Assessment.count()]
     }
 
     def create = {
@@ -135,13 +139,25 @@ class AssessmentController {
     }
     
     def userExam() {
-    [ia: IndividualAssessment.findByIndividual(Individual.get(session.individualid))]
+	    //log.debug("userExam:"+params)
+	    def ia = IndividualAssessment.findByIndividual(Individual.get(session.individualid))
+	    [ia: ia,domainClassName:'EVENT_FEEDBACK',domainClassId:ia?.eventRegistration?.event?.id?.toString(),customEntityName:'IndividualAssessment',customEntityId:ia.id,redirectController:"Assessment",redirectAction:"userDashboard",examtype:params.examtype]
     }
     
     def userStart() {
-    	def ia = IndividualAssessment.findByIndividual(Individual.get(session.individualid))
+    	def ia
+    	if(params.iaid)
+    		ia = IndividualAssessment.get(params.iaid)
+    	else
+    		ia = IndividualAssessment.findByIndividual(Individual.get(session.individualid))
     	def success = false
 	if(ia.questionPaper){	//ie real question paper has been assigned
+		if(params.examtype=='MOCK') {
+			//cant take mock test once qp has been assigned
+			def errmsg = "MOCK test is currently unavailable!!"
+			render([error:errmsg] as JSON)
+			return			
+		}
 		if(!ia.assessmentDate) //taking the assessment for the first time
 			{    		
 			ia.assessmentDate = new Date()
@@ -167,7 +183,8 @@ class AssessmentController {
 		}
 	else
 		{
-		render([error:"Already taken the test earlier"] as JSON)
+		def errmsg = "You have already taken the test earlier on "+(ia?.assessmentDate?.format("dd-MM-yy HH:mm:ss"))+" ! Please contact admin for any further assistance!!"
+		render([error:errmsg] as JSON)
 		return
 		}
 		
@@ -179,6 +196,12 @@ class AssessmentController {
   	render assessmentService.getQuestion(ia,params) as JSON
     }
 
+    def userTimeOver() {
+    	def ia = IndividualAssessment.findByIndividual(Individual.get(session.individualid))
+    	def result = assessmentService.getResult(ia)
+  	render ([result:result] as JSON)
+    }
+
     def jq_registration_list() {
       def sortIndex = params.sidx ?: 'arrivalDate'
       def sortOrder  = params.sord ?: 'desc'
@@ -187,9 +210,17 @@ class AssessmentController {
       def currentPage = Integer.valueOf(params.page) ?: 1
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+	if(params.oper=="excel" )
+		{
+			maxRows = 100000
+			rowOffset = 0
+			sortIndex = "id"
+			sortOrder = "asc"
+		}
 
+	def event = Event.get(params.eid)
 	def result = EventRegistration.createCriteria().list(max:maxRows, offset:rowOffset) {
-			event{eq('id',new Long(params.eid))}
+			eq('event',event)
 			if(params.name)
 				ilike('name',params.name)
 			if(params.isMale=='Male')
@@ -206,8 +237,12 @@ class AssessmentController {
 				ilike('email',params.email)
 			if(params.address)
 				ilike('address',params.address)
+			if(params.addressPincode)
+				like('addressPincode',params.addressPincode)
 			if(params.connectedIskconCenter)
 				ilike('connectedIskconCenter',params.connectedIskconCenter)
+			if(params.centerLocation)
+				ilike('centerLocation',params.centerLocation)
 			if(params.otherGuestType)
 				ilike('otherGuestType',params.otherGuestType)
 			if(params.assessment)
@@ -218,35 +253,90 @@ class AssessmentController {
 				ilike('comments',params.comments)
 			if(params.paymentReference)
 				paymentReference{ilike('details',params.paymentReference)}
+			if(params.user) 
+				individual{eq('loginid',params.user)}
 				
 			order(sortIndex, sortOrder)
 	}
       
       def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
+      
+      def department = event?.department
+      def codes = []
 
-      def jsonCells = result.collect {
-            [cell: [
-            	    it.name,
-            	    it.dob?.format('dd-MM-yyyy'),
-            	    it.isMale?'Male':'Female',
-            	    it.contactNumber,
-            	    it.email,
-            	    it.address,
-            	    it.connectedIskconCenter,
-            	    it.year,
-            	    it.idproofType,
-            	    it.idProofId,
-            	    it.assessment?.name,
-            	    it.otherGuestType,
-            	    it.comments,
-            	    it.paymentReference?.toString(),
-            	    (it.regCode?:'')+" ("+it.arrivalDate?.format('dd-MM-yyyy HH:mm:ss')+")",
-            	    IndividualAssessment.findByEventRegistration(it)?.id
-                ], id: it.id]
-        }
-        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
-        render jsonData as JSON
+		if(params.oper=="excel")
+		 {
+			response.contentType = 'application/zip'
+			new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+				zipOutputStream.putNextEntry(new ZipEntry("registrations.csv"))
+				//header
+				
+				zipOutputStream << "SNo,Name,DoB,Gender,Mobile,Email,Address,Pin,From,City,Year,IdType,IdNo,Assessment,Language,Comments,PaymentReference,RegistrationCode, Registration Date,LoginId,Code,Result" 
+				def sno = 0
+				result.each{ row ->
+					sno++
+					//log.debug(sno+" start")
+					codes = assessmentService.getDetails(row,department)
+					zipOutputStream << "\n"
+					zipOutputStream <<   sno +","+row.name?.replaceAll(',',';') +","+
+						    row.dob?.format('dd-MM-yyyy') +","+
+						    (row.isMale?'Male':'Female') +","+
+						    (row.contactNumber?:'') +","+
+						    row.email?.replaceAll(',',';') +","+
+						    row.address?.tr('\n\r\t',' ')?.replaceAll(',',';') +","+
+						    row.addressPincode?.replaceAll(',',';') +","+
+						    row.connectedIskconCenter?.replaceAll(',',';') +","+
+						    row.centerLocation?.replaceAll(',',';') +","+
+						    row.year?.replaceAll(',',';') +","+
+						    (row.idproofType?:'') +","+
+						    row.idProofId?.replaceAll(',',';') +","+
+						    row.assessment?.name?.replaceAll(',',';') +","+
+						    row.otherGuestType?.replaceAll(',',';') +","+
+						    (row.comments?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';') +","+
+						    (row.paymentReference?:'')?.toString()?.replaceAll(',',';') +","+
+						    (row.regCode?:'') +","+
+						    row.arrivalDate?.format('dd-MM-yyyy HH:mm:ss') +","+
+						    codes[0] +","+
+			    			    codes[1] +","+
+			    			    codes[2]
+					//log.debug(sno+" end")
+				}
+			}    		
+			return
+		 }
+		else
+		{
+	      def jsonCells = result.collect {
+		    codes = assessmentService.getDetails(it,department)
+		    [cell: [
+			    it.name,
+			    it.dob?.format('dd-MM-yyyy'),
+			    it.isMale?'Male':'Female',
+			    it.contactNumber,
+			    it.email,
+			    it.address,
+			    it.addressPincode,
+			    it.connectedIskconCenter,
+			    it.centerLocation,
+			    it.year,
+			    it.idproofType,
+			    it.idProofId,
+			    it.assessment?.name,
+			    it.otherGuestType,
+			    it.comments,
+			    it.paymentReference?.toString(),
+			    codes[0],
+			    codes[1],
+			    codes[2],
+			    (it.regCode?:'')+" ("+it.arrivalDate?.format('dd-MM-yyyy HH:mm:ss')+")",
+			    IndividualAssessment.findByEventRegistration(it)?.id,
+			    it.individual?.id,
+			], id: it.id]
+		}
+		def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+		render jsonData as JSON
+		}
         }
 
 	def jq_edit_registration = {
@@ -344,34 +434,40 @@ class AssessmentController {
     
     def userDashboard() {
     	def individual = Individual.get(session.individualid)
-    	[individual:individual]
+    	def er = EventRegistration.findByIndividual(individual)
+    	[individual:individual,er:er]
     }
 
     def userStudy() {
     	def individual = Individual.get(session.individualid)
-    	[individual:individual]
+    	def er = EventRegistration.findByIndividual(individual)
+    	[individual:individual,er:er]
     }
 
     def userMore() {
     	def individual = Individual.get(session.individualid)
-    	[individual:individual]
+    	def er = EventRegistration.findByIndividual(individual)
+    	[individual:individual,er:er]
     }
     
     def exportQB() {
-      def result = Question.list()
+      def department = IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('AssessmentAdmin'),status:'VALID')?.department
+      def result = Question.createCriteria().list() {
+      			course{eq('department',department)}
+      		}
       
 	response.contentType = 'application/zip'
 	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
 		zipOutputStream.putNextEntry(new ZipEntry("questions.csv"))
 		//header
-		zipOutputStream << "category,language,status,questionText,choice1,choice2,choice3,choice4,isChoice1Correct,isChoice2Correct,isChoice3Correct,isChoice4Correct" 
+		zipOutputStream << "category,language,status,questionText,choice1,choice2,choice3,choice4,isChoice1Correct,isChoice2Correct,isChoice3Correct,isChoice4Correct,course" 
 
 		result.each{ row ->
 			zipOutputStream << "\n"
 			zipOutputStream <<   (row.category?:'')+","+(row.language?:'')+","+(row.status?:'')+","+
 				  (row.questionText?:'').tr('\n\r\t',' ').replaceAll(',',';') +","+
 				  (row.choice1?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+(row.choice2?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+(row.choice3?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+(row.choice4?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
-				  (row.isChoice1Correct?:'')+","+(row.isChoice2Correct?:'')+","+(row.isChoice3Correct?:'')+","+(row.isChoice4Correct?:'')
+				  (row.isChoice1Correct?:'')+","+(row.isChoice2Correct?:'')+","+(row.isChoice3Correct?:'')+","+(row.isChoice4Correct?:'')+","+(row.course?.name?:'')
 		}
 	}    		
 	return
@@ -386,8 +482,10 @@ class AssessmentController {
 	    }
 
 	    def question
+	    def course = Course.get(params.cid)
 	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
 	    	question = new Question()
+	    	question.course = course
 	    	question.category = tokens[0]
 	    	question.language = tokens[1]
 	    	question.status = tokens[2]
@@ -396,10 +494,32 @@ class AssessmentController {
 	    	question.choice2 = tokens[5]
 	    	question.choice3 = tokens[6]
 	    	question.choice4 = tokens[7]
-	    	question.isChoice1Correct = tokens[8]?true:false
-	    	question.isChoice2Correct = tokens[9]?true:false
-	    	question.isChoice3Correct = tokens[10]?true:false
-	    	question.isChoice4Correct = tokens[11]?true:false
+	    	if(tokens.size()>9){
+			question.isChoice1Correct = tokens[8]?true:false
+			question.isChoice2Correct = tokens[9]?true:false
+			question.isChoice3Correct = tokens[10]?true:false
+			question.isChoice4Correct = tokens[11]?true:false
+	    	}
+	    	else {
+	    		question.isChoice1Correct = question.isChoice2Correct = question.isChoice3Correct = question.isChoice4Correct = false
+	    		switch(tokens[8]) {
+	    			case '1':
+	    				question.isChoice1Correct = true
+	    				break
+	    			case '2':
+	    				question.isChoice2Correct = true
+	    				break
+	    			case '3':
+	    				question.isChoice3Correct = true
+	    				break
+	    			case '4':
+	    				question.isChoice4Correct = true
+	    				break
+	    			default:
+	    				break
+	    			
+	    		}
+	    	}
 	    	question.type="SINGLE CHOICE"
 	    	question.level="MEDIUM"
 	    	question.updator = question.creator = springSecurityService.principal.username
@@ -413,7 +533,143 @@ class AssessmentController {
 	    
 	    redirect (controller:"question",action: "list")
     }
+    
+    def verify() {
+    	def success=false
+    	def trycount=0
+    	if(params.packetcode)
+    		{
+		//first get the individual
+		def individual = Individual.findByLoginid(springSecurityService.principal.username)
+		if(!individual)
+			{
+			flash.message = "Invalid user!!"
+			}
+		else
+			{
+			//now get the associated registration
+			def er = EventRegistration.findByIndividual(individual)
+			if(er) {
+				//existing tries
+				if(er.verificationComments)
+					{
+					try{
+						trycount = new Integer(er.verificationComments)
+					}
+					catch(Exception e){trycount=0}
+					}
+				trycount++
+				if(trycount<=3) {
+					switch(er.verificationStatus) {
+						case VerificationStatus.UNVERIFIED:
+							//now get the matching code
+							def code = Code.findByCodeno(params.packetcode) //@TODO: take care of dep,centre,type,category etc and also retries
+							if(code && code.status==null)
+								{
+								code.status='VERIFIED_'+individual.id
+								code.save()
+								er.verificationStatus = VerificationStatus.VERIFIED
+								flash.message = "Registration confirmed. Please logout and login again to access the features of this site."
+								success = true
+								try{
+									assessmentService.makeVerified(er)
+								}
+								catch(Exception e){log.debug(e)}
+								}
+							else
+								{
+								flash.message = "Invalid code!!"
+								}
+							er.verificationComments = trycount
+							er.save()
+							break
+						case VerificationStatus.VERIFIED:
+							flash.message = "You have already been verified. Please wait for further messages from the GPL team!!"								
+							break
+						default:
+							flash.message = "Invalid registration..please contact GPL team!!"
+							break
+					}
+				}
+				else
+					flash.message = "You have exceeded the number of tries. Please contact GPL team for further assistance!!"
+			}
+			else
+				flash.message = "Oops..Something went wrong..please contact GPL team!!"
+			}
+    		}
+    	[success:success, trycount:trycount]
+    }
 
+    def sendConfirmationMail() {
+	def idList = params.idlist.tokenize(',')
+	idList.each{
+		assessmentService.sendConfirmationMail(EventRegistration.get(it))
+    		}
+	render "done"
+    }
     
-    
+    def unlockAndResetUser() {
+	def idList = params.idlist.tokenize(',')
+	idList.each{
+		assessmentService.unlockAndResetUser(EventRegistration.get(it))
+    		}
+	render([message:"OK"] as JSON)
+    }
+        
+    def unlockCodeVerification() {
+	def idList = params.idlist.tokenize(',')
+	idList.each{
+		assessmentService.unlockCodeVerification(EventRegistration.get(it))
+    		}
+	render([message:"OK"] as JSON)
+    }
+        
+    def retest() {
+	def idList = params.idlist.tokenize(',')
+	idList.each{
+		assessmentService.retest(EventRegistration.get(it))
+    		}
+	render([message:"OK"] as JSON)
+    }
+        
+    def uploadbulkregistration() {
+	    log.debug("Inside uploadbulkregistration")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render(view: 'entry')
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+	    def category = ""
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	category = tokens[4]
+	    	numRecords++
+	    	if(individualService.createIndividual(['donorName':tokens[0],'donorAddress':tokens[1],'donorContact':tokens[2],'donorEmail':tokens[3],'category':category]))
+	    		numCreated++
+	    }
+	    
+	    registrationService.bulkRegistration([eid:params.bulkUploadEventId,aid:params.bulkUploadAssessmentId,category:category])
+	    
+	    flash.message="Bulk registered "+numCreated+"/"+numRecords+" individuals!!"
+	    
+	    redirect (action: "registrations")
+	    return
+    }
+
+    def qasheet() {
+    	def ia = IndividualAssessment.findByEventRegistration(EventRegistration.get(params.erid))
+    	if(ia.assessmentDate)
+    		{
+    		def iaqas = IndividualAssessmentQA.findAllByIndividualAssessmentAndCategory(ia,'ACTUAL',[sort:'lastShown'])
+    		render(template: "qasheet", model: [ia:ia,iaqas: iaqas])
+    		}
+    	else
+    		render "No challan found with the specified id. Kindly contact admin!!"
+    }
+
+
 }

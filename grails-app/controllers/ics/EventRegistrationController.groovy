@@ -10,14 +10,15 @@ import grails.util.Environment
 import com.krishna.IcsRole;
 import com.krishna.IcsUser;
 import com.krishna.IcsUserIcsRole;
-
 import org.apache.commons.codec.binary.Hex
-
 import org.apache.commons.codec.digest.DigestUtils
 import java.security.SecureRandom
-
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 
 class EventRegistrationController {
 
@@ -27,6 +28,7 @@ class EventRegistrationController {
     def registrationService
     def simpleCaptchaService 
     def accommodationService
+    def dataSource
     
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -78,6 +80,7 @@ class EventRegistrationController {
     }
 
     def list() {
+    	[eid:params.eid]
     }
 
     def listlocal() {
@@ -189,11 +192,25 @@ class EventRegistrationController {
     	if(params.'event.id')
     		{
     		eventRegistrationInstance = registrationService.saveForEvent(params)
+		if(!eventRegistrationInstance)
+			{
+			flash.message = "It seems you have already registered in past. Please contact admin for any further assistance. Thank you."
+			render(view: "message")
+			return
+			}
+    		
     		//go for payment, if opted
-    		if(params.onlinePayment && !eventRegistrationInstance?.hasErrors()) {
+    		def payonline = false,courier=false
+    		if(eventRegistrationInstance?.assessment?.name?.contains('courier'))
+    			courier = true
+    		if(params.onlinePayment || courier)
+    			payonline = true
+    			
+    		if(payonline && !eventRegistrationInstance?.hasErrors()) {
 			params.orderid=eventRegistrationInstance.id
 			try{
-				params.amount = Assessment.get(params.'assessment.id')?.fees
+				params.amount = registrationService.calculateCharges(eventRegistrationInstance)
+				log.debug("Amount for "+eventRegistrationInstance+" : "+params.amount)
 			}
 			catch(Exception e)
 				{
@@ -214,12 +231,23 @@ class EventRegistrationController {
 		    render(view: "create", model: [eventRegistrationInstance: eventRegistrationInstance])
 		    return
 		}
+		else {
+			//online payment
+			//@TODO: improper attributes being used for now
+			if(eventRegistrationInstance.event.maxAttendees>0) {
+				params.orderid=eventRegistrationInstance.id
+				params.amount = registrationService.calcuateRegistrationCharge(eventRegistrationInstance)
+				def pgurl = registrationService.pgUrl(params)
+				redirect(url:pgurl)
+				return
+			}
+		}
 		}
 	if (springSecurityService.isLoggedIn())
 		redirect(action: "show", id: eventRegistrationInstance.id)
 	else
 		{
-		flash.message = "Thank you for registering with us. We will get back to you shortly. Please quote registration code "+eventRegistrationInstance?.regCode+" (casesensitive) in all communications!"
+		flash.message = "Thank you for registering with us. Confirmation email has been sent to the provided email address with further details!"
 		render(view: "message")
 		}
     }
@@ -245,11 +273,36 @@ class EventRegistrationController {
 
     def show() {
 	def eventRegistrationInstance
+	log.debug("Inside ER Show"+params)
 
 	if(SpringSecurityUtils.ifAnyGranted('ROLE_EVENTPARTICIPANT'))
 	{
 		def loggedIndividual = Individual.findByLoginid(springSecurityService.principal.username)
-		eventRegistrationInstance = EventRegistration.findByIndividual(loggedIndividual) 
+		eventRegistrationInstance = EventRegistration.findByIndividual(loggedIndividual)//@TODO: there coule be multiple registrations
+		log.debug("er for eo:"+eventRegistrationInstance)
+		if(!eventRegistrationInstance)
+			{
+			//maybe the participant hasnt registered yet
+			def epList = EventParticipant.createCriteria().list{
+					eq('individual',loggedIndividual)
+					event{eq('status','OPEN')}
+				}
+			if(epList?.size()>0)
+				{
+				//@TODO: in case of multiple events
+				//render(view: "chooseEvent",model:[epList:epList])
+				
+				def er = new EventRegistration()
+				er.event = epList[0].event
+				er.individual = epList[0].individual
+				er.name = er.individual?.toString()
+				er.contactNumber = VoiceContact.findByCategoryAndIndividual('CellPhone',er.individual)?.number
+				er.email = EmailContact.findByCategoryAndIndividual('Personal',er.individual)?.emailAddress
+				log.debug("Invited reg"+er)
+				render(view: "create",model:[eventRegistrationInstance: er])
+				return
+				}
+			}
 	}	
 	else if (params.id && SpringSecurityUtils.ifAnyGranted('ROLE_EVENTADMIN,ROLE_REGISTRATION_COORDINATOR,ROLE_ACCOMMODATION_COORDINATOR,ROLE_TRANSPORTATION_COORDINATOR,ROLE_PRASADAM_COORDINATOR,ROLE_VIP_COORDINATOR,ROLE_VOLUNTEER_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_VIP_ACCOMMODATION,ROLE_VIP_TRANSPORTATION,ROLE_VIP_PRASADAM')){
 		eventRegistrationInstance = EventRegistration.get(params.id)
@@ -262,8 +315,12 @@ class EventRegistrationController {
             render(view: "message")
 	    return
         }
+        
+        def regamount
+        if(!eventRegistrationInstance?.paymentReference)
+        	regamount = registrationService.calcuateRegistrationCharge(eventRegistrationInstance)
 
-        [eventRegistrationInstance: eventRegistrationInstance]
+        [eventRegistrationInstance: eventRegistrationInstance,regamount:regamount]
     }
 
 
@@ -717,9 +774,13 @@ class EventRegistrationController {
 
 		def eventRegistrations = EventRegistration.createCriteria().list(max:maxRows, offset:rowOffset) {
 
+			if(params.eventid)
+				event{eq('id',new Long(params.eventid))}
+				
+			/*@TODO: RVTO logic not compatible with generic yatra module
 			if (params.verificationStatus!= "REJECTED") {
 				isNull('status')
-			}
+			}*/
 			
 			if (params.name)
 				ilike('name','%'+params.name + '%')
@@ -731,6 +792,12 @@ class EventRegistrationController {
 
 			if (params.contactNumber)
 				ilike('contactNumber','%'+params.contactNumber + '%')
+
+			if (params.email)
+				ilike('email',params.email)
+
+			if (params.status)
+				eq('status',params.status)
 
 			if (params.regCode)
 				ilike('regCode','%'+params.regCode + '%')
@@ -783,7 +850,7 @@ class EventRegistrationController {
 		def now = new Date()
 		def ad
 		
-		def jsonCells = eventRegistrations?.collect {
+		def jsonCells = eventRegistrations?.collect {		    
 		    erg = EventRegistrationGroup.findByMainEventRegistration(it)
 		    if(erg)
 			    arrivalCount = erg.total + "(G"+erg.numGroups+" P"+erg.numPrji+" M"+erg.numMataji+" C"+erg.numChildren+" B"+erg.numBrahmachari+")"
@@ -831,11 +898,13 @@ class EventRegistrationController {
 		    	checkedInCount = tc+"(P"+pc+" M"+mc+" C"+cc+" B"+bc+")"
 		    else
 		    	checkedInCount = ""
-		    	
+		    
 		    [cell: [it.name,
 			    it.connectedIskconCenter,
-			    it.country.name,
+			    it.country?.name,
 			    it.contactNumber,
+			    it.email,
+			    it.status,
 			    it.regCode,
 			    it.creator,
 			    it.dateCreated?.format('dd-MM-yy hh:mm a'),
@@ -1261,7 +1330,7 @@ class EventRegistrationController {
 		catch(Exception e){}
 		def str = "M_nvccpune_12868|"+params.Order_Id+"|"+params.Amount+"|"+params.AuthDesc+"|1hhdrt38f6i1yi4k14"
 		def isValid = helperService.verifyChecksum(str,params.Checksum)
-		def message = "Thank you for registering with us. We will get back to you shortly. Please quote registration code "+er?.regCode+" (casesensitive) in all communications!"
+		def message = "Thank you for registering with us. We will get back to you shortly."
 		def txnMessage=""
 
 			if(isValid && params.AuthDesc.equals("Y"))
@@ -1316,5 +1385,163 @@ class EventRegistrationController {
 		redirect(url:pgurl)
 
 	}
+	
+	def createFees()  {
+		//log.debug("Inside createFees with params: "+params)
+		def er = new EventRegistration()
+		er.assessment = Assessment.get(params.aid)
+		er.addressPincode = params.pin
+		render registrationService.calculateCharges(er)		
+	}
+
+    def export() {
+
+	def sql = new Sql(dataSource)
+
+	//def query="select individual_id,name,contact_number,alternate_contact_number,email,er.date_created registration_date,arrival_date,arrival_traveling_details,departure_date,departure_traveling_details,if(is_accommodation_required,'yes','no') acco_required,numberof_brahmacharis,numberof_children,numberof_matajis,numberof_prabhujis,accomodation_preference,pr.details online_payment_details,pr.amount online_amount,offpr.amount offline_amount,offpr.details acco_details from event_registration er left join payment_reference pr on er.payment_reference_id=pr.id left join payment_reference offpr on er.id=substring(offpr.ref,19) where event_id="+params.eid
+	
+	def query="select * from (select name pname,contact_number pphone,email pemail,null gender,null dob,id from event_registration em where not exists (select 1 from person p where reference='EventRegistration' and p.category=em.id) and event_id="+params.eid+" union select name pname,phone pphone,email pemail,if(is_donor,'M','F') gender,date_format(dob,'%d-%c-%y') dob, category from person where reference='EventRegistration') q left join (select er.id,individual_id,name,contact_number,alternate_contact_number,email,er.date_created registration_date,arrival_date,arrival_traveling_details,departure_date,departure_traveling_details,if(is_accommodation_required,'yes','no') acco_required,numberof_brahmacharis,numberof_children,numberof_matajis,numberof_prabhujis,accomodation_preference,pr.details online_payment_details,pr.amount online_amount,offpr.amount offline_amount,offpr.details acco_details from event_registration er left join payment_reference pr on er.payment_reference_id=pr.id left join payment_reference offpr on er.id=substring(offpr.ref,19) where event_id="+params.eid+") r on q.id=r.id order by q.id"
+
+	def result = sql.rows(query)
+
+	sql.close()
+
+	response.contentType = 'application/zip'
+	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		zipOutputStream.putNextEntry(new ZipEntry("registrations.csv"))
+		//header
+		zipOutputStream << "event_registration_id,pname,pphone,pemail,gender,dob,individual_id,name,contact_number,alternate_contact_number,email,registration_date,arrival_date,arrival_traveling_details,departure_date,departure_traveling_details,acco_required,brahmacharis,children,matajis,prabhujis,accomodation_preference,online_payment_details,online_amount,offline_amount,acco_details" 
+
+		result.each{ row ->
+			zipOutputStream << "\n"
+			zipOutputStream <<   (row.id?:'')+","+
+					(row.pname?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+					(row.pphone?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+				  	(row.pemail?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+					  (row.gender?:'')+","+
+					  (row.dob?:'')+","+
+					(row.individual_id?:'')+","+
+					(row.name?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+					(row.contact_number?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+				  (row.alternate_contact_number?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+				  (row.email?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+				  (row.registration_date?:'')+","+
+				  (row.arrival_date?:'')+","+
+				  (row.arrival_traveling_details?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+				  (row.departure_date?:'')+","+
+				  (row.departure_traveling_details?:'').tr('\n\r\t',' ').replaceAll(',',';')+","+
+				  (row.acco_required?:'')+","+
+				  (row.numberof_brahmacharis?:'')+","+
+				  (row.numberof_children?:'')+","+
+				  (row.numberof_matajis?:'')+","+
+				  (row.numberof_prabhujis?:'')+","+
+				  (row.accomodation_preference?:'')+","+
+				  (row.online_payment_details?:'')+","+
+				  (row.online_amount?:'')+","+
+				  (row.offline_amount?:'')+","+
+				  (row.acco_details?:'')
+		}
+	}    		
+	return
+    }
+
+    def registrationDetails() {
+    	def er = EventRegistration.get(params.id)
+    	if(!er) {
+    		render "Event Registration not found!! Please contact admin."
+    		return
+    		}
+    	def type=er.event.id.toString()
+    	def numPersons = (er.numberofPrabhujis+er.numberofMatajis+er.numberofChildren+er.numberofBrahmacharis)
+    	def registrationCharge = er.event.maxAttendees
+    	def numDays = AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'numDays'))?.value
+    	def prasadCostPerDay = AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'prasadCostPerDay'))?.value
+    	def travelCostPerDay = AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'travelCostPerDay'))?.value
+    	def venueCostPerDay = AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'venueCostPerDay'))?.value
+    	def numPlaces = new Integer(AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'numPlaces'))?.value)
+    	def accomodations = []
+    	//place1=Dwarka&place1_numDays=2&place1_nonacRoomRentPerDay=500&place1_acRoomRentPerDay=1000&place1_nonacRoomNumBeds=2&place1_nonacRoomNumExtraBeds=0&place1_nonacRoomExtraBedRentPerDay=0&place1_acRoomNumBeds=2&place1_acRoomNumExtraBeds=0&place1_acRoomExtraBedRentPerDay=0&place1_numNonACRooms=100&place1_numACRooms=100
+    	for(int i=1;i<numPlaces+1;i++) {
+    		def acco=[:]
+    		acco.put('place',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i))?.value)
+    		acco.put('numDays',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_numDays'))?.value)
+    		acco.put('nonacRoomRentPerDay',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_nonacRoomRentPerDay'))?.value)
+    		acco.put('acRoomRentPerDay',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_acRoomRentPerDay'))?.value)
+    		acco.put('nonacRoomNumBeds',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_nonacRoomNumBeds'))?.value)
+    		acco.put('nonacRoomNumExtraBeds',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_nonacRoomNumExtraBeds'))?.value)
+    		acco.put('nonacRoomExtraBedRentPerDay',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_nonacRoomExtraBedRentPerDay'))?.value)
+    		acco.put('acRoomNumBeds',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_acRoomNumBeds'))?.value)    		
+    		acco.put('acRoomNumExtraBeds',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_acRoomNumExtraBeds'))?.value)
+    		acco.put('acRoomExtraBedRentPerDay',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_acRoomExtraBedRentPerDay'))?.value)
+    		acco.put('numNonACRooms',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_numNonACRooms'))?.value)
+    		acco.put('numACRooms',AttributeValue.findByAttribute(Attribute.findWhere(category:'EVENT',type:type,name:'place'+i+'_numACRooms'))?.value)    		
+    		//log.debug("Acco"+i+":"+acco)
+    		accomodations.add(acco)
+    		}
+    	//get persons from db..if none populate 1st as per er
+    	def persons=Person.findAllByReferenceAndCategory('EventRegistration',er.id.toString())
+    	def firstTime=false
+    	if(persons.size()==0)
+    		{
+    		def person = new Person()
+    		person.name = er.name
+    		person.email = er.email
+    		person.phone = er.contactNumber
+    		person.dob=er.individual?.dob
+    		person.isDonor=er.individual?.isMale
+    		persons.add(person)
+    		firstTime = 'true'
+    		}
+	log.debug("registrationDetails..sending.."+[er:er,persons:persons,firstTime:firstTime,registrationCharge:registrationCharge,numPersons:numPersons,numDays:numDays,prasadCostPerDay:prasadCostPerDay,travelCostPerDay:travelCostPerDay,venueCostPerDay:venueCostPerDay,accomodations:accomodations,numPlaces:numPlaces])
+    	def model = [er:er,persons:persons,firstTime:firstTime,registrationCharge:registrationCharge,numPersons:numPersons,numDays:numDays,prasadCostPerDay:prasadCostPerDay,travelCostPerDay:travelCostPerDay,venueCostPerDay:venueCostPerDay,accomodations:accomodations,numPlaces:numPlaces]
+    	if(params.printRCS)
+    		{
+    		render(view: "registrationDetailsRCS", model: model)
+    		return
+    		}
+    	if(params.printACS)
+    		{
+    		render(view: "registrationDetailsACS", model: model)
+    		return
+    		}
+    	return model
+    	}
+    	
+    	def registrationDetailsSave() {
+    		log.debug("Inside registrationDetailsSave with params:"+params)
+    		def response = registrationService.registrationDetailsSave(params)
+    		redirect(action: "registrationDetails", params: [id: params.erid])
+    	}
+    	
+    	def registrationDetailsRCS() {
+    		[erid:params.id]
+	}    	
+
+    	def registrationDetailsACS() {
+    		[erid:params.id]
+	}
+        
+        def registrationDetailsResources() {            
+        }
+        
+        def bulkRegistration() {
+        	registrationService.bulkRegistration(params)
+        	render "OK"
+        }
+        
+        def bulkAccoAllot() {
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render(flash.message)
+		return
+	    }
+
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	accommodationService.bulkAccoAllot(tokens)
+	    }
+	    
+	    redirect (action: "list",params:[eid:params.eid])        
+        }
 
 }

@@ -60,10 +60,10 @@
             <g:if test="${flash.message}">
             <div class="message"><g:message code="${flash.message}" args="${flash.args}" default="${flash.message}" /></div>
             </g:if>
-            <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
-            ReceiptStatus:<g:select id="rcptStatus" name="rcptStatus" from="${['NOTGENERATED','GENERATED']}" value="NOTGENERATED" onchange="reloadGrid()"/>&nbsp;
+            <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_DUMMY,ROLE_BACKOFFICE">
+            ReceiptStatus:<g:select id="rcptStatus" name="rcptStatus" from="${['NOTGENERATED','GENERATED']}" noSelection="[ALL: 'ALL']" value="NOTGENERATED" onchange="reloadGrid()"/>&nbsp;
             </sec:ifAnyGranted>
-            <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE,ROLE_NVCC_ADMIN,ROLE_DUMMY">
+            <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE,ROLE_NVCC_ADMIN,ROLE_DUMMY,ROLE_BACKOFFICE">
             Center:<g:select id="selectedcenter" name="selectedcenter" from="${ics.Centre.list()}" optionKey="name" value="${selectedcenter}"  noSelection="[ALL: 'ALL']" onchange="reloadGrid()"/>&nbsp;
             Donation Date(All records in this month) :<g:textField id="donationDate" name="donationDate" value="${donationDate}" onchange="reloadGrid()" />   <br/>
             </sec:ifAnyGranted>
@@ -83,7 +83,7 @@
         <!-- pager will hold our paginator -->
         <div id="donationRecord_list_pager" class="scroll" style="text-align:center;"></div>
         
-        <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_DUMMY">
+        <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_DUMMY,ROLE_BACKOFFICE">
 		<input class="menuButton" type="BUTTON" id="receiptBtn" value="CreateDonationReceipt" />
 	</sec:ifAnyGranted>
 
@@ -110,7 +110,7 @@
       postData:{
       	selectedcenter:function(){return $("#selectedcenter").val();},
       	donation_date:function(){return $("#donationDate").val();}
-      	<sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+      	<sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_DUMMY,ROLE_BACKOFFICE">
 		,
 		receiptReceivedStatus:function(){return $("#rcptStatus").val();}
       	</sec:ifAnyGranted>

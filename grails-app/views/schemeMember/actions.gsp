@@ -48,6 +48,58 @@
         <g:link class="list" controller="schemeMember" action="checkECSMandateFromCommitment"><g:message code="schemeMember.update" default="Check Consumer Number of SchemeMembers With ECS Mandate From Commitment" /></g:link>
       </td>
     </tr>
+    <tr>
+      <td>
+        <g:link class="list" controller="schemeMember" action="syncdonation">Sync Donation Records from Donations (For Cash /NEFT / Cheque etc.)</g:link>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <g:link class="list" controller="donationRecord" action="updateDonationRecordWithEmptyCenterBySchemeMemberCenter">Update Donation Record Centers (which are not set) From Primary center of Scheme Member</g:link>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+       Update Donation Record Centers (whose center is not set and don't belong to any scheme member) From a Center , (choose default center)
+
+         <g:form action="updateDonationRecordWithDefaultCenter">
+            <g:select name="centre.id" from="${ics.Centre.list()}" optionKey="id"  />
+            <span class="button"><input type="submit" class="save" value="Update"  /></span>
+         </g:form>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <g:link class="list" controller="donationRecord" action="findDonationRecordsHavingNoSchemeMember">Find Those Individuals who have donation record but does not have scheme membership</g:link>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <g:link class="list" controller="donationRecord" action="updateSchemeMembersCommitmentMode">Update Scheme members Commitment mode based on their last payment type</g:link>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <g:link class="list" controller="schemeMember" action="updateSchemeMembersStatus">Update Scheme members Status based on below condition</g:link> <br/>
+        Active ,-all members having commitment and ecs mandate not null and active commitment are marked active for that scheme<br/>
+        Iregular --all such members ,which commitment mode is not ECS , and number of donation given in previous one year is less then 10 are marked irregular.<br/>
+        In-active --those not marked as prospect and suspended and not given any donation or the last donation given by them is more than 1 year old then mark them in-active<br/> 
+        or if there donation frequency is yearly or half yearly then mark them irregular , but not given more than 2 years then mark them also in-active<br/>
+      </td>
+    </tr>
+
+     <tr>
+      <td>
+        <g:link class="list" controller="schemeMember" action="updateSchemeMembersStars">Update Scheme members Stars based on per month amount given in last one year</g:link>
+      </td>
+    </tr>
+
+
     </tbody>
     </table>
     

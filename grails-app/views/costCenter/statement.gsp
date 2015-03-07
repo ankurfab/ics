@@ -25,17 +25,30 @@
                 <div class="dialog">
                     <table>
                         <tbody>
+			<sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
                             <tr class="prop">
                                 <td valign="top" class="name">
-                                    Department
+                                    Cost Category
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: roleInstance, field: 'name', 'errors')}">
+				   <div style="width: 200px">
+					<g:select name="costCategory.id" from="${ics.CostCategory.list(sort: 'name')}" optionKey="id"  noSelection="['':'-Choose Cost Category-']"/>
+				    </div>
+                                </td>
+                            </tr>
+			</sec:ifAnyGranted >
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    Cost Center
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: roleInstance, field: 'name', 'errors')}">
 				   <div style="width: 200px">
 					<sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
-						<g:select name="costCenter.id" from="${ics.CostCenter.list(sort: 'name')}" optionKey="id"  />
+						<g:select name="costCenter.id" from="${ics.CostCenter.list(sort: 'name')}" optionKey="id"    noSelection="['':'-Choose Cost Center-']"/>
 					</sec:ifAnyGranted >
 					<sec:ifAnyGranted roles="ROLE_CC_OWNER">
-						<g:select name="costCenter.id" from="${ics.CostCenter.findAllByOwner(ics.Individual.get(session.individualid),[sort: 'name']	)}" optionKey="id"  />
+						<g:select name="costCenter.id" from="${ics.CostCenter.findAllByOwner(ics.Individual.get(session.individualid),[sort: 'name']	)}" optionKey="id"   noSelection="['':'-Choose Cost Center-']"/>
 					</sec:ifAnyGranted >
 				    </div>
                                 </td>

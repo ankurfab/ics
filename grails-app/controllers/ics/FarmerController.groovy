@@ -294,6 +294,8 @@ class FarmerController {
 			ilike('middleName',params.middleName)
 		if (params.lastName)
 			ilike('lastName',params.lastName)
+		if (params.gender)
+			eq('gender',params.gender)
 		if (params.post)
 			postVillage{ilike('name',params.post)}
 		if (params.village)
@@ -319,9 +321,11 @@ class FarmerController {
 		if (params.areaOfTotalLand)
 			ge('areaOfTotalLand',new BigDecimal(params.areaOfTotalLand))
 		if (params.numDesiCows)
-			ge('numDesiCows',new BigDecimal(params.numDesiCows))
+			ge('numDesiCows',new Integer(params.numDesiCows))
 		if (params.numHybridCows)
-			ge('numHybridCows',new BigDecimal(params.numHybridCows))
+			ge('numHybridCows',new Integer(params.numHybridCows))
+		if (params.numBuffaloes)
+			ge('numBuffaloes',new Integer(params.numBuffaloes))
 		if (params.otherBusinessDetails)
 			ilike('otherBusinessDetails',params.otherBusinessDetails)
 		if (params.areaUnderDrip)
@@ -367,6 +371,7 @@ class FarmerController {
 		it.firstName?:'',
 		it.middleName?:'',
 		it.lastName?:'',
+		it.gender?:'',
 		it.village?.name?:'',
 		it.taluka?.name?:'',
 		it.district?.name?:'',
@@ -381,6 +386,7 @@ class FarmerController {
 		it.areaOfTotalLand?:'',
 		it.numDesiCows?:'',
 		it.numHybridCows?:'',
+		it.numBuffaloes?:'',		
 		it.otherBusinessDetails?:'',
 		it.areaUnderDrip?:'',
 		it.areaUnderSprinkler?:'',

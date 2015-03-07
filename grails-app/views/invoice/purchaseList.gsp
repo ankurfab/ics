@@ -57,8 +57,8 @@
 			<!-- pager will hold our paginator -->
 			<div id="lineitem_list_pager" class="scroll" style="text-align:center;"></div>
 	    </div>
-	    <g:hiddenField name="iediturl" value="" />
-	    <g:hiddenField name="editurl" value="" />
+	    <g:hiddenField name="iediturl" value="jq_edit_invoice?type=PURCHASE" />
+	    <g:hiddenField name="editurl" value="jq_edit_lineitem" />
         </div>
 
 <script>
@@ -157,13 +157,13 @@
 					$(el).autocomplete({source:'${createLink(controller:'invoice',action:'allVendorsAsJSON_JQ')}',
 					minLength: 0,
 					  select: function(event, ui) { // event handler when user selects an  item from the list.
-					  	var newURL = $("#editurl").val();
-					  	newURL += "&item.id="+ui.item.id;
-    					   jQuery("#lineitem_list").jqGrid('setGridParam',{editurl:newURL});
+					  	var newURL = $("#iediturl").val();
+					  	newURL += "&from.id="+ui.item.id;
+    					   jQuery("#invoice_list").jqGrid('setGridParam',{editurl:newURL});
 					  }					
 					}); 
 				  }},
-		formatter:showIndividual 
+		//formatter:showIndividual 
 	},
 	{name:'itemTotalAmount', search:true, editable: true, editrules:{required:false}},
 	{name:'itemTotalAmountWithTax', search:true, editable: true, editrules:{required:false}},
@@ -197,7 +197,7 @@
     sortorder: "desc",
     width: 1200,
     height: "100%",
-    multiselect: true,
+    multiselect: false,
     caption:"Purchase Invoice List",
     onSelectRow: function(ids) { 
     	if(ids!='new_row')
@@ -237,7 +237,7 @@
 					  }					
 					}); 
 				  }},
-		formatter:showItem
+		//formatter:showItem
 	},
 	{name:'qty', search:true, editable: true},
 	{name:'unitSize', search:true, editable: true},
@@ -265,7 +265,7 @@
     caption:"Purchase Line Item(s)"
     });
     $("#lineitem_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#lineitem_list").jqGrid('navGrid',"#lineitem_list_pager",{edit:false,add:false,del:false,search:false});
+    $("#lineitem_list").jqGrid('navGrid',"#lineitem_list_pager",{edit:false,add:false,del:true,search:false});
     $("#lineitem_list").jqGrid('inlineNav',"#lineitem_list_pager");
     $("#lineitem_list").jqGrid('navGrid',"#lineitem_list_pager").jqGrid('navButtonAdd',"#lineitem_list_pager",{caption:"NewItem", buttonicon:"ui-icon-document", onClickButton:newItem, position: "last", title:"NewItem", cursor: "pointer"});
 

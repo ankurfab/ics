@@ -1,8 +1,10 @@
 		      <div id="menu">
-			<ul>
 		      <sec:ifLoggedIn>
+			<ul>
 			      <sec:ifAnyGranted roles="ROLE_ASMT_ADMIN">
 			      	<li><g:link controller="assessment" action="index">Assessment</g:link></li>
+			      </sec:ifAnyGranted>      
+			      <sec:ifAnyGranted roles="ROLE_ASMT_ADMIN,ROLE_ASMT_MGR">
 			      	<li><g:link controller="assessment" action="registrations">Registrations</g:link></li>
 			      </sec:ifAnyGranted>      
 			      <sec:ifAnyGranted roles="ROLE_VOICE_SEC">
@@ -28,7 +30,7 @@
 				  <!--<li><g:link controller="followup" action="listforindividual" params="['indid':session.individualid]">Followup</g:link></li>-->
 				  <li><g:link controller="followup" action="list1" >Followup</g:link></li>
 		      	      </sec:ifAnyGranted>
-			      <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_BACKOFFICE,ROLE_PATRONCARE_HEAD,ROLE_MB_ADMIN,ROLE_MB_SEC">
+			      <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_BACKOFFICE,ROLE_PATRONCARE_HEAD">
 				  <li><g:link controller="individual" action="list">Individual</g:link></li>
 			      </sec:ifAnyGranted>
 			      <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN,ROLE_DUMMY,ROLE_BACKOFFICE">
@@ -69,11 +71,10 @@
 			      </sec:ifAnyGranted>
 			      
 			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR">
-				  <li><g:link controller="helper" action="clorDashboard">Dashboard</g:link></li>
-				  <li><g:link controller="individual" action="cleelist">Individual Management</g:link></li>
-				  <!--<li><g:link controller="helper" action="commitmentReport">Commitment Report (last 12 months)</g:link></li>
-				  <li><g:link controller="helper" action="donationReport">Donation Report (till date)</g:link></li>-->
-				  <li><g:link controller="mb" action="list">Marriage Board</g:link></li>
+				  <!--<li><g:link controller="individual" action="cleelist">Individual Management</g:link></li>
+				  <li><g:link controller="helper" action="commitmentReport">Commitment Report (last 12 months)</g:link></li>
+				  <li><g:link controller="helper" action="donationReport">Donation Report (till date)</g:link></li>
+				  <li><g:link controller="mb" action="list">Marriage Board</g:link></li>-->
 			      </sec:ifAnyGranted>      
 			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR_GROUP">
 				  <li><g:link controller="relationshipGroup" action="show">Group</g:link></li>
@@ -87,13 +88,24 @@
 
 			<!-- Counsellor/Counsellee Based Common Roles Start-->
 		      	      <sec:ifAnyGranted roles="ROLE_COUNSELLOR,ROLE_COUNSELLEE">
-		      	      	  <li><g:link controller="book" action="order">JivaDaya</g:link></li>
-		      	      	  <li><g:link controller="individualSeva" action="index">Seva</g:link></li>
-		      	      	  <li><g:link controller="menuOrder" action="list">Prasad</g:link></li>
-		      	      	  <li><g:link controller="event" action="list">Event</g:link></li>
-		      	      	  <li><g:link controller="individual" action="list">Search</g:link></li>
+				  <li><g:link controller="helper" action="clorDashboard">Dashboard</g:link></li>
+		      	      	  <li><g:link controller="individual" action="cleelist">Individuals</g:link></li>
+		      	      	  <li><g:link controller="event" action="list">Programs</g:link></li>
+		      	      	  <li><g:link controller="EventSeva" action="list">Services</g:link></li>
+		      	      	  <li><g:link controller="role" action="gridlist">Directory</g:link></li>
+		      	      	  <li><g:link controller="helper" action="clorResources">Resources</g:link></li>
+		      	      	  <!--<li><g:link controller="book" action="order">JivaDaya</g:link></li>
+		      	      	  <li><g:link controller="menuOrder" action="list">Prasad</g:link></li>-->
 		      	      </sec:ifAnyGranted>
 			<!-- Counsellor/Counsellee Based Common Roles End-->
+
+			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR_ADMIN">
+				  <li><g:link controller="helper" action="clorBoardDashboard">CounselorBoard</g:link></li>
+			      </sec:ifAnyGranted>      
+
+			      <sec:ifAnyGranted roles="ROLE_ASMT_USER">
+				  <li><g:link controller="assessment" action="userDashboard">AssessmentApp</g:link></li>
+			      </sec:ifAnyGranted>      
 
 
 			      <sec:ifAnyGranted roles="ROLE_TMC">
@@ -161,13 +173,12 @@
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_KITCHEN_ADMIN">
-					<li><g:link class="list" action="index" controller="Recipe">Recipe Management</g:link></li>
-					<li><g:link class="list" action="index" controller="MenuChart">Menu Management</g:link></li>
+					<!--<li><g:link class="list" action="index" controller="Recipe">Recipe Management</g:link></li>
+					<li><g:link class="list" action="index" controller="MenuChart">Menu Management</g:link></li>-->
 					<li><g:link class="list" action="index" controller="Item">Item Management</g:link></li>
-					<!--<li><g:link class="list" action="index" controller="PurchaseList">Purchase Management</g:link></li>-->
 					<li><g:link class="list" action="purchaseList" controller="Invoice">Purchase Management</g:link></li>
 					<li><g:link class="list" action="salesList" controller="Invoice">Sales Management</g:link></li>
-					<li><g:link class="list" action="gridlist" controller="IndividualDepartment" params="[depName='Kitchen']">Staff Management</g:link></li>
+					<!--<li><g:link class="list" action="gridlist" controller="IndividualDepartment" params="[depName='Kitchen']">Staff Management</g:link></li>-->
 					<li><g:link class="list" action="report" controller="Invoice">Report</g:link></li>
 			      </sec:ifAnyGranted> 
 
@@ -190,7 +201,8 @@
 					<li><g:link class="list" action="uploadpaymentdata" controller="donationRecord">Upload ECS Donations</g:link></li>
 			      </sec:ifAnyGranted> 
 			<!-- Donation Roles End-->
-
+			
+			<!-- Account Office/Finance Roles Start-->
 			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
 				  <li><g:link controller="costCenter" action="list">CostCenter</g:link></li>
 				  <li><g:link controller="voucher" action="list">Voucher</g:link></li>
@@ -204,9 +216,20 @@
 				  <li><g:link controller="helper" action="costcenterReport">Transactions</g:link></li>
 			      </sec:ifAnyGranted>      
 
-			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN,ROLE_CC_OWNER">
+			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
 				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>      
+
+			      <sec:ifAnyGranted roles="ROLE_FINANCE">
+				  <li><g:link controller="costCenter" action="budget">Budget</g:link></li>
+				  <li><g:link controller="costCenter" action="summary" params="['year':'2014']">Summary</g:link></li>
+			      </sec:ifAnyGranted>      
+
+			      <sec:ifAnyGranted roles="ROLE_CCAT_OWNER,ROLE_CC_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
+				  <li><g:link controller="project" action="index">Expense Management</g:link></li>
+				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
+			      </sec:ifAnyGranted>      
+			<!-- Account Office/Finance Roles End-->
 
 			<!-- Marriage Board Based Roles Start-->
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN">
@@ -226,16 +249,6 @@
 					<li><g:link controller="mb" action="prospects">Prospects</g:link></li>
 			      </sec:ifAnyGranted> 
 			<!-- Marriage Board Roles End-->
-
-			<!-- Atithi Based Roles Start-->
-		      	      <sec:ifAnyGranted roles="ROLE_ATITHI_ADMIN,ROLE_ATITHI_USER">
-		      	      	  <li><g:link controller="person" action="list">Visitors</g:link></li>
-		      	      </sec:ifAnyGranted>
-		      	      <sec:ifAnyGranted roles="ROLE_ATITHI_ADMIN">
-		      	      	  <li><g:link controller="topic" action="list">Subscription Management</g:link></li>
-		      	      	  <li><g:link controller="person" action="dashboard">Dashboard</g:link></li>
-		      	      </sec:ifAnyGranted>
-			<!-- Atithi Based Roles End-->
 
 			<!-- VaishnavSamvardhan Based Roles Start-->
 		      	      <sec:ifAnyGranted roles="ROLE_VS_USER,ROLE_VS_ADMIN">
@@ -286,9 +299,9 @@
 		      	      </sec:ifAnyGranted>
 			<!-- EventManager Based Roles End-->
 
-
-		      </sec:ifLoggedIn>
 			</ul>
+		      </sec:ifLoggedIn>
+
 
 		    <span id='loginLink' style='position: relative; margin-right: 20px; float: right'>
 			    <sec:ifLoggedIn>
@@ -302,7 +315,7 @@
 				    <img src="${resource(dir:'images',file:'lock_break.png')}" alt="Reset Password" title="Reset Password" /></a>
 				    </sec:ifAnyGranted>
 
-				    <a href='<g:createLink controller="individual" action="self" />'><img src="${resource(dir:'images',file:'plus.png')}"
+				    <a href='<g:createLink controller="individual" action="self" />'><img src="${resource(dir:'images',file:'profile.png')}"
 				    alt="Profile" title="Profile" /></a> 
 
 				    )
@@ -314,3 +327,19 @@
 			</span>
 
 		      </div>
+
+		      <sec:ifLoggedIn>
+			<!-- Atithi Based Roles Start-->
+			<nav>
+				<ul>
+		      	      <sec:ifAnyGranted roles="ROLE_ATITHI_ADMIN,ROLE_ATITHI_USER">
+		      	      	  <li><g:link controller="person" action="list">Visitors</g:link></li>
+		      	      </sec:ifAnyGranted>
+		      	      <sec:ifAnyGranted roles="ROLE_ATITHI_ADMIN">
+		      	      	  <li><g:link controller="topic" action="list">Subscription Management</g:link></li>
+		      	      	  <li><g:link controller="person" action="dashboard">Dashboard</g:link></li>
+		      	      </sec:ifAnyGranted>
+				</ul>
+			</nav>
+			<!-- Atithi Based Roles End-->
+		      </sec:ifLoggedIn>

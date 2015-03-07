@@ -46,7 +46,7 @@
             <div class="message"><g:message code="${flash.message}" args="${flash.args}" default="${flash.message}" /></div>
             </g:if>
             <div id="information" class="value" style="float:left;padding:10px 10px;margin:10px 10px;border:1px solid;">
-                Red : There is error in Record, It will not be processed.<br>
+                Red : There is error in Record, It will not be processed. Could not found Individual as per ECS mandate <br>
                 Green: Record is resolved, Upload Again.<br>
                 Yellow:Record with same Transaction Id found. Correct the File.<br>
                 Blue: Record of Donations given by the Individual for the Scheme in Same Month<br>

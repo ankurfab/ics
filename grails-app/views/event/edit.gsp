@@ -133,6 +133,15 @@
                         
                             <tr class="prop">
                                 <td valign="top" class="name">
+                                    <label for="type"><g:message code="event.type.label" default="Type" /></label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'type', 'errors')}">
+                                    <g:textField name="type" value="${eventInstance?.type}" />
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
                                   <label for="title"><g:message code="event.title.label" default="Title" /></label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: eventInstance, field: 'title', 'errors')}">

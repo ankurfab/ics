@@ -122,7 +122,7 @@ class MbController {
     }
 
     def search() {
-        def mbProfile = MbProfile.findById(5)
+        def mbProfile = MbProfile.get(params.id)
         [mbProfile: mbProfile]
     }
 
@@ -233,8 +233,8 @@ def showImage = {
             	    IndividualCentre.findByIndividual(it.candidate)?.centre,
             	    VoiceContact.findByCategoryAndIndividual('CellPhone',it.candidate)?.number,
             	    it.profileStatus,
-            	    it.matchMakingStatus,
             	    it.workflowStatus,
+            	    it.matchMakingStatus,
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -242,7 +242,7 @@ def showImage = {
         }
 
     def jq_mbProfile_list = {
-        log.debug(params)
+        log.debug("jq_mbProfile_list:"+params)
       def sortIndex = params.sidx ?: 'id'
       def sortOrder  = params.sord ?: 'asc'
 
@@ -252,79 +252,86 @@ def showImage = {
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
       def mbprofile = MbProfile.get(params.mbProfileId)
+      
+      def result = []
+      
 
-	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
-		eq('workflowStatus','APPROVED')
         if(mbprofile)
         {
-            ne('id',mbprofile.id)
+		result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
+			eq('workflowStatus','APPROVED')
+		    ne('id',mbprofile.id)
 
-            //check for opposite gender
-            if(mbprofile.candidate?.isMale)
-                candidate{eq('isMale',false)}
-            else
-                candidate{eq('isMale',true)}
+		    //check for opposite gender
+		    if(mbprofile.candidate?.isMale)
+			candidate{eq('isMale',false)}
+		    else
+			candidate{eq('isMale',true)}
+			
+		if(!params.showAll) {
 
-            //check for chanting preference
-            if(params.flexibleChanting){
+		    //check for chanting preference
+		    if(params.flexibleChanting){
 
-            }
+		    }
 
-            if(params.flexibleSpMaster=="false"){
-               and {eq('spiritualMaster',params.prefSpMaster,[ignoreCase: true])}
-            }
+		    if(params.flexibleSpMaster=="false" && params.prefSpMaster){
+		       and {eq('spiritualMaster',params.prefSpMaster,[ignoreCase: true])}
+		    }
 
-            if(params.flexibleCentre=="false"){
-                def valList = params.prefCentre.split(',')
-               and {candidate{'in'('iskconCentre',valList)}}
-            }
+		    if(params.flexibleCentre=="false" && params.prefCentre){
+			def valList = params.prefCentre.split(',')
+		       and {candidate{'in'('iskconCentre',valList)}}
+		    }
 
-            if(params.flexibleNationality=="false"){
-               and {candidate{eq('nationality',params.prefNationality,[ignoreCase: true])}}
-            }
+		    if(params.flexibleNationality=="false" && params.prefNationality){
+		       and {candidate{eq('nationality',params.prefNationality,[ignoreCase: true])}}
+		    }
 
-            if(params.flexibleOrigin=="false"){
-                and {candidate{'in'('origin',params.prefOrigin)}}
-            }
+		    if(params.flexibleOrigin=="false" && params.prefOrigin){
+			and {candidate{'in'('origin',params.prefOrigin)}}
+		    }
 
-            if(params.flexibleVarna=="false"){
-               and {candidate{'in'('varna',params.prefVarna)}}
-            }
+		    if(params.flexibleVarna=="false" && params.prefVarna){
+		       and {candidate{'in'('varna',params.prefVarna)}}
+		    }
 
-            if(params.flexibleCategory=="false"){
-                and {eq('scstCategory',params.prefCategory,[ignoreCase: true])}
-            }
+		    if(params.flexibleCategory=="false" && params.prefCategory){
+			and {eq('scstCategory',params.prefCategory,[ignoreCase: true])}
+		    }
 
-            if(params.flexibleCaste=="false"){
-                def valList = params.prefCaste.split(',')
-                and {candidate{'in'('caste',valList)}}
-            }
+		    if(params.flexibleCaste=="false" && params.prefCaste){
+			def valList = params.prefCaste.split(',')
+			and {candidate{'in'('caste',valList)}}
+		    }
 
-            if(params.flexibleSubcaste=="false"){
-                def valList = params.prefSubCaste.split(',')
-                and {candidate{'in'('subCaste',valList)}}
-            }
+		    if(params.flexibleSubcaste=="false" && params.prefSubCaste){
+			def valList = params.prefSubCaste.split(',')
+			and {candidate{'in'('subCaste',valList)}}
+		    }
 
-            if(params.flexibleLangknown=="false"){
-                and {'in'('languagesKnown',params.prefLangKnown)}
-            }
+		    if(params.flexibleLangknown=="false" && params.prefLangKnown){
+			and {'in'('languagesKnown',params.prefLangKnown)}
+		    }
 
-            if(params.flexibleEducationCat){}
+		    if(params.flexibleEducationCat){}
 
-            if(params.flexibleAgediff){}
+		    if(params.flexibleAgediff){}
 
-            if(params.flexibleHeight=="false"){}
+		    if(params.flexibleHeight=="false"){}
 
-            if(params.flexibleCandidateIncome){}
+		    if(params.flexibleCandidateIncome){}
 
-            if(params.flexibleManglik=="false"){
-                and {'in'('manglik',params.prefManglik)}
-            }
+		    if(params.flexibleManglik=="false" && params.prefManglik){
+			and {'in'('manglik',params.prefManglik)}
+		    }
 
-            if(params.flexibleQualifications){}
+		    if(params.flexibleQualifications){}
+		    
+		    }
 
-            order(sortIndex, sortOrder)
-        }
+		    order(sortIndex, sortOrder)
+		}
 	}
 
       def totalRows = result.totalCount
@@ -481,7 +488,6 @@ def showImage = {
 	else
 		render([status:"OK"] as JSON)
     	
-    }
-    
+    }    
     
 }

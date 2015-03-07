@@ -126,6 +126,14 @@ class SevaController {
                 ilike('type',params.type)
             if (params.category)
                 ilike('category',params.category)
+            if(params.incharge) {
+            	incharge{
+            		or{
+            		ilike('legalName',params.incharge)
+            		ilike('initiatedName',params.incharge)
+            		}
+            	}
+            	}
 
             order(sortIndex, sortOrder)
       }
@@ -136,7 +144,8 @@ class SevaController {
             [cell: [it.name,
             	it.description,
             	it.type,
-            	it.category
+            	it.category,
+            	it.incharge?.toString()
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -204,7 +213,7 @@ class SevaController {
 	      render response as JSON
 	    }
 	    
-	def gridList() {}
+	def gridlist() {}
 
 
 }

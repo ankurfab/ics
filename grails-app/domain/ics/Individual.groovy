@@ -86,6 +86,8 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
 	    height(nullable:true)
 	    houseDescription(nullable:true)
 	    nationality(nullable:true)
+	    description(size:0..2500,blank:true,nullable:true)
+	    centre(nullable:true)
 	
 	    dateCreated()
 	    creator()
@@ -161,6 +163,8 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     String externalName
     Integer icsid
     String type
+    String description
+    Centre centre
 
     //devotional
     String frequencyOfTempleVisits
@@ -182,7 +186,7 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     String subCaste
     String egSurnames
     String income	//pa
-    Short height	//inches
+    Integer height	//inches
     boolean ownHouse	//false would mean staying rented house
     String houseDescription
     
@@ -201,7 +205,6 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
 	static mapping = {
 		donations sort:'donationDate'
 		fundCollections sort:'fundReceiptDate'
-
 	}
 
 

@@ -2456,7 +2456,55 @@ def jq_donation_list = {
 	}
 	
 
+    def uploadbulkdonation() {
+	    log.debug("Inside uploadbulkdonation")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render(view: 'entry')
+		return
+	    }
 
+	    def numRecords = 0, numCreated=0
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(donationService.autoCreateDonation(tokens))
+	    		numCreated++
+	    }
+	    
+	    flash.message="Auto created "+numCreated+"/"+numRecords+" donations!!"
+	    
+	    redirect (action: "list")
+	    return
+    }
+
+	def bulkPrint() {
+	}
+	
+	def bulkPrintView() {
+	      log.debug("Inside bulkPrintView with params: "+params)
+
+	      def donationList = []
+
+	      params.rbnos?.tokenize(',').each{rbno->
+	      	donationList.add(Donation.findAllByNvccReceiptBookNo(rbno))
+	      	}
+
+	      params.rnos?.tokenize(',').each{rno->
+	      	donationList.add(Donation.findAllByNvccReceiptNo(rno))
+	      	}
+	      	
+	      params.ids?.tokenize(',').each{id->
+	      	donationList.add(Donation.get(id))
+	      	}
+
+           	donationList = donationList.flatten()
+	      
+		render(template: "bulkreceipt", model: [donationList:donationList,printedBy:(params.authority?:'')])
+	      
+	}
+	
              
 
 

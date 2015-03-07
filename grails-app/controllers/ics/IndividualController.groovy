@@ -684,6 +684,7 @@ def individualService
 				relnship0.updator = springSecurityService.principal.username
 				def relationshipgroup0 = new RelationshipGroup()
 				relationshipgroup0.groupName = "Family of "+ (individualInstance)
+				relationshipgroup0.category='FAMILY'
 
 				relationshipgroup0.refid = individualInstance.id.toInteger()
 				relationshipgroup0.creator = springSecurityService.principal.username
@@ -737,6 +738,7 @@ def individualService
 				relnship1.updator = springSecurityService.principal.username
 				def relationshipgroup1 = new RelationshipGroup()
 				relationshipgroup1.groupName = "Family of "+ (individualInstance)
+				relationshipgroup1.category='FAMILY'
 				relationshipgroup1.refid = individualInstance.id.toInteger()
 				relationshipgroup1.creator = springSecurityService.principal.username
 				relationshipgroup1.updator = springSecurityService.principal.username
@@ -791,6 +793,7 @@ def individualService
 				relnship2.updator = springSecurityService.principal.username
 				def relationshipgroup2 = new RelationshipGroup()
 				relationshipgroup2.groupName = "Family of "+ (individualInstance)
+				relationshipgroup2.category='FAMILY'
 
 				relationshipgroup2.refid = individualInstance.id.toInteger()
 				relationshipgroup2.creator = springSecurityService.principal.username
@@ -844,6 +847,7 @@ def individualService
 				relnship3.updator = springSecurityService.principal.username
 				def relationshipgroup3 = new RelationshipGroup()
 				relationshipgroup3.groupName = "Family of "+ (individualInstance)
+				relationshipgroup3.category='FAMILY'
 
 				relationshipgroup3.refid = individualInstance.id.toInteger()
 				relationshipgroup3.creator = springSecurityService.principal.username
@@ -897,6 +901,7 @@ def individualService
 				relnship4.updator = springSecurityService.principal.username
 				def relationshipgroup4 = new RelationshipGroup()
 				relationshipgroup4.groupName = "Family of "+ (individualInstance)
+				relationshipgroup4.category='FAMILY'
 
 				relationshipgroup4.refid = individualInstance.id.toInteger()
 				relationshipgroup4.creator = springSecurityService.principal.username
@@ -950,6 +955,7 @@ def individualService
 				relnship5.updator = springSecurityService.principal.username
 				def relationshipgroup5 = new RelationshipGroup()
 				relationshipgroup5.groupName = "Family of "+ (individualInstance)
+				relationshipgroup5.category='FAMILY'
 
 				relationshipgroup5.refid = individualInstance.id.toInteger()
 				relationshipgroup5.creator = springSecurityService.principal.username
@@ -1003,6 +1009,7 @@ def individualService
 				relnship6.updator = springSecurityService.principal.username
 				def relationshipgroup6 = new RelationshipGroup()
 				relationshipgroup6.groupName = "Family of "+ (individualInstance)
+				relationshipgroup6.category='FAMILY'
 
 				relationshipgroup6.refid = individualInstance.id.toInteger()
 				relationshipgroup6.creator = springSecurityService.principal.username
@@ -1407,6 +1414,7 @@ def individualService
 	    	return
 	    	}
 
+	/*
         //println ics.Commitment.findByCommittedBy(individualInstance)
         	//sort the relatives
         	//println "Before sorting.. "+individualInstance.relative2
@@ -1416,19 +1424,6 @@ def individualService
 		individualInstance.relative2.sort(mc)     	
         	//println "after sorting... "+individualInstance.relative2
         	
-        	//get summary donation
-        	def summaryDonation
-        	def summaryDonationRecord
-        	if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_ADMIN,ROLE_DUMMY,ROLE_BACKOFFICE,ROLE_NVCC_ADMIN,ROLE_COUNSELLOR,ROLE_PATRONCARE,ROLE_PATRONCARE_USER'))
-        		{
-        		try {
-        			summaryDonation = housekeepingService.donationSummary(params.id)
-        			summaryDonationRecord = housekeepingService.donationRecordSummary(params.id)
-        			}
-        		catch(e)
-        			{log.debug("Exception is summarydonation for :"+params.id+e.printStackTrace())
-        			throw e}
-        		}
         	
         	//see if any bounced cheques
         	
@@ -1460,7 +1455,9 @@ def individualService
         		cultivatorLink = "Remove Cultivator"
         	if (!cultivatorRel)
         		cultivatorLink = "Cultivated by me"
-            [individualInstance: individualInstance,amtInd:summaryDonation?.amtInd,amtIndDR:summaryDonationRecord?.amtIndDR, amtFam: summaryDonation?.amtFam, amtCol:summaryDonation?.amtCol, sList: summaryDonation?.sList, sListDR: summaryDonationRecord?.sListDR, amtColExclOwn: summaryDonation?.amtColExclOwn, amtGiftInd :summaryDonation?.amtGiftInd , amtGiftFam: summaryDonation?.amtGiftFam, amtBCInd: summaryDonation?.amtBCInd, amtBCFam: summaryDonation?.amtBCFam, booksRead: booksRead, courses: courses, individualLanguageList: individualLanguageList, individualCentreList: individualCentreList, servicesrendered: servicesrendered, servicesinterested: servicesinterested, cultivatorLink: cultivatorLink, cultivatorRel : cultivatorRel]
+        //, booksRead: booksRead, courses: courses, individualLanguageList: individualLanguageList, individualCentreList: individualCentreList, servicesrendered: servicesrendered, servicesinterested: servicesinterested, cultivatorLink: cultivatorLink, cultivatorRel : cultivatorRel
+        */
+            [individualInstance: individualInstance]
         }
     }
 
@@ -2742,22 +2739,20 @@ def individualService
 		def c = Individual.createCriteria()
 		def individuals = c.list(max:10)
 			{
-			and{
-				or {
-					like("legalName", "%"+query+"%")
-					like("initiatedName", "%"+query+"%")
+			or {
+				like("legalName", "%"+query+"%")
+				like("initiatedName", "%"+query+"%")
+			}
+			isNull("loginid")
+			or{
+				isNull('status')
+				and{
+				ne('status','MERGED')
+				ne('status','DELETED')
 				}
-				isNull("loginid")
-				or{
-					isNull('status')
-					and{
-					ne('status','MERGED')
-					ne('status','DELETED')
-					}
-				}	    		
-				not{
-					eq("legalName", "Dummy Donor for daily transactions")
-		    	}
+			}	    		
+			not{
+				eq("legalName", "Dummy Donor for daily transactions")
 			}
 			order("initiatedName", "asc")
 			order("legalName", "asc")
@@ -2767,8 +2762,8 @@ def individualService
         def results = individuals.collect {
             [  
                id: it.id,
-               value: it.toString(),
-               label: it.toString() ]
+               value: it.toString()+"("+it.status+")",
+               label: it.toString()+"("+it.status+")" ]
         }
 
         render results as JSON
@@ -2802,6 +2797,20 @@ def individualService
         render results as JSON
     }
 
+    def allIndividualsFuzzyAsJSON_JQ = {
+	def individuals = housekeepingService.searchIndividualName(params.term)
+        response.setHeader("Cache-Control", "no-store")
+
+        def results = individuals.collect {
+            [  
+               id: it.id,
+               value: it.toString(),
+               label: it.toString() ]
+        }
+
+        render results as JSON
+    }
+  
     def allIndividualsAsJSON_JQ = {
 		def query = params.term
 		//many times there is a middle name so handle it automatically
@@ -2839,7 +2848,7 @@ def individualService
 
         render results as JSON
     }
-  
+
     def doubleshow = {
     	def id1=params.id
     	def id2=params.id2
@@ -4868,5 +4877,99 @@ def updateCultivator = {
 		def reportData = reportService.donationReport(session.individualid)
 		[reportData:reportData]
 	}
+	
+	def bulkCreateFromPerson() {
+		def result = individualService.bulkCreateFromPerson(params)
+		render result
+		return
+	}
+
+   def family = {
+ 		render(template: "family", model: [individualInstance : Individual.get(params.id)])
+ 		return
+    } 
+    
+    def professionalInfo = {
+		render(template: "professionalInformation", model: [individualInstance : Individual.get(params.id)])
+		return
+    }  
+    
+    def languages = {
+    		render(template: "languages", model: [individualInstance : Individual.get(params.id)])
+    		return
+    } 
+    
+    def communicationPreferences = {
+        	render(template: "communicationPreferences", model: [individualInstance : Individual.get(params.id)])
+        	return
+    } 
+    
+    def spiritualInformation = {
+            	render(template: "spiritualInformation", model: [individualInstance : Individual.get(params.id)])
+            	return
+    } 
+   
+   def lifeMember = {
+            	render(template: "lifeMember", model: [individualInstance : Individual.get(params.id)])
+            	return
+    } 
+    
+   def  fundsCollected = {
+            	render(template: "fundsCollected", model: [individualInstance : Individual.get(params.id)])
+            	return
+    } 
+    
+   def  fundsReceived = {
+               	render(template: "fundsReceived", model: [individualInstance : Individual.get(params.id)])
+               	return
+    }
+    
+   def  nvccFields = {
+                render(template: "nvccFields", model: [individualInstance : Individual.get(params.id)])
+                return
+    } 
+    
+    def  kcTraining = {
+                render(template: "indkcTraining", model: [individualInstance : Individual.get(params.id)])
+                return
+    }
+    
+    def  kcRoles = {
+                render(template: "kcRoles", model: [individualInstance : Individual.get(params.id)])
+                return
+    }
+   
+    def  services = {
+                render(template: "services", model: [individualInstance : Individual.get(params.id)])
+                return
+    }
+
+     def donationsList = {
+             
+         render(template: "donationsList", model: [individualInstance : Individual.get(params.id)])
+         return
+       }
+
+    def  showDonationSummary = {
+	//get summary donation
+	def summaryDonation
+	def summaryDonationRecord
+	def individualInstance
+
+	if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_ADMIN,ROLE_DUMMY,ROLE_BACKOFFICE,ROLE_NVCC_ADMIN,ROLE_COUNSELLOR,ROLE_PATRONCARE,ROLE_PATRONCARE_USER'))
+		{
+		individualInstance = Individual.get(params.id)
+		try {
+			summaryDonation = housekeepingService.donationSummary(params.id)
+			summaryDonationRecord = housekeepingService.donationRecordSummary(params.id)
+			}
+		catch(e)
+			{log.debug("Exception is summarydonation for :"+params.id+e.printStackTrace())
+			throw e}
+		}
+	render(template: "donationSummary", model: [individualInstance : individualInstance, amtInd:summaryDonation?.amtInd,amtIndDR:summaryDonationRecord?.amtIndDR, amtFam: summaryDonation?.amtFam, amtCol:summaryDonation?.amtCol, sList: summaryDonation?.sList, sListDR: summaryDonationRecord?.sListDR, amtColExclOwn: summaryDonation?.amtColExclOwn, amtGiftInd :summaryDonation?.amtGiftInd , amtGiftFam: summaryDonation?.amtGiftFam, amtBCInd: summaryDonation?.amtBCInd, amtBCFam: summaryDonation?.amtBCFam])
+	return
+    }
+
 
 }

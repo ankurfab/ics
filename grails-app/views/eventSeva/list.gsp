@@ -11,18 +11,22 @@
     </head>
     <body>
         <div class="nav">
-            <table>
+            <!--<table>
 		    <tr>
 			    <td>Download SSRKB BhaktaSamaj Registrations<export:formats formats="['excel']" controller="helper" action="eventRegLocalReport"/></td>
 			    <td>Download SSRKB BhaktaSamaj Service Allotments<export:formats formats="['excel']" controller="helper" action="eventServiceAllotmentReport"/></td>
 			    <td>Download Outside Pune Service Allotments<export:formats formats="['excel']" controller="helper" action="eventServiceAllotmentOPReport"/></td>
 		    </tr>
-	    </table>
+	    </table>-->
         </div>
         <div class="body">
 
 		<g:render template="/common/sms" />
 		<g:render template="/common/email" />
+
+		<div id="dialogChooseIndividualForm" title="Choose Individual">
+			<g:render template="/individual/chooseIndividual" />
+		</div>            
 
 		<div id="dialogChangeService" title="Change Service">
 			<form>
@@ -46,6 +50,10 @@
 			</form>
 		</div>
 
+		<!-- table tag will hold our grid -->
+		<table id="seva_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
+		<!-- pager will hold our paginator -->
+		<div id="seva_list_pager" class="scroll" style="text-align:center;"></div>
 		<!-- table tag will hold our grid -->
 		<table id="eventSeva_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 		<!-- pager will hold our paginator -->
@@ -144,16 +152,67 @@
   $(document).ready(function () {
     $( "#tabs" ).tabs();
 
+		    jQuery("#seva_list").jqGrid({
+		      url:'${createLink(controller:'Seva',action:'jq_seva_list')}',
+		      editurl:'${createLink(controller:'Seva',action:'jq_edit_seva')}',
+		      datatype: "json",
+		      colNames:['Name','Description','Type','Category','Incharge','id'],
+		      colModel:[
+			{name:'name', editable:true},
+			{name:'description', editable:true},
+			{name:'type', editable:true},
+			{name:'category', editable:true,
+				    /*'edittype'    : 'custom',
+				    'editoptions' : {
+				      'custom_element' : autocomplete_element,
+				      'custom_value'   : autocomplete_value
+   					 }*/
+			},
+			{name:'incharge', editable:false},
+			{name:'id',hidden:true}
+		     ],
+		    rowNum:5,
+		    rowList:[5,10,20,30,50,100],
+		    pager: '#seva_list_pager',
+		    viewrecords: true,
+		    gridview: true,
+		    sortname: 'name',
+		    sortorder: "asc",
+		    width: 1200,
+		    height: "100%",
+		    caption:"Service Master List",
+			onSelectRow: function(ids) {
+						var selSevaName = jQuery('#seva_list').jqGrid('getCell', ids, 'name');
+						jQuery("#eventSeva_list").jqGrid('setGridParam',{url:"${createLink(controller:'eventSeva',action:'jq_eventSeva_list',params:['seva.id':''])}"+ids,page:1});
+						jQuery("#eventSeva_list").jqGrid('setGridParam',{editurl:"${createLink(controller:'eventSeva',action:'jq_edit_eventSeva',params:['seva.id':''])}"+ids});
+						jQuery("#eventSeva_list").jqGrid('setCaption',"EventSeva List for Seva: "+selSevaName) .trigger('reloadGrid');
+					}
+		    });
+		   $("#seva_list").jqGrid('navGrid',"#seva_list_pager",
+			{add:true,edit:true,del:true}, // which buttons to show?
+			{},         // edit options
+			{addCaption:'Create New Seva',afterSubmit:afterSubmitEvent,savekey:[true,13],closeAfterAdd:true},  // add options
+			{}          // delete options
+		    );
+		   $("#seva_list").jqGrid('filterToolbar',{autosearch:true});
+		   
     jQuery("#eventSeva_list").jqGrid({
       url:'jq_eventSeva_list',
       editurl:'jq_edit_eventSeva',
       datatype: "json",
-      colNames:['Service','Incharge', 'Incharge Contact','Incharge Email','Comments'/*,'Total Volunteer Needed','Maximum Prji Volunteer Needed','Maximum Mataji Volunteer Needed','Maximum Bramhachari Volunteer Needed','Current Volunteer Allotted','Current Prji Volunteer Allotted','Current Mataji Volunteer Allotted','Current Bramhachari Volunteer Allotted'*/,'Id'],
+      colNames:['Event','Service','Incharge', 'Incharge Contact','Incharge Email','Comments'/*,'Total Volunteer Needed','Maximum Prji Volunteer Needed','Maximum Mataji Volunteer Needed','Maximum Bramhachari Volunteer Needed','Current Volunteer Allotted','Current Prji Volunteer Allotted','Current Mataji Volunteer Allotted','Current Bramhachari Volunteer Allotted'*/,'Id'],
       colModel:[
-	{name:'seva.name', editable:true,editrules:{required:true},sortable:true},
-	{name:'inchargeName', editable:true, editrules:{required:true}},
-	{name:'inchargeContact', editable:true, editrules:{required:true, integer:true, minValue:0, maxValue:9999999999}},
-	{name:'inchargeEmail', editable:true, editrules:{required:true, email:true}},
+	{name:'event.id', formatter:'showlink', 
+             		formatoptions:{baseLinkUrl:'${createLink(controller:'Event',action:'show')}',addParam:'&domainid=Trip'},
+        	search:true, editable: true,
+        	editrules:{required:false},edittype:"select",
+        	editoptions:{value:"${':--Please Select Event--;'+(ics.Event.list([sort:'startDate',order:'desc'])?.collect{it.id+':'+it.toString()}.join(';'))}"},
+		stype:'select', searchoptions: { value: "${':ALL;'+(ics.Event.list([sort:'startDate',order:'desc'])?.collect{it.id+':'+it.toString()}.join(';'))}"}        	
+	},
+	{name:'seva.name', editable:true,editrules:{required:false},sortable:true},
+	{name:'inchargeName', editable:false, editrules:{required:true}},
+	{name:'inchargeContact', editable:false, editrules:{required:true, integer:true, minValue:0, maxValue:9999999999}},
+	{name:'inchargeEmail', editable:false, editrules:{required:true, email:true}},
 	{name:'comments', editable:true},
 	/*{name:'maxRequired', editable:true,search:false},
 	{name:'maxPrjiRequired', editable:true,search:false},
@@ -172,7 +231,7 @@
     sortorder: "asc",
     width: 1200,
     height: "100%",
-    caption:"Service List",
+    caption:"Service List for Events",
     multiselect: true,
     onSelectRow: function(ids) { 
     	jQuery("#eventSevaAllotment_list").jqGrid('setGridParam',{url:"jq_eventSevaAllotment_list?sevaid="+ids}).trigger('reloadGrid');
@@ -184,6 +243,49 @@
     $("#eventSeva_list").jqGrid('filterToolbar',{autosearch:true});
     $("#eventSeva_list").jqGrid('navGrid',"#eventSeva_list_pager",{edit:false,add:false,del:true,search:false});
     $("#eventSeva_list").jqGrid('inlineNav',"#eventSeva_list_pager");
+    $("#eventSeva_list").jqGrid('navGrid',"#eventSeva_list_pager").jqGrid('navButtonAdd',"#eventSeva_list_pager",{caption:"SetIncharge", buttonicon:"ui-icon-person", onClickButton:setIncharge, position: "last", title:"SetIncharge", cursor: "pointer"});
+
+
+	function setIncharge() {
+		var ids = $('#eventSeva_list').jqGrid('getGridParam','selarrrow');
+		if(ids) {
+				$( "#dialogChooseIndividualForm" ).dialog( "open" );
+		}
+		else
+			alert("Please select a row!!");
+	}
+
+		$( "#dialogChooseIndividualForm" ).dialog({
+			autoOpen: false,
+			height: 200,
+			width: 350,
+			modal: true,
+			buttons: {
+				"Submit": function() {
+				      var url = "${createLink(controller:'EventSeva',action:'setIncharge')}?indid="+$('#linkedid').val()+"&idlist="+$('#eventSeva_list').jqGrid('getGridParam','selarrrow');
+				      // post data
+				      $.post(url, '' , function(returnData){
+						  $('#linkedid').val('');
+						  $('#indname').val('');
+						  $('#ind').val('');
+
+						  jQuery("#eventSeva_list").jqGrid().trigger("reloadGrid");
+					      })
+						
+						$( this ).dialog( "close" );
+				},
+				"Cancel": function() {
+					  $('#linkedid').val('');
+					  $('#indname').val('');
+					  $('#ind').val('');
+					$( this ).dialog( "close" );
+				}
+			},
+			close: function() {
+				
+			}
+		});
+
 
     jQuery("#summary_list").jqGrid({
       url:'jq_summary_list',
@@ -620,6 +722,45 @@
 				jQuery("#serviceassigned").val('');
 			}
 		});
+
+		 function afterSubmitEvent(response, postdata) {
+			var success = true;
+
+			var json = eval('(' + response.responseText + ')');
+			var message = json.message;
+
+			if(json.state == 'FAIL') {
+			    success = false;
+			} else {
+			  $('#message').html(message);
+			  $('#message').show().fadeOut(10000);
+			}
+
+			var new_id = json.id
+			return [success,message,new_id];
+		    }
+
+		function autocomplete_element(value, options) {
+		  // creating input element
+		  var $ac = $('<input type="text"/>');
+		  // setting value to the one passed from jqGrid
+		  $ac.val(value);
+		  // creating autocomplete
+		  $ac.autocomplete({source: "${createLink(controller:'item',action:'list')}"+".json"});
+		  // returning element back to jqGrid
+		  return $ac;
+		}
+
+		function autocomplete_value(elem, op, value) {
+			alert(elem) 
+			alert(op) 
+			alert(value)
+		  if (op == "set") {
+		    $(elem).val(value);
+		  }
+		  return $(elem).val();
+		}
+
 
     });
 

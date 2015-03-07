@@ -19,6 +19,8 @@ class GiftRecord {
 	    updator()
     }
 
+     static transients = [ 'isProfileComplete','status','star']
+
     Individual giftedTo
     Scheme scheme
     Centre centre
@@ -29,7 +31,9 @@ class GiftRecord {
     int quantity
     String giftReceivedStatus
     String giftChannel // the way gift is collected by person
-    
+    Boolean isProfileComplete // to save if profile compelte for this member or not
+    String status
+    Integer star
     Date dateCreated
     Date lastUpdated
     String creator

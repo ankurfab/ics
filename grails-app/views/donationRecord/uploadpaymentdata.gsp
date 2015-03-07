@@ -31,8 +31,22 @@
             <g:uploadForm>
             <div class="dialog">
                     <table>
-                        <tbody>
-                        
+                    <tbody  bgcolor="lavender">
+                    <tr class="prop">
+                        <td colspan="6">ECS file Format, make sure that file meets the below format, below is header of file, date should be in yyyymmdd format</td>
+                        </tr>
+                        <tr class="prop">
+                        <td>Consumer code</td>
+                        <td>Customer Name</td>
+                        <td>Amount</td>
+                        <td>Date</td>
+                        <td>Reason Code</td>
+                        <td>Reason description</td>
+                        </tr>
+                    </tbody>
+                    </table>
+                    <table>
+                        <tbody>                        
                         <tr class="prop">
                         <td valign="top" class="name">
                          Use ECS Return File:
@@ -51,25 +65,9 @@
                             <g:radio name="uploadtype" value="account"></g:radio>
                             </td>
                         </tr>
+                       
+                        
                         <tr class="prop">
-                            <td valign="top" class="name">
-                            Scheme
-                            </td>
-
-                            <td valign="top" class="value">
-                                <g:select name="scheme" from="${schemes}" optionKey="id"   />
-                            </td>
-                        </tr>
-                        <tr class="prop">
-                            <td valign="top" class="name">
-                            Use Percetange Deduction
-                            </td>
-
-                            <td valign="top" class="value">
-                                 <g:checkBox name="usepercentagededuction"/>
-                            </td>
-                        </tr>
-                         <tr class="prop">
                             <td valign="top" class="name">
                             Exclude ECS Data
                             </td>
@@ -79,24 +77,7 @@
                             </td>
                         </tr>
 
-                        <tr class="prop">
-                            <td valign="top" class="name">
-                            Use Member Details to Update Member Comments
-                            </td>
-
-                            <td valign="top" class="value">
-                                 <g:checkBox name="usememberdetails" />
-                            </td>
-                        </tr>
-                        <tr class="prop">
-                            <td valign="top" class="name">
-                            Update Member consumer numbers/Donor Id
-                            </td>
-
-                            <td valign="top" class="value">
-                                 <g:checkBox name="updatedonorid" />
-                            </td>
-                        </tr>
+                        
                           <tr class="prop">
                             <td valign="top" class="name">
                                 Select CSV file

@@ -5,6 +5,7 @@ class Department {
     String name
     String description
     String alias
+    CostCenter costCenter
     
     Date dateCreated
     Date lastUpdated
@@ -19,6 +20,7 @@ class Department {
         name()
         description(nullable:true, blank:true)
         alias(nullable:true,unique:true)
+        costCenter(nullable:true)
                 
 	creator()
 	dateCreated()

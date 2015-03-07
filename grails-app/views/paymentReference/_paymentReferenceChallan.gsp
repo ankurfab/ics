@@ -26,6 +26,42 @@
 
 	    <tr class="prop">
 		<td valign="top" class="name">
+		    <label for="instrumentNo">Instrument No</label>
+		</td>
+		<td valign="top" class="value">
+		    <g:textField name="instrumentNo"/>
+		</td>
+	    </tr>
+
+	    <tr class="prop">
+		<td valign="top" class="name">
+		    <label for="instrumentDate">Instrument Date</label>
+		</td>
+		<td valign="top" class="value">
+		    <g:textField name="instrumentDate"/>
+		</td>
+	    </tr>
+
+	    <tr class="prop">
+		<td valign="top" class="name">
+		    <label for="bankName">Bank Name</label>
+		</td>
+		<td valign="top" class="value">
+		    <g:textField name="bankName"/>
+		</td>
+	    </tr>
+
+	    <tr class="prop">
+		<td valign="top" class="name">
+		    <label for="bankBranch">Bank Branch</label>
+		</td>
+		<td valign="top" class="value">
+		    <g:textField name="bankBranch"/>
+		</td>
+	    </tr>
+
+	    <tr class="prop">
+		<td valign="top" class="name">
 		    <label for="details">Details</label>
 		</td>
 		<td valign="top" class="value">
@@ -42,6 +78,8 @@
 		</td>
 	    </tr>
 
+
+
 	</tbody>
     </table>
 </div>
@@ -52,7 +90,14 @@
   jQuery(document).ready(function () {
 
 	$("#paymentDate").datepicker({
-		yearRange : "-2:+0",
+		yearRange : "-1:+0",
+		changeMonth : true,
+		changeYear : true,
+		dateFormat : 'dd-mm-yy'
+	});
+
+	$("#instrumentDate").datepicker({
+		yearRange : "-1:+0",
 		changeMonth : true,
 		changeYear : true,
 		dateFormat : 'dd-mm-yy'

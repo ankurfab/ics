@@ -1,7 +1,8 @@
 package ics
 import org.codehaus.groovy.grails.plugins.springsecurity.*
 import org.springframework.web.context.request.RequestContextHolder
-import java.util.Random 
+import java.util.Random
+import com.krishna.*
 
 class AssessmentService {
 
@@ -237,7 +238,7 @@ class AssessmentService {
     //record the choice(s) made by the user
     def evaluate(IndividualAssessment ia, Map params) {
     	//first check if the inputs received are valid
-    	log.debug("inside evaluate with params "+params)
+    	//log.debug("inside evaluate with params "+params)
     	def mock = true
     	if(ia.assessmentDate)
     		mock = false
@@ -249,13 +250,13 @@ class AssessmentService {
     	if(iaqa) {
     		if(iaqa.individualAssessment==ia) {
     			if((mock && iaqa.category=='MOCK') || (!mock && iaqa.category=='ACTUAL')) {
-    				log.debug("correct pair")
+    				//log.debug("correct pair")
     				//the qid supplied should be the one for last shown
     				def iaqaList = IndividualAssessmentQA.findAllByIndividualAssessmentAndShownAndCategory(ia,true,(mock?'MOCK':'ACTUAL'),[max: 1, sort: "lastShown", order: "desc"])
     				if(iaqaList.size()>0)
     					{
     					
-    					log.debug(iaqa.question?.id+"<=>"+iaqaList[0]?.question?.id)
+    					//log.debug(iaqa.question?.id+"<=>"+iaqaList[0]?.question?.id)
     					
     					//now the qid and this should match
     					if(iaqa.question==iaqaList[0]?.question) {
@@ -263,7 +264,7 @@ class AssessmentService {
     						def choices
     						try{
     							choices = params.iaqac.replaceAll("userCheckbox","")?.tokenize(',')
-    							log.debug("parsed choices.."+choices)
+    							//log.debug("parsed choices.."+choices)
     							choices.each{
     								switch(it) {
     									case '1':
@@ -303,34 +304,57 @@ class AssessmentService {
     def getResult(IndividualAssessment ia) {
     	def mock = true
     	if(ia.assessmentDate)
+    		{
     		mock = false
-    	def iaqaList = IndividualAssessmentQA.findAllByIndividualAssessmentAndCategory(ia,mock?'MOCK':'EXACT')
+    		try{
+			use(groovy.time.TimeCategory) {
+			    ia.timeTaken = (new Date()-ia.assessmentDate).seconds
+			}
+		}
+		catch(Exception e){log.debug(e)}
+    		
+    		}
+    	def iaqaList = IndividualAssessmentQA.findAllWhere(individualAssessment:ia,category:(mock?'MOCK':'ACTUAL'),shown:true)
     	ia.score = 0
     	def numQ = 0
-    	def totalMarks = 0
+    	def totalMarks = ia.questionPaper?.totalMarks?:100
     	iaqaList.each{
     		score(it)
     		ia.score += (it.score?:0)
     		numQ++
-    		totalMarks += it.question.marks
+    		//totalMarks += it.question.marks
     	}
-    	
-    	if(!mock)
-    		ia.save()
-    	
-    	//For percent score: return (ia.score/totalMarks)*100 +" %"
     	
     	//for grades
     	def scorePct = (ia.score/totalMarks)*100
     	def grade=""
-    	if(scorePct<=40)
+    	if(scorePct<40)
     		grade = "F"
-    	else if(scorePct<=55)
+    	else if(scorePct<50)
+    		grade = "D"
+    	else if(scorePct<60)
     		grade = "C"
-    	else if(scorePct<=70)
+    	else if(scorePct<70)
     		grade = "B"
-    	else
+    	else if(scorePct<80)
+    		grade = "B+"
+    	else if(scorePct<90)
     		grade = "A"
+    	else
+    		grade = "A+"
+
+    	
+    	if(!mock) {
+	    	ia.assessmentCode = grade
+    		if(!ia.save())
+			ia.errors.allErrors.each {
+				log.debug("In getResult: error in saving:"+ it)
+				}    			
+    	}
+    	
+    	//For percent score: return (ia.score/totalMarks)*100 +" %"
+    	
+    	log.debug("Result for IA:"+ia+":"+ia.score+":"+grade)
 
 	return "Grade: "+grade
     }
@@ -356,6 +380,7 @@ class AssessmentService {
     	if(iaqa.selectedChoice4)
     		answerList.add(4)
     		
+    	//log.debug("iaqa:"+iaqa+":corect:"+correctList+":answer:"+answerList)
     	if(correctList.size()>0&&answerList==correctList)
     		{
     		iaqa.score = iaqa.question.marks
@@ -366,7 +391,7 @@ class AssessmentService {
 				}
 			}
     		}
-    	log.debug("Score for iaqaid:"+iaqa.id+" = "+iaqa.score)
+    	//log.debug("Score for iaqaid:"+iaqa.id+" = "+iaqa.score)
     }
     
     
@@ -379,9 +404,24 @@ class AssessmentService {
 	def question
 	def iaqa
     	//countByIndividualAssessmentAndShownIsNull(ia) ==> not sure what is the error
-    	def numQ = IndividualAssessmentQA.createCriteria().list{eq('individualAssessment',ia) projections{count('id')}}[0]
+    	def numQ = IndividualAssessmentQA.createCriteria().list{
+		if(ia.assessmentDate)
+			eq('category','ACTUAL')
+		else
+			eq('category','MOCK')
+    		eq('individualAssessment',ia)
+    		projections{count('id')}
+    		}[0]
 	def qNum = numQ +"/"+numQ
-    	def numUnshownQ = IndividualAssessmentQA.createCriteria().list{eq('individualAssessment',ia) isNull('shown') projections{count('id')}}[0]
+    	def numUnshownQ = IndividualAssessmentQA.createCriteria().list{
+		if(ia.assessmentDate)
+			eq('category','ACTUAL')
+		else
+			eq('category','MOCK')
+    		eq('individualAssessment',ia)
+    		isNull('shown')
+    		projections{count('id')}
+    		}[0]
 	if(numUnshownQ>0)
 	{
 		def rowOffset = new Random().nextInt(numUnshownQ.intValue())
@@ -422,7 +462,7 @@ class AssessmentService {
 	return [questionText: question?.questionText?:'', choice1: question?.choice1?:'', choice2: question?.choice2?:'', choice3: question?.choice3?:'', choice4: question?.choice4?:'',qNum:qNum,time:ia?.questionPaper?.timeLimit?:'10:00',iaqaid:iaqa?.id,examover:examover,result:result]
     	
     }
-    
+
     def prepareIAQA(IndividualAssessment ia) {
 	def questions = ia.questionPaper?.questions
 	def qCnt = 0
@@ -469,7 +509,7 @@ class AssessmentService {
 		//first check if iaqa already generated
 		qCnt = IndividualAssessmentQA.countByIndividualAssessmentAndCategory(ia,'ACTUAL')		
 		if(qCnt>0)
-			return false
+			return true
 		
 		//actual assessment
 		//also set up the IAQA
@@ -492,18 +532,30 @@ class AssessmentService {
     def setup(Map params) {
     	log.debug("Inside assessment setup with params "+params)  
     	def cnt=0,message
+    	def newind=false
 	def idList = params.idlist.tokenize(',')
 	idList.each
 	{
 		def er = EventRegistration.get(it)
-		def ind = individualService.createIndividualFromER(er)
+		def ind = er?.individual
+		if(!ind)
+			{
+			ind = individualService.createIndividualFromER(er)
+			newind=true
+			}
 		def ia = new IndividualAssessment()
 		ia.individual = ind
 		ia.assessment = er.assessment
 		ia.language = er.otherGuestType?.toUpperCase()
 		ia.eventRegistration = er
 		ia.status = 'READY'
+		try{
 		ia.creator = ia.updator = springSecurityService.principal.username
+		}
+		catch(Exception e) {
+			ia.creator = ia.updator = "anonymous"
+		}
+		
 		if(!ia.save()) {
 		    ia.errors.allErrors.each {
 			log.debug("Errors in setuing up ia "+ it)
@@ -512,19 +564,193 @@ class AssessmentService {
 		else
 			{
 			cnt++
-			//send the email to candidate with userid
-			def template = Template.findByName("GPL Registration")
-			def body = commsService.fillTemplate(template,[er.name,er.assessment?.toString(),er.otherGuestType,er.regCode,er.arrivalDate?.format('dd-MM-yyyy HH:mm:ss'),ind?.loginid,ind?.loginid])
-			def depcp = DepartmentCP.findByDepartment(Department.findByName("GPL"))
-			commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:er.name,toEmail:er.email,emailsub:template.name,emailbody:body,type:template.type])
+			if(newind) {
+				//send the email to candidate with userid
+				def template = Template.findByName("GPL Registration")
+				def body = commsService.fillTemplate(template,[er.name,er.assessment?.toString(),er.otherGuestType,er.regCode,er.arrivalDate?.format('dd-MM-yyyy HH:mm:ss'),ind?.loginid,ind?.loginid])
+				def depcp = DepartmentCP.findByDepartment(Department.findByName("GPL"))
+				commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:er.name,toEmail:er.email,emailsub:template.name,emailbody:body,type:template.type])
+				}
 			}
 	}
 	return [status:'OK',message:cnt+' registrations setup successfully!!']
+    }
+
+    def setupUV(EventRegistration er, String packetcode) {
+    	log.debug("Inside assessment setupUV for "+er)  
+	def ind = individualService.createIndividualFromER(er)
+	if(ind) 
+		{
+		//update er with the created ind first
+		er.individual = ind
+		if(!er.save())
+		    er.errors.allErrors.each {log.debug("Exception in attaching ind to er"+ it)}
+		else
+			{			
+			//send the email to candidate with userid
+			def template = Template.findByName("GPL Registration")
+			def body = commsService.fillTemplate(template,[er.name,er.assessment?.toString(),er.otherGuestType,er.arrivalDate?.format('dd-MM-yyyy HH:mm:ss'),ind?.loginid,ind?.loginid])
+			def depcp = DepartmentCP.findByDepartment(Department.findByName("GPL"))
+			commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:er.name,toEmail:er.email,emailsub:template.name,emailbody:body,type:template.type])
+
+
+			//try to verify the candidate
+			if(packetcode) {
+				//now get the matching code
+				def code = Code.findByCodeno(packetcode) //@TODO: take care of dep,centre,type,category etc and also retries
+				if(code && code.status==null)
+					{
+					code.status='VERIFIED_'+ind.id
+					code.save()
+					er.verificationStatus = VerificationStatus.VERIFIED
+					er.save()
+					try{
+						makeVerified(er)
+					}
+					catch(Exception e){log.debug("Exception in veriying in setupuv"+e)}
+					}				
+				}
+			}
+		}
     }
     
     //need to set relevant QP in IA
     def setupForExam(Map params) {
     	//assessment.id=1&questionPaper.id=3&individual.id=54703&status=READY&assessmentCode=abcd
-
     }
+    
+    def makeVerified(EventRegistration er) {
+    	Individual ind = er.individual
+    	def iu = IcsUser.findByUsername(ind.loginid)
+    	if(iu) {
+    		IcsUserIcsRole.findAllByIcsUser(iu)?.each{it.delete()}
+    		//now add the verified role
+    		def iuir = new IcsUserIcsRole()
+    		iuir.icsUser = iu
+    		iuir.icsRole = IcsRole.findByAuthority('ROLE_ASMT_USER')
+    		if(!iuir.save())
+    			iuir.errors.allErrors.each {log.debug("Exception in adding verified role"+ it)}
+    		else
+    			{
+    			setup([idlist:(er.id+",")])
+    			try{sendConfirmationMail(er)}
+    				catch(Exception e){log.debug("Exception in sending confirm mail.."+e)}
+    			}
+    	}
+    }
+    
+    def sendConfirmationMail(EventRegistration er) {
+	//send the email to candidate with userid
+	def template = Template.findByName("GPL Registration Confirmation")
+	def body = commsService.fillTemplate(template,[er.name])
+	def depcp = DepartmentCP.findByDepartment(Department.findByName("GPL"))
+	commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:er.name,toEmail:er.email,emailsub:template.name,emailbody:body,type:template.type])
+    }
+    
+    def getCode(EventRegistration er) {
+    	def codeno,code
+    	if(er?.verificationStatus==VerificationStatus.VERIFIED)
+    		{
+		code = Code.findByDepartmentAndStatus(er?.event?.department,'VERIFIED_'+er?.individual?.id?.toString())
+		codeno = code?.codeno
+		}
+	else if(er?.verificationComments=='3')
+    		codeno = 'LOCKED'
+    	return codeno?:''
+    }
+    
+    def unlockCodeVerification(EventRegistration er) {
+    	er.verificationComments = null
+    	if(!er.save()) {
+    		er.errors.each {log.debug("unlockCodeVerification:"+it)}
+    		return false
+    		}
+    	else
+    		return true
+    }
+    
+    
+    def getUser(EventRegistration er) {
+    	def user = er?.individual?.loginid
+    	def isLocked = false
+    	if(user) {
+    		isLocked = IcsUser.findByUsername(user)?.accountLocked
+    		if(isLocked)
+    			user += "(LOCKED)"
+    	}
+    	return user?:''
+    }
+    
+    def unlockAndResetUser(EventRegistration er) {
+    	def iuser  = IcsUser.findByUsername(er?.individual?.loginid)
+    	iuser?.accountLocked = false
+    	iuser?.setPassword('harekrishna')
+    	if(iuser)
+    		return true
+    	else
+    		return false
+    }
+    
+    
+    //for performance
+    def getDetails(EventRegistration er,Department department) {
+    	def retUser="",retCode=""
+    	
+    	def individual = er?.individual
+    	def user = individual?.loginid
+    	def isLocked = false
+    	if(user) {
+    		isLocked = IcsUser.findByUsername(user)?.accountLocked
+    		if(isLocked)
+    			user += "(LOCKED)"
+    	}
+    	retUser= user?:''
+    	//log.debug("retUser:"+retUser)
+    	
+    	def codeno,code
+    	if(er?.verificationStatus==VerificationStatus.VERIFIED)
+    		{
+		code = Code.findByDepartmentAndStatus(department,'VERIFIED_'+individual?.id?.toString())
+		codeno = code?.codeno
+		}
+	else if(er?.verificationComments=='3')
+    		codeno = 'LOCKED'
+    	retCode= codeno?:'' 
+    	//log.debug("retCode:"+retCode)
+    	
+    	def result=''
+    	def ia = IndividualAssessment.findByEventRegistration(er)
+    	if(ia?.assessmentDate)
+    		result = (ia.score?:'') +"/"+(ia.assessmentDate?.format('dd-MM-yy HH:mm:ss')?:'')+"/"+(ia.assessmentCode?:'')
+    	//log.debug("result:"+result)
+    	
+    	return [retUser,retCode,result]
+    }
+    
+    def getResult(EventRegistration er) {
+    	def result = ''
+    	def ia = IndividualAssessment.findByEventRegistration(er)
+    	if(ia?.assessmentDate)
+    		result = (ia.score?:'') +"/"+(ia.assessmentDate?.format('dd-MM-yy HH:mm:ss')?:'')+"/"+(ia.assessmentCode?:'')
+    	return result
+    }
+
+    def retest(EventRegistration er) {
+    	def ia = IndividualAssessment.findByEventRegistration(er)
+    	//cleanup iaqa first
+    	IndividualAssessmentQA.findAllByIndividualAssessmentAndCategory(ia,'ACTUAL').each{it.delete()}
+    	ia.assessmentDate = null
+    	ia.score = null
+    	ia.assessmentCode = null
+    	if(!ia.save()) {
+    		er.errors.each {log.debug("retest:"+it)}
+    		return false
+    		}
+    	else
+    		{
+    		return prepareIAQA(ia)
+    		}
+    }
+    
+    
 }

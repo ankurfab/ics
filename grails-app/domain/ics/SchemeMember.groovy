@@ -42,7 +42,8 @@ class SchemeMember {
     currentCity(nullable:true)
     batchyear(nullable:true) // can be used to store the batch of passing of a member from college.
     toBeCommunicated(nullable:true)
-	
+    toBeSMS(nullable:true)
+	star(nullable:true)
     dateCreated()
     creator()
     lastUpdated()
@@ -95,6 +96,9 @@ class SchemeMember {
 
     String batchyear
     String toBeCommunicated="No"
+    String toBeSMS="No"
+
+    Integer star = 0 //in one year ,per month how much donation given, if 1K per month then 1 star ,if 5k per month then 5 star given to member
 
     Date dateCreated
     Date lastUpdated

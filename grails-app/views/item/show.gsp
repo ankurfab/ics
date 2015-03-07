@@ -80,6 +80,20 @@
                             </tr>
                             
                             <tr class="prop">
+                                <td valign="top" class="name">Rate:</td>
+                                
+                                <td valign="top" class="value">${itemInstance?.rate}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name">TaxRate:</td>
+                                
+                                <td valign="top" class="value">${itemInstance?.taxRate}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
                                 <td valign="top" class="name">
                                     <label for="nunitSize"><g:message code="item.nunitSize" default="Normalized Unit Size" />:</label>
                                 </td>
