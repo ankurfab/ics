@@ -1,6 +1,6 @@
 package ics
 import com.krishna.*
-
+import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 import java.text.SimpleDateFormat
 
 class MbService {
@@ -9,6 +9,7 @@ class MbService {
     def housekeepingService
     def helperService
     def springSecurityService
+    def commsService
     
     def serviceMethod() {
 
@@ -37,7 +38,7 @@ class MbService {
         mbProfile.referrerEmail=params.refEmail
         mbProfile.referrerRelation=params.refReln
     	mbProfile.initiatedBy = Individual.findByLoginid(springSecurityService.principal.username)
-    	mbProfile.profileStatus = 'INITIATED'
+    	mbProfile.profileStatus = 'STARTED'
     	mbProfile.updator = mbProfile.creator = springSecurityService.principal.username
 	if(!mbProfile.save())
 		{
@@ -75,6 +76,11 @@ class MbService {
 			mailIds?.collect{aList.add(it)}*/
 			housekeepingService.sendEmail(mailIds,"Login created by ISKCON Marriage Board!","Hare Krishna! Your registration for MB Profile creation is successful. Please login with "+loginid+" and complete the profile. ISKCON(MB).")
 		}
+		
+	//comms
+	    def contentParams = [loginid]
+	    commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), params.donorContact, params.donorEmail, contentParams)
+	
 
     	
     	return mbProfile?.id
@@ -247,6 +253,8 @@ class MbService {
 
 
         mbProfile.updator = springSecurityService.principal.username
+        /*if(mbProfile.profileStatus!='COMPLETE' || mbProfile.profileStatus!='REJECTED' || mbProfile.profileStatus!='DUPLICATE')
+        	mbProfile.profileStatus = "INCOMPLETE"*/
         if(!mbProfile.save())
             {
             mbProfile.errors.each {
@@ -278,14 +286,41 @@ class MbService {
     }
     
     def updateProfileStatus(Map params) {
+         def username=''
+         try{
+		 username = springSecurityService.principal.username
+         }
+         catch(Exception e){username='unknown'}
+
     	//first get the MbProfile
     	def mbProfile = MbProfile.get(params.id)
     	if(!mbProfile)
-    		return -1	//MbProfile not found
+    		return "Profile not found!!"	//MbProfile not found
+    		
+    	//check for ownership of profile..i.e. who can modify the status
+    	//admin can modify for any centre but sec only for theire centre
+    	def allow = false
+    	if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
+    		def secCentre = Individual.findByLoginid(username)?.iskconCentre
+    		if(secCentre && secCentre==mbProfile.referrerCenter)
+    			allow = true
+    	}
+    	if(!allow)
+    		return "Can not review as profile from other centre."
+    	
     	//now update the fields
-	mbProfile.workflowStatus='APPROVED'
-	mbProfile.save()
-    	return 1
+    	mbProfile.profileStatus = params.status
+    	
+    	if(mbProfile.profileStatus=='COMPLETE')
+		mbProfile.workflowStatus='UNASSIGNED'
+	
+	mbProfile.updator = username
+	if(!mbProfile.save()) {
+		mbProfile.errors.allErrors.each {log.debug("updateProfileStatus:"+it)}
+		return "Some error occurred while updating ProfileStatus..Pls contact admin with errorcode MB"
+	}
+		
+    	return "ProfileStatus updated succesfully..."
     }
 
     def getYearFromDate(Date date){
@@ -321,7 +356,7 @@ class MbService {
     	return mbProfileId
     }
     
-    def propose(Map params) {
+    def suggest(Map params) {
     	def candidate = MbProfile.get(params.candidateid)
     	if(!candidate)
     		return 0
@@ -340,20 +375,89 @@ class MbService {
 			pmatch.stage = "FIRST"
 			if(!pmatch.save())
 			    pmatch.errors.each { log.debug("pmatch:"+it)}
-			else
-				{
-				candidate.matches.add(pmatch)
-				candidate.workflowStatus='INPROGRESS'
-				if(!candidate.save())
-				    candidate.errors.each { log.debug("upd cand:"+it)}
-				prospect.workflowStatus='PROPOSED'
-				if(!prospect.save())
-				    prospect.errors.each { log.debug("upd pros:"+it)}
+			else {
+				//do the same for prospect if specified
+				if(params.type=='both') {
+					suggest([candidateid:prospect.id.toString(),prospects:candidate.id.toString()])
 				}
+			}
 			}
     		}    	
     }
     
+    def propose(Map params) {
+    	def candidate = MbProfile.get(params.candidateid)
+    	if(!candidate)
+    		return 0
+    		
+    	def pmatch
+	def idList = params.prospects.tokenize(',')
+	idList.each{
+		pmatch = MbProfileMatch.get(it)
+		if(pmatch)
+			{
+			pmatch.stage = "SECOND"
+			pmatch.mbStatus = "FULLPROFILE"
+			pmatch.mbDate = new Date()
+			if(!pmatch.save())
+			    pmatch.errors.each { log.debug("pmatch:"+it)}
+			else
+				{
+				//now update workflow statuses
+				pmatch.candidate.workflowStatus='PROPOSED'
+				if(!candidate.save())
+				    candidate.errors.each { log.debug("upd cand:"+it)}
+				//also send the candidate's limited profile to the prospect
+				if(!pmatch.prospect.matches)
+					pmatch.prospect.matches= []
+				def match = new MbProfileMatch()
+				match.candidate = pmatch.prospect
+				match.prospect = pmatch.candidate
+				match.stage = "FIRST"
+				if(!match.save())
+				    match.errors.each { log.debug("match:"+it)}
+				}
+			}
+    		}    	
+    }
+
+    def announce(Map params) {
+    	def candidate = MbProfile.get(params.candidateid)
+    	if(!candidate)
+    		return 0
+    		
+    	def match
+	def idList = params.prospects.tokenize(',')
+	if(idList.size()>1)
+		return 0
+	idList.each{
+		match = MbProfileMatch.get(it)
+		if(match)
+			{
+			match.stage = "THIRD"
+			match.mbStatus = "ANNOUNCE"
+			match.mbDate = new Date()
+			if(!match.save())
+			    match.errors.each { log.debug("match:"+it)}
+			else
+				{
+				//now update workflow statuses
+					def otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
+					if(otherMatch) {
+						//update workflow status for both
+						match.candidate.workflowStatus = 'ANNOUNCE'
+						if(!match.candidate.save())
+							match.candidate.errors.allErrors.each {log.debug("ANNOUNCE:"+it)}
+						otherMatch.candidate.workflowStatus = 'ANNOUNCE'
+						if(!otherMatch.candidate.save())
+							otherMatch.candidate.errors.allErrors.each {log.debug("ANNOUNCE:"+it)}
+					}    				
+				}
+			}
+    		}    	
+    }
+
+
  /*   generic method to create family members of the candidate.
     it assumes all params viz relation,name, education , occupation are sent as numbered params
     relation should be harcoded/hidden var in the gsp or available from a select box
@@ -418,5 +522,155 @@ class MbService {
             }
         }
     }
+    
+    def configureCentres(Map params) {
+    	//first check whether already created??
+    	def attribute = Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','Centre','Config')
+    	if(!attribute) {
+    		log.debug("configureCentres..creating attr");
+		attribute = new Attribute()
+		attribute.domainClassName='Mb'
+		attribute.domainClassAttributeName='Centre'
+		attribute.category='Config'
+		attribute.type='Master'
+		attribute.name='Centre'
+		attribute.displayName='Centre'
+		attribute.position=0
+		if(!attribute.save())
+		    attribute.errors.allErrors.each {
+				log.debug("configureCentres..creating attr..:Exception in saving attr"+it)
+			    }
+    	}
+    	
+    	//now create av as per supplied list
+    	params.centres.tokenize(',').each{centre->
+		def attributeValue = new AttributeValue()			
+		attributeValue.attribute  = attribute
+		attributeValue.objectClassName = attribute.domainClassName
+		attributeValue.objectId = new Long(1)	//irrelevant
+		attributeValue.creator = 'system'
+		attributeValue.value = centre
+		attributeValue.updator = 'system'
+		if(!attributeValue.save())
+		    attributeValue.errors.allErrors.each {
+				log.debug("configureCentres:Exception in saving attrv"+it)
+			    }
+	}
+    	
+	return true    	
+    }
+    
+    def assignProfile(Map params) {
+    	def profile = MbProfile.get(params.profileid)
+    	def assignedTo = Individual.get(params.assignedToId)
+    	
+    	if(assignedTo && profile && profile.profileStatus=='COMPLETE' && profile.workflowStatus=='UNASSIGNED')
+    		{
+    		//assign
+    		profile.assignedTo = assignedTo
+    		profile.workflowStatus = "AVAILABLE"
+    		if(!profile.save())
+ 		    profile.errors.allErrors.each {
+				log.debug("assignProfile:Exception in saving profile"+it)
+			    }
+		else
+			return "Assigned successfully!"
+   			
+    		}
+	else
+		return "Not found!!"
+    }
+    
+    def addBoardMember(Map params) {
+	  def indparams = [:]
+	  indparams.category = 'MB_BOARD'
+	  indparams.legalName = params.name
+	  indparams.contact = params.phone
+	  indparams.email = params.email
+	  indparams.iskconCentre = params.centre
+
+	  individual = individualService.createIndividual(indparams)
+	  if (individual) {
+
+	    def mrole = Role.findByNameAndCategory('MEMBER','MarriageBoard')
+	    def srole = Role.findByNameAndCategory('SECRETARY','MarriageBoard')
+	    def role
+	    
+	    switch(params.role) {
+	    	case 'MEMBER':
+			    //assign the role
+			    role = mrole
+			    if(role) {
+				def indRole = new IndividualRole()
+				indRole.individual = individual
+				indRole.role = role
+				indRole.status = 'VALID'
+				indRole.creator = indRole.updator = springSecurityService.principal.username
+				if(!indRole.save()) {
+					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
+				}
+			    }
+	    		break
+	    	case 'SECRETARY':
+			    //assign the role
+			    role = mrole
+			    if(role) {
+				def indRole = new IndividualRole()
+				indRole.individual = individual
+				indRole.role = role
+				indRole.status = 'VALID'
+				indRole.creator = indRole.updator = springSecurityService.principal.username
+				if(!indRole.save()) {
+					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
+				}
+			    }
+			    //assign the role
+			    role = srole
+			    if(role) {
+				def indRole = new IndividualRole()
+				indRole.individual = individual
+				indRole.role = role
+				indRole.status = 'VALID'
+				indRole.creator = indRole.updator = springSecurityService.principal.username
+				if(!indRole.save()) {
+					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
+				}
+			    }
+	    		break
+	    	default:
+	    		break
+	    		
+	    }
+	   }
+    }
+    
+    def changeWorkflowStatus(Map params) {
+         def username=''
+         try{
+		 username = springSecurityService.principal.username
+         }
+         catch(Exception e){username='unknown'}
+
+    	def profile = MbProfile.get(params.mbprofileid)
+    	if(profile && params.status) {
+		//check for ownership of profile..i.e. who can modify the status
+		//admin can modify for any centre but sec only for theire centre
+		def allow = false
+		if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
+			def secCentre = Individual.findByLoginid(username)?.iskconCentre
+			if(secCentre && secCentre==profile.referrerCenter)
+				allow = true
+		}
+		if(!allow)
+			return "Can not set workflow status as profile from other centre."
+
+    		profile.workflowStatus = params.status
+    		if(!profile.save())
+    			profile.errors.allErrors.each {log.debug(it)}
+    		else
+    			return "Workflow status updated."
+    	}
+    }
+    
 
 }

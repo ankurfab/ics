@@ -35,7 +35,8 @@ class EmailContactController {
         def emailContactInstance = new EmailContact(params)
         if (emailContactInstance.save(flush: true)) {
             flash.message = "${message(code: 'default.created.message', args: [message(code: 'emailContact.label', default: 'EmailContact'), emailContactInstance.id])}"
-            redirect(controller: "individual", action: "edit", id: emailContactInstance?.individual?.id)
+            //redirect(controller: "individual", action: "edit", id: emailContactInstance?.individual?.id)
+            render "OK"
         }
         else {
             render(view: "create", model: [emailContactInstance: emailContactInstance])

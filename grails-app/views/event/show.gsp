@@ -22,6 +22,7 @@
             <span class="menuButton"><g:link class="create" controller="eventSeva" action="list" params="['eid':eventInstance?.id]">EventService</g:link></span>
             <span class="menuButton"><g:link class="create" controller="helper" action="eventDashboard" params="['eid':eventInstance?.id]">EventDashboard</g:link></span>
             <span class="menuButton"><g:link class="create" controller="icsUser" action="list" params="['eid':eventInstance?.id]">EventUsers</g:link></span>
+            <span class="menuButton"><g:link class="create" controller="Event" action="sms" params="['eid':eventInstance?.id]">SMS</g:link></span>
         </div>
         <div class="body">
             <h1><g:message code="default.show.label" args="[entityName]" /></h1>

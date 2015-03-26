@@ -225,24 +225,22 @@
 				  <li><g:link controller="costCenter" action="summary" params="['year':'2014']">Summary</g:link></li>
 			      </sec:ifAnyGranted>      
 
-			      <sec:ifAnyGranted roles="ROLE_CCAT_OWNER,ROLE_CC_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
+			      <sec:ifAnyGranted roles="ROLE_CG_OWNER,ROLE_CC_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
 				  <li><g:link controller="project" action="index">Expense Management</g:link></li>
 				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>      
 			<!-- Account Office/Finance Roles End-->
 
 			<!-- Marriage Board Based Roles Start-->
-			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN">
+			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
 					<li><g:link controller="mb" action="dashboard">Mb Dashboard</g:link></li>
+					<li><g:link class="list" action="manage" controller="mb">Mb Profile Management</g:link></li>
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
 					<li><g:link controller="mb" action="report">Mb Report</g:link></li>
 			      </sec:ifAnyGranted> 
-			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
-					<li><g:link class="list" action="manage" controller="mb">Mb Management</g:link></li>
-			      </sec:ifAnyGranted> 
-			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
-					<li><g:link class="list" action="search" controller="mb">Mb Profile Search</g:link></li>
+			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN">
+					<li><g:link class="list" action="manageBoard" controller="mb">Mb Management</g:link></li>
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
 					<li><g:link controller="mb" action="editProfile">Profile</g:link></li>

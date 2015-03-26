@@ -6,6 +6,7 @@ class MbProfile {
 	candidate()
 	photo(nullable:true, maxSize: 512000 /* 500K */)
 	initiatedBy(nullable: true)
+	assignedTo(nullable: true)
 	profileStatus(nullable: true, maxSize: 20)
 	matchMakingStatus(nullable: true, maxSize: 20)
 	workflowStatus(nullable: true, maxSize: 20)
@@ -127,6 +128,7 @@ class MbProfile {
     
     Individual candidate
     Individual initiatedBy  //removed assigned to as was not getting populated.
+    Individual assignedTo
 
     String profileStatus
     String matchMakingStatus

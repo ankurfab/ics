@@ -46,7 +46,7 @@ grails.mime.types = [ html: ['text/html','application/xhtml+xml'],
 //grails.urlmapping.cache.maxsize = 1000
 
 // What URL patterns should be processed by the resources plugin
-grails.resources.adhoc.patterns = ['/images/*', '/css/*', '/js/*', '/plugins/*']
+grails.resources.adhoc.patterns = ['/images/*', '/css/*', '/js/*', '/plugins/*', '/fonts/*']
 
 grails.resources.modules = {
     jqbarcode {
@@ -74,6 +74,18 @@ grails.resources.modules = {
     }
 
 
+    jquiDatePicker {
+        resource url: '/js/external/jquery-ui/datepicker.js'
+    }
+
+    jqmDatePicker {
+        dependsOn 'jquiDatePicker'
+        resource url: '/js/jquery.mobile.datepicker.js'
+        resource url: '/js/date.js'
+	resource url:'/css/jquery.mobile.datepicker.css'
+	resource url:'/css/jquery.mobile.datepicker.theme.css'
+    }
+    
     fullCalendar {
         dependsOn 'jqui'
         resource url:'/js/fullcalendar.min.js'
@@ -159,6 +171,49 @@ grails.resources.modules = {
         resource url:'/js/jquery.timeTo.min.js' 
     }
 
+    jq {
+        resource url:'/js/jquery-2.1.3.min.js' 
+    }
+
+    jqmigrate {
+        resource url:'/js/jquery-migrate-1.2.1.min.js' 
+    }
+
+    bootstrap {
+        dependsOn 'jq'
+        resource url:'/css/bootstrap.min.css'
+        resource url:'/css/bootstrap-theme.min.css'
+        resource url:'/js/bootstrap.min.js' 
+    }
+
+    angular {
+        dependsOn 'jq'
+        resource url:'/js/angular.min.js' 
+    }
+
+    adminlte {
+        dependsOn 'bootstrap'
+        resource url:'/css/font-awesome.min.css'
+        resource url:'/css/ionicons.min.css'
+        resource url:'/css/morris.css'
+        resource url:'/css/jquery-jvectormap-1.2.2.css'
+        resource url:'/css/daterangepicker-bs3.css'
+        resource url:'/css/AdminLTE.min.css'
+        resource url:'/css/_all-skins.min.css'
+
+        resource url:'/js/fastclick.min.js' 
+        resource url:'/js/app.min.js' 
+        resource url:'/js/jquery.sparkline.min.js' 
+        resource url:'/js/jquery-jvectormap-1.2.2.min.js' 
+        resource url:'/js/jquery-jvectormap-world-mill-en.js' 
+        resource url:'/js/daterangepicker.js' 
+        resource url:'/js/bootstrap-datepicker.js' 
+        resource url:'/js/icheck.min.js' 
+        resource url:'/js/jquery.slimscroll.min.js' 
+        resource url:'/js/Chart.min.js' 
+        resource url:'/js/demo.js' 
+        resource url:'/js/dashboard2.js' 
+    }
 
 }
 

@@ -11,6 +11,10 @@
         <div class="nav">
             <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
             <span class="menuButton"><g:link class="create" action="create"><g:message code="voucher.new" default="New Voucher" /></g:link></span>
+            <span class="menuButton"><g:link class="create" action="createPayment">New Payment Voucher</g:link></span>
+            <span class="menuButton"><g:link class="create" action="createReceipt">New Receipt Voucher</g:link></span>
+            <span class="menuButton"><g:link class="create" action="createContra">New Contra Voucher</g:link></span>
+            <span class="menuButton"><g:link class="create" action="createJournal">New Journal Voucher</g:link></span>
         </div>
         <div class="body">
             <div>
@@ -26,20 +30,31 @@
     jQuery("#voucher_list").jqGrid({
       url:'jq_voucher_list',
       datatype: "json",
-      colNames:['VoucherDate','DepartmentCode','VoucherNo','Description','Withdrawal','Deposit','Updator','LastUpdated','Id'],
+      colNames:['VoucherDate','VoucherNo','DepartmentCode','Description','Deposit(Dr)','Withdrawal(Cr)','Type','From','To','Amount','Debit/Credit','RefNo','Status','Id'],
       colModel:[
 	{name:'voucherDate',search:true},
-	{name:'departmentCode',search:true},
 	{name:'voucherNo',search:true, formatter:'showlink', 
              		formatoptions:{baseLinkUrl:'${createLink(controller:'Voucher',action:'show')}'}
-        },
+        },         
+	{name:'departmentCode',search:true},
 	{name:'description',search:true},
-	{name:'amount',search:true},
 	{name:'amountSettled',search:true},
-	{name:'updator',search:true},
-	{name:'lastUpdated',search:false},
+	{name:'amount',search:true},
+	{name:'type',search:true},
+	{name:'ledger',search:true},
+	{name:'anotherLedger',search:true},
+	{name:'amount',search:true},
+	{name:'debit',search:true},
+	
+	
+	{name:'refNo',search:true,
+			formatter:'showlink', 
+			formatoptions:{target:"_new",baseLinkUrl:'${createLink(controller:'Voucher',action:'showRef')}'}
+	},	
+	{name:'status',search:true},
 	{name:'id',hidden:true}
      ],
+     
     rowNum:10,
     rowList:[10,20,30,40,50,100,200],
     pager: '#voucher_list_pager',
@@ -51,9 +66,14 @@
     multiselect: false,
     caption:"Voucher List"
     });
-    $("#voucher_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager",{edit:false,add:false,del:false,search:false});
-    //$("#voucher_list").jqGrid('inlineNav',"#voucher_list_pager");
+  $("#voucher_list").jqGrid('filterToolbar',{autosearch:true,});
+    $("#voucher_list").jqGrid('navGrid', "#voucher_list_pager", {edit: false, add: false, del: false, search: true});
+    jQuery("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+    onClickButton : function () { 
+    var query = 'jq_voucher_list?eid='+$('#event').val();            
+    jQuery("#voucher_list").jqGrid('excelExport',{"url":query});
+         }
+      });
     });
 </script>
 

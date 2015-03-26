@@ -17,12 +17,16 @@
             <div class="message"><g:message code="${flash.message}" args="${flash.args}" default="${flash.defaultMessage}" /></div>
             </g:if>
 
+
+		<div id="dialogSuggest" title="Suggest">
+		</div>            
+
 		<div id='message' class="message" style="display:none;"></div>
 	<h1>Match making for ${mbProfile?.candidate}</h1>
 		
 		%{--<div>
 			Matchmaking for?<g:select name="mbprofileid"
-				  from="${ics.MbProfile.createCriteria().list{'in'('workflowStatus',['APPROVED','INPROGRESS']) candidate{order('legalName', 'asc')}}}"
+				  from="${ics.MbProfile.createCriteria().list{'in'('workflowStatus',['AVAILABLE']) candidate{order('legalName', 'asc')}}}"
                   noSelection="${['null':'Select One...']}"
                   optionKey="id" optionValue="candidate"
             />
@@ -54,7 +58,7 @@
 	<!--Flexibile on all expectations:<g:checkBox name="checkboxAllFlexible" value="${false}" />-->
 	<!--Flexibile on no expectations:<g:checkBox name="checkboxNoneFlexible" value="${false}" />-->
 	
-	Flexibile: <g:radioGroup name="radioFlex" labels="['All','None' ]" values="['ALL','NONE']" >
+	Flexibile: <g:radioGroup name="radioFlex" labels="['None','All']" values="['NONE','ALL']" >
 	<span>${it.radio} ${it.label}</span>
 	</g:radioGroup>
 
@@ -288,7 +292,7 @@
                         <label for="prefHeight">Preferred Height:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefHeight" multiple="multiple"
+                        <g:select name="prefHeight"
                                   from="${['less than 5 feet', 'Between 5 to 5.4', 'Between 5.5 to 5.8', 'Between 5.9 to 6.0', 'Above 6 feet']}"
                                   value="${mbProfile?.prefHeight}" optionKey=""/>
                     </td>
@@ -410,12 +414,19 @@
                      url:'jq_mbProfile_list',
                      postData: $('#expectationsForm').serialize()+"&sidx=id&sord=asc&rows=10&page=1",
                      datatype: "json",
-                     colNames:['Name','DoB','Id'],
+                     colNames:['Photo','Name','Centre','AssignedTo','Id'],
                      colModel:[
+			{
+			name: 'photo',
+			formatter: function (cellvalue, options, rowObject) {
+				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>'; 
+				}
+			},				
                          {name:'name',
 			formatter:'showlink', 
              		formatoptions:{baseLinkUrl:'show'}},                         
-                         {name:'dob'},
+                         {name:'referrerCenter'},
+                         {name:'assignedTo'},
                          {name:'id',hidden:true}
                      ],
                      rowNum:10,
@@ -438,7 +449,7 @@
                              save: false,
                              cancel: false
                          })
-                 $("#profile_list").jqGrid('navGrid',"#profile_list_pager").jqGrid('navButtonAdd',"#profile_list_pager",{caption:"Propose", buttonicon:"ui-icon-person", onClickButton:propose, position: "last", title:"Propose", cursor: "pointer"});
+                 $("#profile_list").jqGrid('navGrid',"#profile_list_pager").jqGrid('navButtonAdd',"#profile_list_pager",{caption:"Suggest", buttonicon:"ui-icon-person", onClickButton:suggest, position: "last", title:"Suggest", cursor: "pointer"});
 
                  jQuery("#prospect_list").jqGrid({
                      url:'jq_mbProspect_list',
@@ -446,16 +457,25 @@
                          candidateid:function(){return $('#mbprofileid').val();},
                      },
                      datatype: "json",
-                     colNames:['Name','DoB','CandidateStatus','CandidateReason','MbStatus','MbReason','Id'],
+                     colNames:['Photo','Name','WorkflowStatus','Stage','CandidateStatus','CandidateReason','CandidateDate','MbStatus','MbReason','MbDate','Id'],
                      colModel:[
+			{
+			name: 'photo',
+			formatter: function (cellvalue, options, rowObject) {
+				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>'; 
+				}
+			},				
                          {name:'name',
 			formatter:'showlink', 
              		formatoptions:{baseLinkUrl:'show'}},                                                  
-                         {name:'dob'},
+                         {name:'workflowStatus'},
+                         {name:'stage'},
                          {name:'candidateStatus'},
                          {name:'candidateReason'},
+                         {name:'candidateDate'},
                          {name:'mbStatus'},
                          {name:'mbReason'},
+                         {name:'mbDate'},
                          {name:'id',hidden:true}
                      ],
                      rowNum:10,
@@ -477,16 +497,56 @@
                              add: false,
                              save: false,
                              cancel: false
-                         })
+                         });
+                 $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Propose", buttonicon:"ui-icon-person", onClickButton:propose, position: "last", title:"Propose", cursor: "pointer"});
+                 $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Announce", buttonicon:"ui-icon-flag", onClickButton:announce, position: "last", title:"Announce", cursor: "pointer"});
+                         
 	});
 
 
 	function propose() {
 		var answer = confirm("Are you sure?");
 		if (answer){
-			var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+			var ids = $('#prospect_list').jqGrid('getGridParam','selarrrow');
 			if(ids) {
 				var url = "${createLink(controller:'mb',action:'propose')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
+				$.getJSON(url, {}, function(data) {
+					alert(data.status);
+					jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
+				    });	
+			}
+			else
+				alert("Please select one or more prospects!!");
+		} else {
+		    return false;
+		}
+	}
+  
+	function announce() {
+		var answer = confirm("Are you sure?");
+		if (answer){
+			var ids = $('#prospect_list').jqGrid('getGridParam','selarrrow');
+			if(ids) {
+				var url = "${createLink(controller:'mb',action:'announce')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
+				$.getJSON(url, {}, function(data) {
+					alert(data.status);
+					jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
+				    });	
+			}
+			else
+				alert("Please select one or more prospects!!");
+		} else {
+		    return false;
+		}
+	}
+
+	function suggest() {
+		$( "#dialogTeam" ).dialog( "open" );
+		var answer = confirm("Are you sure?");
+		if (answer){
+			var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+			if(ids) {
+				var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
 				$.getJSON(url, {}, function(data) {
 					alert(data.status);
 					jQuery("#profile_list").jqGrid().trigger("reloadGrid");
@@ -499,7 +559,51 @@
 		    return false;
 		}
 	}
-  
+
+		$( "#dialogSuggest" ).dialog({
+			autoOpen: false,
+			modal: true,
+			buttons: {
+				"OnlyToCandidate": function() {
+					var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+					if(ids) {
+						var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
+						$.getJSON(url, {}, function(data) {
+							$( this ).dialog( "close" );
+							alert(data.status);
+							jQuery("#profile_list").jqGrid().trigger("reloadGrid");
+							jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
+						    });	
+					}
+					else
+						alert("Please select one or more profiles!!");
+					$( this ).dialog( "close" );
+				},
+				"ToBothCandidateAndProspect": function() {
+					var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+					if(ids) {
+						var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids+"&type=both";
+						$.getJSON(url, {}, function(data) {
+							$( this ).dialog( "close" );
+							alert(data.status);
+							jQuery("#profile_list").jqGrid().trigger("reloadGrid");
+							jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
+						    });	
+					}
+					else
+						alert("Please select one or more profiles!!");
+					$( this ).dialog( "close" );
+				},
+				"Cancel": function() {
+					$( "#teamMembers" ).val( '' );
+					$( this ).dialog( "close" );
+				}
+			},
+			close: function() {
+				
+			}
+		});
+
       $('#checkboxAllFlexible').change(function() {
           if($(this).is(":checked")) {
           	$("input:radio[name^=flexible][value ='true']").prop('checked', true);

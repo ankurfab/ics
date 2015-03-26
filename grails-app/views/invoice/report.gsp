@@ -31,6 +31,11 @@
 				  </tr>
 				  <tr>
 				    <td>
+					<g:link class="list" action="consumptionReport" controller="Invoice">Consumption Report</g:link>
+				    </td>
+				  </tr>
+				  <tr>
+				    <td>
 					<g:link class="list" action="stockReport" controller="Invoice">Stock Report</g:link>
 				    </td>
 				  </tr>

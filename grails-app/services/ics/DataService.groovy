@@ -239,10 +239,12 @@ class DataService {
 			query="insert into individual_summary (version,indid,name,refresh_date) select 0,i.id,if(initiated_name is not null and trim(initiated_name)!='',initiated_name,legal_name) name,now() from individual i;"
 			sql.execute(query);
 			//phone
-			query="update individual_summary il, (select i.id,group_concat(concat(vc.category,':',vc.number)) number from individual i, voice_contact vc where i.id=vc.individual_id group by i.id) vct set il.phone=vct.number where il.indid=vct.id;"
+			//query="update individual_summary il, (select i.id,group_concat(concat(vc.category,':',vc.number)) number from individual i, voice_contact vc where i.id=vc.individual_id group by i.id) vct set il.phone=vct.number where il.indid=vct.id;"
+			query="update individual_summary il, (select i.id,group_concat(concat(vc.number,',')) number from individual i, voice_contact vc where i.id=vc.individual_id and vc.category='CellPhone' group by i.id) vct set il.phone=vct.number where il.indid=vct.id;"
 			sql.executeUpdate(query);
 			//email
-			query="update individual_summary il, (select i.id,group_concat(concat(ec.category,':',ec.email_address)) email from individual i, email_contact ec where i.id=ec.individual_id group by i.id) ect set il.email=ect.email where il.indid=ect.id;"
+			//query="update individual_summary il, (select i.id,group_concat(concat(ec.category,':',ec.email_address)) email from individual i, email_contact ec where i.id=ec.individual_id group by i.id) ect set il.email=ect.email where il.indid=ect.id;"
+			query="update individual_summary il, (select i.id,group_concat(concat(ec.email_address,',')) email from individual i, email_contact ec where i.id=ec.individual_id and ec.category='Personal' group by i.id) ect set il.email=ect.email where il.indid=ect.id;"
 			sql.executeUpdate(query);
 			//address
 			query="update individual_summary il, (select id,group_concat(concat(category,':',address)) address from (select i.id,a.category,group_concat(concat(a.address_line1,' CITY:',c.name,' STATE:',s.name,' COUNTRY:',ctry.name,' PIN:',ifnull(a.pincode,''))) address from individual i, address a,city c, state s,country ctry  where i.id=a.individual_id and a.city_id=c.id and a.state_id=s.id and a.country_id=ctry.id group by i.id,a.category) q group by id) qa set il.address=qa.address where il.indid=qa.id;"
@@ -559,6 +561,96 @@ class DataService {
 		log.debug("eventSummary:"+query)		
 		log.debug("eventSummary:"+queryResults)		
 		return queryResults
+	}
+	
+	def sheet(Map params) {
+		def results=[]
+		if(!params.eventid) {
+			def indRoles = IndividualRole.createCriteria().list(){
+					if(params.ids)
+						role{'in'('id',params.ids.tokenize(',').collect{new Long(it)})}
+					if(params.names)
+						role{'in'('name',params.names.tokenize(',').collect{it})}
+					eq('status','VALID')
+					individual{order('initiatedName') order('legalName')}
+				}
+			indRoles.each{ir->
+				results.add(ir.individual)
+			}
+		}
+		if(params.eventid) {
+			def eps = EventParticipant.createCriteria().list(){
+						event{eq('id',new Long(params.eventid))}
+						individual{order('initiatedName') order('legalName')}
+					}
+			eps.each{ep->
+				results.add(ep.individual)
+			}
+		}
+		//log.debug("results->"+results)
+		return results
+	}
+
+	def indrolesInPairs(Map params) {
+		def pairs=[], pair=[]
+		def indRoles = IndividualRole.createCriteria().list(){
+				role{eq('id',new Long(params.id))}
+				eq('status','VALID')
+				individual{order('initiatedName') order('legalName')}
+			}
+		def seen = []
+		indRoles.each{ir->
+			//check if this person is already processed
+			if(!(seen.contains(ir.individual.id))) {
+				pair = findHusbandOrWifeRelationship(ir.individual)
+				if(pair.size()==0)
+					pair = [ir.individual]
+				pair.each{
+					seen.add(it.id)
+					}
+				pairs.add(pair)
+				}
+		}
+		log.debug("seen->"+seen)
+		return pairs
+	}
+	
+	def findRelationship(Individual individual, String relationName, Boolean primary) {
+		Relationship.createCriteria().get(){
+					if(primary)
+						eq('individual1',individual)
+					else
+						eq('individual2',individual)
+					eq('status','ACTIVE')						
+					relation{eq('name',relationName)}						
+				}
+	}
+
+	def findHusbandOrWifeRelationship(Individual ind) {
+		log.debug("findHusbandOrWifeRelationship:"+ind)
+		def rship,pair=[]
+		//1. ind is primary, find wife or husband
+		rship = findRelationship(ind,'Wife',true)
+		if(rship)
+			pair = [ind,rship.individual2]
+		else {
+			rship = findRelationship(ind,'Husband',true)
+			if(rship)
+				pair = [ind,rship.individual2]
+		}
+		//2. ind is secondary, find husband or wife
+		if(pair.size()==0) {
+			rship = findRelationship(ind,'Husband',false)
+			if(rship)
+				pair = [rship.individual1,ind]
+			else {
+				rship = findRelationship(ind,'Wife',false)
+				if(rship)
+					pair = [rship.individual1,ind]
+			}
+		}
+		log.debug("findHusbandOrWifeRelationship Got:"+pair)
+		return pair
 	}
 
 }

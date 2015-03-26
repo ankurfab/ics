@@ -12,7 +12,7 @@
 			
 <fieldset class="form">
 
-<sec:ifAnyGranted roles="ROLE_CCAT_OWNER">
+<sec:ifAnyGranted roles="ROLE_CG_OWNER">
 
 <div>
 <g:render template="/costCenter/budget" model="['costCenterInstance':projectInstance?.costCenter,'year':'2014']" />

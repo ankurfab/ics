@@ -16,7 +16,7 @@
         <link rel="stylesheet" href="${resource(dir: 'css', file: 'mobile.css')}" type="text/css">
     <g:javascript library="jquery"/>
     <r:require module="jqmobile" />
-
+    <r:require module="jqmDatePicker" />
 <style>
 /* Custom indentations are needed because the length of custom labels differs from
    the length of the standard labels */
@@ -31,6 +31,7 @@
     <g:layoutHead/>
 
     <r:layoutResources />
+
 
     <div data-role="page" id="landingpage">       
         <!--top panel to include on page -->

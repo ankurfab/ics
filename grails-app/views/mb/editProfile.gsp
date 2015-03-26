@@ -14,18 +14,20 @@
 <div class="nav">
     <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message default="Home"/></a></span>
     <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
-        <g:if test="${mbProfile?.profileStatus != 'COMPLETE'}">
-            <span class="menuButton"><g:link class="create" action="markProfileComplete">Mark Complete</g:link></span>
+        <g:if test="${mbProfile?.profileStatus == 'STARTED' || mbProfile?.profileStatus == 'INCOMPLETE'}">
+            <span class="menuButton"><g:link class="create" action="markProfileComplete">Submit Profile to MB</g:link></span>
         </g:if>
     </sec:ifAnyGranted>
     <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
-        <g:if test="${mbProfile?.profileStatus == 'COMPLETE'}">
+        <g:if test="${mbProfile?.profileStatus == 'SUBMITTED'}">
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
                                              params="['status': 'INCOMPLETE']">Mark InComplete</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
-                                             params="['status': 'VERIFIED']">Mark Verified</g:link></span>
+                                             params="['status': 'COMPLETE']">Mark Completed</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
                                              params="['status': 'REJECTED']">Mark Rejected</g:link></span>
+            <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
+                                             params="['status': 'DUPLICATE']">Mark Duplicate</g:link></span>
         </g:if>
     </sec:ifAnyGranted>
 </div>

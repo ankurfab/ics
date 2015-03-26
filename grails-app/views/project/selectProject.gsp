@@ -10,7 +10,7 @@
     <div role="main" class="ui-content">
 	<g:form name="projectForm" controller="Project" action="createReport" method="POST" data-ajax="false">
 		<label for="projectid">
-			Expense		
+			Expense Reimbursement		
 		</label>
 		<g:select name="projectid"
 			  from="${projects}"

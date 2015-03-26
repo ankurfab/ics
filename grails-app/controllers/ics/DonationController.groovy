@@ -11,6 +11,7 @@ class DonationController {
     def housekeepingService
     def springSecurityService
     def receiptSequenceService
+    def financeService
     def dataSource ; 
 
 def testDatePicker = {
@@ -147,6 +148,8 @@ def testDatePicker = {
 
         def donationInstance = new Donation(params)
         if (donationInstance.save(flush: true)) {
+            financeService.updateProfitCenterBudget(donationInstance)
+            
             //mark the receipt and the receipt book as not blank---TODO later
             //housekeepingService.markNotBlank(donationInstance.id)
             //send SMS
@@ -824,6 +827,9 @@ def testDatePicker = {
 		donationInstance.donorContact = params.donormobile
 		
         if (donationInstance.save(flush: true)) {
+            
+            financeService.updateProfitCenterBudget(donationInstance)
+            
             // disable for now
             //mark the receipt and the receipt book as not blank
             //housekeepingService.markNotBlank(donationInstance.id)
@@ -1229,6 +1235,8 @@ def testDatePicker = {
 					        errArr[j] += it
 					}
 				}
+				else
+					financeService.updateProfitCenterBudget(donationInstance)
 			}
 		}
 		def errString = ""
@@ -2401,7 +2409,11 @@ def jq_donation_list = {
 			}
 		else
 			{
+
+			financeService.updateProfitCenterBudget(donationInstance)
+
 			//donation saved successfully; sent async sms and email print receipt
+			
 			try{
 				//sms
 				if(params.donorContact)
@@ -2503,6 +2515,12 @@ def jq_donation_list = {
 	      
 		render(template: "bulkreceipt", model: [donationList:donationList,printedBy:(params.authority?:'')])
 	      
+	}
+	
+	def submitDTR() {
+		log.debug("Inside submitDTR:"+params)
+		def ret = financeService.createDonationBatch(params)
+		render ret		
 	}
 	
              

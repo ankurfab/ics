@@ -295,6 +295,33 @@ class InvoiceService {
 	return stock	
     }
 
+    def consumptionReport(Map params) {
+    	if(!params.from)
+    		params.from = new Date()-30
+    	def fromDate = params.from.format('yyyy-MM-dd HH:mm:ss')
+
+    	if(!params.to)
+    		params.to = new Date()
+    	def toDate = params.to.format('yyyy-MM-dd HH:mm:ss')
+
+	def pre = "select it.name,sum(qty) quantity,it.rate,it.tax_rate from invoice i, invoice_line_item ili, item it where i.id=ili.invoice_id and i.type='SALES' and ili.item_id=it.id "
+	def post  = " group by it.id order by it.name"
+	def query
+	if(params.consumer)
+		query = pre +" and i.person_to='"+params.consumer+"'"+post
+	else
+		query = pre+post
+	def sql = new Sql(dataSource);
+	def results
+	
+		//log.debug("Query:"+query)
+		results = sql.rows(query)
+		//log.debug("Results:"+results)
+	sql.close()
+
+	return results	
+    }
+
     def paymentReport(Map params) {
 	def invoices = Invoice.createCriteria().list{
 			eq('type','PURCHASE')

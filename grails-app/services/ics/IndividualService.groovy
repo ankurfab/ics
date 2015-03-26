@@ -978,12 +978,13 @@ class IndividualService {
     }
     
     def getDetails(Long indid) {
-	def result
+	/*def result
 	def sql = new Sql(dataSource)
 	def query = "select * from individuallist where indid="+indid
 	result = sql.rows(query)
 	sql.close()
-	return result[0]
+	return result[0]*/
+	return IndividualSummary.findByIndid(indid)
     }
     
     def bulkCreateFromPerson(Map params) {

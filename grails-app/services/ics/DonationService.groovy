@@ -10,6 +10,7 @@ class DonationService {
     def receiptSequenceService
     def housekeepingService
     def dataSource
+    def financeService
     
     def serviceMethod() {
 
@@ -49,7 +50,7 @@ class DonationService {
     	def retVal = null
     	if(dr.receiptReceivedStatus=='NOTGENERATED')
     		{
-    		retVal = createDonation(dr, "DONATION", "", false, true)
+    		retVal = createDonation(dr, "DONATION", "", false, false)
 		}
 	return retVal
     }
@@ -114,6 +115,10 @@ class DonationService {
 		donation.collectedBy = Individual.findByLoginid(dr.creator)
 	else
 		donation.collectedBy = dr.donatedBy
+
+	if(dr.collectedBy)
+		donation.collectedBy = dr.collectedBy
+
 	donation.receivedBy = Individual.findByLoginid(springSecurityService.principal.username)
 	donation.updator=donation.creator=springSecurityService.principal.username
 	if(!donation.save())
@@ -123,6 +128,9 @@ class DonationService {
 	else
 		{
 		log.debug("Autocreated donation.."+donation)
+		
+		financeService.updateProfitCenterBudget(donation)
+		
 		retVal = donation
 		//update the dr with the linked donation
 		dr.donation=donation
@@ -149,6 +157,10 @@ class DonationService {
     def createDonationRecord(Map params) {
     	def retVal = null
 	def dr = new DonationRecord()
+
+	if(params.acCollector_id)
+		dr.collectedBy = Individual.get(params.acCollector_id)
+
     	if(params.icsid)    		
 		dr.donatedBy = Individual.findByIcsid(params.icsid)
 	else

@@ -752,5 +752,14 @@ class AssessmentService {
     		}
     }
     
+    def feedback(Map params) {
+    	def ias = IndividualAssessment.createCriteria().list(){
+    			eventRegistration{event{eq('id',new Long(params.eventid))}}
+    			isNotNull('assessmentDate')
+    			order('assessmentDate','asc')
+    		}
+    	return ias
+    }
+    
     
 }

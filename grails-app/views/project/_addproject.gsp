@@ -1,12 +1,26 @@
 <%@ page import="ics.Project" %>
 
-<g:form name="addprojectForm" controller="project" action="save" method="POST">
+<g:form name="addprojectForm" controller="project" action="save" id="${projectInstance?.id}" method="POST">
 
 <div class="allbody"> 
 
    
 <h1>Expense Approval Form</h1>
+ <table>
+	<thead>
+	<th>Consumed Budget</th>
+	<th>Available Budget</th>
+	 <th>Total Budget</th>
+	</thead>  
+	<tr><td>${costCenter?.balance?:0}</td>  <td>${(costCenter?.budget?:0)- (costCenter?.balance?:0)}</td> <td>${costCenter?.budget?:0}</td></tr>
 			
+	</table> 			
+<div data-role="rangeslider">
+<label for="month-a">Budget Consumption for Current Month:</label>
+<input name="month-a" id="month-a" disabled="disabled" min="0" max="${costCenter?.budget?:0}" value="${costCenter?.balance?:0}" type="range">
+<label for="month-b">Rangeslider:</label>
+<input name="month-b" id="month-b" disabled="disabled" min="0" max="${costCenter?.budget?:0}" value="${costCenter?.budget?:0}" type="range">
+</div>
 						
 <fieldset class="form">
 
@@ -17,7 +31,7 @@
 
 <div>
 	<label for="name">Description:</label>
-	<g:textArea name="description" cols="40" rows="5" maxlength="500" value="${projectInstance?.description}" placeholder="Expense description."/>
+	<g:textArea name="description" cols="40" rows="5" maxlength="500" value="${projectInstance?.description}" placeholder="Expense description." required="required" pattern=".{3,}"/>
 </div>
 
 <div>
@@ -69,7 +83,7 @@
 </div>
 
 <div>
-<g:actionSubmit value="Save" />
+<g:actionSubmit value="Submit" action="Save" />
 </div>
 
 </fieldset>

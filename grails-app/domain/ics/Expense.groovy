@@ -19,6 +19,11 @@ class Expense {
     	approvedAmount(nullable:true)
     	approvalDate(nullable:true)
     	approvalComments(nullable:true)
+    	invoiceAvailable(nullable:true)
+    	invoiceRaisedBy(nullable:true)
+    	invoiceNo(nullable:true)
+    	invoiceDate(nullable:true)
+    	invoicePaymentMode(nullable:true)
 
 	reviewer1(nullable:true)
 	review1Date(nullable:true)
@@ -39,6 +44,14 @@ class Expense {
 	reviewer3Amount(nullable:true)
 	
 	project(nullable:true)
+	ledgerHead(nullable:true)
+	ref(nullable:true)
+	paymentVoucher(nullable:true)
+	
+	    deductionType(nullable:true)
+	    deductionDescription(nullable:true)
+	    deductionPercentage(nullable:true)
+	    deductionAmount(nullable:true)
 
 	    dateCreated()
 	    creator()
@@ -56,6 +69,11 @@ class Expense {
     String description
     BigDecimal amount
     Date expenseDate
+    String invoiceAvailable
+    String invoiceRaisedBy
+    String invoiceNo
+    Date invoiceDate
+    PaymentMode invoicePaymentMode
     Date raisedOn
     Individual approvedBy
     String status
@@ -82,6 +100,15 @@ class Expense {
     BigDecimal reviewer3Amount
     
     Project project
+    LedgerHead ledgerHead
+    String ref
+    Voucher paymentVoucher
+    
+    String deductionType
+    String deductionDescription
+    BigDecimal deductionPercentage
+    BigDecimal deductionAmount
+    
 
     Date dateCreated
     Date lastUpdated

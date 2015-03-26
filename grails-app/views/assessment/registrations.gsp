@@ -85,6 +85,10 @@
 			<div id="divToPrintResult"></div>
 		</div>
 
+		<div id="dialogPrintFeedback" title="Print Feedback">
+			<div id="divToPrintFeedback"></div>
+		</div>
+
         </div>
 
 <script>
@@ -179,6 +183,7 @@
 	    $("#registration_list").jqGrid('navGrid',"#registration_list_pager").jqGrid('navButtonAdd',"#registration_list_pager",{caption:"Code", buttonicon:"ui-icon-unlocked", onClickButton:unlockCode, position: "last", title:"UnlockCode", cursor: "pointer"});
 	    $("#registration_list").jqGrid('navGrid',"#registration_list_pager").jqGrid('navButtonAdd',"#registration_list_pager",{caption:"ReTest", buttonicon:"ui-icon-unlocked", onClickButton:retest, position: "last", title:"ReTest", cursor: "pointer"});
 	    $("#registration_list").jqGrid('navGrid',"#registration_list_pager").jqGrid('navButtonAdd',"#registration_list_pager",{caption:"QASheet", buttonicon:"ui-icon-script", onClickButton:qasheet, position: "last", title:"QASheet", cursor: "pointer"});
+	    $("#registration_list").jqGrid('navGrid',"#registration_list_pager").jqGrid('navButtonAdd',"#registration_list_pager",{caption:"Feedback", buttonicon:"ui-icon-comment", onClickButton:feedback, position: "last", title:"Feedback", cursor: "pointer"});
 	// add custom button to export the detail data to excel	
 	jQuery("#registration_list").jqGrid('navGrid',"#registration_list_pager").jqGrid('navButtonAdd',"#registration_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
 	       onClickButton : function () { 
@@ -343,6 +348,35 @@
 		else
 			alert("Please select a row!!");	
 	}
+
+	function feedback() {
+	      var url = "${createLink(controller:'Assessment',action:'feedback')}";
+	      
+	      // gather the form data
+	      var data="eventid=${events[0]?.id}";
+	      // post data
+	      $.post(url, data , function(returnData){
+			  $('#divToPrintFeedback').html( returnData);
+			  $( "#dialogPrintFeedback" ).dialog( "open" );
+			  
+	      });
+	}
+
+	 $( "#dialogPrintFeedback" ).dialog({
+		autoOpen: false,
+		 width:800,
+		 height:600,
+		modal: true,
+		buttons: {
+		"Print": function() {
+		$('#divToPrintFeedback').printArea();
+		$( this ).dialog( "close" );
+		},
+		Cancel: function() {
+		$( this ).dialog( "close" );
+		}
+		}
+	});
     
     });
 

@@ -2,6 +2,10 @@ package ics
 
 import grails.converters.JSON
 import groovy.sql.Sql;
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 
 class CostCenterController {
     def springSecurityService
@@ -27,6 +31,7 @@ class CostCenterController {
     }
 
     def save = {
+	log.debug("CostCenter save:"+params)
 	if (springSecurityService.isLoggedIn()) {
 		params.creator=springSecurityService.principal.username
 	}
@@ -202,6 +207,7 @@ class CostCenterController {
     def budget(){}
     
     def jq_budget_list = {
+      log.debug("jq_budget_list:"+params)
       def sortIndex = "name"
       def sortOrder  = params.sord ?: 'asc'
 
@@ -211,11 +217,30 @@ class CostCenterController {
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
 	def result = CostCenter.createCriteria().list(max:maxRows, offset:rowOffset) {
-		if (params.vertical)
-			costCategory{ilike('name',params.vertical)}
+		if (params.searchField=='ccatname')
+			costCategory{ilike('name',params.searchString)}
 
-		if (params.department)
-			ilike('name',params.department)
+		if (params.searchField=='ccname')
+			ilike('name',params.searchString)
+
+		if (params.ccname)
+			ilike('name',params.ccname)
+
+		if (params.cgname)
+			costCenterGroup{ilike('name',params.cgname)}
+
+		if (params.isProfitCenter=='Yes')
+			eq('isProfitCenter',true)
+
+		if (params.isProfitCenter=='No')
+			eq('isProfitCenter',false)
+
+		if (params.isServiceCenter=='Yes')
+			eq('isServiceCenter',true)
+
+		if (params.isServiceCenter=='No')
+			eq('isServiceCenter',false)
+
 
 		costCategory{order("name")}
 		order(sortIndex, sortOrder)
@@ -223,27 +248,49 @@ class CostCenterController {
       
       def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
+      
+      def categoryList = []
+      def typeList = []
+      
+      if(params.category)
+      	categoryList.add(params.category)
+      else
+      	categoryList = ['Income','Expense']
+     
+      if(params.type)
+      	typeList.add(params.type)
+      else
+      	typeList = ['Projected','Actual']
 
-      def jsonCells = result.collect {
+      def jsonCells=[]
+      result.each {
             if(!it.budget)
             	it.budget = 0
-            [cell: [
-            	    it.costCategory.name,
+            categoryList.each{category->
+            	typeList.each{type->            	            
+            	jsonCells.add([cell: [
+            	    it.costCategory?.name,
             	    it.name,
-            	    it.budget*12,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget,
-            	    it.budget
-                ], id: it.id]
+            	    it.costCenterGroup?.name,
+            	    it.isProfitCenter?'Yes':'No',
+            	    it.isServiceCenter?'Yes':'No',
+            	    category,
+            	    type,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:1))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:2))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:3))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:4))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:5))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:6))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:7))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:8))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:9))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:10))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:11))?.value?:0,
+            	    AttributeValue.findByAttribute(Attribute.findWhere(domainClassName:'CostCenter',domainClassAttributeName:it.id.toString(),category:'2014',type:category+'_'+type,position:12))?.value?:0,
+                ], id: it.id])
+                }
+                }
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
         render jsonData as JSON
@@ -307,12 +354,95 @@ class CostCenterController {
 		render result
 	}
 	
+	//http://localhost:8080/ics/costCenter/resetStatsAttributes?year=2014
+	def resetStatsAttributes() {
+		def result = financeService.resetStatsAttributes(params)
+		render ([message:result] as JSON)
+	}
+
 	def summary(){
-		[year:params.year]
+		[year:params.year?:new Date().format('yyyy')]
 	}
 	
 	def budgetchart()  {
-		render(template: "budget", model: [book: ''])
+		def costCenterInstance = CostCenter.get(params.id)
+		render(template: "budget", model: [costCenterInstance: costCenterInstance,year:params.year])
 	}
+
+    def showOwner() {
+                def ownerid = CostCenter.get(params.id)?.owner?.id
+                redirect(controller:"individual",action: "show", id: ownerid)    	
+                return
+    }
+    
+    def downloadBudget() {
+    	log.debug("Inside downloadBudget with params:"+params)
+	def year = params.dlyear
+	    if(!year) {
+		flash.message = "For DownloadBudget Please provide year!!"
+		redirect (action: "budget")
+		return	    	
+	    }
+
+    	response.contentType = 'application/zip'
+    	def query = "select c.id ccId,concat(ccat.alias,c.alias) ccCode,ccat.name costcategory,c.name costcenter,cg.name vertical,if(c.is_profit_center,'Yes','No') isProfitCenter,if(c.is_service_center,'Yes','No') isServiceCenter,a.type,if(a.position<10,a.position+3,a.position-9) month,av.value amount  from cost_center c left join cost_center_group cg on c.cost_center_group_id=cg.id, cost_category ccat, attribute a left join attribute_value av on av.attribute_id=a.id where c.cost_category_id=ccat.id and c.id=a.domain_class_attribute_name and a.domain_class_name='CostCenter' and a.category='"+year+"'"
+    	def sql = new Sql(dataSource)
+
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		def fileName = "budget_fy"+year+"_"+new Date().format('ddMMyyHHmmss')+".csv"
+		zipOutputStream.putNextEntry(new ZipEntry(fileName))
+		//header
+		zipOutputStream << "ccId,ccCode,costcategory,costcenter,vertical,isProfitCenter,isServiceCenter,type,month,amount" 
+		sql.eachRow(query){ row ->
+			zipOutputStream << "\n"
+			zipOutputStream <<row.ccId +","+row.ccCode +","+
+				row.costcategory +","+
+				row.costcenter +","+
+				row.vertical +","+
+				row.isProfitCenter +","+
+				row.isServiceCenter +","+
+				row.type +","+
+				row.month +","+
+				row.amount
+		}
+	}    	    	
+    }
+    
+    def uploadBudget() {
+    	log.debug("Inside uploadBudget with params:"+params)
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render(view: 'budget')
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+	    def year = params.ulyear
+	    if(!year) {
+	    	flash.message = "For UploadBudget Please provide year!!"
+	    	redirect (action: "budget")
+	    	return	    	
+	    }
+	    //@TODO: should be created in more effiecient way and elsewhere
+	    //financeService.createStatsAttributes([year:year])
+	    
+	    //lock expense creation first
+	    financeService.lockExpenseCreation()
+	    
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(financeService.uploadBudget(year,tokens))
+	    		numCreated++
+	    }
+	    
+	    //unlock expense creation
+	    financeService.unlockExpenseCreation()
+	    
+	    flash.message="Uploaded "+numCreated+"/"+numRecords+" records!!"
+	    
+	    redirect (action: "budget")
+	    return
+    }
 
 }

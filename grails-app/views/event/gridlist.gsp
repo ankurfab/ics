@@ -7,6 +7,7 @@
         <title><g:message code="event.list" default="Event List" /></title>
 	<r:require module="grid" />
 	<r:require module="dateTimePicker" />
+	<r:require module="printarea" />
     </head>
     <body>
         <div class="nav">
@@ -72,7 +73,7 @@
 					<td valign="top" class="value">
 						<g:select id="roles" name='roles'
 						    noSelection="${['':'Select Roles...']}"
-						    from='${ics.Role.list()}'
+						    from='${ics.Role.list([sort:'name'])}'
 						    optionKey="id" optionValue="name" multiple="multiple"></g:select>
 					</td>
 				    </tr>
@@ -109,6 +110,35 @@
 			</div>
 			</g:form>			
 		</div>            	    
+
+
+		<div id="dialogPrintSheet" title="Attendance Sheet">
+			<div id="divToPrintSheet"></div>
+		</div>
+
+		<div id="dialogUploadSheet" title="Upload Attendance">
+			<g:form name="formUploadSheet" controller="Event" action="uploadSheet" method="post" >
+			<g:hiddenField name="sheeteventId" value="" />
+			<div class="dialog">
+			    <table>
+				<tbody>
+				    <tr class="prop">
+					<td valign="top" class="name">
+					    <label for="mode">ICS Ids</label>
+					</td>
+					<td valign="top" class="value">
+					    <g:textArea name="icsidlist"/>
+					</td>
+				    </tr>
+				</tbody>
+			    </table>
+			</div>
+			</g:form>			
+		</div>            	    
+
+		<div id="dialogStats" title="Event Statistics">
+			<div id="divStats"></div>
+		</div>
 
         </div>
 
@@ -162,6 +192,9 @@
     $("#event_list").jqGrid('filterToolbar',{autosearch:true});
     $("#event_list").jqGrid('navGrid',"#event_list_pager",{edit:false,add:false,del:true,search:false});
     $("#event_list").jqGrid('inlineNav',"#event_list_pager");
+    $("#event_list").jqGrid('navGrid',"#event_list_pager").jqGrid('navButtonAdd',"#event_list_pager",{caption:"D/L-AttSheet", buttonicon:"ui-icon-arrowthick-1-s", onClickButton:downloadSheet, position: "last", title:"DownloadAttendanceSheet", cursor: "pointer"});
+    $("#event_list").jqGrid('navGrid',"#event_list_pager").jqGrid('navButtonAdd',"#event_list_pager",{caption:"U/L-AttSheet", buttonicon:"ui-icon-arrowthick-1-n", onClickButton:uploadSheet, position: "last", title:"UploadSheet", cursor: "pointer"});
+    $("#event_list").jqGrid('navGrid',"#event_list_pager").jqGrid('navButtonAdd',"#event_list_pager",{caption:"Stats", buttonicon:"ui-icon-tag", onClickButton:stats, position: "last", title:"Stats", cursor: "pointer"});
     
     jQuery("#participant_list").jqGrid({
       url:'jq_participant_list',
@@ -203,6 +236,14 @@
     $("#participant_list").jqGrid('navGrid',"#participant_list_pager").jqGrid('navButtonAdd',"#participant_list_pager",{caption:"Confirmed", buttonicon:"ui-icon-mail-open", onClickButton:markConfirmed, position: "last", title:"MarkConfirmed", cursor: "pointer"});
     $("#participant_list").jqGrid('navGrid',"#participant_list_pager").jqGrid('navButtonAdd',"#participant_list_pager",{caption:"Attended", buttonicon:"ui-icon-check", onClickButton:markAttended, position: "last", title:"MarkAttended", cursor: "pointer"});
     $("#participant_list").jqGrid('navGrid',"#participant_list_pager").jqGrid('navButtonAdd',"#participant_list_pager",{caption:"Comments", buttonicon:"ui-icon-comment", onClickButton:updateComments, position: "last", title:"UpdateComments", cursor: "pointer"});
+	// add custom button to export the detail data to excel	
+	jQuery("#participant_list").jqGrid('navGrid',"#participant_list_pager").jqGrid('navButtonAdd',"#participant_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+	       onClickButton : function () { 
+			var query = 'jq_participant_list?eventid='+$('#event_list').jqGrid('getGridParam','selrow');
+			//alert(query);
+			jQuery("#participant_list").jqGrid('excelExport',{"url":query});
+	       }
+	       });
 
     jQuery("#detail_list").jqGrid({
       url:'jq_detail_list',
@@ -416,6 +457,115 @@
 	      });
 
 	      return false; // stops browser from doing default submit process
+	});
+
+	function downloadSheet() {
+		var id = $('#event_list').jqGrid('getGridParam','selrow');
+		if(id) {
+				var url = "${createLink(controller:'Event',action:'sheet')}"+"?eventid="+id;
+				$( "#divToPrintSheet" ).val("");
+				$( "#divToPrintSheet" ).load( url, function(responseTxt,statusTxt,xhr){
+				    if(statusTxt=="success")
+				    {
+					$( "#dialogPrintSheet" ).dialog( "open" );	
+				    }
+				    if(statusTxt=="error")
+				      alert("Error: "+xhr.status+": "+xhr.statusText);
+				  });
+		}
+		else
+			alert("Please select a row!!");
+	}
+
+	 $( "#dialogPrintSheet" ).dialog({
+		autoOpen: false,
+		 width:800,
+		 height:500,
+		modal: true,
+		buttons: {
+		"Print": function() {
+		$('#divToPrintSheet').printArea();
+		$( this ).dialog( "close" );
+		},
+		Cancel: function() {
+		$( this ).dialog( "close" );
+		}
+		}
+	});
+
+	function uploadSheet() {
+		var id = $('#event_list').jqGrid('getGridParam','selrow');
+		if(id) {
+				$( "#dialogUploadSheet" ).dialog( "open" );
+		}
+		else
+			alert("Please select an event!!");	
+	}
+
+		$( "#dialogUploadSheet" ).dialog({
+			autoOpen: false,
+			height: 300,
+			width: 400,
+			modal: true,
+			buttons: {
+				"Submit": function() {
+					    $("#sheeteventId").val($('#event_list').jqGrid('getGridParam','selrow'));
+					    $("#formUploadSheet").submit();					    
+						
+						$( this ).dialog( "close" );
+				},
+				"Cancel": function() {
+					$( this ).dialog( "close" );
+				}
+			},
+			close: function() {
+				
+			}
+		});
+
+	$('#formUploadSheet').submit(function(){
+
+	      var url = "${createLink(controller:'Event',action:'uploadSheet')}";
+	      
+	      // gather the form data
+	      var data=$(this).serialize();
+	      // post data
+	      $.post(url, data , function(returnData){
+			  $('#icsidlist').val('');
+			  jQuery("#participant_list").jqGrid().trigger("reloadGrid");
+	      });
+
+	      return false; // stops browser from doing default submit process
+	});
+
+	function stats() {
+		var id = $('#event_list').jqGrid('getGridParam','selrow');
+		if(id) {
+				var url = "${createLink(controller:'Event',action:'stats')}"+"?eventid="+id;
+				$( "#divStats" ).val("");
+				$( "#divStats" ).load( url, function(responseTxt,statusTxt,xhr){
+				    if(statusTxt=="success")
+				    {
+					$( "#dialogStats" ).dialog( "open" );	
+				    }
+				    if(statusTxt=="error")
+				      alert("Error: "+xhr.status+": "+xhr.statusText);
+				  });
+		}
+		else
+			alert("Please select a row!!");
+	}
+
+	 $( "#dialogStats" ).dialog({
+		autoOpen: false,
+		 width:800,
+		 height:500,
+		modal: true,
+		buttons: {
+		Cancel: function() {
+		$( this ).dialog( "close" );
+		}
+		}
 	});
 
     });

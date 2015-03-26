@@ -11,6 +11,7 @@
 			<th>Credit Amount Due</th>
 			<th>Credit Amount Paid</th>
 			<th>Payment Details</th>
+			<th>Invoice Items</th>
 		</tr>
 		<g:set var="donationTotal" value="${new BigDecimal(0)}" />
 		<g:set var="cashTotal" value="${new BigDecimal(0)}" />
@@ -34,6 +35,7 @@
 			<td>${invoice.paymentReference?.amount}</td>
 			<g:set var="paidTotal" value="${paidTotal+(invoice.paymentReference?.amount?:0)}" />
 			<td>${invoice.paymentReference}</td>
+			<td>${invoice.lineItems?.collect{it.item?.name+" Qty:"+(it.qty?:0)+(it.unit?:'')+" Rate:"+(it.rate?:0)+"/- Tax:"+(it.taxRate?:0)+"%"}}</td>
 		</tr>
 		</g:each>
 		<tr>
@@ -46,6 +48,7 @@
 			<td>${creditTotal}</td>
 			<td>${dueTotal}</td>
 			<td>${paidTotal}</td>
+			<td></td>
 			<td></td>
 		</tr>
 		

@@ -8,28 +8,14 @@
 		<r:require module="grid" />
 		<r:require module="export"/>
 		<r:require module="dateTimePicker" />
-		<style>
-			.bgGreen{
-			   background: none repeat scroll 0 0 green !important;
-			  }
-			.bgLightGreen{
-			   background: none repeat scroll 0 0 lightgreen !important;
-			  }
-			.bgSkyBlue{
-			   background: none repeat scroll 0 0 skyblue !important;
-			  }
-			.bgSteelBlue{
-			   background: none repeat scroll 0 0 steelblue !important;
-			  }
-			.bgRed{
-			   background: none repeat scroll 0 0 red !important;
-			  }
-			.bgYellow{
-			   background: none repeat scroll 0 0 yellow !important;
-			  }
-		</style>		
 	</head>
 	<body>
+
+		<g:javascript src="tinymce/tinymce.min.js" />    
+
+		<g:render template="/common/apisms" />
+		<g:render template="/common/mandrillemail" />
+
 		<div class="nav">
 		    <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
 		    <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
@@ -41,57 +27,18 @@
             <div class="message">${flash.message}</div>
             </g:if>
 
-	<sec:ifAnyGranted roles="ROLE_MB_ADMIN">
-		<div>
-		Upload profiles in bulk: <br />
-		    <g:uploadForm action="upload">
-			<input type="file" name="myFile" />
-			<input type="submit" value="Upload"/>
-		    </g:uploadForm>
-		</div>
-	</sec:ifAnyGranted>
+
+		<div id="dialogAssignForm" title="Assign Profile">
+			<div id="divToAssign">
+			</div>
+		</div>            
+
+		<div id="dialogStatus" title="Change Workflow Status">
+			<g:render template="changeWorkflowStatus" />
+		</div>            
 
 
 		<div id='message' class="message" style="display:none;"></div>
-
-		<g:form name="searchTab" action="list">
-			<table class="searchForm" id="searchTab">
-				<tr>	
-					<td class="searchLabel"><label>Workflow Status:</label></td>
-					<td colspan="3">
-					<sec:ifNotGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION">	
-						<g:radioGroup name="workflowStatus" id="workflowStatus"
-								  values="${['UNAPPROVED','OPEN','INPROGRESS','PROPOSED','WAITING','READY','CONSULTATION','REJECTED','ANNOUNCE']}" 
-								  labels="${['UNAPPROVED','OPEN','INPROGRESS','PROPOSED','WAITING','READY','CONSULTATION','REJECTED','ANNOUNCE']}" 
-								  onClick="gridReload()">
-							${it.radio}&nbsp;<g:message code="${it.label}" />&nbsp;&nbsp;
-						</g:radioGroup></td>
-					</sec:ifNotGranted>
-				</tr>
-				<tr>	
-					<td class="searchLabel"><label>Profile Status:</label></td>
-					<td colspan="3">
-					<g:radioGroup name="profileStatus" id="profileStatus"
-							  values="${['COMPLETE','INCOMPLETE']}" 
-							  labels="${['COMPLETE','INCOMPLETE']}" 
-							  onClick="gridReload()">
-						${it.radio}&nbsp;<g:message code="${it.label}" />&nbsp;&nbsp;
-					</g:radioGroup></td>
-				</tr>
-				<tr>
-					<td class="searchLabel"><label>UnResolved:</label></td>
-					<td><input type="checkbox" name="unresolved" id="unresolved"/></td>
-					<td class="searchLabel"><label>Resolved:</label></td>
-					<td><input type="checkbox" name="resolved" id="resolved"/></td>
-				</tr>
-				<tr>
-					<td><input align="left" class="searchButton" type="submit" value="Clear" onclick="resetSearch()"/></td>
-					<td></td>
-				</tr>
-			    </table>
-		</g:form>
-
-		
 
 		<!-- table tag will hold our grid -->
 		<table id="mbProfile_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
@@ -112,21 +59,16 @@
 		</div>
 		</sec:ifAnyGranted>
 
+	<sec:ifAnyGranted roles="ROLE_MB_ADMIN">
 		<div>
-			<table>
-				<tr>
-					<td style="background:yellow">OPEN</td>
-					<td style="background:red">UNAPPROVED</td>
-					<td style="background:skyblue">PROPOSED</td>
-					<td style="background:steelblue">READY</td>
-					<td style="background:lightgreen">ANNOUNCE</td>
-					<td style="background:green">RESOLVED</td>
-				</tr>
-			</table>
+		Upload profiles in bulk: <br />
+		    <g:uploadForm action="upload">
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
 		</div>
-
-		<g:render template="/common/sms" />
-		<g:render template="/common/email" />
+	</sec:ifAnyGranted>
+	
 
 		<script type="text/javascript">// <![CDATA[
 		  /* when the page has finished loading.. execute the follow */
@@ -134,26 +76,29 @@
 		    jQuery("#mbProfile_list").jqGrid({
 		      url:'jq_mbManageProfile_list',
 		      datatype: "json",
-		      colNames:['ICSid','Name','Temple/Centre','PhoneNumber','ProfileStatus','WorkflowStatus','MatchMakingStatus','id'],
+		      colNames:['Photo','ICSid','Name','Temple/Centre','PhoneNumber','AssignedTo','ProfileStatus','WorkflowStatus','id'],
 		      colModel:[
+			{
+			name: 'photo',
+			formatter: function (cellvalue, options, rowObject) {
+				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>'; 
+				}
+			},				
 			{name:'icsid', search:true},
 			{name:'name', search:true,
 			formatter:'showlink', 
              		formatoptions:{baseLinkUrl:'show'}},
-			{name:'centre', search:true},
+			{name:'referrerCenter', search:true,
+				stype:'select', searchoptions: { value: "${':ALL;'+(ics.MbProfile.createCriteria().list{projections{distinct('referrerCenter')}}?.collect{(it?:'')+':'+(it?:'')}.join(';'))}"}						
+			},
 			{name:'contactNumber', search:true},
-			{name:'profileStatus', search:true},
-			{name:'workflowStatus',search:true,sortable:false,
-				cellattr: function(rowId, value, rowObject, colModel, arrData) {
-							//alert(rowObject[20]+" : "+rowObject[17]);
-							if(rowObject[20]!=0 && rowObject[20] != rowObject[17])
-								{
-								//alert("something wrong with allocation");
-								return 'style="background-color:darkred"';
-								}
-							}
+			{name:'assignedTo', search:true},
+			{name:'profileStatus', search:true,
+				stype:'select', searchoptions: { value: "${':ALL;'+(ics.MbProfile.createCriteria().list{projections{distinct('profileStatus')}}?.collect{it+':'+it}.join(';'))}"}			
 				},
-			{name:'matchMakingStatus', search:true},
+			{name:'workflowStatus',search:true,
+				stype:'select', searchoptions: { value: "${':ALL;'+(['UNASSIGNED','AVAILABLE','PROPOSED','BOYGIRLMEET','PARENTSMEET','PROPOSALAGREED','ANNOUNCE','MARRIEDTHRUMB','MARRIEDOSMB','UNAVAILABLE','ONHOLD','WITHDRAWN'].collect{(it?:'')+':'+(it?:'')}.join(';'))}"}						
+				},
 			{name:'id',hidden:true}
 		     ],
 		    rowNum:10,
@@ -161,28 +106,8 @@
 		    pager:'#mbProfile_list_pager',
 		    viewrecords: true,
 		    gridview: true,
-		    rowattr: function (rd) {
-			    if (rd.defArr == 1) {
-				return {"class": "bgYellow"};
-				}
-			    if (rd.ns ==1) {
-				return {"class": "bgRed"};
-				}
-			    if (rd.ac>0 && (rd.ac < rd.rc) && (rd.cc<rd.ac)) {
-				return {"class": "bgSkyBlue"};
-				}
-			    if (rd.ac>0 && (rd.ac < rd.rc) && (rd.cc==rd.ac)) {
-				return {"class": "bgSteelBlue"};
-				}
-			    if (rd.ac>0 && (rd.rc == rd.ac)&&(rd.cc<rd.ac)) {
-				return {"class": "bgLightGreen"};
-				}
-			    if (rd.ac>0 && (rd.rc == rd.ac)&&(rd.cc==rd.ac)) {
-				return {"class": "bgGreen"};
-				}
-			    },		    
-		    multisearch: true,
-		    multiselect:true,
+		    multisearch: false,
+		    multiselect:false,
 		    sopt:['eq','ne','cn','bw','bn', 'ilike'],
 		    sortname: "lastUpdated",
 		    sortorder: "desc",
@@ -198,7 +123,9 @@
 			{},  // add options
 			{}          // delete options
 		    );
-	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Match", buttonicon:"ui-icon-zoomin", onClickButton:match, position: "last", title:"Match", cursor: "pointer"});
+	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Assign", buttonicon:"ui-icon-arrowthick-2-e-w", onClickButton:assign, position: "last", title:"Assign", cursor: "pointer"});
+	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"MatchHistory", buttonicon:"ui-icon-zoomin", onClickButton:match, position: "last", title:"MatchHistory", cursor: "pointer"});
+	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Status", buttonicon:"ui-icon-shuffle", onClickButton:status, position: "last", title:"Status", cursor: "pointer"});
 
 		 function match()  {
 			var id = $('#mbProfile_list').jqGrid('getGridParam','selrow');
@@ -211,70 +138,98 @@
 
 		 }
 
-	        });
+		 function assign()  {
+			var id = $('#mbProfile_list').jqGrid('getGridParam','selrow');
+			if(id) {
+				var url = "${createLink(controller:'Mb',action:'assign')}"+"?profileid="+id;
+				$( "#divToAssign" ).val("");
+				$( "#divToAssign" ).load( url, function(responseTxt,statusTxt,xhr){
+				    if(statusTxt=="success")
+				    {
+					$( "#dialogAssignForm" ).dialog( "open" );	
+				    }
+				    if(statusTxt=="error")
+				      alert("Error: "+xhr.status+": "+xhr.statusText);
+				  });
+			}
+			else
+				alert("Please select a row!!");
 
-		$(function(){
-		    $('input[name$="Required"]').click(function() {
-			    gridReload();
-		    });
+		 }
+
+
+		$( "#dialogAssignForm" ).dialog({
+			autoOpen: false,
+			modal: true,
+			buttons: {
+				"Assign": function() {
+					      var url = "${createLink(controller:'Mb',action:'assignProfile')}";
+
+					      // gather the form data
+					      var data=$("#formAssignProfile").serialize();
+					      // post data
+					      $.post(url, data , function(returnData){
+							  //alert(returnData);
+							  $( "#dialogAssignForm" ).dialog( "close" );
+							  jQuery("#mbProfile_list").jqGrid().trigger("reloadGrid");
+							})
+						
+						$( this ).dialog( "close" );
+				},
+				"Cancel": function() {
+					$( this ).dialog( "close" );
+				}
+			},
+			close: function() {
+				
+			}
 		});
 
-		 
-		 function afterSubmitEvent(response, postdata) {
-			var success = true;
-
-			var json = eval('(' + response.responseText + ')');
-			var message = json.message;
-
-			if(json.state == 'FAIL') {
-			    success = false;
-			} else {
-			  $('#message').html(message);
-			  $('#message').show().fadeOut(10000);
-			}
-
-			var new_id = json.id
-			return [success,message,new_id];
-		    }
-
+	function status() {
+		var ids = $('#mbProfile_list').jqGrid('getGridParam','selarrrow');
+		if(ids) {
+				$( "#dialogStatus" ).dialog( "open" );
+		}
+		else
+			alert("Please select a row!!");
+	}
 		
-		function gridReload(){
-			var query = "isVipDevotee=false";
-			    
-			if ($('#dropRequired').is(':checked')) {
-				query = query.concat("&dropRequired=true");
-			}
-			if ($('#pickUpRequired').is(':checked')) {
-				query = query.concat("&pickUpRequired=true");
-			}
-			if ($('#accommodationRequired').is(':checked')) {
-				query = query.concat("&accommodationRequired=true");
-			}
-			if ($('#accommodationNotRequired').is(':checked')) {
-				query = query.concat("&accommodationRequired=false");
-			}
-			if ($("input:radio[name='verificationStatus']:checked").val()) {
-				//alert($("input:radio['name=verificationStatus']:checked").val());
-				query = query.concat("&verificationStatus="+$("input:radio[name='verificationStatus']:checked").val());
-				//query = query.concat($("input:radio['name=verificationStatus']:checked").val());
-				//alert("hi");
+	$( "#dialogStatus" ).dialog({
+		autoOpen: false,
+		modal: true,
+		buttons: {
+			"Submit": function() {
+				    $("#mbprofileid").val($('#mbProfile_list').jqGrid('getGridParam','selrow'));
+				    $("#formChangeWorkflowStatus").submit();					    
 
+					$( this ).dialog( "close" );
+			},
+			"Cancel": function() {
+				$( this ).dialog( "close" );
 			}
-			if ($("input:radio[name='accommodationAllotmentStatus']:checked").val()) {
-				//alert($("input:radio['name=verificationStatus']:checked").val());
-				query = query.concat("&accommodationAllotmentStatus="+$("input:radio[name='accommodationAllotmentStatus']:checked").val());
-				//query = query.concat($("input:radio['name=verificationStatus']:checked").val());
-				//alert("hi");
-
-			}
-			//alert(query);
-			jQuery("#mbProfile_list").jqGrid('setGridParam',{url:"jq_mbManageProfile_list?"+query}).trigger("reloadGrid");
+		},
+		close: function() {
 
 		}
+	});
+	
+	$('#formChangeWorkflowStatus').submit(function(){
 
-//		function resetSearch() {
-//			alert("Hi");
-//		}
+	      var url = "${createLink(controller:'Mb',action:'changeWorkflowStatus')}";
+	      
+	      // gather the form data
+	      var data=$(this).serialize();
+	      // post data
+	      $.post(url, data , function(returnData){
+			  jQuery("#mbProfile_list").jqGrid().trigger("reloadGrid");
+	      })
+	      return false; // stops browser from doing default submit process
+	});
+
+	
+
+});
+
 
 		// ]]></script>
 	</body>

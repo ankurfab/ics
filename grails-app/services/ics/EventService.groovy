@@ -135,4 +135,40 @@ class EventService {
 	helperService.storeAV(params)
 	return ['success':'ok']
     }
+
+    def uploadSheet(Map params) {
+    	log.debug("uploadSheet :"+params)
+    		
+    	def eps = EventParticipant.createCriteria().list(){
+    			event{eq('id',new Long(params.sheeteventId))}
+    			individual{'in'('icsid',params.icsidlist.tokenize(',').collect{new Integer(it)})}    			
+    			}
+	eps.each
+	{
+		it.attended = true
+		if(!it.save())
+			it.errors.allErrors.each {log.debug("Exception in uploadSheet:"+e)}
+	}    	
+    	return ['success':'ok']
+    }
+    
+    def stats(Map params) {
+    	log.debug("inside stats with params:"+params)
+    	def eps = EventParticipant.findAllByEvent(Event.get(params.eventid))
+    	def present = [], absent = []
+    	return eps
+    }
+    
+    def getIndividuals(Event event,String attendance,String language) {
+    	boolean attended = (attendance=='PRESENT')?true:false
+    	def eps = EventParticipant.createCriteria().list(){
+    			eq('event',event)
+    			eq('attended',attended)
+    			individual{eq('languagePreference',language)}    			
+    		}
+    	return eps.collect{it.individual.id}.join(',')
+    }
+    
+    
+
 }

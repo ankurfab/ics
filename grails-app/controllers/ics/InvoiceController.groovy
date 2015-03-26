@@ -623,6 +623,30 @@ class InvoiceController {
     	render(template: "salesReport", model: [invoices: invoices])
     }
 
+    def consumptionReport() {
+    	def consumers = Invoice.createCriteria().list{
+    		eq('type','SALES')
+    		projections{
+    			distinct('personTo')
+    			}
+    		order('personTo')
+    		}
+    	log.debug("Got consumers:"+consumers)
+    	[consumers:consumers]
+    }
+    
+    def consumptionReportResult() {
+    	log.debug("Inside consumptionReportResult with params : "+params)
+	
+	if(params.from)
+		  params.from = Date.parse('dd-MM-yyyy',params.from)
+	if(params.to)
+		  params.to = Date.parse('dd-MM-yyyy',params.to)
+    	
+    	def consumptions = invoiceService.consumptionReport(params)
+    	
+    	render(template: "consumptionReport", model: [consumptions: consumptions])
+    }
 
     def stockReport() {
     	def items = Item.createCriteria().list{

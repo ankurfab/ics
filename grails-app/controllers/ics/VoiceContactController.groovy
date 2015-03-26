@@ -34,7 +34,8 @@ class VoiceContactController {
         def voiceContactInstance = new VoiceContact(params)
         if (voiceContactInstance.save(flush: true)) {
             flash.message = "${message(code: 'default.created.message', args: [message(code: 'voiceContact.label', default: 'VoiceContact'), voiceContactInstance.id])}"
-            redirect(controller: "individual", action: "edit", id: voiceContactInstance?.individual?.id)
+            //redirect(controller: "individual", action: "edit", id: voiceContactInstance?.individual?.id)
+            render "OK"
         }
         else {
             render(view: "create", model: [voiceContactInstance: voiceContactInstance])

@@ -4,14 +4,14 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="main" />
-        <title>Initiate Profile Creation</title>
+        <title>Start Profile Creation</title>
     </head>
     <body>
         <div class="nav">
             <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
         </div>
         <div class="body">
-            <h1>Initiate Profile Creation</h1>
+            <h1>Start Profile Creation</h1>
             <g:if test="${flash.message}">
             <div class="message">${flash.message}</div>
             </g:if>
@@ -94,8 +94,9 @@
                                     <label for="refCentre">Centre:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: mbProfileInstance, field: 'initiatedName', 'errors')}">
-                                    <g:textField name="refCentre" size="50" maxlength="127" pattern=".{3,}" value="" />
-
+                                    <g:set var="attr" value="${ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','Centre','Config')}" />
+                                    <g:set var="centres" value="${ics.AttributeValue.findAllByAttribute(attr)?.collect{it.value}}" />
+				    <g:select name="refCentre" from="${centres}"/>
                                 </td>
                             </tr>
                             <tr class="prop">
@@ -129,7 +130,7 @@
                     </fieldset>
                 </div>
                 <div class="buttons">
-                    <span class="button"><g:submitButton name="create" class="save" value="Initiate" /></span>
+                    <span class="button"><g:submitButton name="create" class="save" value="Start" /></span>
                 </div>
             </g:form>
         </div>

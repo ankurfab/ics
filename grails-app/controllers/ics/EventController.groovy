@@ -2,11 +2,16 @@ package ics
 
 import grails.converters.JSON
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 
 class EventController {
     def springSecurityService
     def individualService
     def eventService
+    def dataService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -395,6 +400,14 @@ class EventController {
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
+	if(params.oper=="excel" )
+		{
+			maxRows = 100000
+			rowOffset = 0
+			sortIndex = "id"
+			sortOrder = "asc"
+		}
+
 	def event = null
 	if(params.eventid)
 		event=Event.get(params.eventid)
@@ -424,7 +437,14 @@ class EventController {
 		if(params.flgAddressPrinted=='no')
 			eq('flgAddressPrinted',false)
 
-		order(sortIndex, sortOrder)
+		if(sortIndex=='name') {
+			individual{
+				order('initiatedName', sortOrder)
+				order('legalName', sortOrder)
+			}
+		}
+		else			
+			order(sortIndex, sortOrder)
 
 	}
       
@@ -432,28 +452,55 @@ class EventController {
       def numberOfPages = Math.ceil(totalRows / maxRows)
 
       def indDetails
-      def jsonCells = result.collect {
-            indDetails = individualService.getDetails(it.individual.id)
-            [cell: [
-            	    it.individual?.toString(),
-            	    it.individual?.isMale?'Male':'Female',
-            	    it.individual?.dob?.format('dd-MM-yyyy'),
-            	    /*individualService.getFamily(it.individual),
-            	    individualService.getCounsellor(it.individual),*/
-            	    indDetails.familyof,
-            	    indDetails.counsellor,
-            	    it.invited?'yes':'no',
-            	    it.confirmed?'yes':'no',
-            	    it.attended?'yes':'no',
-            	    it.comments,
-            	    it.regCode,
-            	    it.role,
-            	    it.comments,
-            	    it.flgAddressPrinted?'yes':'no',
-                ], id: it.id]
-        }
-        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
-        render jsonData as JSON
+
+		if(params.oper=="excel")
+		 {
+			response.contentType = 'application/zip'
+			def filename="EventParticipants_"+new Date().format('ddMMyyyy_HHmmss')+".csv"
+			new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+				zipOutputStream.putNextEntry(new ZipEntry(filename))
+				//header
+				
+				zipOutputStream << "Id,IcsId,Name,Family,Phone,Email,Attended,Language" 
+				result.each{ row ->
+					indDetails = individualService.getDetails(row.individual.id)
+					zipOutputStream << "\n"
+					zipOutputStream <<   row.individual.id+","+row.individual.icsid+","+row.individual?.toString()?.replaceAll(',',';') +","+
+							(indDetails?.familyof?:'') +","+
+						    (indDetails?.phone?:'')?.replaceAll(',',';') +","+
+						    (indDetails?.email?:'')?.replaceAll(',',';') +","+
+						    (row.attended?'Yes':'No') +","+
+						    (row.individual.languagePreference?:'')
+				}
+			}    		
+			return
+		 }
+		else
+		{
+
+		      def jsonCells = result.collect {
+			    indDetails = individualService.getDetails(it.individual.id)
+			    [cell: [
+				    it.individual?.toString(),
+				    it.individual?.isMale?'Male':'Female',
+				    it.individual?.dob?.format('dd-MM-yyyy'),
+				    /*individualService.getFamily(it.individual),
+				    individualService.getCounsellor(it.individual),*/
+				    indDetails?.familyof?:'',
+				    indDetails?.counsellor?:'',
+				    it.invited?'yes':'no',
+				    it.confirmed?'yes':'no',
+				    it.attended?'yes':'no',
+				    it.comments,
+				    it.regCode,
+				    it.role,
+				    it.comments,
+				    it.flgAddressPrinted?'yes':'no',
+				], id: it.id]
+			}
+			def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+			render jsonData as JSON
+        	}
         }
 
 	def jq_edit_participant = {
@@ -671,6 +718,39 @@ class EventController {
 	def setupMasterData() {
 		def response = eventService.setupMasterData(params)
 		render response as JSON
+	}
+	
+	def sheet() {
+		def results = dataService.sheet(params)
+		render(template: "/common/sheet", model: [results:results])
+	}
+	
+	def uploadSheet() {
+		def response = eventService.uploadSheet(params)
+		render response as JSON
+	}
+		
+	def stats() {
+		def results = eventService.stats(params)
+		render(template: "stats", model: [results:results])
+	}
+	
+	def sms()  {
+		log.debug("sms:"+params)
+		[eid:params.eid]
+	}
+	
+	def smssend()  {
+		log.debug("smssend:"+params)
+		
+		def event = Event.get(params.eid)
+
+		params.via = 'SMS'
+		params.entityName = 'Individual'
+		params.depid = event.department?.id
+		params.ids = eventService.getIndividuals(event,params.attendance,params.language)
+
+		forward(controller:"helper",action: "sendmessage", params: params)
 	}
 
 }

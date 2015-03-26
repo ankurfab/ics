@@ -12,6 +12,10 @@
             <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
 	    <sec:ifAnyGranted roles="ROLE_ACC_ADMIN,ROLE_ACC_VE">
              <span class="menuButton"><g:link class="list" action="list"><g:message code="voucher.list" default="Voucher List" /></g:link></span>
+            <span class="menuButton"><g:link class="create" action="createPayment">New Payment Voucher</g:link></span>
+            <span class="menuButton"><g:link class="create" action="createReceipt">New Receipt Voucher</g:link></span>
+            <span class="menuButton"><g:link class="create" action="createContra">New Contra Voucher</g:link></span>
+            <span class="menuButton"><g:link class="create" action="createJournal">New Journal Voucher</g:link></span>
             </sec:ifAnyGranted>
         </div>
         <div class="body">

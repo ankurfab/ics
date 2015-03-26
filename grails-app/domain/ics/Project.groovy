@@ -24,6 +24,12 @@ class Project {
 	advanceAmountIssued(nullable:true)
 	advanceIssued(nullable:true)
 	
+	    advanceIssuedTo(nullable:true)
+	    advancePaymentMode(nullable:true)
+	    advancePaymentComments(nullable:true)
+	    advancePaymentVoucher(nullable:true)
+	
+	
 	settleAmount(nullable:true)
 	settleDate(nullable:true)
 
@@ -78,6 +84,10 @@ class Project {
     BigDecimal advanceAmount
     BigDecimal advanceAmountIssued
     Boolean advanceIssued
+    Individual advanceIssuedTo
+    PaymentMode advancePaymentMode
+    String advancePaymentComments
+    Voucher advancePaymentVoucher
     
     BigDecimal settleAmount
     Date settleDate

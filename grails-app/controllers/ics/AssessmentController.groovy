@@ -670,6 +670,12 @@ class AssessmentController {
     	else
     		render "No challan found with the specified id. Kindly contact admin!!"
     }
+    
+    def feedback()  {
+    	log.debug("inside feedback with params:"+params)
+    	def ias = assessmentService.feedback(params)
+    	render(template: "feedbacks", model: [ias:ias])
+    }
 
 
 }

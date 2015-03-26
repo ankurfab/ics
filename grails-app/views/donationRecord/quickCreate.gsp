@@ -417,6 +417,34 @@
                     </table>
                 </div>
 
+                <div class="dialog" id="collectorDiv">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                        <tbody bgcolor="lavender">
+                            <tr >
+                                <td valign="top" width="18%">
+                                    <label for="collectedBy">Collected By</label>
+                                </td>
+                                <td valign="top" width="82%" align="left" class="value">
+                                    
+				   <g:hiddenField name="collectedBy.id" value="" />
+				   <div style="width: 300px">
+					<gui:autoComplete
+						id="acCollector"
+						width="300px"
+						controller="individual"
+						action="findCollectorsAsJSON"
+						useShadow="true"
+						queryDelay="0.5" minQueryLength='3'
+
+					/>
+					</div>
+				   </td>
+                            </tr>
+
+			</tbody>
+			</table>
+		</div>
+
                 <div class="dialog">
                     <table border="0" cellspacing="0" cellpadding="0">
                         <tbody bgcolor="lavender">

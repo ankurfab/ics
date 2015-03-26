@@ -327,7 +327,7 @@
 
 
 	function pay() {
-		var ids = $('#invoice_list').jqGrid('getGridParam','selarrrow');
+		var ids = $('#invoice_list').jqGrid('getGridParam','selrow');
 		if(ids) {
 				$( "#dialogPayForm" ).dialog( "open" );
 		}
@@ -433,7 +433,7 @@ $(document).on('mouseover', 'a.lex', function(event) {
 			modal: true,
 			buttons: {
 				"Submit": function() {
-					    $("#invoiceids").val($('#invoice_list').jqGrid('getGridParam','selarrrow'));
+					    $("#invoiceids").val($('#invoice_list').jqGrid('getGridParam','selrow'));
 					    $("#formPaymentReference").ajaxForm({
 						success: function() {alert("Payment reference submitted");}
 					    }).submit();

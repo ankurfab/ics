@@ -94,7 +94,13 @@ class CommsService {
 	def sendMandrill(Map params) {
 		//log.debug("In sendMandrill:"+params)
 		def recpts = []
-		recpts.add(new MandrillRecipient(name:params.toName, email:params.toEmail))
+
+		//code to handle multiple email addrs for a person
+		def toAddrs = params.toEmail?.replaceAll(';',',')
+		toAddrs?.tokenize(',')?.each{
+			recpts.add(new MandrillRecipient(name:params.toName, email:it))
+		}
+
 		def message
 	
 		if(params.type=="HTML")
@@ -200,5 +206,46 @@ class CommsService {
 	commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:ep.individual.toString(),toEmail:EmailContact.findByCategoryAndIndividual('Personal',ep.individual)?.emailAddress,emailsub:template.name,emailbody:body,type:template.type])
     }
 
+    def sendComms(String departmentName, String templateCode, String toName, String number, String toEmail, List contentParams) {
+	    //SMS
+	    try{
+		//send sms
+		def depcp_sms = DepartmentCP.createCriteria().get{
+				department{eq('name',departmentName)}	//@TODO: handle multi-center scenario
+				cp{eq('type','SMS')}
+				}
+		if(depcp_sms)
+			{
+			if(number) {
+				def template = Template.findByCodeAndCategory(templateCode,"SMS")
+				if(template) {
+					def body = commsService.fillTemplate(template,contentParams)
+					sendSms(depcp_sms.cp,number,body)
+				}
+			}
+			}
+	    }
+	    catch(Exception e){log.debug("sendcomms sms exception:"+e)}
+
+	    //EMAIL
+	    try{
+		//send the email
+		def depcp = DepartmentCP.createCriteria().get{
+				department{eq('name',departmentName)}	//@TODO: handle multi-center scenario
+				cp{eq('type','Mandrill')}
+				}
+		if(depcp)
+			{
+			if(toEmail) {
+				def template = Template.findByCodeAndCategory(templateCode,"EMAIL")
+				if(template) {
+					def body = commsService.fillTemplate(template,contentParams)
+					sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:toName,toEmail:toEmail,emailsub:template.name,emailbody:body,type:template.type])
+				}
+			}
+			}
+	    }
+	    catch(Exception e){log.debug("sendcomms email stage:"+stage+" exception:"+e)}
+    }
 
 }

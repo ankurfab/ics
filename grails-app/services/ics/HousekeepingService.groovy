@@ -1325,7 +1325,7 @@ def config = ConfigurationHolder.config
 			name = i.initiatedName?:i.legalName
 			i.loginid = genloginFromName(name)
 			println "generated loginid: "+i.loginid
-			if(!i.save(flush:true))
+			if(!i.save())
 				{
 				iu.errors.allErrors.each {
 					println it
@@ -1335,7 +1335,7 @@ def config = ConfigurationHolder.config
 			
 			//now create the user
 			iu = new IcsUser(username: i.loginid, password: i.loginid, enabled: true, accountExpired: false, accountLocked: false, passwordExpired: false)
-			if(!iu.save(flush:true)) {
+			if(!iu.save()) {
 				iu.errors.allErrors.each {
 					println it
 				}
@@ -1363,7 +1363,7 @@ def config = ConfigurationHolder.config
 			def iuir = new IcsUserIcsRole()
 			iuir.icsUser = iu
 			iuir.icsRole = ir
-			if(!iuir.save(flush:true)) {
+			if(!iuir.save()) {
 				iuir.errors.allErrors.each {
 					println it
 				}

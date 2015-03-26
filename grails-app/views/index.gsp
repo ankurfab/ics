@@ -30,6 +30,11 @@
 
       </sec:ifNotLoggedIn>
       <sec:ifLoggedIn>
+	<sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
+		<g:javascript>
+		window.location.href = "${createLink(controller:'mb',action:'index')}";
+		</g:javascript>
+	</sec:ifAnyGranted>
 	<sec:ifAnyGranted roles="ROLE_COUNSELLOR">
 		<g:javascript>
 		window.location.href = "${createLink(controller:'helper',action:'clorDashboard')}";
@@ -43,11 +48,6 @@
 	<sec:ifAnyGranted roles="ROLE_ASMT_USERUV">
 		<g:javascript>
 		window.location.href = "${createLink(controller:'assessment',action:'verify')}";
-		</g:javascript>
-	</sec:ifAnyGranted>
-	<sec:ifAnyGranted roles="ROLE_CC_OWNER,ROLE_CCAT_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
-		<g:javascript>
-		window.location.href = "${createLink(controller:'project',action:'index')}";
 		</g:javascript>
 	</sec:ifAnyGranted>
 	<sec:ifNotGranted roles="ROLE_COUNSELLOR,ROLE_ASMT_USER,ROLE_ASMT_USERUV">

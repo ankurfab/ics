@@ -26,6 +26,10 @@ class ReceiptSequenceService {
     	if(dep)
     		{
     		rs = ReceiptSequence.findByTypeAndDepartment(type,dep)
+		    if(!rs)
+			{
+			rs = new ReceiptSequence(type:type,seq:0,department:dep)
+			}
     		//store in httpsession for quicker lookup next time
     		RequestContextHolder.currentRequestAttributes().getSession()?.receiverDepId= dep?.id
     		RequestContextHolder.currentRequestAttributes().getSession()?.receiverDepAlias = dep?.alias
