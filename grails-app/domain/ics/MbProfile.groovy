@@ -76,7 +76,6 @@ class MbProfile {
 	flexibleCentre(nullable: true)
 	prefNationality(nullable: true, maxSize: 40)
 	flexibleNationality(nullable: true)
-	prefOrigin(nullable: true, maxSize: 40)
 	flexibleOrigin(nullable: true)
 	prefVarna(nullable: true,maxSize: 40)
 	flexibleVarna(nullable: true)
@@ -102,7 +101,7 @@ class MbProfile {
 	flexibleLangknown(nullable: true)
 	prefManglik(nullable: true,maxSize: 40)
 	flexibleManglik(nullable: true)
-	settleAbroadWorkingWife(nullable: true)
+	settleAbroadWorkingWife(nullable: true, maxSize: 10)
 	keenDevProfile(nullable: true,maxSize: 80)
 	primdepMB(nullable: true,maxSize: 60)
 	regotherMB(nullable: true,maxSize: 60)
@@ -219,7 +218,6 @@ class MbProfile {
     Boolean flexibleCentre
     String prefNationality
     Boolean flexibleNationality
-    String prefOrigin
     Boolean flexibleOrigin
     String prefVarna
     Boolean flexibleVarna
@@ -245,7 +243,7 @@ class MbProfile {
     Boolean flexibleLangknown
     String prefManglik
     Boolean flexibleManglik
-    Boolean settleAbroadWorkingWife
+    String settleAbroadWorkingWife
     String keenDevProfile
     String primdepMB
     String regotherMB

@@ -14,16 +14,18 @@
 <div class="nav">
     <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message default="Home"/></a></span>
     <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
+        <g:hiddenField name="finishShow" id="finishShow" value="true"/>
         <g:if test="${mbProfile?.profileStatus == 'STARTED' || mbProfile?.profileStatus == 'INCOMPLETE'}">
             <span class="menuButton"><g:link class="create" action="markProfileComplete">Submit Profile to MB</g:link></span>
         </g:if>
     </sec:ifAnyGranted>
     <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
         <g:if test="${mbProfile?.profileStatus == 'SUBMITTED'}">
+            <g:hiddenField name="finishShow" id="finishShow" value="false"/>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
                                              params="['status': 'INCOMPLETE']">Mark InComplete</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
-                                             params="['status': 'COMPLETE']">Mark Completed</g:link></span>
+                                             params="['status': 'COMPLETE']">Mark Completed</g:link></span
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
                                              params="['status': 'REJECTED']">Mark Rejected</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
@@ -170,7 +172,7 @@
         <g:select name="nationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.candidate?.nationality}"/>
     </td>
     <td valign="top" class="name">
-        <label for="originState">Origin (State/UT):</label>
+        <label for="originState">State Of Birth</label>
     </td>
     <td valign="top" class="value">
         <g:select name="originState"
@@ -191,7 +193,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="scstCategory"
-                  from="${['General', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes']}"
+                  from="${['Open','Other Backward Class','Backward Class','Scheduled Caste','Scheduled Tribe','Nomadic Tribes']}"
                   value="${mbProfile?.scstCategory ?: 'Open'}"/>
     </td>
     <td valign="top" class="name">
@@ -1015,7 +1017,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefChanting"
-                  from="${['Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds', 'Above 16 rounds']}"
+                  from="${['Any','Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds']}"
                   value="${mbProfile?.prefChanting}"/>
     </td>
     <td valign="top" class="name">
@@ -1083,7 +1085,7 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefOrigin">Preferred<br>Origin (State):</label>
+        <label for="prefOrigin">Preferred<br>State of Birth</label>
     </td>
     <td valign="top" class="value">
         <g:select name="prefOrigin"
@@ -1091,7 +1093,7 @@
                   value="${mbProfile?.prefOrigin}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleOrigin">I am flexible<br> on Origin(State):</label>
+        <label for="flexibleOrigin">I am flexible<br> on State of Birth</label>
     </td>
     <td>
         <g:radioGroup name="flexibleOrigin" labels="['No', 'Yes']" values="[false, true]"
@@ -1215,9 +1217,7 @@
         <label for="prefAgeDiff">Preferred<br>Age difference:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefAgeDiff"
-                  from="${['More or less same', '6 months', '1 year', '2 years', '3 years', '4 years', '5 years', '6 years', '7 years', '8 years', '9 years', '10 years']}"
-                  value="${mbProfile?.prefAgeDiff}"/>
+        <g name="prefAgeDiff" value="0-10"></g:hiddenField>
     </td>
     <td valign="top" class="name">
         <label for="flexibleAgediff">I am flexible<br> on Age difference:</label>
@@ -1335,7 +1335,7 @@
         </td>
     </g:else>
     <td valign="top" class="value">
-        <g:select name="settleAbroadWorkingWife" from="${['Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
+        <g:select name="settleAbroadWorkingWife" from="${['Flexible','Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
     </td>
 </tr>
 <tr class="prop">
@@ -1526,6 +1526,13 @@
             onLeaveStep: leaveAStepCallback,
             onFinish: onFinishCallback
         });
+
+        setTimeout(function(){
+            if($('#finishShow').val() == "true")
+                $('.buttonFinish').show();
+            else
+                $('.buttonFinish').hide();
+        },0);
 
         function leaveAStepCallback(obj, context) {
             var stepSec=$(obj.attr('href'));

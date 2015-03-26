@@ -70,7 +70,7 @@
                     </td>
                     <td valign="top" class="value">
                         <g:select name="prefChanting"
-                                  from="${['Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds', 'Above 16 rounds']}"
+                                  from="${['Any','Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds']}"
                                   value="${mbProfile?.prefChanting}"/>
                     </td>
                     <td valign="top" class="name">
@@ -133,7 +133,7 @@
                 </tr>
                 <tr class="prop">
                     <td valign="top" class="name">
-                        <label for="prefOrigin">Preferred Origin (State):</label>
+                        <label for="prefOrigin">Preferred State of Birth</label>
                     </td>
                     <td valign="top" class="value">
                         <g:select name="prefOrigin" multiple="multiple"
@@ -172,7 +172,7 @@
                     </td>
                     <td valign="top" class="value">
                         <g:select name="prefCategory"
-                                  from="${['General', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes']}"
+                                  from="${['Open','Other Backward Class','Backward Class','Scheduled Caste','Scheduled Tribe','Nomadic Tribes']}"
                                   value="${mbProfile?.prefCategory}"/>
                     </td>
                     <td valign="top" class="name">
@@ -368,7 +368,7 @@
                         </td>
                     </g:else>
                     <td valign="top" class="value">
-                        <g:select name="settleAbroadWorkingWife" from="${['Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
+                        <g:select name="settleAbroadWorkingWife" from="${['Flexible','Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
                     </td>
                 </tr>
 </g:form>
