@@ -76,7 +76,6 @@ class MbProfile {
 	flexibleCentre(nullable: true)
 	prefNationality(nullable: true, maxSize: 40)
 	flexibleNationality(nullable: true)
-	flexibleOrigin(nullable: true)
 	prefVarna(nullable: true,maxSize: 40)
 	flexibleVarna(nullable: true)
 	prefCategory(nullable: true,maxSize: 40)
@@ -221,7 +220,6 @@ class MbProfile {
     Boolean flexibleCentre
     String prefNationality
     Boolean flexibleNationality
-    Boolean flexibleOrigin
     String prefVarna
     Boolean flexibleVarna
     String prefCategory

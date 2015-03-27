@@ -1098,7 +1098,7 @@
     <td valign="top" class="value">
         <g:select name="prefCulturalInfluence"
                   from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
-                  value="${mbProfile?.prefCulturalInfluence}" noSelection="['':'Select One']"v/>
+                  value="${mbProfile?.prefCulturalInfluence}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="flexibleCulturalInfluence">I am flexible<br>Cultural Influence</label>
