@@ -130,7 +130,7 @@
                     </fieldset>
                 </div>
                 <div class="buttons">
-                    <span class="button"><g:submitButton name="create" class="save" value="Start" /></span>
+                    <span class="button"><g:submitButton name="create" class="save" value="Save" /></span>
                 </div>
             </g:form>
         </div>

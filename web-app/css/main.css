@@ -52,7 +52,6 @@ input, select, textarea {
 }
 select {
    padding: 2px 2px 2px 0;
-    width: 100%;
 }
 textarea {
 	width: 250px;
@@ -264,6 +263,10 @@ th.desc a {
 }
 
 #searchExpectations input[type="text"] {
+    width: 100%;
+}
+
+#searchExpectations select {
     width: 100%;
 }
 

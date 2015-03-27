@@ -105,6 +105,7 @@ class MbService {
 	try{         mbProfile.candCounsellorAshram=params.counselorAshram } catch(Exception e){}
 	try{         mbProfile.candidate.nationality=params.nationality } catch(Exception e){}
 	try{         mbProfile.candidate.origin=params.originState } catch(Exception e){}
+    try{         mbProfile.culturalInfluence=params.culturalInfluence } catch(Exception e){}
 	try{         mbProfile.candidate.varna=params.varna } catch(Exception e){}
 	try{         mbProfile.scstCategory=params.scstCategory } catch(Exception e){}
 	try{         mbProfile.candidate.caste=params.caste } catch(Exception e){}
@@ -208,7 +209,7 @@ class MbService {
 	try{         mbProfile.flexibleSpMaster = Boolean.valueOf(params.flexibleSpMaster) } catch(Exception e){}
 	try{         mbProfile.flexibleCentre = Boolean.valueOf(params.flexibleCentre) } catch(Exception e){}
 	try{         mbProfile.flexibleNationality = Boolean.valueOf(params.flexibleNationality) } catch(Exception e){}
-	try{         mbProfile.flexibleOrigin = Boolean.valueOf(params.flexibleOrigin) } catch(Exception e){}
+	try{         mbProfile.flexibleCulturalInfluence = Boolean.valueOf(params.flexibleCulturalInfluence) } catch(Exception e){}
 	try{         mbProfile.flexibleVarna = Boolean.valueOf(params.flexibleVarna) } catch(Exception e){}
 	try{         mbProfile.flexibleCategory = Boolean.valueOf(params.flexibleCategory) } catch(Exception e){}
 	try{         mbProfile.flexibleCaste = Boolean.valueOf(params.flexibleCaste) } catch(Exception e){}
@@ -226,7 +227,7 @@ class MbService {
 	try{         mbProfile.prefSpMaster=params.prefSpMaster } catch(Exception e){}
 	try{         mbProfile.prefCentre=params.prefCentre } catch(Exception e){}
 	try{         mbProfile.prefNationality=params.prefNationality } catch(Exception e){}
-	try{         mbProfile.prefOrigin=params.prefOrigin } catch(Exception e){}
+	try{         mbProfile.prefCulturalInfluence=params.prefCulturalInfluence } catch(Exception e){}
 	try{         mbProfile.prefVarna=params.prefVarna } catch(Exception e){}
 	try{         mbProfile.prefCategory=params.prefCategory } catch(Exception e){}
 	try{         mbProfile.prefCaste=params.prefCaste } catch(Exception e){}

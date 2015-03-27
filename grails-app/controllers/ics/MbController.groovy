@@ -277,7 +277,7 @@ def showImage = {
         if(mbprofile)
         {
 		result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
-			eq('workflowStatus','AVAILABLE')
+			eq('workflowStatus','APPROVED')
 		    ne('id',mbprofile.id)
 
 		    //check for opposite gender

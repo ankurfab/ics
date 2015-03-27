@@ -101,6 +101,8 @@ class MbProfile {
 	flexibleLangknown(nullable: true)
 	prefManglik(nullable: true,maxSize: 40)
 	flexibleManglik(nullable: true)
+    prefCulturalInfluence(nullable: true,maxSize: 40)
+    flexibleCulturalInfluence(nullable: true)
 	settleAbroadWorkingWife(nullable: true, maxSize: 10)
 	keenDevProfile(nullable: true,maxSize: 80)
 	primdepMB(nullable: true,maxSize: 60)
@@ -111,13 +113,14 @@ class MbProfile {
 	physicalMental(nullable: true)
 	depLifelong(nullable: true)
 	personalInfo(nullable: true)
-    otherExpectations(nullable:true)
+    otherExpectations(nullable:true,maxSize: 500)
     noFamilyMembers(nullable: true)
     otherFamilyMember(nullable: true)
     languagesKnown(nullable: true,maxSize: 80)
     maritalStatus(nullable:true,maxSize: 20)
     devotionalCulture(nullable: true)
     weight(nullable: true)
+    culturalInfluence(nullable: true)
     }
 
     static mapping={
@@ -243,6 +246,8 @@ class MbProfile {
     Boolean flexibleLangknown
     String prefManglik
     Boolean flexibleManglik
+    String prefCulturalInfluence
+    Boolean flexibleCulturalInfluence
     String settleAbroadWorkingWife
     String keenDevProfile
     String primdepMB
@@ -254,6 +259,7 @@ class MbProfile {
     String depLifelong
     String personalInfo
     String otherExpectations
+    String culturalInfluence
 
 
     Date dateCreated

@@ -37,28 +37,11 @@
 <g:form name="expectationsForm" id="expectationsForm">
     <g:hiddenField name="mbProfileId" value="${mbProfile?.id}"/>
     <g:hiddenField name="mbprofileid" value="${mbProfile?.id}"/>
-	%{--<fieldset>
-            <table id="genericSearchTab">
-                <tr>
-                    <td>Attribute</td>
-                    <td>
-                        <g:select name="attrName"
-                                  from="${mbproperties*.name}"
-                                  value=""/>
-                    </td>
-                    <td>Value</td>
-                    <td>
-			<g:textField name="attrValue" value="" placeholder="Please enter value to search"/>
-		    </td>
-		  </tr>
-		</table>
-	</fieldset>--}%
-
 	<!--Ignore Expectations:<g:checkBox name="showAll" value="${false}" />-->
 	<!--Flexibile on all expectations:<g:checkBox name="checkboxAllFlexible" value="${false}" />-->
 	<!--Flexibile on no expectations:<g:checkBox name="checkboxNoneFlexible" value="${false}" />-->
 	
-	Flexibile: <g:radioGroup name="radioFlex" labels="['None','All']" values="['NONE','ALL']" >
+	Flexibile: <g:radioGroup name="radioFlex" labels="['None','All','Default']" values="['NONE','ALL','DEFAULT']" >
 	<span>${it.radio} ${it.label}</span>
 	</g:radioGroup>
 
@@ -132,23 +115,6 @@
                     </td>
                 </tr>
                 <tr class="prop">
-                    <td valign="top" class="name">
-                        <label for="prefOrigin">Preferred State of Birth</label>
-                    </td>
-                    <td valign="top" class="value">
-                        <g:select name="prefOrigin" multiple="multiple"
-                                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
-                                  value="${mbProfile?.prefOrigin}"/>
-                    </td>
-                    <td valign="top" class="name">
-                        <label for="flexibleOrigin">Flexible :</label>
-                    </td>
-                    <td>
-                        <g:radioGroup name="flexibleOrigin" labels="['No', 'Yes']" values="[false, true]"
-                                      value="${mbProfile?.flexibleOrigin}">
-                            <span>${it.radio} ${it.label}</span>
-                        </g:radioGroup>
-                    </td>
                     <td valign="top" class="name">
                         <label for="prefVarna">Preferred  Varna:</label>
                     </td>
@@ -627,6 +593,8 @@
             	$("input:radio[name^=flexible][value ='true']").prop('checked', true);
             if(toggleValue=='NONE')
             	$("input:radio[name^=flexible][value ='false']").prop('checked', true);
+            if(toggleValue=='DEFAULT')
+                $("#expectationsForm")[0].reset();
         }
     );          
 
