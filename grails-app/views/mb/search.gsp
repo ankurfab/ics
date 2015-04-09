@@ -7,6 +7,10 @@
 		<meta name="layout" content="main">
 		<title>MB Profile Search</title>
 		<r:require module="grid" />
+        <r:require module="jqui"/>
+        <r:require module="jqval"/>
+        <r:require module="ajaxform"/>
+        <r:require module="multiselect"/>
 	</head>
 	<body>
 		<div class="nav">
@@ -119,7 +123,7 @@
                         <label for="prefVarna">Preferred  Varna:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefVarna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra','Not Known']}" multiple="multiple"
+                        <g:select name="prefVarna" class="multiple" multiple="multiple" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra','Not Known']}"
                                   value="${mbProfile?.prefVarna}"/>
                     </td>
                     <td valign="top" class="name">
@@ -131,14 +135,31 @@
                             <span>${it.radio} ${it.label}</span>
                         </g:radioGroup>
                     </td>
+                    <td valign="top" class="name">
+                        <label for="prefCulturalInfluence">Preferred<br>Cultural Influence</label>
+                    </td>
+                    <td valign="top" class="value">
+                        <g:select class="multiple" name="prefCulturalInfluence" multiple="multiple"
+                                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                                  value="${mbProfile?.prefCulturalInfluence}"/>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleCulturalInfluence">Flexible:</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleCulturalInfluence" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleCulturalInfluence}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
                 </tr>
                 <tr class="prop">
                     <td valign="top" class="name">
                         <label for="prefCategory">Preferred Category:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefCategory"
-                                  from="${['Open','Other Backward Class','Backward Class','Scheduled Caste','Scheduled Tribe','Nomadic Tribes']}"
+                        <g:select name="prefCategory" class="multiple" multiple="multiple"
+                                  from="${['Open', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes','Others']}"
                                   value="${mbProfile?.prefCategory}"/>
                     </td>
                     <td valign="top" class="name">
@@ -205,9 +226,8 @@
                         <label for="prefCandIncome">Preferred Candidate Income:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefCandIncome"
-                                  from="${['Receiving Stipend', 'Above 1 lakh', 'Above 2 lakhs', 'Above 3 lakhs', 'Above 4 lakhs', 'Above 5 lakhs', 'Above 6 lakhs', 'Above 7 lakhs', 'Above 8 lakhs', 'Above 9 lakhs', 'Above 10 lakhs', 'Above 11 lakhs', 'Above 12 lakhs', 'Above 13 lakhs', 'Above 14 lakhs', 'Above 15 lakhs', 'Above 16 lakhs']}"
-                                  value="${mbProfile?.prefCandIncome}"/>
+                        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome?.split(" - ")[0]}" data-max="${mbProfile?.prefCandIncome?.split(" - ")[1]}"><span> Lakhs Per Annum</span>
+                        <div class="slider-range"></div>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleCandidateIncome">Flexible :</label>
@@ -222,9 +242,9 @@
                         <label for="prefLangKnown">Preferred Languages Known:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefLangKnown" multiple="multiple"
+                        <g:select class="multiple" name="prefLangKnown" multiple="multiple"
                                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
-                                  value="${mbProfile?.prefLangKnown}"/>
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.languagesKnown).toList()}"/>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleLangknown">Flexible :</label>
@@ -241,9 +261,8 @@
                         <label for="prefAgeDiff">Preferred Age difference:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefAgeDiff"
-                                  from="${['More or less same', '6 months', '1 year', '2 years', '3 years', '4 years', '5 years', '6 years', '7 years', '8 years', '9 years', '10 years']}"
-                                  value="${mbProfile?.prefAgeDiff}"/>
+                        <input type="text" class="slider-input" name="prefAgeDiff" id="prefAgeDiff" readonly data-min-val="0" data-max-val="10" data-min="${mbProfile?.prefAgeDiff?.split(" - ")[0]}" data-max="${mbProfile?.prefAgeDiff?.split(" - ")[1]}"><span> Years</span>
+                        <div class="slider-range"></div>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleAgediff">Flexible :</label>
@@ -258,9 +277,8 @@
                         <label for="prefHeight">Preferred Height:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefHeight"
-                                  from="${['less than 5 feet', 'Between 5 to 5.4', 'Between 5.5 to 5.8', 'Between 5.9 to 6.0', 'Above 6 feet']}"
-                                  value="${mbProfile?.prefHeight}" optionKey=""/>
+                        <input type="text" class="slider-input" name="prefHeight" id="prefHeight" readonly data-min-val="53" data-max-val="77" data-min="${mbProfile?.prefHeight?.split(" - ")[0]}" data-max="${mbProfile?.prefHeight?.split(" - ")[1]}">
+                        <div class="slider-range"></div>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleHeight">Flexible :</label>
@@ -311,7 +329,7 @@
                         <label for="prefManglik">Manglik preferences:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefManglik" from="${['Not Manglik', 'Low', 'Medium', 'High']}" multiple="multiple"
+                        <g:select name="prefManglik" class="multiple" multiple="multiple" from="${['Not Manglik', 'Low', 'Medium', 'High']}"
                                   value="${mbProfile?.prefManglik}"/>
                     </td>
                     <td valign="top" class="name">
@@ -596,8 +614,40 @@
             if(toggleValue=='DEFAULT')
                 $("#expectationsForm")[0].reset();
         }
-    );          
+    );
+      $('.multiple').multiselect({
+          noneSelectedText: 'Select One',
+          checkAllText: 'Select All',
+          uncheckAllText: 'Select None',
+          selectedList: 40
+      });
 
+      $(".slider-range").each(function() {
+          var slideInput = $(this).siblings();
+          $(this).slider({
+              range: true,
+              min: slideInput.data('min-val'),
+              max: slideInput.data('max-val'),
+              values: [slideInput.data('min'), slideInput.data('max')],
+              step: slideInput.data('step') || 1,
+              slide: function (event, ui) {
+                  var slideInput = $(this).siblings();
+                  if(slideInput.attr('id')=='prefHeight'){
+                      slideInput.val(Math.floor(ui.values[0]/12) + '"' + ui.values[0]%12 + "'" + " - " + Math.floor(ui.values[1]/12) + '"' + ui.values[1]%12 + "'");
+                  }
+                  else{
+                      slideInput.val(ui.values[0] + " - " + ui.values[1]);
+                  }
+              }
+          });
+          if(slideInput.attr('id')=='prefHeight'){
+              slideInput.val(Math.floor($(this).slider( "values", 0 )/12) + '"' + $(this).slider( "values", 0 )%12 + "'" + " - " + Math.floor($(this).slider( "values", 1 )/12) + '"' + $(this).slider( "values", 1 )%12 + "'");
+          }
+          else{
+              slideInput.val($(this).slider("values",0) + " - " + $(this).slider("values",1));
+          }
+          slideInput.attr('size',slideInput.val().length);
+        });
   
   });
 </script>

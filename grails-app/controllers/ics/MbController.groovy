@@ -25,7 +25,7 @@ class MbController {
     def editProfile() {
     	Individual cand = Individual.get(session.individualid)
     	def mbProfile = MbProfile.findByCandidate(cand)
-    	[mbProfile: mbProfile]
+        [mbProfile: mbProfile]
     }
 
     def save = {
@@ -141,7 +141,7 @@ def uploadImage = {
 	  // Save the image and mime type
 	  switch (params.type) {
 	  case 'fv':
-		  f = request.getFile('imgFile')
+		  f = request.getFile('imgFileFV')
 		  individual.avatar = f.getBytes()
 		  individual.avatarType = f.getContentType()
 		  log.info("fv File uploaded: " + individual.avatarType)

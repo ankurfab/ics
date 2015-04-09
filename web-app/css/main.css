@@ -412,3 +412,12 @@ height: 2.5em;
 	left:880px;
 	top:60px;
 }
+
+.slider-input{
+    border:0;
+    color:#000000;
+    background: transparent;
+}
+.slider-range{
+    width: 50%;
+}

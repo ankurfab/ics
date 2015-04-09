@@ -113,7 +113,7 @@ class MbService {
 	try{         mbProfile.candidate.height=(Integer.parseInt(params.heightInFt)*12) + Integer.parseInt(params.heightInInch) } catch(Exception e){}
     try{         mbProfile.weight=Integer.parseInt(params.weight) } catch(Exception e){}
     try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
-    try{         mbProfile.languagesKnown=params.languagesKnown } catch(Exception e){}
+    try{         mbProfile.languagesKnown=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.languagesKnown)} catch(Exception e){}
 	try{         mbProfile.candidate.income=params.candidateIncome //change the type of the column in db
 	} catch(Exception e){}
 	try{         mbProfile.horoscopeToBeMatched=params.horoscopeToBeMatched } catch(Exception e){}
@@ -235,7 +235,7 @@ class MbService {
 	try{         mbProfile.prefeducationCategory=params.prefeducationCategory } catch(Exception e){}
 	try{         mbProfile.prefqualification=params.prefqualification } catch(Exception e){}
 	try{         mbProfile.prefAgeDiff=params.prefAgeDiff } catch(Exception e){}
-	try{         mbProfile.prefHeight=params.prefHeight } catch(Exception e){}
+	try{         mbProfile.prefHeight=getHeight(params.prefHeight.split(" - ")[0]) + " - " + getHeight(params.prefHeight.split(" - ")[1])} catch(Exception e){}
 	try{         mbProfile.prefLooks=params.prefLooks } catch(Exception e){}
 	try{         mbProfile.prefCandIncome=params.prefCandIncome } catch(Exception e){}
 	try{         mbProfile.prefLangKnown=params.prefLangKnown } catch(Exception e){}
@@ -243,7 +243,7 @@ class MbService {
     try{         mbProfile.otherExpectations=params.otherExpectations } catch(Exception e){}
 
         //step 6
-	try{         mbProfile.keenDevProfile=params.keenDevProfile } catch(Exception e){}
+	try{         mbProfile.keenDevProfile=params.keenDevprofile } catch(Exception e){}
 	try{         mbProfile.primdepMB=params.primdepMB } catch(Exception e){}
 	try{         mbProfile.regotherMB=params.regotherMB } catch(Exception e){}
 	try{         mbProfile.parentsSearch=params.parentsSearch } catch(Exception e){}
@@ -671,6 +671,12 @@ class MbService {
     		else
     			return "Workflow status updated."
     	}
+    }
+
+    def getHeight(String height){
+        def ft = Integer.parseInt(height.split('"')[0])
+        def inch = Integer.parseInt(height.split('"')[1].replace("'",""))
+        return (ft*12 + inch)
     }
     
 
