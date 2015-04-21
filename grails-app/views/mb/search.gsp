@@ -35,7 +35,12 @@
                   optionKey="id" optionValue="candidate"
             />
 		</div>--}%
-
+    <div>
+        <!-- table tag will hold our grid -->
+        <table id="prospect_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
+        <!-- pager will hold our paginator -->
+        <div id="prospect_list_pager" class="scroll" style="text-align:center;"></div>
+    </div>
 <g:set var="mbclass" value="${new DefaultGrailsDomainClass(ics.MbProfile.class)}" />
 <g:set var="mbproperties" value="${mbclass.persistentProperties}" />
 <g:form name="expectationsForm" id="expectationsForm">
@@ -44,11 +49,11 @@
 	<!--Ignore Expectations:<g:checkBox name="showAll" value="${false}" />-->
 	<!--Flexibile on all expectations:<g:checkBox name="checkboxAllFlexible" value="${false}" />-->
 	<!--Flexibile on no expectations:<g:checkBox name="checkboxNoneFlexible" value="${false}" />-->
-	
-	Flexibile: <g:radioGroup name="radioFlex" labels="['None','All','Default']" values="['NONE','ALL','DEFAULT']" >
+	<div style="margin:20px">
+	Flexibile: <g:radioGroup name="radioFlex" labels="['None','All','Default']" values="['NONE','ALL','DEFAULT']" value="DEFAULT" >
 	<span>${it.radio} ${it.label}</span>
 	</g:radioGroup>
-
+    </div>
 	<fieldset>
             <table id="searchExpectations">
                 <tr class="prop">
@@ -124,7 +129,7 @@
                     </td>
                     <td valign="top" class="value">
                         <g:select name="prefVarna" class="multiple" multiple="multiple" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra','Not Known']}"
-                                  value="${mbProfile?.prefVarna}"/>
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefVarna).toList()}"/>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleVarna">Flexible :</label>
@@ -140,8 +145,8 @@
                     </td>
                     <td valign="top" class="value">
                         <g:select class="multiple" name="prefCulturalInfluence" multiple="multiple"
-                                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
-                                  value="${mbProfile?.prefCulturalInfluence}"/>
+                                  from="${['Assamese','Andhraite','Bengali','Bihari','Gujarati','Himachal Pradesh','Kannadiga','Kasmiri','Konkani','Keralite','Madhya Pradesh','Manipuri','Maharashtrian','Marwari','Nepali','Oriyan','Punjabi','Sindhi','Tamilian','Typical North Indian','Typical South Indian','Typical Cosmopolitan','Typical Village','Uttar Pradesh','Urdu','Western']}"
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCulturalInfluence).toList()}"/>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleCulturalInfluence">Flexible:</label>
@@ -160,7 +165,7 @@
                     <td valign="top" class="value">
                         <g:select name="prefCategory" class="multiple" multiple="multiple"
                                   from="${['Open', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes','Others']}"
-                                  value="${mbProfile?.prefCategory}"/>
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCategory).toList()}"/>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleCategory">Flexible :</label>
@@ -207,9 +212,10 @@
                         <label for="prefeducationCategory">Preferred Education Category:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefeducationCategory"
-                                  from="${['SSC(or equivalent)&above', 'HSC(or equivalent)&above', 'Diploma &above', 'Graduate &above', 'Post Graduate&above', 'Doctorate']}"
+                        <g:select name="prefeducationCategory" style="width: 80%"
+                                  from="${['SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                                   value="${mbProfile?.prefeducationCategory}"/>
+                        <span> & above</span>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleEducationCat">Flexible :</label>
@@ -226,7 +232,7 @@
                         <label for="prefCandIncome">Preferred Candidate Income:</label>
                     </td>
                     <td valign="top" class="value">
-                        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome?.split(" - ")[0]}" data-max="${mbProfile?.prefCandIncome?.split(" - ")[1]}"><span> Lakhs Per Annum</span>
+                        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:1}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
                         <div class="slider-range"></div>
                     </td>
                     <td valign="top" class="name">
@@ -261,7 +267,7 @@
                         <label for="prefAgeDiff">Preferred Age difference:</label>
                     </td>
                     <td valign="top" class="value">
-                        <input type="text" class="slider-input" name="prefAgeDiff" id="prefAgeDiff" readonly data-min-val="0" data-max-val="10" data-min="${mbProfile?.prefAgeDiff?.split(" - ")[0]}" data-max="${mbProfile?.prefAgeDiff?.split(" - ")[1]}"><span> Years</span>
+                        <input type="text" class="slider-input" name="prefAgeDiff" id="prefAgeDiff" readonly data-min-val="0" data-max-val="10" data-min="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[0]: 0}" data-max="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[1]:10}"><span> Years</span>
                         <div class="slider-range"></div>
                     </td>
                     <td valign="top" class="name">
@@ -277,7 +283,7 @@
                         <label for="prefHeight">Preferred Height:</label>
                     </td>
                     <td valign="top" class="value">
-                        <input type="text" class="slider-input" name="prefHeight" id="prefHeight" readonly data-min-val="53" data-max-val="77" data-min="${mbProfile?.prefHeight?.split(" - ")[0]}" data-max="${mbProfile?.prefHeight?.split(" - ")[1]}">
+                        <input type="text" class="slider-input" name="prefHeight" id="prefHeight" readonly data-min-val="53" data-max-val="77" data-min="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[0]:53}" data-max="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[1]:77}">
                         <div class="slider-range"></div>
                     </td>
                     <td valign="top" class="name">
@@ -330,7 +336,7 @@
                     </td>
                     <td valign="top" class="value">
                         <g:select name="prefManglik" class="multiple" multiple="multiple" from="${['Not Manglik', 'Low', 'Medium', 'High']}"
-                                  value="${mbProfile?.prefManglik}"/>
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefManglik).toList()}"/>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleManglik">Flexible :</label>
@@ -371,13 +377,6 @@
 			<!-- pager will hold our paginator -->
 			<div id="profile_list_pager" class="scroll" style="text-align:center;"></div>
 	    </div>
-            <div>
-			<!-- table tag will hold our grid -->
-			<table id="prospect_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
-			<!-- pager will hold our paginator -->
-			<div id="prospect_list_pager" class="scroll" style="text-align:center;"></div>
-	    </div>
-		
 
 <script type="text/javascript">
   $(document).ready(function () {
@@ -387,8 +386,57 @@
              data:{id: $(this).val()}
           });
       });
+      jQuery("#prospect_list").jqGrid({
+          url:'jq_mbProspect_list',
+          postData:{
+              candidateid:function(){return $('#mbprofileid').val();},
+          },
+          datatype: "json",
+          colNames:['Photo','Name','WorkflowStatus','Stage','CandidateStatus','CandidateReason','CandidateDate','MbStatus','MbReason','MbDate','Id'],
+          colModel:[
+              {
+                  name: 'photo',
+                  formatter: function (cellvalue, options, rowObject) {
+                      return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>';
+                  }
+              },
+              {name:'name',
+                  formatter:'showlink',
+                  formatoptions:{baseLinkUrl:'show'}},
+              {name:'workflowStatus'},
+              {name:'stage'},
+              {name:'candidateStatus'},
+              {name:'candidateReason'},
+              {name:'candidateDate'},
+              {name:'mbStatus'},
+              {name:'mbReason'},
+              {name:'mbDate'},
+              {name:'id',hidden:true}
+          ],
+          rowNum:10,
+          rowList:[10,20,30,40,50,100,200],
+          pager: '#prospect_list_pager',
+          viewrecords: true,
+          sortname: 'id',
+          sortorder: "asc",
+          width: 1200,
+          height: "100%",
+          multiselect: true,
+          caption:"Prospect List"
+      });
+      $("#prospect_list").jqGrid('filterToolbar',{autosearch:true});
+      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager",{edit:false,add:false,del:true,search:false});
+      $("#prospect_list").jqGrid('inlineNav',"#prospect_list_pager",
+              {
+                  edit: false,
+                  add: false,
+                  save: false,
+                  cancel: false
+              });
+      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Propose", buttonicon:"ui-icon-person", onClickButton:propose, position: "last", title:"Propose", cursor: "pointer"});
+      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Announce", buttonicon:"ui-icon-flag", onClickButton:announce, position: "last", title:"Announce", cursor: "pointer"});
 
-	 $( "#btnSearch" )
+      $( "#btnSearch" )
 	.button()
 	.click(function( event ) {
 		event.preventDefault();
@@ -434,57 +482,6 @@
                              cancel: false
                          })
                  $("#profile_list").jqGrid('navGrid',"#profile_list_pager").jqGrid('navButtonAdd',"#profile_list_pager",{caption:"Suggest", buttonicon:"ui-icon-person", onClickButton:suggest, position: "last", title:"Suggest", cursor: "pointer"});
-
-                 jQuery("#prospect_list").jqGrid({
-                     url:'jq_mbProspect_list',
-                     postData:{
-                         candidateid:function(){return $('#mbprofileid').val();},
-                     },
-                     datatype: "json",
-                     colNames:['Photo','Name','WorkflowStatus','Stage','CandidateStatus','CandidateReason','CandidateDate','MbStatus','MbReason','MbDate','Id'],
-                     colModel:[
-			{
-			name: 'photo',
-			formatter: function (cellvalue, options, rowObject) {
-				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>'; 
-				}
-			},				
-                         {name:'name',
-			formatter:'showlink', 
-             		formatoptions:{baseLinkUrl:'show'}},                                                  
-                         {name:'workflowStatus'},
-                         {name:'stage'},
-                         {name:'candidateStatus'},
-                         {name:'candidateReason'},
-                         {name:'candidateDate'},
-                         {name:'mbStatus'},
-                         {name:'mbReason'},
-                         {name:'mbDate'},
-                         {name:'id',hidden:true}
-                     ],
-                     rowNum:10,
-                     rowList:[10,20,30,40,50,100,200],
-                     pager: '#prospect_list_pager',
-                     viewrecords: true,
-                     sortname: 'id',
-                     sortorder: "asc",
-                     width: 1200,
-                     height: "100%",
-                     multiselect: true,
-                     caption:"Prospect List"
-                 });
-                 $("#prospect_list").jqGrid('filterToolbar',{autosearch:true});
-                 $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager",{edit:false,add:false,del:true,search:false});
-                 $("#prospect_list").jqGrid('inlineNav',"#prospect_list_pager",
-                         {
-                             edit: false,
-                             add: false,
-                             save: false,
-                             cancel: false
-                         });
-                 $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Propose", buttonicon:"ui-icon-person", onClickButton:propose, position: "last", title:"Propose", cursor: "pointer"});
-                 $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Announce", buttonicon:"ui-icon-flag", onClickButton:announce, position: "last", title:"Announce", cursor: "pointer"});
-                         
 	});
 
 
@@ -611,16 +608,31 @@
             	$("input:radio[name^=flexible][value ='true']").prop('checked', true);
             if(toggleValue=='NONE')
             	$("input:radio[name^=flexible][value ='false']").prop('checked', true);
-            if(toggleValue=='DEFAULT')
+            if(toggleValue=='DEFAULT') {
                 $("#expectationsForm")[0].reset();
+                setTimeout(function(){
+                    $('.multiple').multiselect({
+                        noneSelectedText: 'Select One',
+                        menuWidth: 225,
+                        checkAllText: 'Select All',
+                        uncheckAllText: 'Select None',
+                        selectedList: 40,
+                        minWidth: 300
+                    });
+                    $('.ui-multiselect').css('width', '300px');
+                },10);
+            }
         }
     );
       $('.multiple').multiselect({
           noneSelectedText: 'Select One',
+          menuWidth: 225,
           checkAllText: 'Select All',
           uncheckAllText: 'Select None',
-          selectedList: 40
+          selectedList: 40,
       });
+
+      $('.ui-multiselect').css('width', '300px');
 
       $(".slider-range").each(function() {
           var slideInput = $(this).siblings();

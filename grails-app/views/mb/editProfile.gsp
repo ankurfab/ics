@@ -178,7 +178,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="originState"
-                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                  from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.candidate?.origin}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
@@ -258,7 +258,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="candidateIncome"
-                  from="${['Receiving Stipend', 'Less than 2 lakhs', 'Between 2 to 3.99 lakhs', 'Between 4 to 5.99 lakhs', 'Between 6 to 7.99 lakhs', 'Between 8 to 9.99 lakhs', 'Between 10 to 11.99 lakhs', 'Between 12 to 13.99 lakhs', 'Between 14 to 15.99 lakhs', 'Above 16 lakhs']}"
+                  from="${['1 Lakhs','2 Lakhs','3 Lakhs','4 Lakhs','5 Lakhs','6 Lakhs','7 Lakhs','8 Lakhs','9 Lakhs','10 Lakhs','11 Lakhs','12 Lakhs','13 Lakhs','14 Lakhs','15 Lakhs','16 Lakhs','17 Lakhs','18 Lakhs','19 Lakhs','20 Lakhs']}"
                   value="${mbProfile?.candidate?.income}" noSelection="['':'Select One']"/>
     </td>
 </tr>
@@ -297,7 +297,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="state"
-                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                  from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${candAddr?.state?.name}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
@@ -377,7 +377,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="nativeState" required="required"
-                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                  from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.nativeState}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
@@ -399,7 +399,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="familystate"
-                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                  from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.familyAddress?.state?.name}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
@@ -791,7 +791,7 @@
                 </td>
                 <td valign="top" class="value">
                     <g:select name="compState"
-                              from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                              from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                               value="${mbProfile?.companyAddress?.state?.name}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
@@ -1022,7 +1022,7 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefChanting">Preferably<br>Chanting:</label>
+        <label for="prefChanting">Preferably Chanting:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="prefChanting"
@@ -1030,7 +1030,7 @@
                   value="${mbProfile?.prefChanting}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleChanting">I am flexible<br> on Chanting:</label>
+        <label for="flexibleChanting">I am flexible on Chanting:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleChanting" labels="['No', 'Yes']" values="[false, true]"
@@ -1041,14 +1041,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefSpMaster">Preferred<br>Aspiring<br>Spiritual Master:</label>
+        <label for="prefSpMaster">Preferred Spiritual Master:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="prefSpMaster" placeholder="Enter Name of Preferred aspiring Spiritual Master of Partner"
+        <g:textField name="prefSpMaster" placeholder="Enter Name of Preferred Spiritual Master of Partner"
                      maxlength="40" value="${mbProfile?.prefSpMaster}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleSpMaster">I am flexible<br> on Aspiring <br>Spiritual master:</label>
+        <label for="flexibleSpMaster">I am flexible on Spiritual master:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleSpMaster" labels="['No', 'Yes']" values="[false, true]"
@@ -1059,13 +1059,13 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefCentre">Preferred<br>Centre:</label>
+        <label for="prefCentre">Preferred Centre:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="prefCentre" placeholder="Enter ISKCON Centre Name here" value="${mbProfile?.prefCentre}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleOnCentre">I am flexible<br> on Centre:</label>
+        <label for="flexibleOnCentre">I am flexible  on Centre:</label>
     </td>
     <td>
         <g:radioGroup name='flexibleOnCentre' labels="['No', 'Yes']" values="[false, true]"
@@ -1077,13 +1077,13 @@
 
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefNationality">Preferred<br>Nationality:</label>
+        <label for="prefNationality">Preferred Nationality:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="prefNationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.prefNationality}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleNationality">I am flexible<br> on Nationality:</label>
+        <label for="flexibleNationality">I am flexible  on Nationality:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleNationality" labels="['No', 'Yes']" values="[false, true]"
@@ -1094,15 +1094,15 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefCulturalInfluence">Preferred<br>Cultural Influence</label>
+        <label for="prefCulturalInfluence">Preferred Cultural Influence</label>
     </td>
     <td valign="top" class="value">
         <g:select class="multiple" name="prefCulturalInfluence" multiple="multiple"
-                  from="${['Andaman&Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
-                  value="${mbProfile?.prefCulturalInfluence}"/>
+                  from="${['Assamese','Andhraite','Bengali','Bihari','Gujarati','Himachal Pradesh','Kannadiga','Kasmiri','Konkani','Keralite','Madhya Pradesh','Manipuri','Maharashtrian','Marwari','Nepali','Oriyan','Punjabi','Sindhi','Tamilian','Typical North Indian','Typical South Indian','Typical Cosmopolitan','Typical Village','Uttar Pradesh','Urdu','Western']}"
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCulturalInfluence).toList()}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleCulturalInfluence">I am flexible<br>Cultural Influence</label>
+        <label for="flexibleCulturalInfluence">I am flexible Cultural Influence</label>
     </td>
     <td>
         <g:radioGroup name="flexibleCulturalInfluence" labels="['No', 'Yes']" values="[false, true]"
@@ -1113,14 +1113,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefVarna">Preferred<br> Varna:</label>
+        <label for="prefVarna">Preferred  Varna:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="prefVarna" class="multiple" multiple="multiple" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra','Not Known']}"
-                  value="${mbProfile?.prefVarna}"/>
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefVarna).toList()}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleVarna">I am flexible<br> on Varna:</label>
+        <label for="flexibleVarna">I am flexible  on Varna:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleVarna" labels="['No', 'Yes']" values="[false, true]"
@@ -1131,15 +1131,15 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefCategory">Preferred<br>Category:</label>
+        <label for="prefCategory">Preferred Category:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="prefCategory" class="multiple" multiple="multiple"
                   from="${['Open', 'Backward Class', 'Other Backward Class', 'Scheduled Caste', 'Scheduled Tribe', 'Nomadic Tribes','Others']}"
-                  value="${mbProfile?.prefCategory}"/>
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCategory).toList()}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleCategory">I am flexible<br> on Category:</label>
+        <label for="flexibleCategory">I am flexible  on Category:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleCategory" labels="['No', 'Yes']" values="[false, true]"
@@ -1150,13 +1150,13 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefCaste">Preferred<br>Caste:</label>
+        <label for="prefCaste">Preferred Caste:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="prefCaste" placeholder="Enter preferred Caste here" value="${mbProfile?.prefCaste}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleCaste">I am flexible<br> on Caste:</label>
+        <label for="flexibleCaste">I am flexible  on Caste:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
@@ -1167,13 +1167,13 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefsubCaste">Preferred<br>Sub-Caste:</label>
+        <label for="prefsubCaste">Preferred Sub-Caste:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="prefsubCaste" placeholder="Enter preferred Sub Caste" value="${mbProfile?.prefsubCaste}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleSubcaste">I am flexible<br> on Sub-Caste:</label>
+        <label for="flexibleSubcaste">I am flexible  on Sub-Caste:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleSubcaste" labels="['No', 'Yes']" values="[false, true]"
@@ -1185,15 +1185,16 @@
 
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefeducationCategory">Preferred<br>Education Category:</label>
+        <label for="prefeducationCategory">Preferred Education Category:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="prefeducationCategory"
-                  from="${['SSC(or equivalent)&above', 'HSC(or equivalent)&above', 'Diploma &above', 'Graduate &above', 'Post Graduate&above', 'Doctorate']}"
+                  from="${['SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                   value="${mbProfile?.prefeducationCategory}"/>
+        <span> & above</span>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleEducationCat">I am flexible<br> on Education Category:</label>
+        <label for="flexibleEducationCat">I am flexible  on Education Category:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleEducationCat" labels="['No', 'Yes']" values="[false, true]"
@@ -1204,14 +1205,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefqualification">Preferred<br>Qualifications:</label>
+        <label for="prefqualification">Preferred Qualifications:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="prefqualification" placeholder="Enter your qualification here"
                      value="${mbProfile?.prefqualification}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleQualifications">I am flexible<br> on Qualifications:</label>
+        <label for="flexibleQualifications">I am flexible  on Qualifications:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleQualifications" labels="['No', 'Yes']" values="[false, true]"
@@ -1223,14 +1224,14 @@
 
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefAgeDiff">Preferred<br>Age difference:</label>
+        <label for="prefAgeDiff">Preferred Age difference:</label>
     </td>
     <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefAgeDiff" id="prefAgeDiff" readonly data-min-val="0" data-max-val="10" data-min="${mbProfile?.prefAgeDiff?.split(" - ")[0]}" data-max="${mbProfile?.prefAgeDiff?.split(" - ")[1]}"><span> Years</span>
+        <input type="text" class="slider-input" name="prefAgeDiff" id="prefAgeDiff" readonly data-min-val="0" data-max-val="10" data-min="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[0]: 0}" data-max="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[1]:10}"><span> Years</span>
         <div class="slider-range"></div>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleAgediff">I am flexible<br> on Age difference:</label>
+        <label for="flexibleAgediff">I am flexible  on Age difference:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleAgediff" labels="['No', 'Yes']" values="[false, true]"
@@ -1241,14 +1242,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefHeight">Preferred<br>Height:</label>
+        <label for="prefHeight">Preferred Height:</label>
     </td>
     <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefHeight" id="prefHeight" readonly data-min-val="53" data-max-val="77" data-min="${mbProfile?.prefHeight?.split(" - ")[0]}" data-max="${mbProfile?.prefHeight?.split(" - ")[1]}">
+        <input type="text" class="slider-input" name="prefHeight" id="prefHeight" readonly data-min-val="53" data-max-val="77" data-min="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[0]:53}" data-max="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[1]:77}">
         <div class="slider-range"></div>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleHeight">I am flexible<br> on Height:</label>
+        <label for="flexibleHeight">I am flexible  on Height:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleHeight" labels="['No', 'Yes']" values="[false, true]"
@@ -1259,14 +1260,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefLooks">Preferred<br>Looks:</label>
+        <label for="prefLooks">Preferred Looks:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="prefLooks" placeholder="Enter any specific looks you prefer"
                      value="${mbProfile?.prefLooks}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleLooks">I am flexible<br> on Looks:</label>
+        <label for="flexibleLooks">I am flexible  on Looks:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleLooks" labels="['No', 'Yes']" values="[false, true]"
@@ -1277,14 +1278,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefCandIncome">Preferred<br>Candidate Income:</label>
+        <label for="prefCandIncome">Preferred Candidate Income:</label>
     </td>
     <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome?.split(" - ")[0]}" data-max="${mbProfile?.prefCandIncome?.split(" - ")[1]}"><span> Lakhs Per Annum</span>
+        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:1}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
         <div class="slider-range"></div>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleCandidateIncome">I am flexible<br> on Candidate Income:</label>
+        <label for="flexibleCandidateIncome">I am flexible  on Candidate Income:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleCandidateIncome" labels="['No', 'Yes']" values="[false, true]"
@@ -1295,15 +1296,15 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="PrefLangKnown">Preferred<br>Languages Known:</label>
+        <label for="prefLangKnown">Preferred Languages Known:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="PrefLangKnown" class="multiple" multiple="multiple"
+        <g:select name="prefLangKnown" class="multiple" multiple="multiple"
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
-                  value="${mbProfile?.prefLangKnown}"/>
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefLangKnown).toList()}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleLangknown">I am flexible<br> on Languages known:</label>
+        <label for="flexibleLangknown">I am flexible  on Languages known:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleLangknown" labels="['No', 'Yes']" values="[false, true]"
@@ -1314,14 +1315,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefManglik">Manglik<br>preferences:</label>
+        <label for="prefManglik">Manglik preferences:</label>
     </td>
     <td valign="top" class="value">
         <g:select name="prefManglik" class="multiple" multiple="multiple" from="${['Not Manglik', 'Low', 'Medium', 'High']}"
-                  value="${mbProfile?.prefManglik}"/>
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefManglik).toList()}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleManglik">I am flexible<br> on Manglik aspect:</label>
+        <label for="flexibleManglik">I am flexible  on Manglik aspect:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleManglik" labels="['No', 'Yes']" values="[false, true]"
@@ -1348,7 +1349,7 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="otherExpectations">Any other Expectations<br>/Remarks:</label>
+        <label for="otherExpectations">Any other Expectations /Remarks:</label>
 
     </td>
     <td valign="top" class="value">
@@ -1545,6 +1546,7 @@
 
         $('.multiple').multiselect({
             noneSelectedText: 'Select One',
+            menuWidth: 225,
             checkAllText: 'Select All',
             uncheckAllText: 'Select None',
             selectedList: 40

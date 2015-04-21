@@ -119,7 +119,7 @@ class MbProfile {
     maritalStatus(nullable:true,maxSize: 20)
     devotionalCulture(nullable: true)
     weight(nullable: true)
-    culturalInfluence(nullable: true)
+    culturalInfluence(nullable: true,maxSize: 40)
     }
 
     static mapping={

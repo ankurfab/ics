@@ -54,7 +54,7 @@ select {
    padding: 2px 2px 2px 0;
 }
 textarea {
-	width: 250px;
+	width: 215px;
 	height: 150px;
 	vertical-align: middle;
 }
@@ -257,19 +257,31 @@ th.desc a {
 #searchExpectations .prop .name {
 	padding: 5px 0 0 10px;
     text-align: left;
-    max-width: 35px;
+    max-width: 100px;
 	vertical-align: middle;
     width: auto;
 }
 
-#searchExpectations input[type="text"] {
-    width: 100%;
+#searchExpectations .prop .value {
+    padding: 5px 0 0 10px;
+    text-align: left;
+    max-width: 250px;
+    vertical-align: middle;
+    width: auto;
 }
 
+#searchExpectations input[type="text"] {
+    width: 98%;
+}
+#searchExpectations .slider-input {
+    width: auto !important;
+}
 #searchExpectations select {
     width: 100%;
 }
-
+#searchExpectations .ui-slider{
+    width: 100%;
+}
 .prop .value {
     text-align: left;
     /*width: 300px;*/
@@ -420,4 +432,11 @@ height: 2.5em;
 }
 .slider-range{
     width: 50%;
+}
+
+#step-5 .prop .name{
+    max-width: 25%;
+}
+#step-5 .prop .value{
+    max-width: 25%;
 }

@@ -227,9 +227,9 @@ class MbService {
 	try{         mbProfile.prefSpMaster=params.prefSpMaster } catch(Exception e){}
 	try{         mbProfile.prefCentre=params.prefCentre } catch(Exception e){}
 	try{         mbProfile.prefNationality=params.prefNationality } catch(Exception e){}
-	try{         mbProfile.prefCulturalInfluence=params.prefCulturalInfluence } catch(Exception e){}
-	try{         mbProfile.prefVarna=params.prefVarna } catch(Exception e){}
-	try{         mbProfile.prefCategory=params.prefCategory } catch(Exception e){}
+	try{         mbProfile.prefCulturalInfluence=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCulturalInfluence) } catch(Exception e){}
+	try{         mbProfile.prefVarna=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefVarna) } catch(Exception e){}
+	try{         mbProfile.prefCategory=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCategory) } catch(Exception e){}
 	try{         mbProfile.prefCaste=params.prefCaste } catch(Exception e){}
 	try{         mbProfile.prefsubCaste=params.prefsubCaste } catch(Exception e){}
 	try{         mbProfile.prefeducationCategory=params.prefeducationCategory } catch(Exception e){}
@@ -238,8 +238,8 @@ class MbService {
 	try{         mbProfile.prefHeight=getHeight(params.prefHeight.split(" - ")[0]) + " - " + getHeight(params.prefHeight.split(" - ")[1])} catch(Exception e){}
 	try{         mbProfile.prefLooks=params.prefLooks } catch(Exception e){}
 	try{         mbProfile.prefCandIncome=params.prefCandIncome } catch(Exception e){}
-	try{         mbProfile.prefLangKnown=params.prefLangKnown } catch(Exception e){}
-	try{         mbProfile.prefManglik=params.prefManglik } catch(Exception e){}
+	try{         mbProfile.prefLangKnown=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefLangKnown) } catch(Exception e){}
+	try{         mbProfile.prefManglik=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefManglik) } catch(Exception e){}
     try{         mbProfile.otherExpectations=params.otherExpectations } catch(Exception e){}
 
         //step 6

@@ -1,6 +1,7 @@
 package ics
 
 import grails.converters.JSON
+import groovy.time.TimeCategory
 
 class MbController {
 
@@ -277,79 +278,112 @@ def showImage = {
         if(mbprofile)
         {
 		result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
-			eq('workflowStatus','APPROVED')
-		    ne('id',mbprofile.id)
+            eq('workflowStatus', 'APPROVED')
+            ne('id', mbprofile.id)
 
-		    //check for opposite gender
-		    if(mbprofile.candidate?.isMale)
-			candidate{eq('isMale',false)}
-		    else
-			candidate{eq('isMale',true)}
-			
-		if(!params.showAll) {
+            //check for opposite gender
+            if (mbprofile.candidate?.isMale)
+                candidate { eq('isMale', false) }
+            else
+                candidate { eq('isMale', true) }
 
-		    //check for chanting preference
-		    if(params.flexibleChanting){
+            if (!params.showAll) {
 
-		    }
+                //check for chanting preference
+                if (params.flexibleChanting) {
+                }
 
-		    if(params.flexibleSpMaster=="false" && params.prefSpMaster){
-		       and {eq('spiritualMaster',params.prefSpMaster,[ignoreCase: true])}
-		    }
+                if (params.flexibleSpMaster == "false" && params.prefSpMaster) {
+                    def valList = params.prefSpMaster.split(',')
+                    and { 'in'('spiritualMaster', valList) }
+                }
 
-		    if(params.flexibleCentre=="false" && params.prefCentre){
-			def valList = params.prefCentre.split(',')
-		       and {candidate{'in'('iskconCentre',valList)}}
-		    }
+                if (params.flexibleCentre == "false" && params.prefCentre) {
+                    def valList = params.prefCentre.split(',')
+                    and { candidate { 'in'('iskconCentre', valList) } }
+                }
 
-		    if(params.flexibleNationality=="false" && params.prefNationality){
-		       and {candidate{eq('nationality',params.prefNationality,[ignoreCase: true])}}
-		    }
+                if (params.flexibleNationality == "false" && params.prefNationality) {
+                    and { candidate { eq('nationality', params.prefNationality, [ignoreCase: true]) } }
+                }
 
-		    if(params.flexibleOrigin=="false" && params.prefOrigin){
-			and {candidate{'in'('origin',params.prefOrigin)}}
-		    }
+                if (params.flexibleCulturalInfluence == "false" && params.prefCulturalInfluence) {
+                    and { 'in'('culturalInfluence', params.prefCulturalInfluence) }
+                }
 
-		    if(params.flexibleVarna=="false" && params.prefVarna){
-		       and {candidate{'in'('varna',params.prefVarna)}}
-		    }
+                if (params.flexibleVarna == "false" && params.prefVarna) {
+                    and { candidate { 'in'('varna', params.prefVarna) } }
+                }
 
-		    if(params.flexibleCategory=="false" && params.prefCategory){
-			and {eq('scstCategory',params.prefCategory,[ignoreCase: true])}
-		    }
+                if (params.flexibleCategory == "false" && params.prefCategory) {
+                    and { 'in'('scstCategory', params.prefCategory) }
+                }
 
-		    if(params.flexibleCaste=="false" && params.prefCaste){
-			def valList = params.prefCaste.split(',')
-			and {candidate{'in'('caste',valList)}}
-		    }
+                if (params.flexibleCaste == "false" && params.prefCaste) {
+                    def valList = params.prefCaste.split(',')
+                    and { candidate { 'in'('caste', valList) } }
+                }
 
-		    if(params.flexibleSubcaste=="false" && params.prefSubCaste){
-			def valList = params.prefSubCaste.split(',')
-			and {candidate{'in'('subCaste',valList)}}
-		    }
+                if (params.flexibleSubcaste == "false" && params.prefSubCaste) {
+                    def valList = params.prefSubCaste.split(',')
+                    and { candidate { 'in'('subCaste', valList) } }
+                }
 
-		    if(params.flexibleLangknown=="false" && params.prefLangKnown){
-			and {'in'('languagesKnown',params.prefLangKnown)}
-		    }
+                if (params.flexibleLangknown == "false" && params.prefLangKnown) {
+                    //and {'in'('languagesKnown',params.prefLangKnown)}
+                }
 
-		    if(params.flexibleEducationCat){}
+                if (params.flexibleEducationCat == "false" && params.prefeducationCategory) {
+                    ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
+                    def pos = categories.indexOf(params.prefeducationCategory)
+                    categories = categories.subList(pos,categories.size())
+                    and {'in'('eduCat',categories)}
+                }
 
-		    if(params.flexibleAgediff){}
+                if (params.flexibleAgediff == "false" && params.prefAgeDiff) {
+                    use(TimeCategory) {
+                        def dobLower, dobUpper
+                        if (mbprofile.candidate?.isMale) {
+                            dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
+                            dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
+                        } else {
+                            dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
+                            dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
+                        }
+                        and { candidate { between('dob', dobLower, dobUpper) } }
+                    }
+                }
 
-		    if(params.flexibleHeight=="false"){}
+                if (params.flexibleHeight == "false" && params.prefHeight) {
+                    and {
+                        candidate {
+                            between('height', MbService.getHeight(params.prefHeight.split(" - ")[0]), MbService.getHeight(params.prefHeight.split(" - ")[1]))
+                        }
+                    }
+                }
 
-		    if(params.flexibleCandidateIncome){}
+                if (params.flexibleCandidateIncome == "false" && params.prefCandIncome) {
+                    def lowerLimit = Integer.parseInt(params.prefCandIncome.split(" - ")[0])
+                    def upperLimit = Integer.parseInt(params.prefCandIncome.split(" - ")[1])
+                    ArrayList<String> incomeList = new ArrayList<String>();
+                    for (int i = lowerLimit; i <= upperLimit; i++)
+                        incomeList.add(i.toString() + ' Lakhs');
+                    and { candidate { 'in'('income', incomeList) } }
+                }
 
-		    if(params.flexibleManglik=="false" && params.prefManglik){
-			and {'in'('manglik',params.prefManglik)}
-		    }
+                if (params.flexibleManglik == "false" && params.prefManglik) {
+                    def valList = params.prefManglik.split(',')
+                    and { 'in'('manglik', valList) }
+                }
 
-		    if(params.flexibleQualifications){}
-		    
-		    }
+                if (params.flexibleQualifications == "false" && params.prefqualification) {
+                    def valList = params.prefqualification.split(',')
+                    and { 'in'('eduQual', valList) }
+                }
 
-		    order(sortIndex, sortOrder)
-		}
+                order(sortIndex, sortOrder)
+            }
+        }
 	}
 
       def totalRows = result.totalCount
