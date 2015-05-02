@@ -8,23 +8,6 @@
     
   
 <body>
-	 <style>
-	   #month-a{
-	       width:auto;
-	   }
-	   #month-b{
-	       width:auto;
-	   }
-
-	   #custom-slider .ui-rangeslider-sliders {
-	       margin: 0.5em 100px !important;
-	   }
-
-	   #custom-slider input.ui-input-text.ui-slider-input {
-	       width: 70px !important;
-
-	}
-	   </style> 
 
     <div role="main" class="ui-content">
 
@@ -36,7 +19,7 @@
 	        <g:each in="${projectInstanceList}" status="i" var="projectInstance">
 	        
 	        <fieldset data-role="collapsible" data-theme="a" data-content-theme="d"  class="collaps">
-	                    <legend>${projectInstance.amount+" by "+projectInstance.costCenter?.name+"/"+projectInstance.submitDate?.format('dd-MM-yyyy')+"/"+projectInstance.priority}</legend>
+	                    <legend>${projectInstance.amount+" by "+projectInstance.costCenter?.name+"/"+projectInstance.submitDate?.format('dd-MM-yyyy')+"/"+projectInstance.priority+"/"+projectInstance.category}</legend>
 	                    <table>
 	                    	<tr>
 	                    		<td>Reference</td>
@@ -46,22 +29,48 @@
 	                    	</tr>
 	                    	<tr>
 	                    		<td>Description</td>
-	                    		<td colspan="3">${fieldValue(bean: projectInstance, field: "description")}</td>
-	                    		<!--<td></td>
-	                    		<td></td>-->
-	                    	</tr>
-	                    	<tr>
-	                    		<td>Amount</td>
+	                    		<td >${fieldValue(bean: projectInstance, field: "description")}</td>
+	                    		<td>Total Approval Amount</td>
 	                    		<td>${fieldValue(bean: projectInstance, field: "amount")}</td>
-	                    		<td>AdvanceAmount</td>
-	                    		<td>${fieldValue(bean: projectInstance, field: "advanceAmount")}</td>
 	                    	</tr>
 	                    	<tr>
+	                    		<td>Advance Amount Requested</td>
+	                    		<td>${projectInstance?.advanceAmount}</td>
+	                    		<td>Advance Amount Issued</td>
+	                    		<td>${projectInstance?.advanceAmountIssued}</td>
+	                    	</tr>
+	                    	<tr>
+	                    		<td>Settle Date</td>
+	                    		<td>${projectInstance?.settleDate?.format('dd-MM-yyyy HH:mm:ss')}</td>
+	                    		<td>Settle Amount</td>
+	                    		<td>${projectInstance?.settleAmount}</td>
+	                    	</tr>
+	                    	<!--<tr>
 	                    		<td>Priority</td>
 	                    		<td>${fieldValue(bean: projectInstance, field: "priority")}</td>
 	                    		<td>Category</td>
 	                    		<td>${fieldValue(bean: projectInstance, field: "category")}</td>
+	                    	</tr>-->
+	                    	<sec:ifNotGranted roles="ROLE_CG_OWNER"><!--hide for compact mobile i/f -->
+	                    	<tr>
+	                    		<td>Type</td>
+	                    		<td>${projectInstance.type}</td>
+	                    		<td>Issue To</td>
+	                    		<td>${projectInstance.advanceIssuedTo}</td>
 	                    	</tr>
+	                    	<tr>
+	                    		<td>Issue Mode</td>
+	                    		<td>${projectInstance.advancePaymentMode?.name}</td>
+	                    		<td>Issue Comments</td>
+	                    		<td>${projectInstance.advancePaymentComments}</td>
+	                    	</tr>
+	                    	<tr>
+	                    		<td>Bill No</td>
+	                    		<td>${projectInstance.billNo}</td>
+	                    		<td>Bill Date</td>
+	                    		<td>${(projectInstance.billDate?.format('dd-MM-yyyy')?:'')}</td>
+	                    	</tr>
+	                    	</sec:ifNotGranted>
 	                    	<tr>
 	                    		<td>Submitter</td>
 	                    		<td>${projectInstance.submitter}</td>
@@ -74,6 +83,7 @@
 	                    		<td>Vertical Head Comments</td>
 	                    		<td>${projectInstance.review1Comments?:''}</td>
 	                    	</tr>
+	                    	<sec:ifNotGranted roles="ROLE_CG_OWNER"><!--hide for compact mobile i/f -->
 	                    	<tr>
 	                    		<td>Finance Head</td>
 	                    		<td>${projectInstance.reviewer2}(${projectInstance.review2Date?.format('dd-MM-yyyy')})</td>
@@ -86,21 +96,23 @@
 	                    		<td>Accountant Comments</td>
 	                    		<td>${projectInstance.review3Comments?:''}</td>
 	                    	</tr>
+	                    	</sec:ifNotGranted>
 	                    </table>
-	                <g:set var="expenses" value="${ics.Expense.findAllByProjectAndStatus(projectInstance,'SUBMITTED')}" />
-	                <g:if test="${expenses.size()>0}">
-	                	<g:render template="expenseItems" model="['projectInstance':projectInstance,'expenses':expenses]" />
+	                <g:set var="childProjects" value="${ics.Project.findAllByMainProject(projectInstance)}" />
+	                <g:set var="expenses" value="${ics.Expense.findAllByProject(projectInstance)}" />
+	                <g:if test="${childProjects.size()>0||expenses.size()>0}">
+	                	<g:render template="expenseItems" model="['projectInstance':projectInstance,'expenses':expenses,'mainProject':projectInstance,'childProjects':childProjects]" />
 			</g:if>
 
 		        <sec:ifAnyGranted roles="ROLE_CC_OWNER">
 				<g:if test="${projectInstance.status=='DRAFT_REQUEST'}">
-					<g:link action="create" id="${projectInstance.id}" data-ajax="false">EDIT</g:link>
-                                        <g:link action="deleteRequest" id="${projectInstance.id}" data-ajax="false">DELETE</g:link>				
+					<g:link action="create" id="${projectInstance.id}" class="ui-btn" data-ajax="false">EDIT</g:link>
+                                        <g:link action="deleteRequest" id="${projectInstance.id}" class="ui-btn" data-ajax="false">DELETE</g:link>				
                                         </g:if>
                                         
-				<g:if test="${projectInstance.status=='DRAFT_REPORT'}">
+				<g:if test="${projectInstance.status=='DRAFT_REPORT' || projectInstance.status=='REJECTED_REPORT'}">
 					<g:link action="createReport" params="['projectid':projectInstance?.id]" data-ajax="false">EDIT</g:link>
-					<g:link action="deleteReport" params="['projectid':projectInstance?.id]" data-ajax="false">DELETE</g:link>
+					<g:link action="deleteReport" params="['projectid':projectInstance?.id]" data-ajax="false">CLEAR</g:link>
 				</g:if>
 				
 				</sec:ifAnyGranted>
@@ -118,14 +130,7 @@
 				    
 				    <tr><td>${projectInstance.costCenter.balance?:0}</td>  <td>${(projectInstance.costCenter.budget?:0)- (projectInstance.costCenter.balance?:0)}</td> <td>${projectInstance.costCenter.budget?:0}</td></tr>
 			
-				  </table>    
-					
-			    <div data-role="rangeslider">
-						<label for="month-a">Budget Consumption for Current Month::</label>
-						<input name="month-a" id="month-a" disabled="disabled" min="0" max="${projectInstance.costCenter.budget?:0}" value="${projectInstance.costCenter.balance?:0}" type="range">
-						<label for="month-b">Total Budget:</label>
-						<input name="month-b" id="month-b" disabled="disabled" min="0" max="${projectInstance.costCenter.budget?:0}" value="${projectInstance.costCenter.budget?:0}" type="range">
-					    </div>
+				  </table>    					
 				
 				    	</g:if>
 					<g:if test="${projectInstance.category=='CAPITAL'}">
@@ -137,12 +142,6 @@
 					</thead>                                                      
 					<tr><td>${projectInstance.costCenter.capitalBudget?:0}</td>  <td>${(projectInstance.costCenter.capitalBudget?:0)- (projectInstance.costCenter.capitalBalance?:0)}</td> <td>${projectInstance.costCenter.capitalBalance?:0}</td></tr>
 				  </table> 
-					    <div data-role="rangeslider">
-						<label for="month-a">Budget Consumption for Current Month:</label>
-						<input name="month-a" id="month-a" disabled="disabled" min="0" max="${projectInstance.costCenter.capitalBudget?:0}" value="${projectInstance.costCenter.capitalBalance?:0}" type="range">
-						<label for="month-b">Rangeslider:</label>
-						<input name="month-b" id="month-b" disabled="disabled" min="0" max="${projectInstance.costCenter.capitalBudget?:0}" value="${projectInstance.costCenter.capitalBudget?:0}" type="range">
-					    </div>
 					
 				    	</g:if>
 				<form name=${'formCCAT_'+projectInstance.id} id="${'formCCAT_'+projectInstance.id}" method="post" action="${createLink(controller:'Project',action:'changeState')}">
@@ -179,24 +178,9 @@
 					</thead>  
 						<tr><td>${projectInstance.costCenter.balance?:0}</td> <td>${(projectInstance.costCenter.budget?:0)- (projectInstance.costCenter.balance?:0)}</td>  <td>${projectInstance.costCenter.budget?:0}</td></tr>
 				</table>
-					    <div data-role="rangeslider">
-						<label for="month-a">Budget Consumption for Current Month:</label>
-						<input name="month-a" id="month-a" disabled="disabled" min="0" max="${projectInstance.costCenter.budget?:0}" value="${projectInstance.costCenter.balance?:0}" type="range">
-						<label for="month-b">Rangeslider:</label>
-						<input name="month-b" id="month-b" disabled="disabled" min="0" max="${projectInstance.costCenter.budget?:0}" value="${projectInstance.costCenter.budget?:0}" type="range">
-					    </div>
 					   
 					  </g:if>
 					<g:if test="${projectInstance.category=='CAPITAL'}">
-					    <div data-role="rangeslider">
-					    <label for="month-a">Budget Consumption for Current Month:</label>
-						
-						
-						<input name="month-a" id="month-a" disabled="disabled" min="0" max="${projectInstance.costCenter.capitalBudget?:0}" value="${projectInstance.costCenter.capitalBalance?:0}" type="range">
-						<label for="month-b">Rangeslider:</label>
-						<input name="month-b" id="month-b" disabled="disabled" min="0" max="${projectInstance.costCenter.capitalBudget?:0}" value="${projectInstance.costCenter.capitalBudget?:0}" type="range">
-					    </div>
-					   
 					  </g:if>
 				<form name=${'formCCAT_'+projectInstance.id} id="${'formCCAT_'+projectInstance.id}" method="post" action="${createLink(controller:'Project',action:'changeState')}">
 				  <g:hiddenField name="projectid" value="${projectInstance?.id}" />
@@ -225,7 +209,6 @@
 	       </g:each>                
 	
     </div><!-- /content -->
-
            
 </body>
 </html>

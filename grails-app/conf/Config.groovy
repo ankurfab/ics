@@ -211,14 +211,15 @@ grails.resources.modules = {
         resource url:'/js/icheck.min.js' 
         resource url:'/js/jquery.slimscroll.min.js' 
         resource url:'/js/Chart.min.js' 
-        resource url:'/js/demo.js' 
-        resource url:'/js/dashboard2.js' 
+        //resource url:'/js/demo.js' 
+        //resource url:'/js/dashboard2.js' 
     }
 
     multiselect{
         resource url:'/js/multiselect.js'
         resource url:'/css/multiselect.css'
     }
+
 }
 
 
@@ -456,4 +457,4 @@ mandrill {
 	//    port = ""
 	//}
 }
-
+

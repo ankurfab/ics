@@ -17,6 +17,20 @@
 			   $(document.getElementById('owner.id')).val(ui.item.id); // update the hidden field.
 			  }
 		});
+		$( "#ind1" ).autocomplete({
+			source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",//todo take care of data from other departments
+			minLength: 3,
+			  select: function(event, ui) { // event handler when user selects a company from the list.
+			   $(document.getElementById('owner1.id')).val(ui.item.id); // update the hidden field.
+			  }
+		});
+		$( "#ind2" ).autocomplete({
+			source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",//todo take care of data from other departments
+			minLength: 3,
+			  select: function(event, ui) { // event handler when user selects a company from the list.
+			   $(document.getElementById('owner2.id')).val(ui.item.id); // update the hidden field.
+			  }
+		});
 	});
 	</script>
         <div class="nav">
@@ -81,6 +95,26 @@
                             </tr>
                         
                                                 
+                           <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="newowner1">New Owner1</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: costCenterGroupInstance, field: 'owner1', 'errors')}">
+                                    <g:hiddenField name="owner1.id" value="${costCenterGroupInstance?.owner1?.id}"/>
+                                    <input id="ind1" size="40" />
+                                </td>
+                            </tr>
+
+                           <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="newowner2">New Owner2</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: costCenterGroupInstance, field: 'owner2', 'errors')}">
+                                    <g:hiddenField name="owner2.id" value="${costCenterGroupInstance?.owner2?.id}"/>
+                                    <input id="ind2" size="40" />
+                                </td>
+                            </tr>
+
                             <tr class="prop">
                                 <td valign="top" class="name">
                                     <label for="updator"><g:message code="costCenterGroup.updator" default="Updator" />:</label>

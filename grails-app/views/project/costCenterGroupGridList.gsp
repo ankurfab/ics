@@ -8,8 +8,16 @@
   		<title>Vertical-Department List</title>
    
   		<r:require module="grid" />
+
   	</head>
   	<body>  		
+		<div class="nav">
+		    <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
+		    <span class="menuButton"><g:link class="list" controller="CostCenter" action="ccBackup">Download CostCenters</g:link></span>
+		    <span class="menuButton"><g:link class="list" controller="CostCenterGroup" action="cgBackup">Download CostCenterGroups</g:link></span>
+		    <span class="menuButton"><g:link class="list" controller="CostCenter" action="orgStructureBackup">Download Org Structure</g:link></span>
+		</div>
+
                 <div id="dialogNewCostCenterGroupForm" title="Add New Vertical">
 			 <g:form name="addCostCenterGroup" controller="project" action="addCostCenterGroup" method="POST">
 			 <g:render template="addCostCenterGroup" />	         
@@ -46,6 +54,22 @@
        		<!-- pager will hold our paginator -->
   		<div id="costcenter_list_pager" class="scroll" style="text-align:center;"></div>
   
+		<div>
+		Bulk create Verticals : <br />
+		    <g:uploadForm controller="CostCenterGroup" action="uploadForCG">
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
+		</div>
+		<div>
+		Bulk create Cost Center : <br />
+		    <g:uploadForm controller="CostCenter" action="uploadForCC">
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
+		</div>
+
+
              <script type="text/javascript">		
   		  $(document).ready(function () {
   	
@@ -98,11 +122,29 @@
   	
   		    $("#costcentergroup_list").jqGrid('filterToolbar',{autosearch:true});
   		    $("#costcentergroup_list").jqGrid('navGrid', "#costcentergroup_list_pager", {edit: false, add: false, del: false, search: false});  		    
-  		    $("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"newVertical", buttonicon:"ui-icon-document", onClickButton:newCostCenterGroup, position: "last", title:"newVertical", cursor: "pointer"}); 
   		    //$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"UpdateVertical", buttonicon:"ui-icon-document", onClickButton:editCostCenterGroup, position: "last", title:"updateVertical", cursor: "pointer"}); 
           	    <sec:ifAnyGranted roles="ROLE_FINANCE">
-  		    	$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"GenerateLoginId", buttonicon:"ui-icon-gear", onClickButton:generateCGOLoginId, position: "last", title:"Generate Login Id", cursor: "pointer"}); 
+  		        $("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"NewVertical", buttonicon:"ui-icon-document", onClickButton:newCostCenterGroup, position: "last", title:"NewVertical", cursor: "pointer"}); 
+  		    	//$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"GenerateLoginId", buttonicon:"ui-icon-gear", onClickButton:generateCGOLoginId, position: "last", title:"Generate Login Id", cursor: "pointer"}); 
+			$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"UnlockUser", buttonicon:"ui-icon-unlocked", onClickButton:unlockVH, position: "last", title:"UnlockUser", cursor: "pointer"});
   		    </sec:ifAnyGranted>
+
+	function unlockVH() {
+		var answer = confirm("This action would reset the password of the user to harekrishna ! Are you sure?");
+		if (answer){
+			var idlist = $('#costcentergroup_list').jqGrid('getGridParam','selrow');
+			if(idlist) {
+				var url = "${createLink(controller:'project',action:'unlockAndResetVH')}"+"?idlist="+idlist
+				$.getJSON(url, {}, function(data) {
+					alert(data.message);
+				    });	
+			}
+			else
+				alert("Please select a row!!");
+		} else {
+		    return false;
+		}
+	}
                     
                     function newCostCenterGroup()
                      { 
@@ -197,12 +239,30 @@
   		   
   		   $("#costcenter_list").jqGrid('filterToolbar',{autosearch:true});
   		   $("#costcenter_list").jqGrid('navGrid', "#costcenter_list_pager", {edit: false, add: false, del: false, search: false});  		    
-  		   //$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"NewCostCenter", buttonicon:"ui-icon-document", onClickButton:newCostCenter, position: "last", title:"newCostCenter", cursor: "pointer"}); 
   		   //$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"EditCostCenter", buttonicon:"ui-icon-document", onClickButton:editCostCenter, position: "last", title:"editCostCenter", cursor: "pointer"}); 
           	    <sec:ifAnyGranted roles="ROLE_FINANCE">
-  		   $("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"GenerateLoginId", buttonicon:"ui-icon-gear", onClickButton:generateCCLoginid, position: "last", title:"Generate LoginId", cursor: "pointer"}); 
+  		   	$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"NewCostCenter", buttonicon:"ui-icon-document", onClickButton:newCostCenter, position: "last", title:"NewCostCenter", cursor: "pointer"}); 
+  		   	//$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"GenerateLoginId", buttonicon:"ui-icon-gear", onClickButton:generateCCLoginid, position: "last", title:"Generate LoginId", cursor: "pointer"}); 
+			$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"UnlockUser", buttonicon:"ui-icon-unlocked", onClickButton:unlockHOD, position: "last", title:"UnlockUser", cursor: "pointer"});
   		    </sec:ifAnyGranted>
                     
+	function unlockHOD() {
+		var answer = confirm("This action would reset the password of the user to harekrishna ! Are you sure?");
+		if (answer){
+			var idlist = $('#costcenter_list').jqGrid('getGridParam','selrow');
+			if(idlist) {
+				var url = "${createLink(controller:'project',action:'unlockAndResetHOD')}"+"?idlist="+idlist
+				$.getJSON(url, {}, function(data) {
+					alert(data.message);
+				    });	
+			}
+			else
+				alert("Please select a row!!");
+		} else {
+		    return false;
+		}
+	}
+
                    function newCostCenter()
                     { 
                     $("#dialogNewCostCenterForm").dialog("open");
@@ -211,14 +271,24 @@
             
                 $("#dialogNewCostCenterForm").dialog({
                         autoOpen: false,
-                        height: 500,
+                        height: 300,
                         width: 600,
                         modal: true,
                         buttons:
                         {
                             "Submit": function()
                             {
-                              
+			      var url = "${createLink(controller:'Project',action:'addCostCenter')}";
+
+			      // gather the form data
+			      var data=$("#addcostcenter").serialize();
+			      // post data
+			      $.post(url, data , function(returnData){
+					  //alert(returnData);
+					  $( "#dialogNewCostCenterForm" ).dialog( "close" );
+					  jQuery("#costcenter_list").jqGrid().trigger("reloadGrid");
+					})
+						                         
                                 $(this).dialog("close");
                             },
                             "Cancel": function() {

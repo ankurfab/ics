@@ -5811,8 +5811,10 @@ def commsService
 		def ind
 		def login
 
-	   // f.inputStream.eachCsvLine(['skipLines':'1']) { tokens -> 
-	    f.inputStream.toCsvReader().eachLine{ tokens ->
+	    //file format (generic, used by EMS module as well)
+	    //@TODO: only 1st 2 cols used in this case
+	    //IndividualId,IcsRoleId,LoginId,IndividualCategory,IndividualName
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
 	    	ind = Individual.get(tokens[0])
 	    	icsRole = IcsRole.get(tokens[1])
 
@@ -7155,7 +7157,7 @@ def jq_donor_list = {
 		def clorNames = IndividualRole.findAllByRoleAndStatus(Role.findByName('PuneLeadCouncellors'),'VALID',[sort: "individual.id"])?.collect{it.individual}
 		def clorNameList = []
 		clorNames.eachWithIndex { it, index -> clorNameList.add([100000+it.id,"'"+it.toString()+"'"]) }
-		[clorNameList:clorNameList]
+		[clorNameList:clorNameList, eventSummary:dataService.eventSummaryCBM()]
 	}
 
     def donationPeriodReport = {

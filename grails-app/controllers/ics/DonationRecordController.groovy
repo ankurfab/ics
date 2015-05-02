@@ -1378,7 +1378,8 @@ def donationRecordDataForPC(){
 	      	
 	      drs.each{dr->
 	      	dr.rbno = "ECS-"+housekeepingService.getFY()
-	      	dr.rno = receiptSequenceService.getNext("DONATION-ECS")
+	      	dr.rno = receiptSequenceService.getNext(dr.rbno)
+	      	//dr.rno = receiptSequenceService.getNext("DONATION-ECS")
 	      	if(!dr.save())
 	      		dr.errors.allErrors.each {
 			             			log.debug(it)

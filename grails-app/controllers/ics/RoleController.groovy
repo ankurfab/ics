@@ -220,8 +220,8 @@ class RoleController {
 	
 	def pairs() {
 		log.debug("inside pairs with params:"+params)
-		def result =  dataService.indrolesInPairs(params)
-		[id:params.id,result:result]
+		def retMap =  dataService.indrolesInPairs(params)
+		[id:params.id,retMap:retMap]
 	}
 
 	def sheet() {

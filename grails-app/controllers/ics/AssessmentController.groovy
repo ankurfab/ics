@@ -4,6 +4,7 @@ import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry  
 import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
+import groovy.time.*
 
 class AssessmentController {
 
@@ -483,7 +484,11 @@ class AssessmentController {
 
 	    def question
 	    def course = Course.get(params.cid)
-	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    def count=0,numRows=0
+	    f.inputStream.toCsvReader(['charset':'UTF-8','skipLines':'1']).eachLine{ tokens ->
+
+	    	numRows++
+	    	try{
 	    	question = new Question()
 	    	question.course = course
 	    	question.category = tokens[0]
@@ -502,16 +507,21 @@ class AssessmentController {
 	    	}
 	    	else {
 	    		question.isChoice1Correct = question.isChoice2Correct = question.isChoice3Correct = question.isChoice4Correct = false
-	    		switch(tokens[8]) {
+	    		def choice = tokens[8]?.toLowerCase()
+	    		switch(choice) {
+	    			case 'a':
 	    			case '1':
 	    				question.isChoice1Correct = true
 	    				break
+	    			case 'b':
 	    			case '2':
 	    				question.isChoice2Correct = true
 	    				break
+	    			case 'c':
 	    			case '3':
 	    				question.isChoice3Correct = true
 	    				break
+	    			case 'd':
 	    			case '4':
 	    				question.isChoice4Correct = true
 	    				break
@@ -527,10 +537,15 @@ class AssessmentController {
 				question.errors.allErrors.each {
 					println "Error in bulk saving question :"+it
 				}
-		else
+		else {
 			log.debug(question.toString()+" saved!")
+			count++
+		}
+		}
+		catch(Exception e) {log.debug("importQB:exception:"+e)}
 	    }
 	    
+	    flash.message = count+"/"+numRows +" questions uploaded"
 	    redirect (controller:"question",action: "list")
     }
     
@@ -575,6 +590,11 @@ class AssessmentController {
 									assessmentService.makeVerified(er)
 								}
 								catch(Exception e){log.debug(e)}
+								//@TODO: some hardcodings for GPL
+								try{
+									assessmentService.setupForExam([timeLimit:'2100',totalMarks:'100',numQuestions:'100',regcode:er.regCode])
+								}
+								catch(Exception e){log.debug("Exception in setupexam during verification:"+e)}
 								}
 							else
 								{
@@ -663,19 +683,168 @@ class AssessmentController {
     def qasheet() {
     	def ia = IndividualAssessment.findByEventRegistration(EventRegistration.get(params.erid))
     	if(ia.assessmentDate)
-    		{
-    		def iaqas = IndividualAssessmentQA.findAllByIndividualAssessmentAndCategory(ia,'ACTUAL',[sort:'lastShown'])
+    		{    		
+    		TimeDuration duration = TimeCategory.minus(new Date(), ia.assessmentDate)
+    		log.debug("duration:"+duration)
+    		def timeSinceAssessmentTaken = duration.hours*60*60 + duration.minutes*60 + duration.seconds
+		log.debug("inside qasheet for ia:"+ia+":timeSinceAssessmentTaken:"+timeSinceAssessmentTaken)
+		if(!ia.score && timeSinceAssessmentTaken>2*60*60)	//calc score for more that 2hr old assment
+			assessmentService.getResult(ia)
+			
+    		def iaqas = IndividualAssessmentQA.findAllByIndividualAssessmentAndCategoryAndShownIsNotNull(ia,'ACTUAL',[sort:'lastShown'])
     		render(template: "qasheet", model: [ia:ia,iaqas: iaqas])
     		}
     	else
-    		render "No challan found with the specified id. Kindly contact admin!!"
+    		render "No qa sheet found with the specified id. Kindly contact admin!!"
     }
     
     def feedback()  {
-    	log.debug("inside feedback with params:"+params)
+    	//log.debug("inside feedback with params:"+params)
     	def ias = assessmentService.feedback(params)
     	render(template: "feedbacks", model: [ias:ias])
     }
+    
+    //create the basic datastructures viz qp, ia_qp, ia_qa etc for the specified params
+    def setupForExam()  {
+    	log.debug("setupForExam:"+params)
+    	render assessmentService.setupForExam(params)
+    }
+    
+    def dashboard() {
+    	//@TODO: hardcoded for GPL for now
+    	def event = Event.findByDepartment(IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('AssessmentAdmin'),status:'VALID')?.department,[sort:'id',order:'desc'])
+    	[event:event, stats:assessmentService.stats(event)]   	
+    }
+    
+    def recalculateScore() {
+    	def iaList = IndividualAssessment.createCriteria().list{
+    				eventRegistration{event{eq('id',new Long(params.eid))}}
+    				isNotNull('assessmentDate')
+    				isNotNull('questionPaper')
+    			}
+    	iaList.each{ia->
+    		assessmentService.getResult(ia)
+    	}
+    	render "DONE"
+    }
+    
+    def feedbacks() {
+    	[events:Event.findAllByDepartment(IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('AssessmentAdmin'),status:'VALID')?.department,[sort:'title'])]
+    }
 
+    def jq_feedback_list() {
+      def sortIndex = params.sidx ?: 'assessmentDate'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+	if(params.oper=="excel" )
+		{
+			maxRows = 100000
+			rowOffset = 0
+			sortIndex = "assessmentDate"
+			sortOrder = "asc"
+		}
+
+	def event = Event.get(params.eid)
+	def result = IndividualAssessment.createCriteria().list(max:maxRows, offset:rowOffset) {
+			eventRegistration{eq('event',event)}
+			isNotNull('assessmentDate')
+			if(params.name)
+				eventRegistration{ilike('name',params.name)}
+			if(params.language)
+				eq('language',params.language)
+			if(params.regCode)
+				eventRegistration{eq('regCode',params.regCode)}
+			if(params.loginid) 
+				individual{eq('loginid',params.loginid)}
+				
+			order(sortIndex, sortOrder)
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+      
+      def department = event?.department
+
+		if(params.oper=="excel")
+		 {
+			response.contentType = 'application/zip'
+			new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+				def fname = "registrations_"+new Date().format('ddMMyyyyHHmmss')+".csv"
+				zipOutputStream.putNextEntry(new ZipEntry(fname))
+				//header
+				
+				zipOutputStream << "SNo,Name,Loginid,Regcode,Language,Date,TimeTaken,Score,Grade,Item1,Item2,Item3,Item4,Item5,Item6,Item7,Item8,Item9,Item10,Item11,Item12,Item13,Item14,Item15" 
+				def sno = 0
+				def fb
+				result.each{ row ->
+				        fb = assessmentService.feedback(row)
+					sno++
+					zipOutputStream << "\n"
+					zipOutputStream <<   sno +","+row.individual?.toString()?.replaceAll(',',';') +","+
+						    row.individual?.loginid +","+
+						    row.eventRegistration?.regCode +","+
+						    row.language +","+
+						    row.assessmentDate?.format('dd-MM-yyyy HH:mm:ss') +","+
+						    new Double((row.timeTaken?:0)/60).round(2) +","+
+						    row.score +","+
+						    row.assessmentCode +","+
+						    (fb.item1?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item2?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item3?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item4?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item5?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item6?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item7?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item8?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item9?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item10?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item11?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item12?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item13?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item14?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')+","+
+						    (fb.item15?:'')?.tr('\n\r\t',' ')?.replaceAll(',',';')
+				}
+			}    		
+			return
+		 }
+		else
+		{
+	      def fb
+	      def jsonCells = result.collect {
+		    fb = assessmentService.feedback(it)
+		    [cell: [
+			    it.individual?.toString(),
+			    it.individual?.loginid,
+			    it.eventRegistration?.regCode,
+			    it.language,
+			    it.assessmentDate?.format('dd-MM-yyyy HH:mm:ss'),
+			    new Double((it.timeTaken?:0)/60).round(2),
+			    it.score,
+			    it.assessmentCode,
+			    fb.item1?:'',
+			    fb.item2?:'',
+			    fb.item3?:'',
+			    fb.item4?:'',
+			    fb.item5?:'',
+			    fb.item6?:'',
+			    fb.item7?:'',
+			    fb.item8?:'',
+			    fb.item9?:'',
+			    fb.item10?:'',
+			    fb.item11?:'',
+			    fb.item12?:'',
+			    fb.item13?:'',
+			    fb.item14?:'',
+			    fb.item15?:''
+			], id: it.id]
+		}
+		def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+		render jsonData as JSON
+		}
+        }
 
 }

@@ -17,8 +17,11 @@ class InvoiceService {
     def createInvoice(Map params) {	
 	def invoice = new Invoice()
 	invoice.properties = params
-	if(!params.invoiceNumber)
-		invoice.invoiceNumber = housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("KITCHEN")
+	if(!params.invoiceNumber) {
+		def key = 'KIT/'+housekeepingService?.getFY()
+		invoice.invoiceNumber = key +"/"+ receiptSequenceService.getNext(key)
+		//invoice.invoiceNumber = housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("KITCHEN")
+	}
 	if(!params.invoiceDate)
 		invoice.invoiceDate = new Date()
 	if(!params.from)
@@ -240,7 +243,7 @@ class InvoiceService {
 			if(params.from)
 				ge('invoiceDate',params.from)
 			if(params.to)
-				le('invoiceDate',params.to)
+				lt('invoiceDate',params.to)
 			order("personTo", "asc")
 			order("invoiceDate", "asc")
 			}
@@ -262,10 +265,14 @@ class InvoiceService {
 
     	if(!params.to)
     		params.to = new Date()
+
+    	//for last day boundary condition
+    	params.to = params.to + 1
+
     	def toDate = params.to.format('yyyy-MM-dd HH:mm:ss')
 
-	def purchaseQuery = "select sum(qty) totalQty, round(sum(ili.qty*(1+(ifnull(ili.tax_rate,0)/100))*ili.rate),2) worth from invoice i, invoice_line_item ili where ili.invoice_id=i.id and i.type='PURCHASE' and i.invoice_date>='"+fromDate+"' and i.invoice_date<='"+toDate+"' and ili.item_id="
-	def salesQuery = "select sum(qty) totalQty, round(sum(ili.qty*(1+(ifnull(ili.tax_rate,0)/100))*ili.rate),2) worth from invoice i, invoice_line_item ili where ili.invoice_id=i.id and i.type='SALES' and i.invoice_date>='"+fromDate+"' and i.invoice_date<='"+toDate+"' and ili.item_id="
+	def purchaseQuery = "select sum(qty) totalQty, round(sum(ili.qty*(1+(ifnull(ili.tax_rate,0)/100))*ili.rate),2) worth from invoice i, invoice_line_item ili where ili.invoice_id=i.id and i.type='PURCHASE' and i.invoice_date>='"+fromDate+"' and i.invoice_date<'"+toDate+"' and ili.item_id="
+	def salesQuery = "select sum(qty) totalQty, round(sum(ili.qty*(1+(ifnull(ili.tax_rate,0)/100))*ili.rate),2) worth from invoice i, invoice_line_item ili where ili.invoice_id=i.id and i.type='SALES' and i.invoice_date>='"+fromDate+"' and i.invoice_date<'"+toDate+"' and ili.item_id="
 	def sql = new Sql(dataSource);
 	def query,results
 	
@@ -302,10 +309,17 @@ class InvoiceService {
 
     	if(!params.to)
     		params.to = new Date()
-    	def toDate = params.to.format('yyyy-MM-dd HH:mm:ss')
+    		
+    	
+    	//for last day boundary condition
+    	params.to = params.to + 1
 
-	def pre = "select it.name,sum(qty) quantity,it.rate,it.tax_rate from invoice i, invoice_line_item ili, item it where i.id=ili.invoice_id and i.type='SALES' and ili.item_id=it.id "
-	def post  = " group by it.id order by it.name"
+    	def toDate = params.to.format('yyyy-MM-dd HH:mm:ss')
+    	
+
+	def pre = "select name,sum(qty) quantity,sum(iliamt) amount from (select ili.item_id,it.name, ili.qty, ili.qty*ili.rate*(1+(ili.tax_rate/100)) iliamt from invoice i left join invoice_line_item ili on i.id=ili.invoice_id left join item it on ili.item_id=it.id where i.type='SALES' and i.invoice_date>='"+fromDate+"' and i.invoice_date<'"+toDate+"'"
+
+	def post  = ") q group by item_id order by name"
 	def query
 	if(params.consumer)
 		query = pre +" and i.person_to='"+params.consumer+"'"+post
@@ -314,9 +328,8 @@ class InvoiceService {
 	def sql = new Sql(dataSource);
 	def results
 	
-		//log.debug("Query:"+query)
+		log.debug("consumptionReportQuery:"+query)
 		results = sql.rows(query)
-		//log.debug("Results:"+results)
 	sql.close()
 
 	return results	

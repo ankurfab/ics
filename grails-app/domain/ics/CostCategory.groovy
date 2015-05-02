@@ -6,6 +6,7 @@ class CostCategory {
 	    name()
 	    alias()
 	    owner(nullable:true)
+	    status(nullable:true)
 	    dateCreated()
 	    creator()
 	    lastUpdated()
@@ -15,6 +16,7 @@ class CostCategory {
     String name
     String alias
     Individual owner
+    String status
 
     Date dateCreated
     Date lastUpdated

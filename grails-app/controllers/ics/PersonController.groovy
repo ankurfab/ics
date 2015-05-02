@@ -964,49 +964,51 @@ class PersonController {
 
 	    def person
 	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
-	    	person = new Person()
-	    	person.name = tokens[0]
-	    	person.address = tokens[1]
-	    	person.phone = tokens[2]
-	    	person.email = tokens[3]
-	    	if(tokens.size()>4)
-			try
+	    	if(tokens[0]?.trim()) {	    		
+			person = new Person()
+			person.name = tokens[0]
+			person.address = tokens[1]
+			person.phone = tokens[2]
+			person.email = tokens[3]
+			if(tokens.size()>4)
+				try
+					{
+					person.dob = tokens[4]?Date.parse('dd-MM-yyyy', tokens[4]):null
+					}
+				catch(Exception e)
+					{
+					person.dob = null
+					log.debug("In upload: Error formatting dob: "+tokens[4])
+					}
+			if(tokens.size()>5)
+				try
+					{
+					person.dom = tokens[5]?Date.parse('dd-MM-yyyy', tokens[5]):null
+					}
+				catch(Exception e)
+					{
+					person.dom = null
+					log.debug("In upload: Error formatting dom: "+tokens[5])
+					}
+			person.category = session.individualid
+			person.updator = person.creator = springSecurityService.principal.username
+			if(!person.save())
+					person.errors.allErrors.each {
+						println "Error in bulk saving person :"+it
+					}
+			else
 				{
-				person.dob = tokens[4]?Date.parse('dd-MM-yyyy', tokens[4]):null
+				log.debug(person.toString()+" saved!")
+				//if added by guest reception the send the welcome email
+				if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_ATITHI_ADMIN'))
+					if(person.email)
+						try{
+							def body = commsService.fillTemplate(template,[person.name])
+							commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:person.name,toEmail:person.email,emailsub:template.name,emailbody:body,type:template.type])		    	
+							}
+						catch(Exception e){log.debug("Exception in sending welcome email"+e)}
 				}
-			catch(Exception e)
-				{
-				person.dob = null
-				log.debug("In upload: Error formatting dob: "+tokens[4])
-				}
-	    	if(tokens.size()>5)
-			try
-				{
-				person.dom = tokens[5]?Date.parse('dd-MM-yyyy', tokens[5]):null
-				}
-			catch(Exception e)
-				{
-				person.dom = null
-				log.debug("In upload: Error formatting dom: "+tokens[5])
-				}
-	    	person.category = session.individualid
-	    	person.updator = person.creator = springSecurityService.principal.username
-	    	if(!person.save())
-				person.errors.allErrors.each {
-					println "Error in bulk saving person :"+it
-				}
-		else
-			{
-			log.debug(person.toString()+" saved!")
-			//if added by guest reception the send the welcome email
-			if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_ATITHI_ADMIN'))
-				if(person.email)
-					try{
-						def body = commsService.fillTemplate(template,[person.name])
-						commsService.sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:person.name,toEmail:person.email,emailsub:template.name,emailbody:body,type:template.type])		    	
-						}
-					catch(Exception e){log.debug("Exception in sending welcome email"+e)}
-			}
+		    }
 	    }
 	    
 	    redirect (action: "list")

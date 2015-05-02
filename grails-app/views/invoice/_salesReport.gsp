@@ -18,10 +18,9 @@
 			<td>${invoice.status}</td>
 			<td>${invoice.invoiceAmount}</td>
 			<g:set var="invoicetotal" value="${new BigDecimal(0)}" />
-			<g:set var="invoicetotal" value="${invoice.lineItems?.sum{(it.qty?:0)*(it.rate?:0)*(1+(it.taxRate?:0)/100)}}" />
-			<td>${invoicetotal}</td>
+			<g:set var="invoicetotal" value="${invoice.lineItems?.sum{new Double((it.qty?:0)*(it.rate?:0)*(1+(it.taxRate?:0)/100)).round(2)}}" />
+			<td>${new Double(invoicetotal).round(2)}</td>
 			<td>${invoice.lineItems?.collect{it.item?.name+" Qty:"+(it.qty?:0)+(it.unit?:'')+" Rate:"+(it.rate?:0)+"/- Tax:"+(it.taxRate?:0)+"%"}}</td>
-			<!--<g:set var="total" value="${total+(invoice.invoiceAmount?:0)}" />-->
 			<g:set var="total" value="${total+invoicetotal}" />
 		</tr>
 		</g:each>
@@ -31,7 +30,7 @@
 			<td></td>
 			<td></td>
 			<td>Totals:</td>
-			<td>${total}</td>
+			<td>${new Double(total).round(2)}</td>
 			<td></td>
 		</tr>
 		

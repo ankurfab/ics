@@ -3,12 +3,15 @@ import org.codehaus.groovy.grails.plugins.springsecurity.*
 import org.springframework.web.context.request.RequestContextHolder
 import java.util.Random
 import com.krishna.*
+import groovy.sql.Sql;
+import groovy.time.*
 
 class AssessmentService {
 
     def springSecurityService
     def individualService
     def commsService
+    def dataSource
     
     //Generate a question paper for the specified assessment
     def generateQP(Map params) {
@@ -186,6 +189,62 @@ class AssessmentService {
     	
     }
     
+    //Generate question paper with specified criteria
+    //the assumption is all questions have same marks (not necessarily 1)
+    def generateQP(QuestionPaper qp,Integer numQuestions,String category ) {
+    	//randomly get a question from the question bank
+    	def question=null, existingq, cnt
+    	int i=0
+    	for(i=0;i<numQuestions;i++)
+    		{
+    		question=null
+    		cnt=0
+    		while(!question && cnt<10) {	//keep on searching  for a new question or abandon after 10 tries
+			question = getRandomQuestion(qp.course,category,qp.language,'')
+			if(!question)
+				{
+				cnt++
+				}
+			else
+				{
+				//the question shouldn't already exist in the question paper
+				/*existingq = null
+				if(qp.questions && qp.questions.size()>0)
+					{
+					existingq = QuestionPaper.createCriteria().get{
+						questions{
+							eq('id',question.id)
+							}
+						}
+					if(existingq)
+						{
+						question = null
+						cnt++
+						}
+					}*/
+				existingq = null
+				if(qp.questions && qp.questions.size()>0) {
+					if(qp.questions.contains(question))
+						existingq = question
+					if(existingq)
+						{
+						question = null
+						cnt++
+						}
+					}
+				}
+    			}
+    		if(question)
+    			{
+    			if(!qp.questions)
+    				qp.questions = []
+    			qp.questions << question
+    			}
+    		}
+    	if(!qp.save())
+		qp.errors.allErrors.each {log.debug("generateQP in updating qp:"+e)}    		
+    }
+
     //gets a random question from the question bank for the specifies params
     def getRandomQuestion(Course course, String category, String language, String level) {
     	//first get a count of questions in the bank matching the provided criteria
@@ -206,12 +265,11 @@ class AssessmentService {
     				eq('level',level)
     			projections{count('id')}    			
     			}[0]?.intValue()?:0
-    	log.debug("Num qns found : "+numQns+" :"+(course?:'')+(category?:'')+(language?:'')+(level?:''))
     	def question = null
+    	def rowOffset
     	if(numQns>0)
     		{
-    		def rowOffset = new Random().nextInt(numQns)//should vary between 0 and (numQns-1), need to be randomised
-    		log.debug("random rowoffset : "+rowOffset)
+    		rowOffset = new Random().nextInt(numQns)//should vary between 0 and (numQns-1), need to be randomised
     		question = Question.createCriteria().list(max:1, offset:rowOffset){
     			if(course)
     				eq('course',course)
@@ -230,7 +288,9 @@ class AssessmentService {
     			
     			}[0]
     		}
-    	log.debug("Returning random question "+(question?:''))
+    	//log.debug("Num qns found : "+numQns+" :"+(course?:'')+(category?:'')+(language?:'')+(level?:''))
+   	//log.debug("random rowoffset : "+rowOffset)
+    	log.debug("Returning random question "+(question?:'')+"Num qns found : "+numQns+" :"+(course?:'')+(category?:'')+(language?:'')+(level?:'')+"random rowoffset : "+rowOffset)
     	return question
     		
     }
@@ -302,17 +362,21 @@ class AssessmentService {
     
     //get the result
     def getResult(IndividualAssessment ia) {
+ 	log.debug("getResult:ia:"+ia)
     	def mock = true
     	if(ia.assessmentDate)
     		{
     		mock = false
-    		try{
-			use(groovy.time.TimeCategory) {
-			    ia.timeTaken = (new Date()-ia.assessmentDate).seconds
-			}
-		}
-		catch(Exception e){log.debug(e)}
-    		
+
+		//get timestamp of  the last shown iaqa
+		//def iaqas = IndividualAssessmentQA.findAllWhere(individualAssessment:ia,category:(mock?'MOCK':'ACTUAL'),shown:true,[max: 1, sort: "lastShown", order: "desc"])
+		def iaqas = IndividualAssessmentQA.findAllByIndividualAssessmentAndCategoryAndShownIsNotNull(ia,(mock?'MOCK':'ACTUAL'),[sort:'lastShown',max: 1, order: "desc"])
+		def lastShownOn = iaqas[0]?.lastShown?:new Date()
+
+    		TimeDuration duration = TimeCategory.minus(lastShownOn, ia.assessmentDate)
+    		log.debug("getResult:duration:"+duration)
+    		ia.timeTaken = duration.hours*60*60 + duration.minutes*60 + duration.seconds
+		log.debug("getResult:ia:"+ia+":lastShownOn:"+lastShownOn+":timeTaken:"+ia.timeTaken)    		
     		}
     	def iaqaList = IndividualAssessmentQA.findAllWhere(individualAssessment:ia,category:(mock?'MOCK':'ACTUAL'),shown:true)
     	ia.score = 0
@@ -355,8 +419,11 @@ class AssessmentService {
     	//For percent score: return (ia.score/totalMarks)*100 +" %"
     	
     	log.debug("Result for IA:"+ia+":"+ia.score+":"+grade)
-
-	return "Grade: "+grade
+    	//@TODO: hardcoded for GPL
+	if(ia?.eventRegistration?.event?.title=='GPL2015')
+		return "Score: "+(ia.score?:'')
+	else
+		return "Grade: "+grade
     }
     
     def score(IndividualAssessmentQA iaqa) {
@@ -614,10 +681,10 @@ class AssessmentService {
 		}
     }
     
-    //need to set relevant QP in IA
+    /*//need to set relevant QP in IA
     def setupForExam(Map params) {
     	//assessment.id=1&questionPaper.id=3&individual.id=54703&status=READY&assessmentCode=abcd
-    }
+    }*/
     
     def makeVerified(EventRegistration er) {
     	Individual ind = er.individual
@@ -760,6 +827,139 @@ class AssessmentService {
     		}
     	return ias
     }
+
+    //create the basic datastructures viz qp, ia_qp, ia_qa etc for the specified params
+    //Mandatory params: params.timeLimit,params.totalMarks,params.numQuestions
+    //params.regcode or (params.language && params.eventid)
+    def setupForExam(Map params)  {
+    	def msg = ""
+    	if(params.regcode) {
+    		//setup only for the specified er
+    		msg = setupForExamForER(EventRegistration.findByRegCode(params.regcode),params.timeLimit,params.totalMarks,params.numQuestions)
+    		}
+    	else if(params.language && params.eventid) {
+    		//setup for the specified langauge
+    		def ers = EventRegistration.findAllByEventAndOtherGuestTypeAndVerificationStatus(Event.get(params.eventid),params.language,VerificationStatus.VERIFIED)
+    		def resp
+    		ers.each{
+    			resp = setupForExamForER(it,params.timeLimit,params.totalMarks,params.numQuestions)
+    			if(resp)
+    				msg += ' , '+resp
+    		}
+    	}
+    	return msg
+    }
     
+    def setupForExamForER(EventRegistration er,String timeLimit, String totalMarks, String numQuestions) {
+    	def msg = ""
+	def qp,ia,iaqa
+
+    	if(!er || (er.verificationStatus != VerificationStatus.VERIFIED))
+    		return msg
+
+	ia = IndividualAssessment.findByEventRegistration(er)
+	if(!ia || ia.questionPaper)
+		return msg
+		
+    	log.debug("setupForExamForER:"+er)
+
+        def username = ''
+        try{
+        username = springSecurityService.principal.username
+        }
+        catch(Exception e){username='unknown'}
+
+    	try{
+		//create qp
+		qp = new QuestionPaper()
+		qp.assessment = er.assessment
+		qp.course = er.assessment.course
+		qp.department = er.assessment.department
+		qp.description = "Autogenerated on "+new Date()
+		qp.name = "QP for "+er.name+" "+er.assessment.course.name+" "+er.otherGuestType+" ("+er.regCode+")"
+		qp.randomize = true
+		qp.language = er.otherGuestType
+		qp.status = 'AVAILABLE'
+		qp.timeLimit = new Integer(timeLimit)
+		qp.totalMarks = new Integer(totalMarks)
+		qp.numQuestions = new Integer(numQuestions)
+		qp.creator = qp.updator = username
+		if(!qp.save())
+			qp.errors.allErrors.each {log.debug("setupForExamForER:Exception in creating qp"+e)}
+		else {		
+			log.debug("qp created for er:"+qp)
+			//assign qns to qp
+			if(assignQnsToQP(qp)) {
+				log.debug("qns assigned:"+qp.questions.size())
+				//assign qp to ia
+				//ia = IndividualAssessment.findByEventRegistration(er)
+				if(ia && !ia.questionPaper) {
+					ia.questionPaper = qp
+					if(!ia.save())
+						ia.errors.allErrors.each {log.debug("setupForExamForER:Exception in assigning qp"+e)}
+					else {		
+						log.debug("ia updated:"+ia)
+						//create iaqa
+						qp.questions.each{question->
+							iaqa = new IndividualAssessmentQA()
+							iaqa.individualAssessment = ia
+							iaqa.question = question
+							iaqa.category = "ACTUAL"
+							if(!iaqa.save())
+								iaqa.errors.allErrors.each {log.debug("setupForExamForER:Exception in creating iaqa"+e)}
+							else
+								log.debug("iaqa created:"+iaqa)
+						}
+						msg = "ok for er:"+er
+						log.debug("setupForExamForER:"+msg)
+					}
+				}
+				
+			}
+		}
+    	}
+    	catch(Exception e) {log.debug(e)}
+    	return msg
+    }
     
+    //@TODO: random assignment of qns to qp harcoded as per GPL logic
+    def assignQnsToQP(QuestionPaper qp) {
+	generateQP(qp,20,'SECTION1')
+	generateQP(qp,50,'SECTION2')
+	generateQP(qp,30,'SECTION3')
+	return true
+    }
+    
+    def stats(Event event) {
+	def query,results,stats=[:]
+	def sql = new Sql(dataSource)
+    	//num of registrations by language and status    	
+    	query = "select other_guest_type,verification_status,count(1) num from event_registration where event_id="+event?.id+" group by other_guest_type,verification_status"
+	results = sql.rows(query)
+	stats.put('numRegistrations',results)
+
+    	//exam takers by language    	
+    	query = "SELECT i.language,count(1) num FROM individual_assessment i,event_registration er where i.event_registration_id=er.id and er.event_id="+event?.id+" and i.assessment_date is not null group by i.language"
+	results = sql.rows(query)
+	stats.put('examTakers',results)
+
+	sql.close()
+	
+	return stats    	    	
+    }
+    
+    def feedback(IndividualAssessment ia) {
+	def feedback=[:]
+	AttributeValue.findAllByObjectClassNameAndObjectId('IndividualAssessment',ia.id.toString()).each{ fb->
+	    def attr
+	    if(fb.attribute.type=='MULTI') {
+		attr = Attribute.findWhere(domainClassName:'EVENT_FEEDBACK',type:'RADIO',category:fb.attribute.name,position:new Integer(fb.value))?.displayName
+		feedback.put(fb.attribute.name,attr)
+	    }
+	    else {
+	    	feedback.put(fb.attribute.name,fb.value)
+	    }
+	}             		
+	return feedback
+    }
 }

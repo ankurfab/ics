@@ -7,7 +7,10 @@
 		<th>Name</th>
 		<th>Phone</th>
 		<th>Email</th>
-		<th>Attendance</th>
+		<th>Attendance On ${attOn?attOn[2]?.eventDate?.format('dd-MM'):''}</th>
+		<th>Attendance On ${attOn?attOn[1]?.eventDate?.format('dd-MM'):''}</th>
+		<th>Attendance On ${attOn?attOn[0]?.eventDate?.format('dd-MM'):''}</th>
+		<th>Today's Attendance</th>
 	</thead>
 <g:each in="${results}" var="ind" status="i"> 
 	<tr>
@@ -16,6 +19,9 @@
 		<td>${ind.toString()}</td>
 		<td>${ics.VoiceContact.findByIndividualAndCategory(ind,'CellPhone')?.number?:''}</td>
 		<td>${ics.EmailContact.findByIndividualAndCategory(ind,'Personal')?.emailAddress?:''}</td>
+		<td>${(attOn?attOn[2]?.get(ind.icsid):'')?'Y':''}</td>
+		<td>${(attOn?attOn[1]?.get(ind.icsid):'')?'Y':''}</td>
+		<td>${(attOn?attOn[0]?.get(ind.icsid):'')?'Y':''}</td>
 		<td/>
 	 </tr>
 

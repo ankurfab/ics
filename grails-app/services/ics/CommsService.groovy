@@ -54,7 +54,7 @@ class CommsService {
 	def fd = new Date().clearTime()
 	def td = fd+1
 	
-	def ccList = CostCenter.list()
+	def ccList = CostCenter.findAllByStatusIsNull()
 	ccList.each{cc->
 		recpts = []
 		result = []

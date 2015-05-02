@@ -15,14 +15,27 @@
 
 <div>
 	<label for="description">Description</label>
-	<g:textArea name="description" value="" rows="5" cols="40"/>
+	<g:textField name="description" value=""/>
 </div>
 
-<div>
-	<label for="anotherLedger">Department</label>
-	<g:textField name="anotherLedger"/>
+<div id="divAnotherLedger">
+	<g:select id="anotherLedger" name='anotherLedger' value=""
+	    noSelection="${['':'Select To Department...']}"
+	    from='${ics.CostCenter.findAllByStatusIsNull([sort:'name'])}' ></g:select>	
 </div>
 
 </fieldset>
 
 </div>
+
+<script>
+  $(document).ready(function () {
+	$("#divAnotherLedger").hide();
+	$( "#type" ).change(function() {
+		if($( "#type option:selected" ).text()=="Journal")
+			$("#divAnotherLedger").show();
+		else
+			$("#divAnotherLedger").hide();
+	});
+  });
+</script>

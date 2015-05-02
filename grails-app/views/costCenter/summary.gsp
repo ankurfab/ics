@@ -30,7 +30,7 @@
             			<th>Q4 Expense</th>
             		</thead>
             		<tbody>
-            		<g:each var="cc" in="${ics.CostCenter.list([sort:'name'])}">
+            		<g:each var="cc" in="${ics.CostCenter.findAllByStatusIsNull([sort:'name'])}">
             			<tr>
             				<td>
             					${cc.name}

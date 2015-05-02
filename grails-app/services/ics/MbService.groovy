@@ -1,5 +1,6 @@
 package ics
 import com.krishna.*
+import groovy.sql.Sql;
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 import java.text.SimpleDateFormat
 
@@ -10,6 +11,7 @@ class MbService {
     def helperService
     def springSecurityService
     def commsService
+    def dataSource
     
     def serviceMethod() {
 
@@ -590,7 +592,7 @@ class MbService {
 	  indparams.email = params.email
 	  indparams.iskconCentre = params.centre
 
-	  individual = individualService.createIndividual(indparams)
+	  def individual = individualService.createIndividual(indparams)
 	  if (individual) {
 
 	    def mrole = Role.findByNameAndCategory('MEMBER','MarriageBoard')
@@ -672,12 +674,69 @@ class MbService {
     			return "Workflow status updated."
     	}
     }
+    
+    def stats() {
+    	def stats = [:]
+    	def result
+    	def query
+    	def sql = new Sql(dataSource)
+    	
+    	//profile stats
+    	result = MbProfile.createCriteria().list(){
+			projections {
+				groupProperty('profileStatus')
+				rowCount('id')
+			}
+    		}
+    	def map = [:]
+    	result.each{map.put(it[0],it[1])}
+    	log.debug('ProfileStats:'+map)
+    	stats.put('ProfileStats',map)
+    	
+    	//workflow stats
+    	result = MbProfile.createCriteria().list(){
+			projections {
+				groupProperty('workflowStatus')
+				rowCount('id')
+			}
+    		}
+    	def wmap = [:]
+    	result.each{wmap.put(it[0],it[1])}
+    	log.debug('WorkflowStats:'+wmap)
+    	stats.put('WorkflowStats',wmap)
+
+    	//last 10 logins    	
+	def llist = []
+    	query = "select a.*,i.id,i.legal_name,i.initiated_name,i.category from access_log a , individual i where a.loginid=i.loginid and (i.category='MB' or i.category='MB_BOARD') order by a.id desc limit 10"
+    	result = sql.rows(query)
+        result.each{row->
+	        def rowMap = [:]
+        	row.keySet().each {column ->
+            		rowMap[column] = row[column]
+            		}
+            	llist.add(rowMap)
+        	}
+        
+    	log.debug('LoginStats:'+llist)
+    	stats.put('LoginStats',llist)
+
+    	//match stats
+    	result = MbProfileMatch.createCriteria().list(max:10){
+    			order('id','desc')
+    		}
+    	log.debug('MatchStats:'+result)
+    	stats.put('MatchStats',result)
+    	
+    	sql.close()
+    	
+    	return stats
+
+    }
 
     def getHeight(String height){
         def ft = Integer.parseInt(height.split('"')[0])
         def inch = Integer.parseInt(height.split('"')[1].replace("'",""))
         return (ft*12 + inch)
-    }
-    
+    }    
 
 }

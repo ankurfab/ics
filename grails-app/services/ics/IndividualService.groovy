@@ -175,9 +175,13 @@ class IndividualService {
     	//first check for exact duplicate (on legalName or initiatedName)
     	if(!params.name)
     		return null
+
+    	def individuals = []
     	//@TODO: this is buggy, duplicate check should be more strict
     	//def individuals = Individual.findAllByLegalNameOrInitiatedName(params.name,params.name)
-    	def individuals = []
+    	//try for unique legal name in category
+    	if(params.category)
+    		individuals = Individual.findAllByCategoryAndLegalName(params.category,params.name)
     	if(individuals?.size()>0)
     		return individuals[0]
     	else

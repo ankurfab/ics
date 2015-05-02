@@ -21,7 +21,7 @@ class CostCenterController {
 
     def list = {
         params.max = 200
-        [costCenterInstanceList: CostCenter.list(params), costCenterInstanceTotal: CostCenter.count()]
+        [costCenterInstanceList: CostCenter.findAllByStatusIsNull(params), costCenterInstanceTotal: CostCenter.count()]
     }
 
     def create = {
@@ -40,6 +40,10 @@ class CostCenterController {
 	params.updator=params.creator
 
         def costCenterInstance = new CostCenter(params)
+        if(!costCenterInstance.budget)
+        	costCenterInstance.budget = 0
+        if(!costCenterInstance.balance)
+        	costCenterInstance.balance = 0
         if (!costCenterInstance.hasErrors() && costCenterInstance.save()) {
             //also create the corresponding default scheme
             def scheme = new Scheme()
@@ -73,7 +77,7 @@ class CostCenterController {
 		      def costCenterCode = params.cc[-3..-1]
 		      log.debug("Inside ajax costcenter show :"+costCategoryCode+":"+costCenterCode)
 		      def costCategory = CostCategory.findByAlias(costCategoryCode)
-		      def costCenter = CostCenter.findByCostCategoryAndAlias(costCategory,costCenterCode)
+		      def costCenter = CostCenter.findByCostCategoryAndAliasAndStatusIsNull(costCategory,costCenterCode)
 		      //also check count of schemes associated
 		      //if only one scheme then return the schemeid as well
 		      def schemes = Scheme.findAllByCc(costCenter)
@@ -147,13 +151,20 @@ class CostCenterController {
         def costCenterInstance = CostCenter.get(params.id)
         if (costCenterInstance) {
             try {
+                //first delete the scheme
+                def scheme = Scheme.findByCc(costCenterInstance)
+                //check if any donations on this scheme
+                def donationCount = Donation.countByScheme(scheme)
+                if(!donationCount || donationCount==0)
+                	scheme?.delete()
+                
                 costCenterInstance.delete()
                 flash.message = "costCenter.deleted"
                 flash.args = [params.id]
                 flash.defaultMessage = "CostCenter ${params.id} deleted"
                 redirect(action: "list")
             }
-            catch (org.springframework.dao.DataIntegrityViolationException e) {
+            catch (Exception e) {
                 flash.message = "costCenter.not.deleted"
                 flash.args = [params.id]
                 flash.defaultMessage = "CostCenter ${params.id} could not be deleted"
@@ -370,7 +381,7 @@ class CostCenterController {
 	}
 
     def showOwner() {
-                def ownerid = CostCenter.get(params.id)?.owner?.id
+                def ownerid = CostCenter.get(params.id)?.owner1?.id
                 redirect(controller:"individual",action: "show", id: ownerid)    	
                 return
     }
@@ -383,6 +394,8 @@ class CostCenterController {
 		redirect (action: "budget")
 		return	    	
 	    }
+	//create stats in case some thing was missing
+	financeService.createStatsAttributes([year:year])
 
     	response.contentType = 'application/zip'
     	def query = "select c.id ccId,concat(ccat.alias,c.alias) ccCode,ccat.name costcategory,c.name costcenter,cg.name vertical,if(c.is_profit_center,'Yes','No') isProfitCenter,if(c.is_service_center,'Yes','No') isServiceCenter,a.type,if(a.position<10,a.position+3,a.position-9) month,av.value amount  from cost_center c left join cost_center_group cg on c.cost_center_group_id=cg.id, cost_category ccat, attribute a left join attribute_value av on av.attribute_id=a.id where c.cost_category_id=ccat.id and c.id=a.domain_class_attribute_name and a.domain_class_name='CostCenter' and a.category='"+year+"'"
@@ -424,8 +437,9 @@ class CostCenterController {
 	    	redirect (action: "budget")
 	    	return	    	
 	    }
-	    //@TODO: should be created in more effiecient way and elsewhere
-	    //financeService.createStatsAttributes([year:year])
+
+	    //create stats in case some thing was missing
+	    financeService.createStatsAttributes([year:year])
 	    
 	    //lock expense creation first
 	    financeService.lockExpenseCreation()
@@ -444,5 +458,250 @@ class CostCenterController {
 	    redirect (action: "budget")
 	    return
     }
+    
+    def lockExpenseCreation() {
+    	financeService.lockExpenseCreation();
+    	render "OK"
+    }
+
+    def unlockExpenseCreation() {
+    	financeService.unlockExpenseCreation();
+    	render "OK"
+    }
+
+    def uploadForCC() {
+	    log.debug("Inside uploadForCC")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render flash.message
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+	    //format
+	    //name,alias,cg_id,ccat_id,loginid,owner_icsid
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(financeService.createCC(tokens))
+	    		numCreated++
+	    }
+	    
+	    flash.message="Created "+numCreated+"/"+numRecords+" CCs!!"
+	    render flash.message
+	    
+    }	
+
+    def ccBackup() {
+    	response.contentType = 'application/zip'
+    	def query = "select ccat.id ccatid,ccat.alias ccat_alias, ccat.name ccatname,cg.id cgid,cg.name cgname,cc.id ccid,cc.alias cc_alias, cc.name ccname,cc.budget,cc.balance consumedbudget,cc.status, cc.last_updated,cc.updator from cost_center cc left join cost_category ccat on cc.cost_category_id=ccat.id left join cost_center_group cg on cc.cost_category_id=cg.id"
+    	def sql = new Sql(dataSource)
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		def fileName = "cc_"+new Date().format('ddMMyyHHmmss')+".csv"
+		zipOutputStream.putNextEntry(new ZipEntry(fileName))
+		//header
+		def headers = null; //["id","name"]
+
+		sql.rows(query).each{ row ->
+			   if (headers == null) {
+				headers = row.keySet()
+				log.debug("headers:"+headers)
+				zipOutputStream << headers
+			        zipOutputStream << "\n"
+			   }
+			//with escaping for excel
+			log.debug("row:"+row)
+			zipOutputStream << row.values().collect{it.toString()}
+			zipOutputStream << "\n"
+		}
+	}    	
+    }
+
+    def createSchemes = {
+	log.debug("createSchemes:"+params)
+	if (springSecurityService.isLoggedIn()) {
+		params.creator=springSecurityService.principal.username
+	}
+	else
+		params.creator=""
+	params.updator=params.creator
+
+        CostCenter.findAllByStatusIsNull().each{costCenterInstance->
+        if(!costCenterInstance.budget)
+        	costCenterInstance.budget = 0
+        if(!costCenterInstance.balance)
+        	costCenterInstance.balance = 0
+        if (!Scheme.findByCc(costCenterInstance)) {
+            //also create the corresponding default scheme
+            def scheme = new Scheme()
+            scheme.name = costCenterInstance.name
+            scheme.minAmount = 1
+            scheme.description = "For default donations"
+            scheme.effectiveFrom = new Date()
+            scheme.effectiveTill = scheme.effectiveFrom + 5*365	//for 5 years
+            scheme.category = "Linked"
+            scheme.benefits = "General"
+            scheme.cc = costCenterInstance
+            scheme.updator=scheme.creator=springSecurityService.principal.username
+            if(!scheme.save())
+            	scheme.errors.allErrors.each { println it   }
+            else
+            	log.debug("Created default scheme for costcenter.."+costCenterInstance+":"+scheme)            
+        }
+    }
+    	render "done"
+    }
+
+    def orgStructureBackup() {
+	response.contentType = 'application/zip'
+	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		def fileName = "orgstructure_"+new Date().format('ddMMyyHHmmss')+".csv"
+		zipOutputStream.putNextEntry(new ZipEntry(fileName))
+		//header
+		zipOutputStream << "alias,costcenter,hod_name,hod_phone,hod_email,hod_login,vert_name,vert_phone,vert_email,vert_login" 
+
+		CostCenter.findAllByStatusIsNull().each{cc->
+			zipOutputStream << "\n"
+			zipOutputStream <<   (cc.costCategory?.alias+cc.alias?:'')+","+(cc.name?:'')+","+
+				  (cc.owner1?.toString()?:'') +","+
+				  (VoiceContact.findByCategoryAndIndividual('CellPhone',cc.owner1)?.number?:'').replaceAll(',',';') +","+
+				  (EmailContact.findByCategoryAndIndividual('Personal',cc.owner1)?.emailAddress?:'').replaceAll(',',';') +","+
+				  (cc.owner?.loginid?:'') +","+
+				  (cc.costCenterGroup?.owner1?.toString()?:'') +","+
+				  (VoiceContact.findByCategoryAndIndividual('CellPhone',cc.costCenterGroup?.owner1)?.number?:'').replaceAll(',',';') +","+
+				  (EmailContact.findByCategoryAndIndividual('Personal',cc.costCenterGroup?.owner1)?.emailAddress?:'').replaceAll(',',';') +","+
+				  (cc.costCenterGroup?.owner?.loginid?:'')
+		}
+	}
+	}
+
+	def monthSummary() {}
+
+    def jq_monthSummary_list = {
+      log.debug("jq_monthSummary_list:"+params)
+      def sortIndex = "name"
+      def sortOrder  = params.sord ?: 'asc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = CostCenter.createCriteria().list(max:maxRows, offset:rowOffset) {
+		isNull('status')
+		if(params.ccat)
+			costCategory{ilike('name',params.ccat)}
+		if(params.name)
+			ilike('name',params.name)
+		if(params.alias)
+			eq('alias',params.alias)
+		
+		order(sortIndex, sortOrder)
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+      
+      def totalBudget=0,totalAvailableBudget=0,totalBalance=0,s_totalExpense=0,s_approvedExpense=0,s_draftSettlement=0
+      def s_rejectedSettlement=0,s_submittedSettlement=0,s_approvedSettlement=0,s_settledExpense=0
+      
+          def jsonCells = result.collect {
+                def stats = financeService.getMonthSummaryStats(it)
+                totalBudget += it.budget
+                totalAvailableBudget += ((it.budget?:0)-(it.balance?:0))
+                totalBalance += it.balance
+                s_totalExpense += stats.totalExpense?:0
+                s_approvedExpense += stats.approvedExpense?:0
+                s_draftSettlement += stats.draftSettlement?:0
+                s_rejectedSettlement += stats.rejectedSettlement?:0
+                s_submittedSettlement += stats.submittedSettlement?:0
+                s_approvedSettlement += stats.approvedSettlement?:0
+                s_settledExpense += stats.settledExpense?:0
+                [cell: [
+                	it.costCategory?.name,
+                	it.name,
+                	it.alias,
+                	it.budget,
+                	(it.budget?:0)-(it.balance),
+                	it.balance,
+                	stats.approvedExpense,
+                	stats.draftSettlement,
+                	stats.rejectedSettlement,
+                	stats.submittedSettlement,
+                	stats.approvedSettlement,
+                	stats.settledExpense,
+                	(it.balance==stats.totalExpense)?'ok':'notok'
+                    ], id: it.id]
+            }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages,userdata:[alias:'Total',budget:totalBudget,remainingbudget:totalAvailableBudget,balance:totalBalance,approvedExpense:s_approvedExpense,draftSettlement:s_draftSettlement,rejectedSettlement:s_rejectedSettlement,submittedSettlement:s_submittedSettlement,approvedSettlement:s_approvedSettlement,settledExpense:s_settledExpense]]
+        render jsonData as JSON
+        }	
+
+	def incomeSummary() {}
+
+    def jq_incomeSummary_list = {
+      log.debug("jq_incomeSummary_list:"+params)
+      def sortIndex = "name"
+      def sortOrder  = params.sord ?: 'asc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = CostCenter.createCriteria().list(max:maxRows, offset:rowOffset) {
+		isNull('status')
+		if(params.ccat)
+			costCategory{ilike('name',params.ccat)}
+		if(params.name)
+			ilike('name',params.name)
+		if(params.alias)
+			eq('alias',params.alias)
+		
+		order(sortIndex, sortOrder)
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+      
+      def totalApr=0,totalMay=0,totalJune=0,totalJuly=0,totalAug=0,totalSep=0,totalOct=0,totalNov=0,totalDec=0,totalJan=0,totalFeb=0,totalMar=0
+      
+          def jsonCells = result.collect {
+                def stats = financeService.getIncomeSummaryStats(it)
+		totalApr += stats.month_4
+		totalMay += stats.month_5
+		totalJune += stats.month_6
+		totalJuly += stats.month_7
+		totalAug += stats.month_8
+		totalSep += stats.month_9
+		totalOct += stats.month_10
+		totalNov += stats.month_11
+		totalDec += stats.month_12
+		totalJan += stats.month_1
+		totalFeb += stats.month_2
+		totalMar += stats.month_3
+                [cell: [
+                	it.costCategory?.name,
+                	it.name,
+                	it.alias,
+			stats.month_4,
+			stats.month_5,
+			stats.month_6,
+			stats.month_7,
+			stats.month_8,
+			stats.month_9,
+			stats.month_10,
+			stats.month_11,
+			stats.month_12,
+			stats.month_1,
+			stats.month_2,
+			stats.month_3,
+                    ], id: it.id]
+            }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages,userdata:[alias:'Total',apr:totalApr,may:totalMay,june:totalJune,july:totalJuly,aug:totalAug,sep:totalSep,oct:totalOct,nov:totalNov,dec:totalDec,jan:totalJan,feb:totalFeb,mar:totalMar]]
+        render jsonData as JSON
+        }	
+
 
 }

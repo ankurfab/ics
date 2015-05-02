@@ -47,7 +47,7 @@
                                     <label for="departmentCode"><g:message code="voucher.departmentCode" default="Department Code" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'departmentCode', 'errors')}">
-                                    <g:select name="departmentCode.id" from="${ics.CostCenter.list(sort: 'name')}" optionKey="id" value="${voucherInstance?.departmentCode?.id}"  />
+                                    <g:select name="departmentCode.id" from="${ics.CostCenter.findAllByStatusIsNull(sort: 'name')}" optionKey="id" value="${voucherInstance?.departmentCode?.id}"  />
 
                                 </td>
                             </tr>

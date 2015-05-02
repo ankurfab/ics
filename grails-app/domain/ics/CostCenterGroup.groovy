@@ -6,6 +6,9 @@ class CostCenterGroup {
 	    name()
 	    description(nullable:true)
 	    owner(nullable:true)
+	    owner1(nullable:true)
+	    owner2(nullable:true)
+	    status(nullable:true)
 	    dateCreated()
 	    creator()
 	    lastUpdated()
@@ -15,6 +18,9 @@ class CostCenterGroup {
     String name
     String description
     Individual owner
+    Individual owner1
+    Individual owner2
+    String status
 
     Date dateCreated
     Date lastUpdated

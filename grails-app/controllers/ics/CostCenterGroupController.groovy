@@ -1,6 +1,14 @@
 package ics
+import groovy.sql.Sql;
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 
 class CostCenterGroupController {
+
+    def financeService
+    def dataSource
 
     def index = { redirect(action: "list", params: params) }
 
@@ -114,8 +122,58 @@ class CostCenterGroupController {
     }
     
     def showOwner() {
-                def ownerid = CostCenterGroup.get(params.id)?.owner?.id
+                def ownerid = CostCenterGroup.get(params.id)?.owner1?.id
                 redirect(controller:"individual",action: "show", id: ownerid)    	
                 return
     }
+
+    def uploadForCG() {
+	    log.debug("Inside uploadForCG")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render flash.message
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+	    //format
+	    //name,description,loginid,owner_icsid
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(financeService.createCG(tokens))
+	    		numCreated++
+	    }
+	    
+	    flash.message="Created "+numCreated+"/"+numRecords+" CGs!!"
+	    render flash.message
+	    
+    }	
+
+    def cgBackup() {
+    	response.contentType = 'application/zip'
+    	def query = "SELECT cg.id,name,i.icsid,cg.updator,cg.last_updated FROM cost_center_group cg,individual i where cg.owner1_id=i.id"
+    	def sql = new Sql(dataSource)
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		def fileName = "cg_"+new Date().format('ddMMyyHHmmss')+".csv"
+		zipOutputStream.putNextEntry(new ZipEntry(fileName))
+		//header
+		def headers = null; //["id","name"]
+
+		sql.rows(query).each{ row ->
+			   if (headers == null) {
+				headers = row.keySet()
+				log.debug("headers:"+headers)
+				zipOutputStream << headers
+			        zipOutputStream << "\n"
+			   }
+			//with escaping for excel
+			log.debug("row:"+row)
+			zipOutputStream << row.values().collect{it.toString()}
+			zipOutputStream << "\n"
+		}
+	}    	
+    }
+
 }

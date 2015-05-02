@@ -16,7 +16,7 @@
 		<g:message code="voucher.departmentCode.label" default="Department Code" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:select name="departmentCode.id" from="${ics.CostCenter.list()}" optionKey="id" value="${voucherInstance?.departmentCode?.id}"  />
+	<g:select name="departmentCode.id" from="${ics.CostCenter.findAllByStatusIsNull()}" optionKey="id" value="${voucherInstance?.departmentCode?.id}"  />
 
 </div>
 

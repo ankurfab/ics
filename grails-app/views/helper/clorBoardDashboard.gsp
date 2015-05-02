@@ -15,11 +15,16 @@
         <div class="body">
             <h1>More Devotees! Happy Devotees!!</h1>
 
+	    <div id="divEvents">
+	    	<g:render template="eventSummary"/>
+	    </div>
+
 		<div id="accordian">
 		    <div id="summ">
 				<div id="chartSumm" style="height:2000px; width:1200px;float:left;"></div>
 		    </div>
 		</div>
+
 		
         </div>
 	

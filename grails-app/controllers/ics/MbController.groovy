@@ -1,7 +1,12 @@
 package ics
 
 import grails.converters.JSON
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 import groovy.time.TimeCategory
+
 
 class MbController {
 
@@ -278,7 +283,7 @@ def showImage = {
         if(mbprofile)
         {
 		result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
-            eq('workflowStatus', 'APPROVED')
+            eq('workflowStatus', 'AVAILABLE')
             ne('id', mbprofile.id)
 
             //check for opposite gender
@@ -779,12 +784,110 @@ def showImage = {
     }
     
     def dashboard() {
+    	[stats:MbService.stats()]
     }
     
     def changeWorkflowStatus() {
     	def ret = MbService.changeWorkflowStatus(params)
     	render ([message:ret] as JSON)
     }
+
+    def report() {}
+    
+    def showReportResult() {
+    	log.debug("Inside showReportResult with params : "+params)	    	
+    	render(template: params.reportName)
+    }
+    
+    def jq_workflowStatus_list() {
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'desc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+          
+          if(params.oper=="excel" )
+          		{
+          			maxRows = 100000
+          			rowOffset = 0
+          			sortIndex = "id"
+          			sortOrder = "asc"
+    		}
+    
+    
+    	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
+    				
+    		    
+    	if(params.db)
+    		eq('category',params.db)
+    	if(params.centre)
+    		eq('referrerCenter',params.centre)
+    	if(params.gender) {
+    		if(params.gender=='BOY')
+    			candidate{eq('isMale',true)}
+    		else
+    			candidate{eq('isMale',false)}
+    		}
+    	if(params.workflowStatus)
+    		eq('workflowStatus',params.workflowStatus)
+    	if(params.name)
+    		candidate{
+    			or{
+    			ilike('legalName',params.name)
+    			ilike('initiatedName',params.name)
+    			}
+    		}
+    
+    
+    	order(sortIndex, sortOrder)
+    	}
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+          
+         
+         if(params.oper=="excel")
+            {
+         
+    	def fileName = "mbworkflowstatus_"+new Date().format('ddMMyyyyHHmmss')+".csv"
+    	response.contentType = 'application/zip'
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+    	zipOutputStream.putNextEntry(new ZipEntry(fileName))
+    	
+    	zipOutputStream << "DB,Centre,Gender,WorkflowStatus,Name" 
+    	def sno = 0
+    	result.each{ row ->
+    	sno++
+    	zipOutputStream <<"\n"
+    	zipOutputStream <<(row.category?:'') +","+
+    	(row.referrerCenter?:'') +","+
+    	(row.candidate.isMale?'Boy':'Girl') +","+
+    	(row.workflowStatus?:'') +","+
+    	(row.candidate.toString()) 
+    	    }
+    	 }    		
+    	return
+    		 }
+        else
+    	{
+          
+          def jsonCells
+          jsonCells = result.collect {
+                [cell: [
+                	    it.category,
+                	    it.referrerCenter,
+                	    it.candidate.isMale?'Boy':'Girl',
+                	    it.workflowStatus,
+                	    it.candidate.toString(),
+                    ], id: it.id]
+            }
+            def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+            render jsonData as JSON
+            }
+    }
+    
 
     
 }

@@ -18,13 +18,14 @@
              	<td>${i+1}</td>
              	<td>${ia.individual}</td>
              	<td>
-             		${ia.eventRegistration.regCode}
+             		<g:link action="qasheet" params="['erid':ia.eventRegistration?.id]" target="_new">${ia.eventRegistration.regCode}</g:link>
+             		
              	</td>
              	<td>
              		${ia.assessmentDate.format('dd-MM-yyyy HH:mm:ss')}
              	</td>
              	<td>
-             		${ia.timeTaken}
+             		${new Double((ia.timeTaken?:0)/60).round(2)}m
              	</td>
              	<td>
              		${ia.score}

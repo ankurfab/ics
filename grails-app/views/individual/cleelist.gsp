@@ -13,8 +13,8 @@
 			href="${createLink(uri: '/')}"><g:message
 					code="default.home.label" /></a></span>
 		<sec:ifAnyGranted roles="ROLE_COUNSELLOR">
-			<span class="menuButton"><g:link class="create" action="createprofile" params="[type: 'Counsellee']">New Counsellee</g:link></span>
-			<span class="menuButton"><g:link class="create" action="createprofile" params="[type: 'Wellwisher']">New WellWisher</g:link></span>
+			<!--<span class="menuButton"><g:link class="create" action="createprofile" params="[type: 'Counsellee']">New Counsellee</g:link></span>
+			<span class="menuButton"><g:link class="create" action="createprofile" params="[type: 'Wellwisher']">New WellWisher</g:link></span>-->
 		</sec:ifAnyGranted>
 
 	</div>
@@ -57,7 +57,7 @@
   	{name:'id',hidden:true}
        ],
       rowNum:10,
-      rowList:[10,20,30,40,50,100,200],
+      rowList:[10,20,30,40,50,100,200,500,1000],
       pager: '#counsellee_list_pager',
       viewrecords: true,
       sortorder: "asc",
@@ -77,6 +77,7 @@
 					var url = "${createLink(controller:'individual',action:'mergeRecords')}"+"?idList="+ids
 					$.getJSON(url, {}, function(data) {
 						alert(data.message);
+						jQuery("#counsellee_list").jqGrid().trigger("reloadGrid");
 					    });	
 			}
 			else
@@ -90,6 +91,7 @@
 					var url = "${createLink(controller:'individual',action:'changeRelation')}"+"?type=Counsellee&idList="+ids
 					$.getJSON(url, {}, function(data) {
 						alert(data.message);
+						jQuery("#counsellee_list").jqGrid().trigger("reloadGrid");
 					    });	
 			}
 			else
@@ -104,6 +106,7 @@
 					var url = "${createLink(controller:'individual',action:'changeRelation')}"+"?type=Wellwisher&idList="+ids
 					$.getJSON(url, {}, function(data) {
 						alert(data.message);
+						jQuery("#counsellee_list").jqGrid().trigger("reloadGrid");
 					    });	
 			}
 			else

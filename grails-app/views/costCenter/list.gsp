@@ -29,6 +29,8 @@
                         
                    	    <g:sortableColumn property="alias" title="Alias" titleKey="costCenter.alias" />
                         
+                   	    <g:sortableColumn property="status" title="Status" titleKey="costCenter.status" />
+                        
                    	    <g:sortableColumn property="costCategory" title="CostCategory" titleKey="costCenter.costCategory" />
                         
                    	    <g:sortableColumn property="isProfitCenter" title="IsProfitCenter" titleKey="costCenter.isProfitCenter" />
@@ -60,6 +62,8 @@
                             <td>${fieldValue(bean: costCenterInstance, field: "name")}</td>
                         
                             <td>${fieldValue(bean: costCenterInstance, field: "alias")}</td>
+                        
+                            <td>${fieldValue(bean: costCenterInstance, field: "status")}</td>
                         
                             <td>${fieldValue(bean: costCenterInstance, field: "costCategory")}</td>
                         

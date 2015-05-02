@@ -3,149 +3,221 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name="layout" content="main-jqm-landing" />
+        <meta name="layout" content="main" />
         <title>File Expense Report</title>
+	<r:require module="jqui" />
     </head>
-    <body>
+<body>
 
-    <div role="main" class="ui-content">
+<div class="nav">
+    <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
+    <span class="menuButton"><g:link class="list" action="selectProject">File Report</g:link></span>
+</div>
+
+<div class="body">
     
-<div class="allbody"> 
 
 <g:set var="modes" value="${ics.PaymentMode.findAllByInpersonAndNameInList(true,['Cash','Cheque','RTGS','Transfer'])}" />
 
-<h1>Expense Reimbursement Form</h1>
-			
+<h1>Expense Reimbursement Form for ${projectInstance.ref +" "+ projectInstance.name +" "+projectInstance.amount.toString()}</h1>
+
+<g:if test="${creditProjects.size()==1}">
+	<g:set var="creditSettlementProject" value="${creditProjects[0]}" />
+	<div>
+	Linking Part Payment Expenses (${ppProjects}) with Credit Expense: ${creditSettlementProject}
+	</div>
+</g:if>
 			 
 <g:form name="expenseReimbursementForm" controller="project" action="saveReport"   method="POST">
+
+<g:set var="numItems" value="${new Integer(numRows?:'10')}" />
 			
-<fieldset class="form">
 
 <g:hiddenField name="projectid" value="${projectInstance.id}" />
+<g:hiddenField name="ppProjectIds" value="${ppProjects?.collect{it.id}?.join(',')}" />
+<g:hiddenField name="settlementAmount" value="" />
+<g:hiddenField name="numRows" value="${numRows}" />
 
-<div>
-	
-	<!--@TODO: This should be per row or automatically determined if invoice raised by is populated
-	<h3><input type="checkbox" id="invoicehide-chk" name="invoicehide-chk" value="1"><span id="spn_invoice">Disable Invoice Details</span></h3>
-	-->
+    <div>
 	<table>
-	<thead>        
-	               <th>Ref</th>
-	              <th>Name</th>
-	               <th></th>
-	               <th>Amount</th>
-	</thead>               
-	<tr><td>${projectInstance.ref }</td> <td>${projectInstance.name}</td>  <td> </td>  <td>${projectInstance.amount } </td> </tr>
-	</table>
-	<table id="expenseReimbursementtb">
 		<thead>
-<!--mode..Particulars,,Bill Availability...amount,vendor,bill no(Not Compulsary),,Bill date/Expense date -->
-
 			<th>Bill Payment Mode</th>
-			<!--<th>Date</th>-->
 			<th>Particulars</th>
 			<th>Bill Availability</th>
 			<th>Amount </th>
 			<th>Vendor</th>
 			<th>Bill No</th>
 			<th>Bill Date</th>
-			
-			
 		</thead>
-		<g:set var="totalExp" value="${new BigDecimal(0)}" />
-		<g:set var="advance" value="${projectInstance.advanceIssued?projectInstance.advanceAmountIssued:new BigDecimal(0)}" />
-		<g:set var="balance" value="${new BigDecimal(0)}" />
 		
-		<g:each in="${0..9}" var="i">
-			<tr>
-				
-				<td class="invoice">
-					<g:select name="${'mode.id_'+i}" from="${modes}" value=""
-						  optionKey="id" optionValue="name" noSelection="['':'-Select Payment Mode-']" class="billpaymentmode"/>				
-				</td> 
-				<!-- <td><g:textField class="date-input-css" name="${'expdate_'+i}"  value="" placeholder="dd-MM-yyyy"/></td> <--for id becoz id was random with input type="text" -->
-					
-				
-				 
-				<td>
-					<g:textField name="${'part_'+i}" value="" placeholder="Description" />
-				</td> 
-				
-				
-				<td> 
-				
-				
-				          				
-          				
-          				
-				<select id="${'invoiceAvailable_'+i}"  name="${'invoiceAvailable_'+i}">
-				 <option value="">-Select Bill Availability-</option>
-				  <option value="Available">Available</option>
-				  <option value="Not Available">Not Available</option>
-				  <option value="Adjustment against previous Bill">Adjustment against previous bill</option>
-				  <option value="Advance against future bill">Advance against future bill</option>
-				</select>		
-				</td>
-				
-				
-				<td>
-					<g:textField name="${'amount_'+i}" value="" class="amount" placeholder="Amount" type="number" min="1"/>
-				</td>
-				
-                    
-				 
-				
-		        <td class="invoice">
-				<g:textField name="${'invoiceRaisedBy_'+i}" value=""  placeholder="Invoice Raised By"/>
-				 </td>	
-				              
-			        <td class="invoice" id="${'invoiceNum_'+i}">
-				<g:textField name="${'invoiceNo_'+i}" value=""   placeholder="Invoice Number"/>
-				</td>	
-				                 
-			        <td class="invoice" >
-				<g:textField class="date-input-invoice" name="${'invoiceDate_'+i}" value=""    placeholder="Invoice Date" />
-				</td>
-				
+		<g:set var="totalExp" value="${new BigDecimal(0)}" />
+		<g:set var="advance" value="${projectInstance.advanceAmountIssued?:new BigDecimal(0)}" />
+		<g:set var="balance" value="${new BigDecimal(0)}" />
+		<g:set var="ppTotalAmount" value="${new BigDecimal(0)}" />
 
-                                     
-				  	
+		<g:if test="${creditSettlementProject}">
+		<!-- show the credit row -->
+			<tr>				
+				<td>${creditSettlementProject.advancePaymentMode}</td> 
+				<td>${creditSettlementProject.advancePaymentComments}</td>
+				<td>${creditSettlementProject.advancePaymentVoucher?.voucherNo}</td>
+				<td>${creditSettlementProject.amount}</td>
+				<td>${creditSettlementProject.advanceIssuedTo}</td>
+				<td>${creditSettlementProject.billNo}</td>
+				<td>${creditSettlementProject.billDate?.format('dd-MM-yyyy')}</td>
 			</tr>
-		        </g:each> 
+		
+		<!-- show the part payment row(s) if any -->
+		<g:each in="${ppProjects}" var="ppProject">
+			<tr>				
+				<td>${ppProject.advancePaymentVoucher?.mode}</td> 
+				<td>${ppProject.advancePaymentVoucher?.description}</td> 
+				<td>${ppProject.advancePaymentVoucher?.voucherNo}</td>
+				<td>${ppProject.advancePaymentVoucher?.amount}</td>
+				<td>${ppProject.advanceIssuedTo}</td>
+				<td>${ppProject.advancePaymentVoucher?.voucherNo}</td>
+				<td>${ppProject.advancePaymentVoucher?.voucherDate?.format('dd-MM-yyyy')}</td>
+				
+				<g:set var="ppTotalAmount" value="${ppTotalAmount+ppProject.advancePaymentVoucher?.amount}" />
+			</tr>
+		</g:each>
+		
+		</g:if>
+
+		<g:if test="${!expenses}">
+		<!-- data entry first rows  -->
+		<g:each in="${0..0}" var="i">
+			<tr>				
+				<td>
+					<g:select name="${'mode.id_'+i}" from="${modes}" value="${projectInstance?.advancePaymentMode}"
+					optionKey="id" optionValue="name" noSelection="['':'-Select Payment Mode-']" class="billpaymentmode"/>				
+				</td> 
+				<td><g:textField name="${'part_'+i}" value="" placeholder="Description" /></td> 
+				<td>
+					<select id="${'invoiceAvailable_'+i}"  name="${'invoiceAvailable_'+i}">
+					 <option value="">-Select Bill Availability-</option>
+					  <option value="Available" <g:if test="${creditSettlementProject}">selected="selected"</g:if> >Available</option>
+					  <option value="Not Available">Not Available</option>
+					  <!--<option value="Adjustment against previous Bill">Adjustment against previous bill</option>
+					  <option value="Advance against future bill">Advance against future bill</option>-->
+					</select>		
+				</td>
+				<td><g:textField name="${'amount_'+i}" value="" class="amount" placeholder="Amount" type="number" min="1" value="${(projectInstance?.amount?:0)}"/></td>
+				<td><g:textField name="${'invoiceRaisedBy_'+i}" value="${projectInstance?.advanceIssuedTo}"  placeholder="Invoice Raised By"/></td>
+				<td><g:textField name="${'invoiceNo_'+i}" value="${projectInstance?.billNo}"   placeholder="Invoice Number"/></td>
+				<td><g:textField class="date-input-invoice" name="${'invoiceDate_'+i}" value="${projectInstance?.billDate?.format('dd-MM-yyyy')}"    placeholder="Invoice Date" /></td>
+			</tr>
+		</g:each>
+		<!-- data entry rows  -->
+		<g:each in="${1..((numItems?:10)-1)}" var="i">
+			<tr>				
+				<td>
+					<g:select name="${'mode.id_'+i}" from="${modes}" value=""
+					optionKey="id" optionValue="name" noSelection="['':'-Select Payment Mode-']" class="billpaymentmode"/>				
+				</td> 
+				<td><g:textField name="${'part_'+i}" value="" placeholder="Description" /></td> 
+				<td>
+					<select id="${'invoiceAvailable_'+i}"  name="${'invoiceAvailable_'+i}">
+					 <option value="">-Select Bill Availability-</option>
+					  <option value="Available">Available</option>
+					  <option value="Not Available">Not Available</option>
+					  <!--<option value="Adjustment against previous Bill">Adjustment against previous bill</option>
+					  <option value="Advance against future bill">Advance against future bill</option>-->
+					</select>		
+				</td>
+				<td><g:textField name="${'amount_'+i}" value="" class="amount" placeholder="Amount" type="number" min="1" value=""/></td>
+				<td><g:textField name="${'invoiceRaisedBy_'+i}" value=""  placeholder="Invoice Raised By"/></td>
+				<td><g:textField name="${'invoiceNo_'+i}" value=""   placeholder="Invoice Number"/></td>
+				<td><g:textField class="date-input-invoice" name="${'invoiceDate_'+i}" value=""    placeholder="Invoice Date" /></td>
+			</tr>
+		</g:each>
+		</g:if>
+		<g:else> <!-- edit scenario begins-->
+			<!-- existing expenses rows  -->
+			<g:if test="${expenses.size()>0}">
+				<g:each in="${expenses}" var="expense" status="i">
+					<tr>				
+						<g:hiddenField name="${'expid_'+i}" value="${expense.id}" />
+						<td>
+							<g:select name="${'mode.id_'+i}" from="${modes}" value="${expense.invoicePaymentMode?.id}"
+							optionKey="id" optionValue="name" noSelection="['':'-Select Payment Mode-']" class="billpaymentmode"/>				
+						</td> 
+						<td><g:textField name="${'part_'+i}" value="${expense.description}" placeholder="Description" /></td> 
+						<td>
+							<select id="${'invoiceAvailable_'+i}"  name="${'invoiceAvailable_'+i}">
+							 <option value="">-Select Bill Availability-</option>
+							  <option value="Available" <g:if test="${expense.invoiceAvailable=='Available'}">selected="selected"</g:if>>Available</option>
+							  <option value="Not Available" <g:if test="${expense.invoiceAvailable=='Not Available'}">selected="selected"</g:if>>Not Available</option>
+							  <!--<option value="Adjustment against previous Bill">Adjustment against previous bill</option>
+							  <option value="Advance against future bill">Advance against future bill</option>-->
+							</select>		
+						</td>
+						<td><g:textField name="${'amount_'+i}" value="" class="amount" placeholder="Amount" type="number" min="1" value="${expense.amount}"/></td>
+						<td><g:textField name="${'invoiceRaisedBy_'+i}" value="${expense.invoiceRaisedBy}"  placeholder="Invoice Raised By"/></td>
+						<td><g:textField name="${'invoiceNo_'+i}" value="${expense.invoiceNo}"   placeholder="Invoice Number"/></td>
+						<td><g:textField class="date-input-invoice" name="${'invoiceDate_'+i}" value="${expense.invoiceDate?.format('dd-MM-yyyy')}"    placeholder="Invoice Date" /></td>
+					</tr>
+				</g:each>
+			</g:if>
+			<!-- data entry rows  -->
+			<g:each in="${expenses.size()..(numItems-1)}" var="i">
+				<tr>				
+					<td>
+						<g:select name="${'mode.id_'+i}" from="${modes}" value=""
+						optionKey="id" optionValue="name" noSelection="['':'-Select Payment Mode-']" class="billpaymentmode"/>				
+					</td> 
+					<td><g:textField name="${'part_'+i}" value="" placeholder="Description" /></td> 
+					<td>
+						<select id="${'invoiceAvailable_'+i}"  name="${'invoiceAvailable_'+i}">
+						 <option value="">-Select Bill Availability-</option>
+						  <option value="Available">Available</option>
+						  <option value="Not Available">Not Available</option>
+						  <!--<option value="Adjustment against previous Bill">Adjustment against previous bill</option>
+						  <option value="Advance against future bill">Advance against future bill</option>-->
+						</select>		
+					</td>
+					<td><g:textField name="${'amount_'+i}" value="" class="amount" placeholder="Amount" type="number" min="1" value=""/></td>
+					<td><g:textField name="${'invoiceRaisedBy_'+i}" value=""  placeholder="Invoice Raised By"/></td>
+					<td><g:textField name="${'invoiceNo_'+i}" value=""   placeholder="Invoice Number"/></td>
+					<td><g:textField class="date-input-invoice" name="${'invoiceDate_'+i}" value=""    placeholder="Invoice Date" /></td>
+				</tr>
+			</g:each>		
+		</g:else> <!-- edit scenario ends-->
+
+			       <tr><td></td> <td></td> <td>Total Expense Amount : </td> <td><div id="total">${projectInstance?.amount}</div></td></tr>
+			       <tr><td></td> <td></td> <td>Less Advance Taken:  </td> <td><div id="advance">${advance+(ppTotalAmount?:0)}</div></td></tr>
+			       <tr><td></td> <td></td> <td>Balance Returned/Payable: </td> <td><div id="payable">${projectInstance?.amount - (ppTotalAmount?:0) - advance}</div></td></tr>
+		
 		        
-			       <tr><td></td> <td></td> <td>totalCashAmount: </td> <td><div id="totalcash"></div></td></tr>
-			       <tr><td></td> <td></td> <td>totalChequesAmount: </td> <td><div id="totalothers"></div></td></tr>
-			       <tr><td></td> <td></td> <td>total : </td> <td><div id="total"></div></td></tr>
-			       <tr><td></td> <td></td> <td>advance:  </td> <td><div id="advance">${advance}</div></td></tr>
-			       <tr><td></td> <td></td> <td>balance: </td> <td><div id="payable"></div></td></tr>
-			       <tr><td></td> <td></td> <td> balancecash: </td> <td><div id="balancecash"></td></tr>
-			       <tr><td></td> <td></td> <td><input type="button" id="gettotalamt" value="getTotals"></td> <td></td></tr>
 	</table>		       
 		
         </div>
-		<div>
-		<fieldset data-role="controlgroup" data-type="horizontal">
-			<legend>Status:</legend>
-			<input name="reportstatus" id="reportstatus-1" value="DRAFT" type="radio">
-			<label for="reportstatus-1">DRAFT</label>
-			<input name="reportstatus" id="reportstatus-2" value="SUBMIT" type="radio" checked="checked">
-			<label for="reportstatus-2">SUBMIT</label>
-		</fieldset>
-		</div>
 
-		<div>
-			<g:submitButton name="save" value="Save" />
-		</div>
+	<!--<g:hiddenField name="reportstatus" value="SUBMIT" />-->
+	
+	<div>
+	<fieldset data-role="controlgroup" data-type="horizontal">
+		<legend>Status:</legend>
+		<input name="reportstatus" id="reportstatus-1" value="DRAFT" type="radio">
+		<label for="reportstatus-1">DRAFT</label>
+		<input name="reportstatus" id="reportstatus-2" value="SUBMIT" type="radio" checked="checked">
+		<label for="reportstatus-2">SUBMIT</label>
+	</fieldset>
+	</div>
+		
+	<div>
+		<g:submitButton name="save" value="Submit" />
+	</div>
 
-		</fieldset>
+</g:form>
 
-		</g:form>
+</div>
 
-		</div>
-
-		 <script>
-		 $(document).ready(function()
-		 {   
+<script>
+ $(document).ready(function()
+ {   
+	$( ".date-input-invoice" ).datepicker({dateFormat: 'dd-mm-yy',maxDate: 0});
+	
 		 /*  // var numDaysSinceSubmitted = ${projectInstance.submitDate - new Date()};
 		  
 		  submitDate = '${projectInstance.submitDate?:0}';
@@ -164,13 +236,14 @@
 		  var totalamt=0;//first initilized totalamount to zero
 		  var cashamt=0;
 		  var totalother=0;
-		  var advance = parseFloat(${advance?:0})
+		  var advance = parseFloat(${(advance?:0)+(ppTotalAmount?:0)})
 		 // InitializeDate();
 		  
 		 $("table input").on('change blur input', function ()
 		      {
 
-		       var row = $(this).closest('tr'),
+		       //buggy: doesnt consider existing values in case of edit
+		       /*var row = $(this).closest('tr'),
 		       amount = row.find('.amount').val();
 		       temp = parseFloat(1);
 		       row.find('.amount').text(amount * temp);
@@ -178,18 +251,25 @@
 		       var sum = 0;
 		       $('.amount').each(function () {
 			      sum += parseFloat($(this).text()) || 0;
-			      console.log(sum)
+			      //console.log(sum)
 			     });
+			     
+			*/
+			
+			var sum = 0;
+			for (k = 0; k < ${numItems?:10}; k++)
+			{ 
+				if($('#amount_'+k).val())
+					sum += parseFloat($('#amount_'+k).val());
+			}
+			
 			  $('#total').text(sum);
 			  totalamt=sum;
-			  $('#payable').text(advance-totalamt);   
+			  $('#payable').text(totalamt-advance);   
 		       });
 
 
 		      $("#expenseReimbursementForm").submit(function(e){
-
-			if(!validateFirstRow())
-			    return false;
 
 			if(!validate())
 			    return false;
@@ -201,127 +281,48 @@
 		    function validate()  
 		      {
 
-			//1. check total amount
+			//check if all relevant fields are selected
+			var incompleteRows = checkEachRow();
+			if(incompleteRows)
+			{
+			alert("Please fill all mandatory fields for rows: "+incompleteRows);
+			return false;
+			}
+
+			//check total amount
 			if(!validateTotal())
 			{
 			return false
 			}                     
 
-			//2. check cash amount
-			/* if(!validateCash())
-			{
-			return false
-			}  */
-
-			//3. check if payment mode is selected
-
-
-			//alert("Expense Reimbursement Form will get Submitted");
 			return true;
 		      }
 		    
-
-
-	     $( "#gettotalamt" ).click(function() {
-
-		totalother=0;
-		cashamt=0;
-	        var validcash=18000;
-		  for (i=0;i<10;i++)
-		      {
-		          var selected = $('#mode\\.id_'+i+' :selected').val();
-			  
-			  if(selected=='')
-			  {
-			  //nothing to do
-			  }
-			  else if(selected=="Cash") 
-			  {
-			     validatefields(i);
-			     if(parseFloat($('#amount_'+i).val())>validcash){
-			     alert("Amount More than 18000/- in Cash  is not allowed for the row  "+((parseFloat(i))+(parseFloat(1))));
-			     return false }
-			     else
-			     {
-			      if($('#amount_'+i).val()=='')
-			        $('#amount_'+i).val(0);
-			     cashamt=cashamt+parseFloat($('#amount_'+i).val());
-			     }
-			     
-			  }
-			  
-			  else
-			 {
-			 validatefields(i);
-			 if($('#amount_'+i).val()=='')
-			        $('#amount_'+i).val(0);
-			 totalother =totalother+parseFloat($('#amount_'+i).val());
-			  }
-			  
-
-			   }
-			      $("#totalcash").text(cashamt);
-			      $("#totalothers").text(totalother);  
-			      var balancecashtemp=parseFloat(advance)-parseFloat(cashamt);
-			      $("#balancecash").text(balancecashtemp);
-			      var balance1 =totalamt-advance;
-			      $("#balanceother").text(balance1-balancecashtemp);
-			  return false;
-		});
-	
-	
-                function  validatefields(i)
-		      {
-	                     var somePopulated = false;
-	                     if($('#part_'+i).val() || $('#invoiceAvailable_'+i).val() || $('#amount_'+i).val() || $('#invoiceRaisedBy_'+i).val() || $('#invoiceDate_'+i).val())
-	                     	somePopulated = true;
-	                     	
-	                     if(!somePopulated)
-	                     	return true;
-	                     	
-	                     if($('#part_'+i).val()=='')
-			      {
-			      alert("Please select the Particulars for the row  "+((parseFloat(i))+(parseFloat(1)))); return false}
-			      
-			     else if($('#invoiceAvailable_'+i).val()=='')
-			      { 
-			      alert("Please select the Bill Availability   for the row  "+((parseFloat(i))+(parseFloat(1)))); return false} 
-			      
-			     else if($('#amount_'+i).val()=='')
-			      { 
-			      alert("Please select the amount   for the row  "+((parseFloat(i))+(parseFloat(1)))); return false}
-			      
-			     else if($('#invoiceRaisedBy_'+i).val()==''){
-			      alert("Please select the Vendor   for the row  "+((parseFloat(i))+(parseFloat(1)))); return false}
-			       
-			     else if($('#invoiceDate_'+i).val()==''){
-			      alert("Please select the Bill Date   for the row  "+((parseFloat(i))+(parseFloat(1)))); return false}
-			     return 
-		        }	        
+                     
 		 function validateTotal()
-		    {     
-		    return validateamount(totalamt);
-		    }
-     
-		 function validateamount(totalamt)
 		 {
-		   var advanceIssued = ${advance}
+		   var totalamt = 0;
+			for (k = 0; k < ${numItems?:10}; k++)
+			{ 
+				if($('#amount_'+k).val())
+					totalamt += parseFloat($('#amount_'+k).val());
+			}
+		   
 
-		   var projectamount = ${projectInstance.amount?:0}
+		   var projectamount = parseFloat(${projectInstance.amount?:0})
+		   var ppTotalAmount = parseFloat(${ppTotalAmount?:0})
 
-		   var newamount=parseFloat(totalamt)-parseFloat(advanceIssued);
-
-		   if(newamount>projectamount)
+		   if(totalamt>projectamount)
 		   {
-
-		   alert("Expenses exceed sanctioned amount!!");
-		   return false;
+			   alert("Expenses exceed sanctioned amount!!");
+			   return false;
 		   }
 		   else
 		   {
-		    //alert("OK..(totalAmount-advanceIssued)is less than the total Project Amount")
-		   return true;
+			   $('#settlementAmount').val(totalamt);
+			   return true;
 		   }
+
 		   return true;
 		 } 
 
@@ -362,75 +363,75 @@
 		   });
 		  }
           
-	        var count=10;
-		var advance = parseFloat(${advance?:0})
-		for (k = 0; k < count; k++)
+	   function checkEachRow() {
+	        var incompleteRows="";
+		for (k = 0; k < ${numItems?:10}; k++)
 		{ 
-
-		$('#part_'+k).focusout(function(){
-
-
-		if($(this).val()=="" || $(this).val()==null)
-		{
-		alert("Please fill the Particulars ");
+			if(!validatefields(k))
+				incompleteRows += (k+1) +", ";
 		}
-		});
+		return incompleteRows;
+	   }
 
-		$('#type_'+k).focusout(function(){
+                function  validatefields(i)
+		      {
+	                     var somePopulated = false;
+	                     var mandatoryFieldsFlag = true;
+	                     var billFieldsFlag = true;
+	                     if($('#mode\\.id_'+i).val() || $('#part_'+i).val() || $('#invoiceAvailable_'+i).val() || $('#amount_'+i).val() || $('#invoiceRaisedBy_'+i).val() || $('#invoiceNo_'+i).val() || $('#invoiceDate_'+i).val())
+	                     	somePopulated = true;
+	                     	
+	                     if(somePopulated) {
+	                     	//check if relevant fields are populated
+	                     	
+	                     	mandatoryFieldsFlag = checkMandatoryFields(i);
+	                     	
+	                     	billFieldsFlag = true;
+	                     	var mode = $('#mode\\.id_'+i).find(":selected").text();
+	                     	if(mode.toUpperCase()!='CASH' && $('#invoiceAvailable_'+i).val()!='Not Available') {
+	                     		billFieldsFlag = checkBillDetails(i);
+	                     	}
+	                     	
+	                     }
+	                     if(mandatoryFieldsFlag && billFieldsFlag)
+	                     	return true;
+	                     else
+	                     	return false;
+		        }	        
+
+                function  checkMandatoryFields(i)
+		      {
+	                     var allPopulated = true;
+	                     if(!$('#mode\\.id_'+i).val() || !$('#part_'+i).val() || !$('#invoiceAvailable_'+i).val() || !$('#amount_'+i).val())
+	                     	allPopulated = false;
+	                     
+	                     var mode = $('#mode\\.id_'+i).find(":selected").text();
+	                     if(mode.toUpperCase()=='CASH' && $('#amount_'+i).val()) {
+	                     	var cashAmt = $('#amount_'+i).val()
+				if(parseFloat(cashAmt)>18000){
+					alert("Amount More than 18000/- in Cash  is not allowed for the row  "+(i+1));
+					allPopulated = false;
+				}
+	                     }
+	                     
+	                     return allPopulated;
+	                     	
+		        }	        
+
+                function  checkBillDetails(i)
+		      {
+	                     var allPopulated = true;
+	                     if(!$('#invoiceRaisedBy_'+i).val() || !$('#invoiceNo_'+i).val() || !$('#invoiceDate_'+i).val())
+	                     	allPopulated = false;
+	                     
+	                     return allPopulated;
+	                     	
+		        }	        
+
+ });  
 
 
-		if($(this).val()=="" || $(this).val()==null)
-		{
-		alert("Please fill the Type ");
-		}
-		});
+</script>
 
-		$('#amount_' + k).blur(function(){
-
-                
-		if($(this).val()=="" || $(this).val()==null||$('#amount_' + k).val==0)
-		{
-		alert("Please fill the Amount ");
-		}
-		else
-		{
-		
-              
-		}
-		});
-               var  cashamount=parseFloat(totalamt);
-		$("#payable").text(cashamount-advance);
-
-		}
-
-
-		$('#invoicehide-chk').click(function() 
-		{
-
-		  if ($('#invoicehide-chk').is(':checked')) {
-		  $("#expenseReimbursementtb .invoice input").attr('disabled', 'disabled');
-		  $('#spn_invoice').text(' Enable Invoice Details');
-
-		  } else {
-		  $("#expenseReimbursementtb .invoice input").removeAttr('disabled');
-		  $('#spn_invoice').text('Disable Invoice Details');
-		    }
-		  });
-
-
-		
-
-	     //  $( ".date-input-invoice" ).datepicker({dateFormat: 'dd-mm-yy'});
-               $( ".date-input-invoice" ).datepicker({
-                    dateFormat: 'dd-mm-yy',
-                    maxDate: 0
-                    
-                      });
-                  
-	     });  
-            
-       
-	</script>
-
-	    </body>
-	</html>
+</body>
+</html>

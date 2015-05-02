@@ -54,7 +54,7 @@ select {
    padding: 2px 2px 2px 0;
 }
 textarea {
-	width: 215px;
+	width: 250px;
 	height: 150px;
 	vertical-align: middle;
 }
@@ -424,6 +424,17 @@ height: 2.5em;
 	left:880px;
 	top:60px;
 }
+
+.blink {
+    animation-duration: 1s;
+    animation-name: blink;
+    animation-iteration-count: infinite;
+    animation-timing-function: steps(2, start);
+}
+@keyframes blink {
+    80% {
+        visibility: hidden;
+    }
 
 .slider-input{
     border:0;

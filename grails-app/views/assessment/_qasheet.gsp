@@ -1,12 +1,13 @@
 <div>
 <div id="headingsale" class="invoice">
-    <h2>Answer sheet for ${ia.individual}</h2>
+    <h2>Answer sheet for ${ia.individual} Language:${ia.language?:'ENGLISH'} Score:${ia.score?:0} Duration:${ia.timeTaken?:''}s (${new Double((ia.timeTaken?:0)/60).round(2)}m)</h2>
 </div>
 
 
 <table id="answersheet" > 
 	<thead>
 		<th>S.No.</th>
+		<th>TimeStamp</th>
 		<th>Question</th>
 		<th>Choice1</th>
 		<th>Choice2</th>
@@ -19,6 +20,7 @@
              <tr>
                           	
              	<td>${i+1}</td>
+             	<td>${iaqa.lastShown?.format('dd-MM-yy HH:mm:ss')}</td>
              	<td>${iaqa.question.questionText}</td>
              	<td>
              		<g:if test="${iaqa.question.isChoice1Correct}"><b></g:if>

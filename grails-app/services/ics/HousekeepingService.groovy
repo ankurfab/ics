@@ -525,7 +525,7 @@ def config = ConfigurationHolder.config
 	   def queryFam = "select sum(amount) amt from donation where (status is null or status <> 'BOUNCED') and donated_by_id in (select individual1_id from relationship where relationship_group_id in (select id from relationship_group where refid="+indId+" and group_name like 'Family%') union select "+indId+" from dual union (select distinct rg.refid from relationship r, relationship_group rg where r.relationship_group_id=rg.id and rg.group_name like 'Family%' and r.individual1_id="+indId+") union select distinct individual1_id from relationship where relationship_group_id = (select distinct rg.id from relationship r, relationship_group rg where r.relationship_group_id=rg.id and rg.group_name like 'Family%' and r.individual1_id="+indId+"))"
 	   def queryCol = "select sum(amount) amt from donation where (status is null or status <> 'BOUNCED') and collected_by_id="+indId
 	   def queryColExclOwn = "select sum(amount) amt from donation where (status is null or status <> 'BOUNCED') and collected_by_id<> donated_by_id and collected_by_id="+indId
-	   def queryScheme = "select s.name scheme,sum(amount) amt from donation d, scheme s where d.scheme_id=s.id and (status is null or status <> 'BOUNCED') and donated_by_id="+indId+" group by s.name"
+	   def queryScheme = "select s.name scheme,sum(amount) amt from donation d, scheme s where d.scheme_id=s.id and (d.status is null or d.status <> 'BOUNCED') and donated_by_id="+indId+" group by s.name"
 	   
  	   def amtInd = sql.firstRow(queryInd).amt
  	   def amtFam = 0
@@ -1327,27 +1327,31 @@ def config = ConfigurationHolder.config
 			println "generated loginid: "+i.loginid
 			if(!i.save())
 				{
-				iu.errors.allErrors.each {
-					println it
-				}
+				i.errors.allErrors.each {println it}
 				return ""
-				}
-			
+				}			
+			}
+		else {
+			//supplied by user
+			//check if its unique
+			def ilist = Individual.findAllByLoginid(i.loginid)
+			if(ilist.size()>1) {
+				log.debug("Duplicate loginid found:"+loginid+":"+ilist)
+				return ""
+			}
+		}
+		//now check icsUser
+		iu = IcsUser.findByUsername(i.loginid)
+		if(!iu) {
 			//now create the user
 			iu = new IcsUser(username: i.loginid, password: i.loginid, enabled: true, accountExpired: false, accountLocked: false, passwordExpired: false)
 			if(!iu.save()) {
-				iu.errors.allErrors.each {
-					println it
-				}
+				iu.errors.allErrors.each {println it}
 				return ""
 				}
-			}
-		else
-			iu = IcsUser.findByUsername(i.loginid)
+		}
 		
-		println "IU: "+iu
-		if(!iu)
-			return ""
+		log.debug("createLogin:"+i+":"+iu)
 			
 		//now add the role if not exists
 		/*def ir = IcsRole.findByAuthority(role)

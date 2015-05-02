@@ -1,10 +1,13 @@
 package ics
+import com.krishna.*
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 import java.util.zip.Adler32
 
 class HelperService {
 
     def springSecurityService
+    def individualService
+    def housekeepingService
 
     def serviceMethod() {
     
@@ -430,6 +433,29 @@ def verifyChecksum(str,cksum)
 	}
 	
 	return true    	
+    }
+    
+    //file format
+    //IndividualId,IcsRoleId,LoginId,IndividualCategory,IndividualName
+    def createLogin(Object tokens) {
+	def loginMap=""
+	try{
+		def ind = null
+		if(tokens[0])
+			ind = Individual.get(tokens[0])
+		else if(tokens[3]&&tokens[4])
+			ind = individualService.createBasicIndividual([name:tokens[4],category:tokens[3],loginid:tokens[2]])
+		def icsRole = IcsRole.get(tokens[1])
+
+		if(ind && icsRole) {
+			def login=null
+			login=housekeepingService.createLogin(ind,icsRole)
+			if(login)
+				loginMap += ind.id+"->"+ind.legalName+"->"+ind.initiatedName+"->"+login+";"
+		}
+	}
+	catch(Exception e) {log.debug("createLogin:Exception:"+e)}
+	return loginMap
     }
 
 

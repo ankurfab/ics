@@ -111,8 +111,13 @@
 	   
 	   function examOver(result) {
 		blank();
-	   	//alert("Thanks for the attempt. The test is now over. Your result is "+result);
-	   	alert("Thanks for your participation in the exam. Result will be published soon.");
+		//@TODO: hardcoded for GPL
+	   	<g:if test="${ia?.eventRegistration?.event?.title=='GPL2015'}">
+	   		alert("Thanks for your participation in the exam. Your result is "+result);
+	   	</g:if>
+	   	<g:else>
+	   		alert("Thanks for your participation in the exam. Result will be published soon.");
+	   	</g:else>
 	   	$( "#dialogFeedbackForm" ).popup("open");
 	   }
 	   
@@ -128,8 +133,11 @@
 		$("#divQuestionPanel").hide();
 	   }
 	  $('#btnSubmitFeedbackForm').click(function(event){
-	    $('#formCustom').submit();
-	    $( "#dialogFeedbackForm" ).popup("close");
+	    if($("#formCustom")[0].checkValidity()) {
+		//your form execution code
+		    $('#formCustom').submit();
+		    $( "#dialogFeedbackForm" ).popup("close");
+	    }else alert("Please provide fill all items in the feedback form!");	    
 	  });
 
 	/*$(document).on('pageinit', '.ui-page',function(event){

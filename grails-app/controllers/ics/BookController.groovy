@@ -585,7 +585,10 @@ class BookController {
 		  order.updator=order.creator=springSecurityService.principal.username
 		  if (! order.hasErrors() && order.save()) {
 		    //assign order no
-		    order.orderNo = "JDORD"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Order")
+		    def key = 'JDORD'+housekeepingService?.getFY()
+		    order.orderNo = key +"/"+ receiptSequenceService.getNext(key)
+		    //order.orderNo = "JDORD"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Order")
+
 		    order.save()
 		    message = "BookOrder Saved.."
 		    id = order.id
@@ -1177,7 +1180,10 @@ class BookController {
 	    order.updator=order.creator=springSecurityService.principal.username
 	  if (! order.hasErrors() && order.save()) {
 	    //assign order no
-	    order.orderNo = "JDORD"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Order")
+	    def key = 'JDORD'+housekeepingService?.getFY()
+	    order.orderNo = key +"/"+ receiptSequenceService.getNext(key)
+	    //order.orderNo = "JDORD"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Order")
+	    
 	    if(!order.save())
 		    order.errors.allErrors.each {log.debug(it)}
 	    else {
@@ -1269,7 +1275,10 @@ class BookController {
 	  order.updator=order.creator=springSecurityService.principal.username
 	  if (! order.hasErrors() && order.save()) {
 	    //assign order no
-	    order.orderNo = "JDORD"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Order")
+	    def key = 'JDORD'+housekeepingService?.getFY()
+	    order.orderNo = key +"/"+ receiptSequenceService.getNext(key)
+
+	    //order.orderNo = "JDORD"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Order")
 	    if(!order.save())
 		    order.errors.allErrors.each {
 			log.debug(it)

@@ -25,7 +25,7 @@
 		<g:message code="project.costCenter.label" default="Cost Center" />
 		
 	</label>
-	<g:select name="costCenter.id" from="${ics.CostCenter.list()}" optionKey="id" value="${projectInstance?.costCenter?.id}" noSelection="['null': '']" />
+	<g:select name="costCenter.id" from="${ics.CostCenter.findAllByStatusIsNull()}" optionKey="id" value="${projectInstance?.costCenter?.id}" noSelection="['null': '']" />
 
 </div>
 

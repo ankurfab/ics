@@ -52,6 +52,20 @@
                             </tr>
                             
                             <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenterGroup.owner1" default="Owner1" />:</td>
+                                
+                                <td valign="top" class="value"><g:link controller="individual" action="show" id="${costCenterGroupInstance?.owner1?.id}">${costCenterGroupInstance?.owner1?.encodeAsHTML()}</g:link></td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenterGroup.owner2" default="Owner2" />:</td>
+                                
+                                <td valign="top" class="value"><g:link controller="individual" action="show" id="${costCenterGroupInstance?.owner2?.id}">${costCenterGroupInstance?.owner2?.encodeAsHTML()}</g:link></td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
                                 <td valign="top" class="name"><g:message code="costCenterGroup.dateCreated" default="Date Created" />:</td>
                                 
                                 <td valign="top" class="value"><g:formatDate date="${costCenterGroupInstance?.dateCreated}" /></td>

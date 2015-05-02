@@ -563,8 +563,21 @@ class DataService {
 		return queryResults
 	}
 	
+	def eventSummaryCBM() {
+		def sql = new Sql(dataSource)
+		
+		def query="select q.id,q.initiated_name,date_format(q.event,'%d %b') occ,type from (select i.id,i.initiated_name,i.dob event,'Birthday' type from individual i where month(i.dob)=month(curdate()) and i.id in (select distinct individual_id from individual_role where status='VALID' and role_id in (select id from role where name in ('PuneEnglishCouncellors','PuneHindiCouncellors'))) union select i.id,i.initiated_name,i.marriage_anniversary event,'MarriageAnniversary' type from individual i where month(i.marriage_anniversary)=month(curdate()) and i.id in (select distinct individual_id from individual_role where status='VALID' and role_id in (select id from role where name in ('PuneEnglishCouncellors','PuneHindiCouncellors'))) ) q order by occ"
+		
+		
+		def queryResults = sql.rows(query)
+
+		sql.close()
+
+		return queryResults
+	}
+
 	def sheet(Map params) {
-		def results=[]
+		def results=[],retMap=[:]
 		if(!params.eventid) {
 			def indRoles = IndividualRole.createCriteria().list(){
 					if(params.ids)
@@ -578,23 +591,64 @@ class DataService {
 				results.add(ir.individual)
 			}
 		}
+		def event
 		if(params.eventid) {
-			def eps = EventParticipant.createCriteria().list(){
-						event{eq('id',new Long(params.eventid))}
-						individual{order('initiatedName') order('legalName')}
-					}
-			eps.each{ep->
-				results.add(ep.individual)
-			}
+			event = Event.get(params.eventid)
+				def eps = EventParticipant.createCriteria().list(){
+							eq('event',event)
+							individual{order('initiatedName') order('legalName')}
+						}
+				eps.each{ep->
+					results.add(ep.individual)
+				}
 		}
 		//log.debug("results->"+results)
+		retMap.put('results',results)
+
+		//previous attendance
+		def events = Event.createCriteria().list{
+					eq('category',event?.category)
+					lt('startDate',event?.startDate)
+					order('id','desc')
+				}
+		//log.debug("sheet:pastevents:"+events)
+		def attOn = []
+		if(events.size()>0)
+			attOn.add(getAttendance(events[0]))
+		if(events.size()>1)
+			attOn.add(getAttendance(events[1]))
+		if(events.size()>2)
+			attOn.add(getAttendance(events[2]))
+			
+		retMap.put('attOn',attOn)
+		
+		//log.debug("sheet:retMap:"+retMap)
+		return retMap
+	}
+	
+	def getAttendance(Event event) {
+		def results = [:]
+		results.put('eventDate',event.startDate)
+		def eps = EventParticipant.createCriteria().list(){
+					eq('event',event)
+					eq('attended',true)
+					individual{order('initiatedName') order('legalName')}
+				}
+		eps.each{ep->
+			results.put(ep.individual.icsid,ep.individual)
+		}
+		//log.debug("getAttendance:"+event+":"+results)
 		return results
 	}
 
 	def indrolesInPairs(Map params) {
-		def pairs=[], pair=[]
+		def pairs=[], pair=[], retMap=[:]
+		def roleIds = params.id?:params.roleids	//csv from event grid
+		def roleIdsList = []
+		roleIds?.tokenize(',').each{roleIdsList.add(new Long(it))}
+		
 		def indRoles = IndividualRole.createCriteria().list(){
-				role{eq('id',new Long(params.id))}
+				role{inList('id',roleIdsList)}
 				eq('status','VALID')
 				individual{order('initiatedName') order('legalName')}
 			}
@@ -611,8 +665,71 @@ class DataService {
 				pairs.add(pair)
 				}
 		}
-		log.debug("seen->"+seen)
-		return pairs
+		//log.debug("seen->"+seen)
+
+		//now sort them
+		//first add each pair in a map
+		def pairsMap = [:], lead = [], sortedPairs=[]
+		pairs.each {
+			pairsMap.put(it[0].id,it)
+			lead.add(it[0])
+		}
+		//now sort the leads
+		lead.sort{a,b->
+			a.initiatedName <=> b.initiatedName ?: a.legalName <=> b.legalName
+			}
+		//now retrieve back the pairs, but in sorted order
+		lead.each{
+			sortedPairs.add(pairsMap.get(it.id))
+		}
+		log.debug("sortedPairs:"+sortedPairs)
+		if(!sortedPairs)
+			sortedPairs=pairs
+
+		retMap.put('pairs',sortedPairs)
+		
+		//previous attendance
+		if(params.eid) {
+			def event=Event.get(params.eid)
+			def events = Event.createCriteria().list{
+						eq('category',event?.category)
+						lt('startDate',event?.startDate)
+						order('id','desc')
+					}
+			def attOn = []
+			if(events.size()>0)
+				attOn.add(getAttendance(events[0]))
+			if(events.size()>1)
+				attOn.add(getAttendance(events[1]))
+			if(events.size()>2)
+				attOn.add(getAttendance(events[2]))
+
+			retMap.put('attOn',attOn)
+		}
+		
+		return retMap
+	}
+	
+	def sortedPairs(java.util.ArrayList pairs) {
+		//first add each pair in a map
+		def pairsMap = [:], lead = [], sortedPairs=[]
+		pairs.each {pair ->
+			pairsMap.put(pair[0].id,pair)
+			lead.add(pair[0])
+		}
+		//now sort the leads
+		lead.sort{a,b->
+			a.initiatedName <=> b.initiatedName ?: a.legalName <=> b.legalName
+			}
+		//now retrieve back the pairs, but in sorted order
+		lead.each{
+			sortedPairs.add(pairsMap.get(it.id))
+		}
+		log.debug("sortedPairs:"+sortedPairs)
+		if(!sortedPairs)
+			sortedPairs=pairs
+
+		return sortedPairs
 	}
 	
 	def findRelationship(Individual individual, String relationName, Boolean primary) {
@@ -627,8 +744,8 @@ class DataService {
 	}
 
 	def findHusbandOrWifeRelationship(Individual ind) {
-		log.debug("findHusbandOrWifeRelationship:"+ind)
-		def rship,pair=[]
+		//log.debug("findHusbandOrWifeRelationship:"+ind)
+		def rship,pair=[],swappedPair=[]
 		//1. ind is primary, find wife or husband
 		rship = findRelationship(ind,'Wife',true)
 		if(rship)
@@ -649,8 +766,11 @@ class DataService {
 					pair = [rship.individual1,ind]
 			}
 		}
-		log.debug("findHusbandOrWifeRelationship Got:"+pair)
-		return pair
+		//log.debug("findHusbandOrWifeRelationship Got:"+pair)
+		if(pair)
+			swappedPair = [pair[1],pair[0]]
+		log.debug("findHusbandOrWifeRelationship swappedPair:"+swappedPair)
+		return swappedPair
 	}
 
 }

@@ -35,7 +35,7 @@
 		  </div>
 
 		  <div data-role="footer">
-		    <h1>Knowledge..Culture..Devotion</h1>
+		    <h1>Please read instructions carefully and do not click the back button else the test would be over!!</h1>
 		    <a href="${createLink(controller:'assessment',action:'userDashboard')}" data-transition="flip" data-icon="home" class="ui-btn-left">Home</a>
 		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" data-ajax="false" class="ui-btn-right">Logout</a>
 		  </div><!-- /footer -->

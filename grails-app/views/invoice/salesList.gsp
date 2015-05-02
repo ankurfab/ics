@@ -83,8 +83,8 @@
 	{name:'personTo', search:true, editable: true},
 	{name:'departmentTo.id', search:true, editable: true, editrules:{required:false},
 		edittype:"select",
-		editoptions:{value:"${':--Please Select Department--;'+(ics.CostCenter.findAll([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"},
-		stype:'select', searchoptions: { value: "${':--Please Select Department--;'+(ics.CostCenter.findAll([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"}
+		editoptions:{value:"${':--Please Select Department--;'+(ics.CostCenter.findAllByStatusIsNull([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"},
+		stype:'select', searchoptions: { value: "${':--Please Select Department--;'+(ics.CostCenter.findAllByStatusIsNull([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"}
 	},	
 	{name:'dueDate', search:true, editable: true,
 		editoptions:{ 

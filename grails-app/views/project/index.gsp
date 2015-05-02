@@ -45,7 +45,7 @@
 		    <h3>Expense Approval</h3>
 		    <ul data-role="listview">
 			<li><g:link controller="Project" action="list" params="['status':'SUBMITTED_REQUEST']" data-ajax="false">Submitted Requests<span class="ui-li-count">${stats['SUBMITTED_REQUEST']?:'0'}</span></g:link></li>
-			<li><g:link controller="Project" action="list" params="['status':'APPROVED_REQUEST']" data-ajax="false">Approved Requests<span class="ui-li-count">${stats['APPROVED_REQUEST']?:'0'}</span></g:link></li>
+			<li><g:link controller="Project" action="list" params="['status':'APPROVED_REQUEST']" data-ajax="false">Approved Requests<span class="ui-li-count">${(stats['APPROVED_REQUEST']?:0)+(stats['DRAFT_REPORT']?:0)}</span></g:link></li>
 			<li><g:link controller="Project" action="list" params="['status':'REJECTED_REQUEST']" data-ajax="false">Rejected Requests<span class="ui-li-count">${stats['REJECTED_REQUEST']?:'0'}</span></g:link></li>
 			<li><g:link controller="Project" action="list" params="['status':'ESCALATED_REQUEST']" data-ajax="false">Escalated Requests<span class="ui-li-count">${stats['ESCALATED_REQUEST']?:'0'}</span></g:link></li>
 		    </ul>
@@ -66,6 +66,7 @@
 		<ul data-role="listview" data-count-theme="b" data-inset="true">
 		    <li><g:link controller="Project" action="list" params="['status':'ESCALATED_REQUEST']" data-ajax="false">Escalated  Approval Requests<span class="ui-li-count">${stats['ESCALATED_REQUEST']?:'0'}</span></g:link></li>
 		    <li><g:link controller="Project" action="list" params="['status':'ESCALATED_REPORT']" data-ajax="false">Escalated Reimbursement Reports<span class="ui-li-count">${stats['ESCALATED_REPORT']?:'0'}</span></g:link></li>
+		    <li><g:link controller="Project" action="gridlist" params="['s_status':'SU']" data-ajax="false">All Expenses (SuperUser Mode)</g:link></li>
 		</ul>
 		<div data-role="collapsible" data-inset="true">
 		    <h3>Configurations</h3>
@@ -78,14 +79,23 @@
 		</div><!-- /collapsible -->
 	</sec:ifAnyGranted>         
 
-        <sec:ifAnyGranted roles="ROLE_CC_OWNER,ROLE_CG_OWNER,ROLE_FINANCE">
+        <sec:ifAnyGranted roles="ROLE_CC_OWNER,ROLE_CG_OWNER">
+		<div data-role="collapsible" data-inset="true">
+		    <h3>Dashboard</h3>
+		    <ul data-role="listview">
+		        <li><g:link controller="project" action="expenseSummary" data-ajax="false">ExpenseSummary</g:link></li>
+		    </ul>
+		</div><!-- /collapsible -->
+	</sec:ifAnyGranted>         
+
+
+        <sec:ifAnyGranted roles="ROLE_FINANCE">
 		<div data-role="collapsible" data-inset="true">
 		    <h3>Dashboard</h3>
 		    <ul data-role="listview">
 		        <li><g:link controller="costCenter" action="summary" data-ajax="false">Summary</g:link></li>
-			<li><a href="#">Monthly</a></li>
-			<li><a href="#">Quarterly</a></li>
-			<li><a href="#">Yearly</a></li>
+		        <li><g:link controller="costCenter" action="monthSummary" data-ajax="false">CurrentMonthSummary</g:link></li>
+		        <li><g:link controller="costCenter" action="incomeSummary" data-ajax="false">IncomeSummary</g:link></li>
 		    </ul>
 		</div><!-- /collapsible -->
 	</sec:ifAnyGranted>         
@@ -93,9 +103,15 @@
 
         <sec:ifAnyGranted roles="ROLE_ACC_USER">
 		<ul data-role="listview" data-count-theme="b" data-inset="true">
-		    <li><g:link controller="Project" action="gridlist" params="['status':'APPROVED_REQUEST']" data-ajax="false">Advance <span class="ui-li-count">${stats['APPROVED_REQUEST']?:'0'}</span></g:link></li>
-		    <li><g:link controller="Project" action="gridlist" params="['status':'APPROVED_REPORT']" data-ajax="false">Settle <span class="ui-li-count">${stats['APPROVED_REPORT']?:'0'}</span></g:link></li>
+		    <li><g:link controller="Project" action="gridlist" params="['s_status':'APPROVED_REQUEST','onlyAdv':'onlyAdv','advAmtIssued':'NO']" data-ajax="false">Advance <span class="ui-li-count">${stats['APPROVED_REQUEST']?:'0'}</span></g:link></li>
+		    <li><g:link controller="Project" action="gridlist" params="['s_status':'APPROVED_REPORT']" data-ajax="false">Settle <span class="ui-li-count">${stats['APPROVED_REPORT']?:'0'}</span></g:link></li>
 		</ul>
+		<div data-role="collapsible" data-inset="true">
+		    <h3>Configurations</h3>
+		    <ul data-role="listview">
+			<li><g:link controller="project" action="ledgerHeadGridList" data-ajax="false">LedgerHead</g:link></li>
+		    </ul>
+		</div><!-- /collapsible -->
 		<div data-role="collapsible" data-inset="true">
 		    <h3>Reconcilliations</h3>
 		    <ul data-role="listview">

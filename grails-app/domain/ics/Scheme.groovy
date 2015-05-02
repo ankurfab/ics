@@ -15,6 +15,7 @@ class Scheme {
 	    costCategoryAlias(nullable:true)
 	    costCenterAlias(nullable:true)
 	    cc(nullable:true)
+	    status(nullable:true)
 
 	    dateCreated()
 	    creator()
@@ -35,6 +36,7 @@ class Scheme {
     String costCategoryAlias
     String costCenterAlias
     CostCenter cc
+    String status
 
     Date dateCreated
     Date lastUpdated

@@ -192,6 +192,7 @@
     $("#event_list").jqGrid('filterToolbar',{autosearch:true});
     $("#event_list").jqGrid('navGrid',"#event_list_pager",{edit:false,add:false,del:true,search:false});
     $("#event_list").jqGrid('inlineNav',"#event_list_pager");
+    $("#event_list").jqGrid('navGrid',"#event_list_pager").jqGrid('navButtonAdd',"#event_list_pager",{caption:"D/L-AttPairSheet", buttonicon:"ui-icon-arrowthick-1-s", onClickButton:downloadPairSheet, position: "last", title:"DownloadAttendanceSheet", cursor: "pointer"});
     $("#event_list").jqGrid('navGrid',"#event_list_pager").jqGrid('navButtonAdd',"#event_list_pager",{caption:"D/L-AttSheet", buttonicon:"ui-icon-arrowthick-1-s", onClickButton:downloadSheet, position: "last", title:"DownloadAttendanceSheet", cursor: "pointer"});
     $("#event_list").jqGrid('navGrid',"#event_list_pager").jqGrid('navButtonAdd',"#event_list_pager",{caption:"U/L-AttSheet", buttonicon:"ui-icon-arrowthick-1-n", onClickButton:uploadSheet, position: "last", title:"UploadSheet", cursor: "pointer"});
     $("#event_list").jqGrid('navGrid',"#event_list_pager").jqGrid('navButtonAdd',"#event_list_pager",{caption:"Stats", buttonicon:"ui-icon-tag", onClickButton:stats, position: "last", title:"Stats", cursor: "pointer"});
@@ -458,6 +459,24 @@
 
 	      return false; // stops browser from doing default submit process
 	});
+
+	function downloadPairSheet() {
+		var id = $('#event_list').jqGrid('getGridParam','selrow');
+		if(id) {
+				var url = "${createLink(controller:'Event',action:'sheet')}"+"?eventid="+id+"&pair=true";
+				$( "#divToPrintSheet" ).val("");
+				$( "#divToPrintSheet" ).load( url, function(responseTxt,statusTxt,xhr){
+				    if(statusTxt=="success")
+				    {
+					$( "#dialogPrintSheet" ).dialog( "open" );	
+				    }
+				    if(statusTxt=="error")
+				      alert("Error: "+xhr.status+": "+xhr.statusText);
+				  });
+		}
+		else
+			alert("Please select a row!!");
+	}
 
 	function downloadSheet() {
 		var id = $('#event_list').jqGrid('getGridParam','selrow');

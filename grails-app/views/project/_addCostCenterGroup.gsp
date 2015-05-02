@@ -21,26 +21,22 @@
 	<g:textField name="description" value="${costCenterGroupInstance?.description}"/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: costCenterGroupInstance, field: 'owner', 'error')} ">
-	<label for="owner">
-		<g:message code="costCenterGroup.owner.label" default="Owner" />
+<div>
+	<label for="loginid">
+		Loginid
 		
 	</label>
-	    <g:hiddenField name="owner.id" value=""/>
-	    <input id="ind" size="40" />
-	
+	<g:textField name="loginid" value=""/>
 </div>
 
-<div>
-	<label for="ccids">
-		Cost Centers		
+<div class="fieldcontain ${hasErrors(bean: costCenterGroupInstance, field: 'owner1', 'error')} ">
+	<label for="owner1">
+		<g:message code="costCenterGroup.owner1.label" default="Owner" />
+		
 	</label>
-	<g:select name="ccids"
-          from="${ics.CostCenter.findAllByCostCenterGroupIsNull([sort:'name'])}"
-	  noSelection="${['null':'Select departments...']}"
-          optionKey="id"
-          optionValue="name"
-          multiple="true" size="25"/>	
+	    <g:hiddenField name="owner1.id" value=""/>
+	    <input id="ind1" size="40" />
+	
 </div>
 
 
@@ -48,14 +44,14 @@
 
 </div>
 
-	<script>
-	$(function() {
-		$( "#ind" ).autocomplete({
-			source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",//todo take care of data from other departments
-			minLength: 3,
-			  select: function(event, ui) { // event handler when user selects a company from the list.
-			   $(document.getElementById('owner.id')).val(ui.item.id); // update the hidden field.
-			  }
-		});
+<script>
+$(function() {
+	$( "#ind1" ).autocomplete({
+		source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",//todo take care of data from other departments
+		minLength: 3,
+		  select: function(event, ui) { // event handler when user selects a company from the list.
+		   $(document.getElementById('owner1.id')).val(ui.item.id); // update the hidden field.
+		  }
 	});
-	</script>
+});
+</script>

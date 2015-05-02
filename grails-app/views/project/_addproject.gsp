@@ -4,6 +4,8 @@
 
 <div class="allbody"> 
 
+<g:set var="modes" value="${ics.PaymentMode.findAllByInpersonAndNameInList(true,['Cash','Cheque','RTGS','Transfer'])}" />
+
    
 <h1>Expense Approval Form</h1>
  <table>
@@ -13,35 +15,76 @@
 	 <th>Total Budget</th>
 	</thead>  
 	<tr><td>${costCenter?.balance?:0}</td>  <td>${(costCenter?.budget?:0)- (costCenter?.balance?:0)}</td> <td>${costCenter?.budget?:0}</td></tr>
-			
-	</table> 			
-<div data-role="rangeslider">
-<label for="month-a">Budget Consumption for Current Month:</label>
-<input name="month-a" id="month-a" disabled="disabled" min="0" max="${costCenter?.budget?:0}" value="${costCenter?.balance?:0}" type="range">
-<label for="month-b">Rangeslider:</label>
-<input name="month-b" id="month-b" disabled="disabled" min="0" max="${costCenter?.budget?:0}" value="${costCenter?.budget?:0}" type="range">
-</div>
+ </table> 			
 						
 <fieldset class="form">
 
 <div>
 	<label for="name">Name:</label>
-	<g:textField name="name" value="${projectInstance?.name}" placeholder="Expense name in brief." required="required" pattern=".{3,}"/>
+	<g:textField name="name" value="${projectInstance?.name}" placeholder="Expense name in brief." required="required"/>
 </div>
 
 <div>
 	<label for="name">Description:</label>
-	<g:textArea name="description" cols="40" rows="5" maxlength="500" value="${projectInstance?.description}" placeholder="Expense description." required="required" pattern=".{3,}"/>
+	<g:textArea name="description" cols="40" rows="5" maxlength="500" value="${projectInstance?.description}" placeholder="Expense description." required="required"/>
 </div>
 
 <div>
-	<label for="amount">Amount:</label>
-	<g:field name="amount" value="${projectInstance?.amount}" placeholder="Expense amount" type="number" required="required" min= "1"/>
+    <fieldset data-role="controlgroup" data-type="horizontal">
+        <legend>Type:</legend>
+        <input name="type" id="type-1" value="NORMAL" checked="checked" type="radio">
+        <label for="type-1">NORMAL</label>
+        <input name="type" id="type-2" value="PARTPAYMENT" type="radio">
+        <label for="type-2">PARTPAYMENT ADVANCE</label>
+        <input name="type" id="type-3" value="CREDIT" type="radio">
+        <label for="type-3">PARTPAYMENT SETTLEMENT</label>
+    </fieldset>
 </div>
 
-<div>
+
+<div id="divApprovalAmount">
+	<label for="amount">Total Approval Amount:</label>
+	<g:field name="amount" value="${projectInstance?.amount}" placeholder="Total Approval Amount" type="number" required="required" min= "1"/>
+</div>
+
+<div id="divAdvanceAmount">
 	<label for="advanceAmount">Advance Amount:</label>
-	<g:field name="advanceAmount" value="${projectInstance?.advanceAmount}" placeholder="Advance(if needed, <= amount)" type="number"/>
+	<g:field name="advanceAmount" value="${projectInstance?.advanceAmount}" placeholder="Advance(if needed, <= Approval Amount)" type="number"/>
+</div>
+
+
+<div id="divVendors">
+	<label for="vendorid">Vendor:</label>
+	<g:select id="vendorid" name='vendorid' value=""
+	noSelection="${['':'Select Vendor...']}"
+	from='${vendors}'
+	optionKey="id" optionValue="legalName"></g:select>
+</div>
+
+<div id="divAdvanceDetails">
+
+	<label for="advanceIssuedToName">Issue To (New Vendor):</label>
+	<g:textField name="advanceIssuedToName" value="${projectInstance?.advanceIssuedTo}" placeholder="For New Vendor only..If existing vendor then pls choose from dropdown above!!"/>
+
+	<div id="divAdvanceModeDetails">
+		<label for="advancePaymentModeName">Issue Mode:</label>
+		<g:select name="${'advancePaymentModeName'}" from="${modes}" value=""
+			  optionKey="id" optionValue="name" noSelection="['':'-Select Payment Mode-']"/>				
+
+		<label for="advancePaymentComments">Issue Comments:</label>
+		<g:textArea name="advancePaymentComments" cols="40" rows="5" maxlength="500" value="${projectInstance?.advancePaymentComments}" placeholder="Issue comments."/>
+	</div>
+
+</div>
+
+
+<div id="divBillDetails">
+	<label for="billNo">Bill No:</label>
+	<g:textField name="billNo" value="${projectInstance?.billNo}" placeholder="Bill no.."/>
+
+	<label for="billDate">Bill Date:</label>
+	<g:textField name="billDate" value="${projectInstance?.billDate}" placeholder="Bill date.."/>
+
 </div>
 
 <div data-role="controlgroup" data-type="horizontal">
@@ -65,8 +108,8 @@
         <legend>Category:</legend>
         <input name="category" id="category-1" value="REVENUE" checked="checked" type="radio">
         <label for="category-1">REVENUE</label>
-        <input name="category" id="category-2" value="CAPITAL" type="radio">
-        <label for="category-2">CAPITAL</label>
+        <!--<input name="category" id="category-2" value="CAPITAL" type="radio">
+        <label for="category-2">CAPITAL</label>-->
     </fieldset>
 </div>
 
@@ -91,3 +134,121 @@
 </div>
 
 </g:form>
+
+<script>
+$(document).ready(function(){
+
+	$("#divAdvanceDetails").hide();
+	$("#divBillDetails").hide();
+	$("#divVendors").hide();
+
+       $( "#billDate" ).datepicker({
+	    dateFormat: 'dd-mm-yy',
+	    maxDate: 0
+	      });
+	      
+$("#type-1").click(function(){
+	clearSpecialFields();
+	$('#divApprovalAmount').show();
+	$('#divAdvanceAmount').show();
+	$("#divAdvanceDetails").hide();
+	$("#divBillDetails").hide();
+	$("#divVendors").hide();
+	});
+
+$("#type-2").click(function(){
+	clearSpecialFields();
+	$('#divApprovalAmount').hide();
+	$('#divAdvanceAmount').show();
+	$("#divAdvanceDetails").show();
+	$("#divAdvanceModeDetails").show();	
+	$("#divVendors").show();
+	$("#divBillDetails").hide();
+	});
+
+$("#type-3").click(function(){
+	clearSpecialFields();
+	clearAndHideAdvanceAmount();
+	$('#divApprovalAmount').show();
+	$("#divAdvanceDetails").hide();
+	$("#divAdvanceModeDetails").hide();	
+	$("#divVendors").show();
+	$("#divBillDetails").show();
+	});
+
+function clearSpecialFields()  {
+	$('#advanceIssuedToName').val('');
+	$('#advancePaymentModeName').val('');
+	$('#advancePaymentComments').val('');
+	$('#billNo').val('');
+	$('#billDate').val('');
+}
+
+function clearAndHideAdvanceAmount()  {
+	$('#advanceAmount').val('');
+	$('#divAdvanceAmount').hide();
+}
+
+$('#advanceAmount').change(function() { 
+	var selectedType = $('input[name=type]:checked', '#addprojectForm').val();
+	if(selectedType=='PARTPAYMENT') {
+		$('#amount').val($('#advanceAmount').val());
+	}
+});
+
+
+/* make placeholder for bill amount
+$('#type').change(function() {
+	var selectedType = $('input[name=type]:checked', '#addprojectForm').val();
+	if(selectedType=='CREDIT') {
+		$('#amount').attr("placeholder", "Please enter bill amount here..");
+	}
+});*/
+
+
+$( "#addprojectForm" ).submit(function( event ) {
+	//alert( "Handler for .submit() called." );
+	//event.preventDefault();
+	var selectedType = $('input[name=type]:checked', '#addprojectForm').val();
+	if(selectedType=='PARTPAYMENT') {
+		if(!$('#advanceAmount').val()) {
+			alert("Please provide advance amount!!");
+			return false;
+			}
+		if(!$('#advanceIssuedToName').val()) {
+			alert("Please provide vendor name!!");
+			return false;
+			}
+		if(!$('#advancePaymentModeName').val()) {
+			alert("Please provide advance payment mode!!");
+			return false;
+			}
+	}
+	if(selectedType=='CREDIT') {
+		if(!$("#vendorid").val()) {
+			alert("Please select the vendor!!");
+			return false;
+		}
+		if(!$('#advanceIssuedToName').val()) {
+			alert("Please provide vendor name!!");
+			return false;
+			}
+		if(!$('#billNo').val()) {
+			alert("Please provide bill no.!!");
+			return false;
+			}
+		if(!$('#billDate').val()) {
+			alert("Please provide bill date!!");
+			return false;
+			}
+	}
+	return true;
+});
+
+
+$("#vendorid").change(function(){
+	$('#advanceIssuedToName').val($( "#vendorid option:selected" ).text());
+});
+
+});
+</script>

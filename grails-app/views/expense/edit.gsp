@@ -54,7 +54,7 @@
                                     <label for="costCenter"><g:message code="expense.costCenter" default="Cost Center" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: expenseInstance, field: 'costCenter', 'errors')}">
-                                    <g:select name="costCenter.id" from="${ics.CostCenter.list()}" optionKey="id" value="${expenseInstance?.costCenter?.id}" noSelection="['null': '']" />
+                                    <g:select name="costCenter.id" from="${ics.CostCenter.findAllByStatusIsNull()}" optionKey="id" value="${expenseInstance?.costCenter?.id}" noSelection="['null': '']" />
 
                                 </td>
                             </tr>

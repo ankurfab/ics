@@ -27,12 +27,12 @@
 				<g:set var="choices" value="${ics.Attribute.findAllWhere('domainClassName':domainClassName,'domainClassAttributeName':domainClassId,category:item.name,[sort:'position'])}" />
 				<g:each var="choice" in="${choices}">
 					<label>
-						<input type="radio" name="${item.name}" value="${choice.position}">${choice.displayName}
+						<input type="radio" name="${item.name}" value="${choice.position}" required="required">${choice.displayName}
 					</label>					
 				</g:each>
 			</g:if>
 			<g:else>
-				<g:textArea name="${item.name}" value=""/>
+				<g:textArea name="${item.name}" value="" required="required" maxlength="200"/>
 			</g:else>
 			<p/>
 	  	</td>

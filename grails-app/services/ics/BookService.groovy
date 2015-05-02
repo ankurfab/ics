@@ -79,7 +79,9 @@ class BookService {
     	else
     		{
     		//generate challan refNo
-		    challan.refNo = "JDCHLN"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Challan")
+			def key = 'JDCHLN'+housekeepingService?.getFY()
+		    challan.refNo = key +"/"+ receiptSequenceService.getNext(key)
+		    //challan.refNo = "JDCHLN"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Challan")
 		    challan.save()
 		
 		//add challan line items

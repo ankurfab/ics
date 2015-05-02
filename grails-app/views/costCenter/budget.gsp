@@ -30,7 +30,7 @@
 	    </g:form>
 	    <input id = "btnLoadGrid" type="submit" value="Show"/>
 		<!--<button id="btnDownload">Download</button>-->
-		<button id="btnReset">Reset</button>
+		<!--<button id="btnReset">Reset</button>-->
 		<div>
 		Upload: <br />
 		    <g:uploadForm name="formBudgetUpload" controller="CostCenter" action="uploadBudget">

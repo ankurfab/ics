@@ -75,7 +75,11 @@ class ChallanService {
 	  def payRef = new PaymentReference(params)
 	  if(params.instrumentNo)
 		  payRef.details = payRef.details+" ("+(params.bankName?:'')+"/"+(params.bankBranch?:'')+"/"+(params.instrumentDate?.format('dd-MM-yyyy')?:'')+"/"+(params.instrumentNo?:'')+")"
-	  payRef.ref = "JDCHLNPMNT"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Challan-Payment")
+
+	  def key = 'JDCHLNPMNT'+housekeepingService?.getFY()
+	  payRef.ref = key +"/"+ receiptSequenceService.getNext(key)
+	  //payRef.ref = "JDCHLNPMNT"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Challan-Payment")
+
 	  payRef.updator=payRef.creator=springSecurityService.principal.username
 	  if (! payRef.hasErrors() && payRef.save()) {
 	    message = "PaymentReference Saved.."
@@ -256,7 +260,10 @@ class ChallanService {
 	else
 		{
     		//generate challan refNo
-		    newChallan.refNo = "JDCHLN"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Challan")
+		    def key = 'JDCHLN'+housekeepingService?.getFY()
+		    newChallan.refNo = key +"/"+ receiptSequenceService.getNext(key)
+		    //newChallan.refNo = "JDCHLN"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Challan")
+
 		    if(!newChallan.save())
 			    newChallan.errors.allErrors.each {
 				log.debug("error in cf challan refno:"+ it)

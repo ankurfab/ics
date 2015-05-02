@@ -23,6 +23,9 @@ class CostCenter {
 	    isProfitCenter(nullable:true)
 	    isServiceCenter(nullable:true)
 	    costCenterGroup(nullable:true)
+	    donationAccepted(nullable:true)
+	    status(nullable:true)
+	    
 	    dateCreated()
 	    creator()
 	    lastUpdated()
@@ -48,6 +51,8 @@ class CostCenter {
     BigDecimal capitalYearBalance	//current capital yearly balance
     Boolean isProfitCenter	//can spend only as much as it has earned
     Boolean isServiceCenter	//can provide services to other cost centers against payment
+    Boolean donationAccepted	//whether the cost center can accept donations
+    String status
 
     Date dateCreated
     Date lastUpdated

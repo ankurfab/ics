@@ -721,8 +721,8 @@ class EventController {
 	}
 	
 	def sheet() {
-		def results = dataService.sheet(params)
-		render(template: "/common/sheet", model: [results:results])
+		def retMap = dataService.sheet(params)
+		render(template: "/common/sheet", model: [results:retMap.results,attOn:retMap.attOn])
 	}
 	
 	def uploadSheet() {

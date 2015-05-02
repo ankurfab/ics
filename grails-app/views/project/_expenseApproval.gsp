@@ -12,18 +12,25 @@ fieldset
 border:1px solid black 
 }
 
-h1,h2,h4,h5,h5
+h1,h2,h4
 {
  text-align: center;
+}
+h5
+{
+text-align: center;
+font: 9pt "Tahoma";
+}
+.header1
+{
+text-align: center;
+font: 9pt "Tahoma";
 }
 p
 {
 text-align: center;
 }
-.voucherbody
-{
-font-family:10pt, "HelveticaNeue-Light";
-}
+
 </style>
 
  <style type='text/css' media='print'>
@@ -39,24 +46,24 @@ font-family:10pt, "HelveticaNeue-Light";
             }
             .page {
                 width: 21cm;
-                height: 29.7cm;
+                height: 297mm;
                 #padding-left: 1.6cm;
-                #margin: 1cm;
+                margin: 1cm;
                 #border: 1px #D3D3D3 solid;
-                #border-radius: 5px;
+                border-radius: 5px;
                 background: white;
-                #box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
             }
             .subpageTop{
-               // padding: 0.5cm;
-                #border: 5px red solid;
-                #height: 148mm;
+               padding: 0.5cm;
+                #border: 1px blue solid;
+                height: 148mm;
                 #outline: 1cm #FFEAEA solid;
             }
             .subpageBottom {
-                //padding-top: 0.5cm;
-                #border: 5px red solid;
-                #height: 130mm;
+                padding-top: 0.5cm;
+                #border: 1px red solid;
+                height: 130mm;
                 #outline: 0.5cm #FFEAEA solid;
             }
 
@@ -80,6 +87,12 @@ font-family:10pt, "HelveticaNeue-Light";
                     page-break-after:always;
                 }
             }
+            
+             table#advancetoptable{width:100%;}
+	     #advancetoptable tr td {height:10px; font: 9pt "Tahoma"; }  
+	            
+	     table#advancebottomtable{width:100%;  }
+             #advancebottomtable tr td {height:10px; font: 9pt "Tahoma";  } 
         </style>
 
 
@@ -89,140 +102,152 @@ font-family:10pt, "HelveticaNeue-Light";
  
   <fieldset>
 
-  <h4>International Society For Krishna Consciousness(ISKCON)</h4>
-  <h5>(Regd.Office,:Hare Krishna Land,Juhu, Mumbai-400 049.)</h5>
-  <h5>(Branch:4,Katraj-Kondhava Bypass Rd,Opp Shatranjay Temple ,Kondhava Bk,Pune-48,Ph020141033247/222.)</h5> 
+  <h4>International Society For Krishna Consciousness</h4>
+  <h5>(Regd.Office:Hare Krishna Land,Juhu, Mumbai 400 049),</h5>
+  <h5>(Branch:S.No.50/2,Katraj-Kondhwa Bypass Rd.,Opp. Shatrunjay Temple ,Kondhawa Bk,Pune-48,Ph.020-41033247/222.)</h5> 
   
-  <table>
-  
-        <tr>
-         <td><span style="float: left;"> <h6> Expense Ref No: ${projectInstance?.ref} </h6></span></td>
-         <td><span style="float: right;padding-right:20px;"><h6> Date:${new Date()?.format('dd-MM-yyyy')}   <h6></span></td>
-        </tr>
-     
-     
-        <tr><h4><u>ADVANCE REQUISITION SLIP</u></h4></tr>
-   
-       <tr> 
-        <td><span style="float: left;"><h4>Department:${projectInstance?.costCenter?.name} <h4></span></td>
-        <td><span style="float: right;padding-right:20px;"></span></td>
-       </tr>
-       
-      
-       <tr>  
-          <td><div class="voucherbody">To<br>
+  <table id="advancetoptable">
+  <div class="header1">
+  <tr> </tr>
+            <tr>
+             <td><span style="float: left;"> Expense Ref No: ${projectInstance?.ref} </span></td>
+             <td>Date:${new Date()?.format('dd-MM-yyyy')}</td>
+            </tr>
+         </div>
+         
+            <tr><h4><u>ADVANCE REQUISITION SLIP</u></h4></tr>
+          <div class="header1">
+           <tr> 
+           <td><span style="float: left;"> Vr. No: ${projectInstance?.advancePaymentVoucher?.voucherNo}</span></td>
+            <td>Department:${projectInstance?.costCenter?.name}</td>
+           </tr>
+           </div>
+         
+       </table>
+      To<br>
             The President,<br>
             ISKCON,Pune.<br>
             Dear Prabhu,<br>
-            
-            
-            Please grant me an advance of Rs.<b> ${projectInstance?.advanceAmountIssued} /-</b> Rs. in Words <b> ${org.apache.commons.lang.WordUtils.capitalize(EnglishNumberToWords.convert(projectInstance?.advanceAmountIssued?.toString()?:'0'))} Only </b><br>
-            for the following expenses:<br>
-           <b>Name of the expense:</b> ${projectInstance?.name}<br>  
-           <b>Description:</b> ${projectInstance?.description}<br>            
-       
+            <br>
            
-            I will settle the above amount by producing the necesarry documents in  <b>  30  </b>  days <br>
             
-          Thanking You,</div> </td> </tr>
-           <div class="voucherbody">
-                <tr>  
-	             <td><span style="float: left;">Your Servant,  </span></td>
-	             <td><p>Sanctioned</p></td>
-                </tr>
-                
+            Please grant me an advance of Rs.<b> ${projectInstance?.advanceAmountIssued} /- </b> for the following expenses:<br>
+            In Words <b> ${org.apache.commons.lang.WordUtils.capitalize(EnglishNumberToWords.convert(projectInstance?.advanceAmountIssued?.toString()?:'0'))} Only </b><br>
+           <br>
+           <div id="description" > 
+           <b> ${projectInstance?.name}</b> <br>  
+           Description:<br>
+            ${projectInstance?.description}<br>    
+	  </div>
+	  <br>
+            I will settle the above amount by producing the necessary documents in  <b>  30  </b>  days <br><br>
+            
+          Thanking You. <br>
+<table id="advancebottomtable">
+             <div class="header1">
+             <tr> </tr> 
                   <tr>  
-  	             <td><span style="float: left;"><b>${projectInstance?.submitter}</b></span></td>
-  	             <td><p><b>${projectInstance?.reviewer1}</b></p></td>
-                  </tr>
-               
-                
-                <tr>
-		      <td><span style="float: left;">(Signature)</span></td>
-		      <td><span style="float: right;padding-right:20px;"></span></td>
-	        </tr>  
-          
-                
-                
-                 <tr>
-		       <td>Name:${projectInstance?.reviewer3}</td>
-		      <td style="padding-right:30px;">(AutorisedSign)</td>
-		 </tr> </div> 
-          </table>
+                      <td><span style="float: left;padding-right:20px;">Your Servant,</span></td>
+	       	      <td><p>Electronically Sanctioned By</p></td>
+	          </tr>
+	                       
+	           <tr>  
+	              <td><span style="float: left;padding-right:20px;"></span></td>
+	       	      <td><p><b>${projectInstance?.reviewer1}</b> </p></td>
+  		   </tr>
+                 
+                   <tr>
+                      <td><span style="float: left;padding-right:20px;">(Signature) </span></td>
+  		      <td><p>(Autorised Signatory) </p></td>
+  	           </tr>  
+              
+                   <tr>
+                      <td><span style="float: left;padding-right:20px;"> Name:  <b>${projectInstance?.submitter?:''}</b>  </span></td>
+  		      <td><span style="float: right;"> </span></td>
+  		   </tr> 
+  		   
+  		 </div>
+            </table>
  
   </fieldset>
+
   </div> 
   
   <div class="subpageBottom">  <!-- bottom Copy -->
   
-  
   <fieldset>
+
+  <h4>International Society For Krishna Consciousness</h4>
+  <h5>(Regd.Office:Hare Krishna Land,Juhu, Mumbai 400 049),</h5>
+  <h5>(Branch:S.No.50/2,Katraj-Kondhwa Bypass Rd.,Opp. Shatrunjay Temple ,Kondhawa Bk,Pune-48,Ph.020-41033247/222.)</h5> 
   
-    <h4>International Society For Krishna Consciousness(ISKCON)</h4>
-    <h5>(Regd.Office,:Hare Krishna Land,Juhu, Mumbai-400 049.)</h5>
-    <h5>(Branch:4,Katraj-Kondhava Bypass Rd,Opp Shatranjay Temple ,Kondhava Bk,Pune-48,Ph020141033247/222.)</h5> 
-    
-    <table>
-    
-          <tr>
-           <td><span style="float: left;"> <h6> Expense Ref No: ${projectInstance?.ref} </h6></span></td>
-           <td><span style="float: right;padding-right:20px;"><h6> Date:${new Date()?.format('dd-MM-yyyy')}   <h6></span></td>
-          </tr>
-       
-       
-          <tr><h4><u>ADVANCE REQUISITION SLIP</u></h4></tr>
-     
-         <tr> 
-          <td><span style="float: left;"><h5>Department:${projectInstance?.costCenter?.name} <h5></span></td>
-          <td><span style="float: right;padding-right:20px;"></span></td>
-         </tr>
+  <table id="advancetoptable">
+  <div class="header1">
+  <tr> </tr>
+            <tr>
+             <td><span style="float: left;"> Expense Ref No: ${projectInstance?.ref} </span></td>
+             <td>Date:${new Date()?.format('dd-MM-yyyy')}</td>
+            </tr>
+         </div>
          
-        
-         <tr>  
-            <td><div class="voucherbody">To<br>
-              The President,<br>
-              ISKCON,Pune.<br>
-              Dear Prabhu,<br>
-              
-              
-              Please grant me an advance of Rs.<b> ${projectInstance?.advanceAmountIssued} /-</b> Rs. in Words <b> ${org.apache.commons.lang.WordUtils.capitalize(EnglishNumberToWords.convert(projectInstance?.advanceAmountIssued?.toString()?:'0'))} Only </b><br>
-              for the following expenses:<br>
-             <b>Name of the expense:</b> ${projectInstance?.name}<br>  
-             <b>Description:</b> ${projectInstance?.description}<br>            
+            <tr><h4><u>ADVANCE REQUISITION SLIP</u></h4></tr>
+          <div class="header1">
+           <tr> 
+           <td><span style="float: left;"> Vr. No: ${projectInstance?.advancePaymentVoucher?.voucherNo}</span></td>
+            <td>Department:${projectInstance?.costCenter?.name}</td>
+           </tr>
+           </div>
          
-             
-              I will settle the above amount by producing the necesarry documents in  <b>  30  </b>  days <br>
-              
-            Thanking You,</div> </td> </tr>
-
-
-
-                  <tr>  
-  	             <td><span style="float: left;">Your Servant,  </span></td>
-  	             <td><p>Sanctioned</p></td>
-                  </tr>
-                  
-                  <tr>  
-  	             <td><span style="float: left;"><b>${projectInstance?.submitter}</b></span></td>
-  	             <td><p><b>${projectInstance?.reviewer1}</b></p></td>
-                  </tr>
-                 
-                  
-                  <tr>
-  		      <td><span style="float: left;">(Signature)</span></td>
-  		      <td><span style="float: right;padding-right:20px;"></span></td>
-  	        </tr>  
+       </table>
+      To<br>
+            The President,<br>
+            ISKCON,Pune.<br>
+            Dear Prabhu,<br>
+            <br>
+           
             
-                  
-                  
+            Please grant me an advance of Rs.<b> ${projectInstance?.advanceAmountIssued} /- </b> for the following expenses:<br>
+            In Words <b> ${org.apache.commons.lang.WordUtils.capitalize(EnglishNumberToWords.convert(projectInstance?.advanceAmountIssued?.toString()?:'0'))} Only </b><br>
+           <br>
+           <div id="description" > 
+           <b> ${projectInstance?.name}</b> <br>  
+           Description:<br>
+            ${projectInstance?.description}<br>    
+	  </div>
+	  <br>
+            I will settle the above amount by producing the necessary documents in  <b>  30  </b>  days <br><br>
+            
+          Thanking You. <br>
+<table id="advancebottomtable">
+             <div class="header1">
+             <tr> </tr> 
+                  <tr>  
+                      <td><span style="float: left;padding-right:20px;">Your Servant,</span></td>
+	       	      <td><p>Electronically Sanctioned By</p></td>
+	          </tr>
+	                       
+	           <tr>  
+	              <td><span style="float: left;padding-right:20px;"></span></td>
+	       	      <td><p><b>${projectInstance?.reviewer1}</b> </p></td>
+  		   </tr>
+                 
                    <tr>
-  		       <td>Name:${projectInstance?.reviewer3}</td>
-  		      <td style="padding-right:30px;">(AutorisedSign)</td>
-  		 </tr>  
+                      <td><span style="float: left;padding-right:20px;">(Signature) </span></td>
+  		      <td><p>(Autorised Signatory) </p></td>
+  	           </tr>  
+              
+                   <tr>
+                      <td><span style="float: left;padding-right:20px;"> Name:  <b>${projectInstance?.submitter?:''}</b>  </span></td>
+  		      <td><span style="float: right;"> </span></td>
+  		   </tr> 
+  		   
+  		 </div>
             </table>
-   
+ 
   </fieldset>
-    </div> 
+ 
+  
+  
   
                     </div>   <!-- End of subpageBottom Div -->  
                 </div>    <!-- End of Page Div --> 

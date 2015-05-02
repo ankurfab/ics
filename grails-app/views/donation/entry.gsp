@@ -309,7 +309,7 @@
                                     <label for="icsid">Donor's IcsId:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: donationInstance, field: 'donorName', 'errors')}">
-                                    <g:textField id="icsid" name="icsid" value="${donationInstance?.donatedBy?.icsid}" size="8" />
+                                    <g:textField id="icsid" name="icsid" value="${id?(100000+new Long(id)):donationInstance?.donatedBy?.icsid}" size="8" />
                                 </td>
                             </tr>
 

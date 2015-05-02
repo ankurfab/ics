@@ -15,7 +15,7 @@
         <div class="body">
             <h1><g:message code="question.list" default="Question List" /></h1>
             <g:if test="${flash.message}">
-            <div class="message"><g:message code="${flash.message}" args="${flash.args}" default="${flash.defaultMessage}" /></div>
+            <div class="message">${flash.message}</div>
             </g:if>
 
             <g:form name="courseForm" action="list">
@@ -23,6 +23,7 @@
 		    noSelection="${['':'Select a course...']}"
 		    from='${courses}'
 		    optionKey="id" optionValue="name" onchange="updatecid()"></g:select>
+		<g:select name='language' value="${language}" from='${['ENGLISH','HINDI','MARATHI']}'></g:select>
 		<g:submitButton name="refresh" value="Refresh" />
             </g:form>
             
@@ -43,9 +44,11 @@
                         
                    	    <g:sortableColumn property="choice4" title="Choice4" titleKey="question.choice4" />
                         
-                   	    <g:sortableColumn property="course" title="Course" titleKey="question.course" />
+                   	    <th>Answer</th>
                         
                    	    <g:sortableColumn property="category" title="Category" titleKey="question.category" />
+                        
+                   	    <g:sortableColumn property="language" title="Language" titleKey="question.language" />
                         
                         </tr>
                     </thead>
@@ -64,10 +67,12 @@
                             <td>${fieldValue(bean: questionInstance, field: "choice3")}</td>
                         
                             <td>${fieldValue(bean: questionInstance, field: "choice4")}</td>
-                        
-                            <td>${fieldValue(bean: questionInstance, field: "course")}</td>
+                            
+                            <td>${questionInstance.isChoice1Correct?1:(questionInstance.isChoice2Correct?2:(questionInstance.isChoice3Correct?3:(questionInstance.isChoice4Correct?4:(''))))}</td>
                         
                             <td>${fieldValue(bean: questionInstance, field: "category")}</td>
+                        
+                            <td>${fieldValue(bean: questionInstance, field: "language")}</td>
                         
                         </tr>
                     </g:each>

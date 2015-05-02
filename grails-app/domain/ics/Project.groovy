@@ -28,10 +28,15 @@ class Project {
 	    advancePaymentMode(nullable:true)
 	    advancePaymentComments(nullable:true)
 	    advancePaymentVoucher(nullable:true)
+	    billNo(nullable:true)
+	    billDate(nullable:true)
+	    billAmount(nullable:true)
 	
 	
 	settleAmount(nullable:true)
 	settleDate(nullable:true)
+	
+	mainProject(nullable:true)
 
 	submitter(nullable:true)
 	submitDate(nullable:true)
@@ -88,9 +93,14 @@ class Project {
     PaymentMode advancePaymentMode
     String advancePaymentComments
     Voucher advancePaymentVoucher
+    String billNo
+    Date billDate
+    BigDecimal billAmount
     
     BigDecimal settleAmount
     Date settleDate
+    
+    Project mainProject
     
     Individual submitter
     Date submitDate

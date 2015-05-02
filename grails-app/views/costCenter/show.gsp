@@ -67,9 +67,23 @@
                             </tr>
                             
                             <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.balance" default="Balance (Consumed Budget)" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: costCenterInstance, field: "balance")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
                                 <td valign="top" class="name"><g:message code="costCenter.capitalBudget" default="Capital Budget" />:</td>
                                 
                                 <td valign="top" class="value">${fieldValue(bean: costCenterInstance, field: "capitalBudget")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.capitalBalance" default="Capital Balance (Consumed Capital Budget)" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: costCenterInstance, field: "capitalBalance")}</td>
                                 
                             </tr>
                             

@@ -6,6 +6,8 @@
 			      </sec:ifAnyGranted>      
 			      <sec:ifAnyGranted roles="ROLE_ASMT_ADMIN,ROLE_ASMT_MGR">
 			      	<li><g:link controller="assessment" action="registrations">Registrations</g:link></li>
+			      	<li><g:link controller="assessment" action="dashboard">Dashboard</g:link></li>
+			      	<li><g:link controller="assessment" action="feedbacks">Feedbacks</g:link></li>
 			      </sec:ifAnyGranted>      
 			      <sec:ifAnyGranted roles="ROLE_VOICE_SEC">
 			      	<li><g:link controller="individual" action="createprofile">Profile Management</g:link></li>
@@ -71,8 +73,8 @@
 			      </sec:ifAnyGranted>
 			      
 			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR">
-				  <!--<li><g:link controller="individual" action="cleelist">Individual Management</g:link></li>
-				  <li><g:link controller="helper" action="commitmentReport">Commitment Report (last 12 months)</g:link></li>
+				  <li><g:link controller="individual" action="cleelist">Individual Management</g:link></li>
+				  <!--<li><g:link controller="helper" action="commitmentReport">Commitment Report (last 12 months)</g:link></li>
 				  <li><g:link controller="helper" action="donationReport">Donation Report (till date)</g:link></li>
 				  <li><g:link controller="mb" action="list">Marriage Board</g:link></li>-->
 			      </sec:ifAnyGranted>      
@@ -88,18 +90,24 @@
 
 			<!-- Counsellor/Counsellee Based Common Roles Start-->
 		      	      <sec:ifAnyGranted roles="ROLE_COUNSELLOR,ROLE_COUNSELLEE">
+				  <!--<li><g:link controller="helper" action="clorDashboard">Dashboard</g:link></li>
+		      	      	  <li><g:link controller="individual" action="cleelist">Individuals</g:link></li>
+		      	      	  <li><g:link controller="event" action="list">Programs</g:link></li>
+		      	      	  <li><g:link controller="EventSeva" action="list">Services</g:link></li>
+		      	      	  <li><g:link controller="role" action="gridlist">Directory</g:link></li>
+		      	      	  <li><g:link controller="helper" action="clorResources">Resources</g:link></li>
+		      	      	  <li><g:link controller="book" action="order">JivaDaya</g:link></li>
+		      	      	  <li><g:link controller="menuOrder" action="list">Prasad</g:link></li>-->
+		      	      </sec:ifAnyGranted>
+			<!-- Counsellor/Counsellee Based Common Roles End-->
+
+			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR_ADMIN">
 				  <li><g:link controller="helper" action="clorDashboard">Dashboard</g:link></li>
 		      	      	  <li><g:link controller="individual" action="cleelist">Individuals</g:link></li>
 		      	      	  <li><g:link controller="event" action="list">Programs</g:link></li>
 		      	      	  <li><g:link controller="EventSeva" action="list">Services</g:link></li>
 		      	      	  <li><g:link controller="role" action="gridlist">Directory</g:link></li>
 		      	      	  <li><g:link controller="helper" action="clorResources">Resources</g:link></li>
-		      	      	  <!--<li><g:link controller="book" action="order">JivaDaya</g:link></li>
-		      	      	  <li><g:link controller="menuOrder" action="list">Prasad</g:link></li>-->
-		      	      </sec:ifAnyGranted>
-			<!-- Counsellor/Counsellee Based Common Roles End-->
-
-			      <sec:ifAnyGranted roles="ROLE_COUNSELLOR_ADMIN">
 				  <li><g:link controller="helper" action="clorBoardDashboard">CounselorBoard</g:link></li>
 			      </sec:ifAnyGranted>      
 
@@ -220,11 +228,6 @@
 				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>      
 
-			      <sec:ifAnyGranted roles="ROLE_FINANCE">
-				  <li><g:link controller="costCenter" action="budget">Budget</g:link></li>
-				  <li><g:link controller="costCenter" action="summary" params="['year':'2014']">Summary</g:link></li>
-			      </sec:ifAnyGranted>      
-
 			      <sec:ifAnyGranted roles="ROLE_CG_OWNER,ROLE_CC_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
 				  <li><g:link controller="project" action="index">Expense Management</g:link></li>
 				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
@@ -296,6 +299,12 @@
 		      	      	  <li><g:link controller="event" action="list">Events</g:link></li>
 		      	      </sec:ifAnyGranted>
 			<!-- EventManager Based Roles End-->
+
+			<!-- ContactManagement Based Roles Start-->
+		      	      <sec:ifAnyGranted roles="ROLE_CONTACT_MGR">
+		      	      	  <li><g:link controller="person" action="list">Contacts</g:link></li>
+		      	      </sec:ifAnyGranted>
+			<!-- ContactManagement Based Roles End-->
 
 			</ul>
 		      </sec:ifLoggedIn>

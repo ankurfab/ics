@@ -93,9 +93,9 @@
                    });		   
   		   
   		    $("#costcategory_list").jqGrid('filterToolbar',{autosearch:true});
-  		    $("#costcategory_list").jqGrid('navGrid', "#costcategory_list_pager", {edit: true, add: true, del: true, search: true});
-  		    $("#costcategory_list").jqGrid('navGrid',"#costcategory_list_pager").jqGrid('navButtonAdd',"#costcategory_list_pager",{caption:"NewCostCategory", buttonicon:"ui-icon-document", onClickButton:newCostCategory, position: "last", title:"newCostCategory", cursor: "pointer"}); 
-  		    $("#costcategory_list").jqGrid('navGrid',"#costcategory_list_pager").jqGrid('navButtonAdd',"#costcategory_list_pager",{caption:"EditCostCategory", buttonicon:"ui-icon-document", onClickButton:editCostCategory, position: "last", title:"editCostCategory", cursor: "pointer"}); 
+  		    $("#costcategory_list").jqGrid('navGrid', "#costcategory_list_pager", {edit: false, add: false, del: false, search: false});
+  		    //$("#costcategory_list").jqGrid('navGrid',"#costcategory_list_pager").jqGrid('navButtonAdd',"#costcategory_list_pager",{caption:"NewCostCategory", buttonicon:"ui-icon-document", onClickButton:newCostCategory, position: "last", title:"newCostCategory", cursor: "pointer"}); 
+  		    //$("#costcategory_list").jqGrid('navGrid',"#costcategory_list_pager").jqGrid('navButtonAdd',"#costcategory_list_pager",{caption:"EditCostCategory", buttonicon:"ui-icon-document", onClickButton:editCostCategory, position: "last", title:"editCostCategory", cursor: "pointer"}); 
                   
                    function newCostCategory()
                      {
@@ -179,9 +179,9 @@
   		    });
   	
   		    $("#costcenter_list").jqGrid('filterToolbar',{autosearch:true});
-  		    $("#costcenter_list").jqGrid('navGrid', "#costcenter_list_pager", {edit: true, add: true, del: true, search: true});  		    
-  		    $("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"NewCostCenter", buttonicon:"ui-icon-document", onClickButton:newCostCostCenter, position: "last", title:"newCostCenter", cursor: "pointer"}); 
-  		    $("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"EditCostCategory", buttonicon:"ui-icon-document", onClickButton:updateCostCenter, position: "last", title:"updateCostCenter", cursor: "pointer"}); 
+  		    $("#costcenter_list").jqGrid('navGrid', "#costcenter_list_pager", {edit: false, add: false, del: false, search: false});  		    
+  		    //$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"NewCostCenter", buttonicon:"ui-icon-document", onClickButton:newCostCostCenter, position: "last", title:"newCostCenter", cursor: "pointer"}); 
+  		    //$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"EditCostCategory", buttonicon:"ui-icon-document", onClickButton:updateCostCenter, position: "last", title:"updateCostCenter", cursor: "pointer"}); 
                     
                     function newCostCostCenter()
                      { 

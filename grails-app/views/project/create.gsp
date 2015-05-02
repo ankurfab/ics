@@ -5,6 +5,13 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="main-jqm-landing" />
         <title>New Expense Request</title>
+	
+<style>
+.ui-filter-inset {
+    margin-top: 0;
+}
+</style>
+
     </head>
     <body>
     <div role="main" class="ui-content">
@@ -23,11 +30,19 @@
 		<div class="errors" role="status">Budget updation in progress. Please try after some time. Thank you.</div>
 	</g:if>
 	<g:else>
+		<g:if test="${state=='INVALID'}">
+			<div class="errors" role="status">
+			INVALID user. Please contact admin!!
+			</div>
+		</g:if>
 		<g:if test="${!unsettledExpensesBeyondCutoff}">
 			<g:render template="addproject" />
 		</g:if>
 		<g:else>
-			<div class="errors" role="status">Sorry! You can not raise new request as you have un-settled expense for more than 30 days. Please settle it first. Thank you.</div>
+			<div class="errors" role="status">
+			Sorry! You can not raise new request as you have un-settled expense for more than 30 days. Please settle it first. Thank you.<br>
+			${unsettledExpensesBeyondCutoff?.collect{(it.ref?:'')+'/'+it.name+'/'+it.submitDate?.format('dd-MM-yyyy')+'/'+it.amount+'<br>'}}
+			</div>
 		</g:else>
     	</g:else>
     </div>
@@ -50,10 +65,13 @@
    </style>
 <script>
 $(document).ready(function () {
-	<g:if test="${unsettledExpenses}">
-	alert("Gentle reminder! You have the following unsettled expenses. Please settle them in time (max 30 days). Thank you.\n\n${unsettledExpenses?.collect{it.name+'/'+it.submitDate?.format('dd-MM-yyyy')+'/'+it.amount}}");
+	<g:if test="${unsettledExpenses?.size()>0}">
+	alert("Gentle reminder! You have the following unsettled expenses. Please settle them in time (max 30 days). Thank you.\n\n${unsettledExpenses?.collect{(it.ref?:'')+'/'+it.name+'/'+it.submitDate?.format('dd-MM-yyyy')+'/'+it.amount}}\n\nFollowing are approved part payments. Please settle them soon!! ${unsettledPartPaymentExpenses?.collect{(it.ref?:'')+'/'+it.name+'/'+it.submitDate?.format('dd-MM-yyyy')+'/'+it.amount}}");
 	</g:if>
 	
+	<g:if test="${limit75pc}">
+	alert("Alert! More than 75% of allocated budget ("+${cc.budget}+") has already been consumed ("+${cc.balance}+") !!");
+	</g:if>
 	
 	 
       $("#addprojectForm").submit(function(e){
@@ -88,8 +106,11 @@ $(document).ready(function () {
      }
      
     });
-	
+    
 });
+
+
+
 </script>
     </body>
 </html>

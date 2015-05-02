@@ -11,6 +11,9 @@
 	<r:require module="printarea" />
 
 		<style>
+			.bgLightBlue{
+			   background: none repeat scroll 0 0 lightblue !important;
+			  }
 			.bgGreen{
 			   background: none repeat scroll 0 0 green !important;
 			  }
@@ -56,7 +59,7 @@
 				<td style="background:orange">User locked!!</td>
 				<td style="background:red">Code verification failed!!</td>
 				<td style="background:lightgreen">Code verified. Ready to take exam!!</td>
-				<td style="background:green">Exam taken!!</td>
+				<td style="background:lightblue">Exam taken!!</td>
 			</tr>
 		</table>
 	</div>
@@ -146,7 +149,7 @@
     sortorder: "desc",
     rowattr: function (rd) {
 	    if (rd.result!= null && rd.result.length>0) {
-		return {"class": "bgGreen"};
+		return {"class": "bgLightBlue"};
 		}
 	    if (rd.user== null ) {
 		return {"class": "bgYellow"};
@@ -317,7 +320,7 @@
 
 	 $( "#dialogPrintResult" ).dialog({
 		autoOpen: false,
-		 width:800,
+		 width:900,
 		 height:500,
 		modal: true,
 		buttons: {

@@ -42,8 +42,8 @@
             </div>          
              <div data-type="horizontal" class="ui-btn-right"> 
                 Hare Krishna! ${session.individualname} (<sec:username/>)
-                <a href="${createLink(uri: '/')}" id="home"  data-role="button" data-icon="home" data-iconpos="notext" title="Home" >Home</a>
-                <a href="${createLink(controller:'individual',action: 'self')}"  id="profile" data-role="button" data-icon="user"  data-iconpos="notext" data-history="false" title="Profile">Profile</a>
+                <a href="${createLink(uri: '/')}" id="home"  data-role="button" data-icon="home" data-iconpos="notext" title="Home" data-ajax="false" >Home</a>
+                <a href="${createLink(controller:'individual',action: 'self')}"  id="profile" data-role="button" data-icon="user"  data-iconpos="notext" data-history="false" data-ajax="false"  title="Profile">Profile</a>
                 <a href="${createLink(controller:'logout',action: 'index')}" id="logout"  data-role="button" data-icon="lock" data-ajax="false" data-iconpos="notext" title="Logout">Logout</a>
             </div>          
          </div> 

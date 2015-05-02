@@ -37,7 +37,8 @@
 	</sec:ifAnyGranted>
 	<sec:ifAnyGranted roles="ROLE_COUNSELLOR">
 		<g:javascript>
-		window.location.href = "${createLink(controller:'helper',action:'clorDashboard')}";
+		//window.location.href = "${createLink(controller:'helper',action:'clorDashboard')}";
+		window.location.href = "${createLink(controller:'individual',action:'cleelist')}";
 		</g:javascript>
 	</sec:ifAnyGranted>
 	<sec:ifAnyGranted roles="ROLE_ASMT_USER">
@@ -50,8 +51,16 @@
 		window.location.href = "${createLink(controller:'assessment',action:'verify')}";
 		</g:javascript>
 	</sec:ifAnyGranted>
-	<sec:ifNotGranted roles="ROLE_COUNSELLOR,ROLE_ASMT_USER,ROLE_ASMT_USERUV">
-		<img src="${resource(dir:'images',file:'main.jpg')}" width="1250" height="500"/>
+	<sec:ifAnyGranted roles="ROLE_CC_OWNER,ROLE_CG_OWNER">
+		<g:javascript>
+		window.location.href = "${createLink(controller:'project',action:'index')}";
+		</g:javascript>
+	</sec:ifAnyGranted>
+	<sec:ifNotGranted roles="ROLE_COUNSELLOR,ROLE_ASMT_USER,ROLE_ASMT_USERUV,ROLE_CC_OWNER,ROLE_CG_OWNER">
+		<!--<img src="${resource(dir:'images',file:'main.jpg')}" width="1250" height="500"/>-->
+		<div>
+			<h1>Welcome to ICS! Please select the relevant activity from the top menu bar!!</h1>
+		</div>
 	</sec:ifNotGranted>
       </sec:ifLoggedIn>
     </body>

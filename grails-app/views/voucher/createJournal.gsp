@@ -45,7 +45,7 @@
                                 </td>
                             </tr>
                         
-                            <tr class="prop">
+                            <!--<tr class="prop">
                                 <td valign="top" class="name">
                                     <label for="voucherNo"><g:message code="voucher.voucherNo" default="Voucher No" />:</label>
                                 </td>
@@ -53,7 +53,7 @@
                                     <g:textField name="voucherNo" value="${fieldValue(bean: voucherInstance, field: 'voucherNo')}" />
 
                                 </td>
-                            </tr>
+                            </tr>-->
 
                             <tr class="prop">
                                 <td valign="top" class="name">

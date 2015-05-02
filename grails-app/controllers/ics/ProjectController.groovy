@@ -21,14 +21,23 @@ class ProjectController {
         params.max = Math.min(params.max ? params.max.toInteger() : 10,  100)
         def result = Project.createCriteria().list(){
 			      if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER')) {
-			      	submitter{eq('loginid',springSecurityService?.principal.username)}
+			      	costCenter{owner{eq('loginid',springSecurityService?.principal.username)}}
 			      }
 			      if(SpringSecurityUtils.ifAllGranted('ROLE_CG_OWNER')) {
 			      	costCenter{costCenterGroup{owner{eq('loginid',springSecurityService?.principal.username)}}}
+			      	isNull('mainProject')
 			      }
         		
-        		if(params.status)
-        			eq('status',params.status)
+        		if(params.status) {
+        			if(SpringSecurityUtils.ifAllGranted('ROLE_CG_OWNER') && params.status=='APPROVED_REQUEST') {
+        				or{
+        					eq('status','APPROVED_REQUEST')
+        					eq('status','DRAFT_REPORT')
+        				}
+        			}
+        			else
+        				eq('status',params.status)
+        		}
         		order("dateCreated", "desc")
         		order("priority", "desc")
         	}
@@ -48,9 +57,18 @@ class ProjectController {
        			projectInstance = Project.get(params.id)
        		}
        		catch(Exception e){log.debug("Project create:"+e)}
-       		if(projectInstance)
+       		if(projectInstance) {
        			retval.put('projectInstance',projectInstance)
+       			}
        		}
+	//also existing vendor list
+	try{
+	def vendors = Individual.findAllByCategoryAndCreator('EMS_VENDOR',springSecurityService.principal.username)
+	log.debug(springSecurityService.principal.username+" got vendors "+vendors)
+	retval.put('vendors',vendors)
+	}
+	catch(Exception e){log.debug(e)}
+
        	log.debug("Project create:"+retval)
        	retval.put('costCenter',costCenter)
        	retval.put('locked',financeService.checkExpenseCreationLock())
@@ -67,7 +85,7 @@ class ProjectController {
       	params.costCenter = financeService.getCostCenter(session.individualid)
         def response = financeService.saveProject(params)
         if(!response?.balCheck?.allow) {
-        	render(view: "create", model: [projectInstance: response.projectInstance,balCheck:response.balCheck])
+        	render(view: "create", model: [projectInstance: response.projectInstance,balCheck:response.balCheck,costCenter:params.costCenter])
         	return
         }
         else
@@ -139,8 +157,9 @@ class ProjectController {
     }
 
     def deleteRequest = {
+        log.debug("deleteRequest:"+params)
         def projectInstance = Project.get(params.id)
-        if (projectInstance && projectInstance.submitter.loginid==springSecurityService.principal.username && projectInstance.status=='DRAFT_REQUEST') {
+        if (projectInstance && projectInstance.costCenter.owner.loginid==springSecurityService.principal.username && projectInstance.status=='DRAFT_REQUEST') {
             try {
                 projectInstance.delete()
                 flash.message = "Expense deleted!!"
@@ -158,10 +177,15 @@ class ProjectController {
     }
 
     def deleteReport = {
+        log.debug("deleteReport:"+params)
         def projectInstance = Project.get(params.projectid)
-        if (projectInstance && projectInstance.submitter.loginid==springSecurityService.principal.username && projectInstance.status=='DRAFT_REPORT') {
+        log.debug("project status:"+projectInstance+":"+projectInstance.costCenter.owner.loginid)
+        if (projectInstance && projectInstance.costCenter.owner.loginid==springSecurityService.principal.username && (projectInstance.status=='DRAFT_REPORT'||projectInstance.status=='REJECTED_REPORT')) {
             try {
                 Expense.findAllByProject(projectInstance).each{it.delete()}
+                projectInstance.status='APPROVED_REQUEST'
+                if(!projectInstance.save())
+                	projectInstance.errors.allErrors.each {log.debug("Exception in deleteReport"+e)}
                 flash.message = "Expense items deleted!!"
                 redirect(action: "index")
             }
@@ -177,11 +201,162 @@ class ProjectController {
     }
 
     def gridlist(){
-    [status:params.status]
+    [s_status:params.s_status,onlyAdv:params.onlyAdv, advAmtIssued:params.advAmtIssued]
     }
+
+def jq_partproject_list = 
+         {
+          log.debug("jq_partproject_list:"+params)
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'asc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+      
+    		
+    	def result = Project.createCriteria().list(max: maxRows, offset: rowOffset) 
+    	{
+		mainProject{eq('id',new Long(params.projectid?:0))}
+
+   	   	if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER'))
+   	   	eq('costCenter',financeService.getCostCenter(session.individualid))
+   	   	else if (params.costCenter)
+    	   		costCenter{eq('id', new Long(params.costCenter))}
+    	   
+    	   	eq('type','PARTPAYMENT')
+    	   	
+    	   	if (params.name) 
+    	   		ilike('name', params.name)
+    	   				
+    	   				
+    	   	if (params.description) 
+    	   		ilike('description', params.description)
+    	   				
+    	   	if (params.category) 
+    	   		ilike('category', params.category)
+    	   				
+    	   	if (params.expectedStartDate) 
+    	   		eq('expectedStartDate', Date.parse('dd-MM-yyyy', params.expectedStartDate))	
+    	   				
+    	   	if (params.submitDate) {
+    	   		def submitDate = Date.parse('dd-MM-yyyy', params.submitDate)
+    	   		ge('submitDate', submitDate)	
+    	   		lt('submitDate', submitDate+1)	
+    	   		}
+    	   				
+    	   	if (params.amount) 
+    	   		eq('amount', new BigDecimal(params.amount))	
+    	   				
+    	   	if(params.onlyAdv && params.onlyAdv=='onlyAdv') {
+				gt('advanceAmount', new BigDecimal(0))
+    	   	}
+    	   		
+    	   	if (params.advanceAmount) 
+    	   		eq('advanceAmount', new BigDecimal(params.advanceAmount))	
+    	   				
+
+    	   	if (params.advanceAmountIssued) {
+    	   		if (params.advanceAmountIssued=='NO')
+    	   			isNull('advanceAmountIssued')	
+    	   		else
+    	   			isNotNull('advanceAmountIssued')
+    	   	}
+    	   				
+    	   	if (params.priority) 
+    	   		eq('priority', params.priority)	
+    	   				
+    	   	if (params.s_status && params.s_status!='SU' && !params.status) {
+    	   		eq('status', params.s_status)
+    	   		if(params.s_status=='APPROVED_REPORT' && !params.status)
+    	   			ne('type', 'PARTPAYMENT')	
+    	   	}
+    	   	
+    	   	if (params.status) 
+    	   		eq('status', params.status)	
+
+    	   	if (params.ref) 
+    	   		ilike('ref', params.ref)	
+    	   				
+    	   	if (params.type) 
+    	   		eq('type', params.type)	
+
+    	   	if (params.issueTo) 
+    	   		advanceIssuedTo{
+    	   			eq('category', 'EMS_VENDOR')
+    	   			ilike('legalName', params.issueTo)
+    	   		}
+
+    	   	if (params.mode) 
+    	   		advancePaymentMode{
+    	   			eq('name', params.mode)
+    	   			}
+
+    	   	if (params.issueComments) 
+    	   		ilike('advancePaymentComments', params.issueComments)	
+
+    	   	if (params.billNo) 
+    	   		ilike('billNo', params.billNo)	
+
+    	   	if (params.billAmount) 
+    	   		eq('billAmount', new BigDecimal(params.billAmount))	
+
+    	   	if (params.billDate) {
+    	   		def billDate = Date.parse('dd-MM-yyyy', params.billDate)
+    	   		ge('billDate', billDate)	
+    	   		lt('billDate', billDate+1)	
+    	   		}
+
+    	   	if (params.advancePaymentVoucher) 
+    	   		advancePaymentVoucher{
+    	   			ilike('voucherNo', params.advancePaymentVoucher)
+    	   			}
+
+    	   	if (params.mainProject) {
+    	   		if (params.mainProject=='YES')
+    	   			isNull('mainProject')	
+    	   		else
+    	   			isNotNull('mainProject')
+    	   	}
+    	   			
+       		order(sortIndex, sortOrder)
+    
+    	}  
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+    
+          def jsonCells = result.collect {
+                [cell: [
+                	it.costCenter?.name,
+                	it.name,
+                	it.description,
+                	//it.category,
+                	it.submitDate?.format('dd-MM-yyyy'),
+                	it.amount,
+                	it.advanceAmount,
+                	it.advanceAmountIssued,
+                	it.type,                  
+                	/*it.advancePaymentMode?.name,                  
+                	it.advanceIssuedTo?.toString(),                  
+                	it.advancePaymentComments,
+                	it.billNo,
+                	it.billDate,*/
+                	it.advancePaymentVoucher?.voucherNo,
+                	it.mainProject?.ref,
+                	it.priority,                  
+                	it.status,                  
+                	it.ref,                  
+                    ], id: it.id]
+            }
+         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+               render jsonData as JSON
+        }
 
 def jq_project_list = 
          {
+          log.debug("jq_project_list:"+params)
           def sortIndex = params.sidx ?: 'id'
           def sortOrder  = params.sord ?: 'asc'
     
@@ -196,7 +371,7 @@ def jq_project_list =
    	   	if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER'))
    	   	eq('costCenter',financeService.getCostCenter(session.individualid))
    	   	else if (params.costCenter)
-    	   		costCenter{ilike('name', params.costCenter)}
+    	   		costCenter{eq('id', new Long(params.costCenter))}
     	   
     	   	if (params.name) 
     	   		ilike('name', params.name)
@@ -208,33 +383,96 @@ def jq_project_list =
     	   	if (params.category) 
     	   		ilike('category', params.category)
     	   				
-    	   	if (params.type) 
-    	   		ilike('type', params.type)	
-    	   				
     	   	if (params.expectedStartDate) 
     	   		eq('expectedStartDate', Date.parse('dd-MM-yyyy', params.expectedStartDate))	
     	   				
-    	   	if (params.submitDate) 
-    	   		eq('submitDate', Date.parse('dd-MM-yyyy', params.submitDate))	
+    	   	if (params.submitDate) {
+    	   		def submitDate = Date.parse('dd-MM-yyyy', params.submitDate)
+    	   		ge('submitDate', submitDate)	
+    	   		lt('submitDate', submitDate+1)	
+    	   		}
     	   				
     	   	if (params.amount) 
-    	   		eq('amount', params.amount)	
+    	   		eq('amount', new BigDecimal(params.amount))	
     	   				
+    	   	if(params.onlyAdv && params.onlyAdv=='onlyAdv') {
+				gt('advanceAmount', new BigDecimal(0))
+    	   	}
+    	   		
     	   	if (params.advanceAmount) 
-    	   		eq('advanceAmount', params.advanceAmount)	
+    	   		eq('advanceAmount', new BigDecimal(params.advanceAmount))	
     	   				
-    	   	if (params.advanceAmountIssued) 
-    	   		eq('advanceAmountIssued', params.advanceAmountIssued)	
+    	   	if (params.advAmtIssued && !params.advanceAmountIssued) {
+    	   		if (params.advAmtIssued=='NO')
+    	   			isNull('advanceAmountIssued')	
+    	   		else
+    	   			isNotNull('advanceAmountIssued')
+    	   	}
+
+    	   	if (params.advanceAmountIssued) {
+    	   		if (params.advanceAmountIssued=='NO')
+    	   			isNull('advanceAmountIssued')	
+    	   		else if (params.advanceAmountIssued=='YES')
+    	   			isNotNull('advanceAmountIssued')
+    	   		/*else if(SpringSecurityUtils.ifAllGranted('ROLE_ACC_USER'))    	   		
+    	   			gt('advanceAmount',new BigDecimal(0))*/
+    	   	}
     	   				
     	   	if (params.priority) 
     	   		eq('priority', params.priority)	
     	   				
+    	   	if (params.s_status && params.s_status!='SU' && !params.status && !params.advanceAmountIssued) {
+    	   		eq('status', params.s_status)
+    	   		if(params.s_status=='APPROVED_REPORT' && !params.status)
+    	   			ne('type', 'PARTPAYMENT')	
+    	   	}
+    	   	
     	   	if (params.status) 
     	   		eq('status', params.status)	
-    	   				
+
     	   	if (params.ref) 
-    	   		eq('ref', params.ref)	
+    	   		ilike('ref', params.ref)	
     	   				
+    	   	if (params.type) 
+    	   		eq('type', params.type)	
+
+    	   	if (params.issueTo) 
+    	   		advanceIssuedTo{
+    	   			eq('category', 'EMS_VENDOR')
+    	   			ilike('legalName', params.issueTo)
+    	   		}
+
+    	   	if (params.mode) 
+    	   		advancePaymentMode{
+    	   			eq('name', params.mode)
+    	   			}
+
+    	   	if (params.issueComments) 
+    	   		ilike('advancePaymentComments', params.issueComments)	
+
+    	   	if (params.billNo) 
+    	   		ilike('billNo', params.billNo)	
+
+    	   	if (params.billAmount) 
+    	   		eq('billAmount', new BigDecimal(params.billAmount))	
+
+    	   	if (params.billDate) {
+    	   		def billDate = Date.parse('dd-MM-yyyy', params.billDate)
+    	   		ge('billDate', billDate)	
+    	   		lt('billDate', billDate+1)	
+    	   		}
+
+    	   	if (params.advancePaymentVoucher) 
+    	   		advancePaymentVoucher{
+    	   			ilike('voucherNo', params.advancePaymentVoucher)
+    	   			}
+
+    	   	if (params.mainProject) {
+    	   		if (params.mainProject=='YES')
+    	   			isNull('mainProject')	
+    	   		else
+    	   			isNotNull('mainProject')
+    	   	}
     	   			
        		order(sortIndex, sortOrder)
     
@@ -248,11 +486,19 @@ def jq_project_list =
                 	it.costCenter?.name,
                 	it.name,
                 	it.description,
-                	it.category,
+                	//it.category,
                 	it.submitDate?.format('dd-MM-yyyy'),
                 	it.amount,
                 	it.advanceAmount,
                 	it.advanceAmountIssued,
+                	it.type,                  
+                	/*it.advancePaymentMode?.name,                  
+                	it.advanceIssuedTo?.toString(),                  
+                	it.advancePaymentComments,
+                	it.billNo,
+                	it.billDate,*/
+                	it.advancePaymentVoucher?.voucherNo,
+                	it.mainProject?.ref,
                 	it.priority,                  
                 	it.status,                  
                 	it.ref,                  
@@ -369,6 +615,7 @@ def jq_project_list =
 
     def jq_expense_list = 
              {
+              log.debug("jq_expense_list:"+params)
               def sortIndex = params.sidx ?: 'id'
               def sortOrder  = params.sord ?: 'desc'
         
@@ -382,11 +629,10 @@ def jq_project_list =
         	{   
         				isNotNull('project')
         				
-        	   			if (params.projectid)
-        	   				project{eq('id', new Long(params.projectid))}
+        	   			project{eq('id', new Long(params.projectid?:0))}
 
         	   			if (params.costCenter)
-        	   				project{costCenter{ilike('name', params.costCenter)}}
+        	   				project{costCenter{eq('id', new Long(params.costCenter))}}
         	   		        	
         	   			if (params.expenseDate)
         	   				eq('expenseDate', Date.parse('dd-MM-yyyy', params.expenseDate))
@@ -394,7 +640,7 @@ def jq_project_list =
         	   			
         	   
         	   			if (params.ledgerHead)
-        	   				ledgerHead{ilike('name', params.ledgerHead)}
+        	   				ledgerHead{eq('id', new Long(params.ledgerHead))}
 
         	   			if (params.category) 
         	   				eq('category', params.category)
@@ -403,7 +649,14 @@ def jq_project_list =
         	   				ilike('description', params.description)	
         	   				
         	   			if (params.amount) 
-					        eq('amount', params.amount)	
+					        eq('amount', new BigDecimal(params.amount))	
+
+        	   			if (params.deduction) {
+					        if(params.deduction=='YES')
+					        	isNotNull('deductionType')	
+					        else
+					        	isNull('deductionType')
+					}
 					         
         	   			/*if (params.status)
         	   			        eq('status', params.status)
@@ -413,14 +666,27 @@ def jq_project_list =
         	   			if (params.invoiceRaisedBy) 
 					        invoiceRaisedBy{ilike('legalName', params.invoiceRaisedBy)}
 
-        	   			if (params.invoiceNo) 
-					        eq('invoiceNo', params.invoiceNo)	
+        	   			if (params.invoiceAvailable) 
+					        eq('invoiceAvailable', params.invoiceAvailable)	
 
-        	   			if (params.invoiceDate)
-        	   				eq('invoiceDate', Date.parse('dd-MM-yyyy', params.invoiceDate))
+        	   			if (params.invoiceNo) 
+					        ilike('invoiceNo', params.invoiceNo)	
+
+					if (params.invoiceDate) {
+						def invoiceDate = Date.parse('dd-MM-yyyy', params.invoiceDate)
+						ge('invoiceDate', invoiceDate)	
+						lt('invoiceDate', invoiceDate+1)	
+						}
 
         	   			if (params.invoicePaymentMode) 
 					        invoicePaymentMode{eq('name', params.invoicePaymentMode)}
+
+        	   			if (params.ref) 
+					        ilike('ref', params.ref)	
+
+        	   			if (params.paymentVoucher) 
+					        paymentVoucher{ilike('voucherNo', params.paymentVoucher)}
+
 
            			order(sortIndex, sortOrder)
         
@@ -429,23 +695,26 @@ def jq_project_list =
               def totalRows = result.totalCount
               def numberOfPages = Math.ceil(totalRows / maxRows)
         
+              def totalAmount = 0
               def jsonCells = result.collect {
+                    totalAmount += (it.amount?:0)
                     [cell: [
                     	    it.project?.costCenter?.name,
-                   	             
                    	                 it.description,
                    	                 it.ledgerHead?.name?:'',
                    	                 it.amount,
+                   	                 ((it.deductionType?:'')+' '+(it.deductionPercentage?:'')+' '+(it.deductionAmount?:'')+' '+(it.deductionDescription?:'')),
                    	                 it.invoiceRaisedBy,
+                   	                 it.invoiceAvailable,
                    	                 it.invoiceNo,
                    	                 it.invoiceDate?.format('dd-MM-yyyy'),
                    	                 it.invoicePaymentMode?.name,
+                   	                it.paymentVoucher?.voucherNo,
                    	                it.status,
                    	                it.ref,
-                   	                it.paymentVoucher?.voucherNo,
                         ], id: it.id]
                 }
-             def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+             def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages,userdata:[ledgerHead:'Total',amount:totalAmount]]
                    render jsonData as JSON
         }
         
@@ -461,47 +730,31 @@ def jq_project_list =
                 def id
                 
                 switch (params.oper) {
-		        case 'add':
-		          // add instruction sent
-		        
-		         if(params.id)
-		         	params.remove('id')	//id is autogenerated
-		         	
-		         expense = new Expense(params)
-		           if (!expense.hasErrors() && expense.save())
-		           {
-		            
-		            message = "Expense is Added by   ${expense.raisedBy}  Sucessfully"
-		            id = expense.id
-			    state = "OK"
-			            }
-			            else 
-			            {
-			            
-			              message = "Could Not Save Expense"
-			            }
-
-		          break;
-		          
-		            case 'edit':
-			   
-			    expense = Expense.get(params.id) 
+		        case 'edit':			   
+			    try{
+			    expense = Expense.get(params.id)
+			    if(!expense.paymentVoucher) {
                           
-                            expense.costCenter = params.costCenter
-                            expense.description = params.description
-                       
-                            expense.raisedBy = params.raisedBy
-                            expense.category = params.category
-                            expense.invoiceNo = params.invoiceNo
-                            expense.invoiceDate = new Date()//(params.invoiceDate)
-                            expense.amount = new BigDecimal(params.amount)
-                           //expense.invoicePaymentMode = params.invoicePaymentMode  //PaymentMode
-                            //@Pk to do
+                            if(params.description)
+                            	expense.description = params.description                       
+                            if(params.amount)
+                            	expense.amount = new BigDecimal(params.amount)
+
+                            if(params.invoiceRaisedBy && params.invoiceRaisedBy!=expense.invoiceRaisedBy) {
+                            	def new_invoiceRaisedBy = Individual.findByCategoryAndLegalName('EMS_VENDOR',params.invoiceRaisedBy)                            	
+                            		expense.invoiceRaisedBy = params.invoiceRaisedBy
+                            }
+
+                            if(params.invoiceNo)
+                            	expense.invoiceNo = params.invoiceNo
+                            if(params.invoiceDate)
+                            	expense.invoiceDate = Date.parse('dd-MM-yyyy', params.invoiceDate)
+                            if(params.invoicePaymentMode) {
+                            	def new_invoicePaymentMode = PaymentMode.findByNameAndInperson(params.invoicePaymentMode,true)                            	
+                            	expense.invoicePaymentMode = new_invoicePaymentMode
+                            }
                             
-			    if (expense)
-			    {
-			    println params
-			      if (!expense.hasErrors() && expense.save(flush: true,insert:true)) { 
+			      if (!expense.hasErrors() && expense.save()) { 
 			     
 			        message = "Expense raised by   ${expense.raisedBy} Updated Sucessfully "
 			        id = expense.id
@@ -510,43 +763,43 @@ def jq_project_list =
 			        message = "Could Not Update Expense"
 			      }
 			    }
+			   }
+			    catch(Exception e)  {log.debug("Edit of expense item:"+e)}
 			    
-                         break;
+                         break;		          
+		case 'del':
+				def idList = params.id.tokenize(',')
+				idList.each
+				{
+				  // check if exists
+				  expense  = Expense.get(it)
+				  def voucher = expense.paymentVoucher
+				  if (expense && (!expense.paymentVoucher || !expense.paymentVoucher.dataCaptured)) {
+				    // delete
+				    if(!expense.delete())
+					{
+					    expense.errors.allErrors.each {
+						log.debug("In jq_edit_expense: error in deleting exp:"+ it)
+						}
+					}
+				    else {
+					    //soft-delete paymentVoucher, if exists
+					    if(voucher) {
+					    	voucher.status='DELETED'
+					    	if(!voucher.save())
+					    		voucher.errors.allErrors.each {log.debug("excp in sofdel voucher:"+it)}
+					    	else {
+						    message = "Deleted!!"
+						    state = "OK"
+					    	}					    
+					    }
+				    }
+				  }
+				}
+		  break;
 		          
-		          
-		          case 'del':
-			    
-			    expense = Expense.get(new Long(params.id))
-			    if (expense) {
-			      
-			      expense.delete()
-			      message = "Expense  Added by ${expense.raisedBy} is Deleted"
-			      println "deleted"
-			      state = "OK"
-			    }
-                        break;
-		      
-		       
-		      default :
-		      		 
-		      		  expense = Expense.get(new Long(params.id))
-		      		  if (expense) {
-		      		 
-		      		    expense.properties = params
-		      		    expense.updator = springSecurityService.principal.username
-		      		   		    
-		      		    if (! expense.hasErrors() && expense.save()) {
-		      		      message = "Expense  ${expense.toString()} Updated"
-		      		      id = expense.id
-		      		      state = "OK"
-		      		    } else {
-		      			    expense.errors.allErrors.each {
-		      				println it
-		      				}
-		      		      message = "Could Not Update Expense"
-		      		    }
-		      		  }
-		      		  break;
+		        default:
+                        	break;
  	 }
 		
               
@@ -582,8 +835,8 @@ def jq_project_list =
 
     def ledgerHead() {
 	def expenseInstance = Expense.get(params.id) 
-	if (!expenseInstance) {
-	    render "Expense not found with id:"+params.id
+	if (!expenseInstance || expenseInstance.paymentVoucher) {
+	    render "Expense Invalid!!"
 	}
 	else {
 	    render(template: "ledgerHead", model: [expenseInstance: expenseInstance])
@@ -592,7 +845,12 @@ def jq_project_list =
 
     def printApproval() {
     	def projectInstance = Project.get(params.projectid)
-    	render(template: "expenseApproval", model: [projectInstance: projectInstance])
+	//advance req slip to be printed only in case of CASH...else normal payment/debit voucher
+	if (!projectInstance.advancePaymentMode || projectInstance.advancePaymentMode.name.toUpperCase()=='CASH')
+    		render(template: "expenseApproval", model: [projectInstance: projectInstance])
+    	else
+    		render(template: "/voucher/printPaymentVoucher", model: [voucherInstance: projectInstance?.advancePaymentVoucher])
+    		
     }
 
     def printReimbursement() {
@@ -632,13 +890,84 @@ def jq_project_list =
 		redirect(action: "index")
 		return
 	}
-	if(!params.projectid) {
+	def projectInstance		
+	def creditProjects=[], ppProjects = [], projects = [], vendors=[]
+	def editScenario = false
+	def expenses
+	if(!params.projectid) {	//projectid would be specified if the ERR is supposed to be edited
+		if(params.specificProjectIds) {
+			//partpayment/credit scenario
+			def project
+			params.specificProjectIds.tokenize(',').each{
+				project = Project.get(it)
+				if(project.advanceIssuedTo)
+					vendors.add(project.advanceIssuedTo.legalName)
+				switch(project.type) {
+					case 'CREDIT':
+						creditProjects.add(project)
+						break
+					case 'PARTPAYMENT':
+						ppProjects.add(project)
+						break
+					default :
+						projects.add(project)
+						break
+						
+					}
+				}
+		}
+		else {
 		flash.message  = "Please select an expense!!"
 		redirect(action: "index")
 		return
+		}
 	}
-	def projectInstance = Project.get(params.projectid)
-	[projectInstance:projectInstance]
+	else  {	
+		log.debug("Editing ERR for Projectid:"+params.projectid)
+		projectInstance = Project.get(params.projectid)
+		if(projectInstance.type=='CREDIT') {
+			creditProjects.add(projectInstance)
+			ppProjects = Project.findAllByMainProject(projectInstance)
+		}
+		editScenario = true
+		expenses = Expense.findAllByProject(projectInstance,[sort:'id'])
+	}
+
+	def validSelection=false
+	if(!editScenario) {
+		if(creditProjects.size()==1 && projects.size()==0) {
+			projectInstance = creditProjects[0]
+			log.debug("Vendors before unq:"+vendors)
+			vendors.unique { a, b -> a <=> b }
+			log.debug("Vendors after unq:"+vendors)
+			if(vendors.size()==1)
+				validSelection = true
+		}
+		else if(creditProjects.size()==0 && ppProjects.size()==0 && projects.size()==1)
+			validSelection=true
+	}
+	else
+		validSelection=true
+		
+	if(!projectInstance && projects.size()>0)
+		projectInstance = projects[0]	
+
+	def numRows = 10
+	if(params.numItems)
+		numRows = params.numItems
+	else {	//edit scenario
+		def numExpenses = expenses.size()
+		def maxRowsToAdd = 50-numExpenses
+		if(maxRowsToAdd>10)
+			numRows = numExpenses+10
+		else
+			numRows = numExpenses+maxRowsToAdd
+	}
+		
+	if(validSelection && projectInstance)		
+		[projectInstance:projectInstance, creditProjects: creditProjects, ppProjects:ppProjects, projects:projects, numRows:numRows,expenses:expenses]
+	else
+		render "Please choose correct expenses!!"
     }
     
     def saveReport() {
@@ -651,7 +980,7 @@ def jq_project_list =
     	log.debug("Inside rejectExpense with params:"+params)
     	def expense = Expense.get(params.expenseid)
     	def message=""
-    	if(expense) {
+    	if(expense && !expense.paymentVoucher) {
     		expense.status="REJECTED"
     		expense.updator = springSecurityService.principal.username
     		if(!expense.save()) {
@@ -663,52 +992,40 @@ def jq_project_list =
     			
     	}
     	else
-    		message = "Expense item not found!!"
+    		message = "Expense item invalid!!"
     	render ([message:message] as JSON)
     }
     
     def issueAdvance() {
     	log.debug("Inside issueAdvance with params:"+params)
-    	def message=""
-    	def project = Project.get(params.id)
-    	if(project && params.advanceAmountIssued && !project.advanceIssued) {
-    		project.advanceIssued = true
-    		project.advanceAmountIssued = new BigDecimal(params.advanceAmountIssued)
-    		project.updator = springSecurityService.principal.username
-    		if((project.advanceAmountIssued<=project.advanceAmount) && project.save()) {
-    			message = "Expense updated!!"
-    		}
-    		else {
-    			project.errors.allErrors.each {log.debug("Exception in updating project"+e)}
-    			message = "Some exception occurred!"
-    		}
-    		
-    	}
-    	else
-    		message = "Expense not found!!"
+    	def message=financeService.issueAdvance(params)
     	render message
     }
 
     def assignLedgerHead() {
     	log.debug("Inside assignLedgerHead with params:"+params)
+    	def count=0
     	def message=""
-    	def expense = Expense.get(params.id)
-    	if(expense && params.'ledgerHead.id') {
-    		expense.ledgerHead = LedgerHead.get(params.'ledgerHead.id')
-    		expense.updator = springSecurityService.principal.username
-    		if(expense.save()) {
-    			message = "LedgerHead for expense item updated!!"
+    	def expense
+	
+	if(params.'ledgerHead.id') {
+		params.expidsForLedgerHead?.tokenize(',').each{eid->
+			expense = Expense.get(eid)
+			if(expense && !expense.paymentVoucher) {
+				expense.ledgerHead = LedgerHead.get(params.'ledgerHead.id')
+				expense.updator = springSecurityService.principal.username
+				if(expense.save()) {
+					count++
+				}
+				else {
+					expense.errors.allErrors.each {log.debug("assignLedgerHead:Exception in updating expense item"+e)}
+				}
+
+			}
     		}
-    		else {
-    			expense.errors.allErrors.each {log.debug("Exception in updating expense item"+e)}
-    			message = "Some exception occurred!"
-    		}
-    		
     	}
-    	else
-    		message = "Expense item not found!!"
-    	render message
-    }
+    	render count +" ledgers updated!!"
+   }
 
  def ledgerHeadGridList(){}
  def jq_ledger_head_list = 
@@ -998,6 +1315,8 @@ def jq_project_list =
 
 		def result = CostCenter.createCriteria().list(max: maxRows, offset: rowOffset) 
 		{       
+			isNull('status')
+			
 			if(params.ccatid)
 				costCategory{eq('id',new Long(params.ccatid))}
 			
@@ -1011,7 +1330,7 @@ def jq_project_list =
 				ilike('alias', params.alias)			
                       
 			if (params.owner)
-				owner{
+				owner1{
 					or{
 						ilike('legalName', params.owner)
 						ilike('initiatedName', params.owner)
@@ -1031,9 +1350,9 @@ def jq_project_list =
 		    [cell: [  
 			    it.name,
 			    it.alias,
-			    it.owner?.toString(),
-			    it.owner?(VoiceContact.findByIndividualAndCategory(it.owner,'CellPhone')?.number?:''):'',
-			    it.owner?(EmailContact.findByIndividualAndCategory(it.owner,'Personal')?.emailAddress?:''):'',
+			    it.owner1?.toString(),
+			    it.owner1?(VoiceContact.findByIndividualAndCategory(it.owner1,'CellPhone')?.number?:''):'',
+			    it.owner1?(EmailContact.findByIndividualAndCategory(it.owner1,'Personal')?.emailAddress?:''):'',
 			    it.owner?.loginid
 			], id: it.id]
 		}
@@ -1154,7 +1473,7 @@ def jq_project_list =
 				ilike('alias', params.description)			
 
 			if (params.owner)
-				owner{
+				owner1{
 					or{
 						ilike('legalName', params.owner)
 						ilike('initiatedName', params.owner)
@@ -1175,9 +1494,9 @@ def jq_project_list =
 		    [cell: [  		  
 			    it.name,
 			    it.description,
-			    it.owner?.toString(),
-			    it.owner?(VoiceContact.findByIndividualAndCategory(it.owner,'CellPhone')?.number?:''):'',
-			    it.owner?(EmailContact.findByIndividualAndCategory(it.owner,'Personal')?.emailAddress?:''):'',
+			    it.owner1?.toString(),
+			    it.owner1?(VoiceContact.findByIndividualAndCategory(it.owner1,'CellPhone')?.number?:''):'',
+			    it.owner1?(EmailContact.findByIndividualAndCategory(it.owner1,'Personal')?.emailAddress?:''):'',
 			    it.owner?.loginid
 			], id: it.id]
 		}
@@ -1277,6 +1596,13 @@ def jq_project_list =
 		def project = Project.get(params.projectid)
 		if(project)
 			{
+    			def expensesWithoutVouchers = Expense.findAllByProjectAndStatusAndPaymentVoucherIsNull(project,'SUBMITTED')
+    			if(expensesWithoutVouchers.size()>0) {
+    				render "Voucher not created for one or more expenses has not been created!!"
+    				return
+    			}
+
+    			def expenses = Expense.findAllByProjectAndStatus(project,'SUBMITTED')
 			//change the status and do other computations
 			if(project.status=='APPROVED_REPORT')
 				{
@@ -1286,7 +1612,6 @@ def jq_project_list =
 		      				log.debug("Exception in markSettled:"+it)
 		      				}					 	
 				}
-    			def expenses = Expense.findAllByProjectAndStatus(project,'SUBMITTED')
 			render(template: "expenseReimburesemt", model: [projectInstance: project,expenses: expenses])
 			}
 		else
@@ -1295,7 +1620,18 @@ def jq_project_list =
 	
 	def addCostCenterGroup() {
 		log.debug("Inside addCostCenterGroup with params:"+params)
-		financeService.addCostCenterGroup(params)		
+		//financeService.addCostCenterGroup(params)		
+		def tokens = [params.name,params.description,params.loginid,Individual.get(params.'owner1.id')?.icsid?.toString()]
+		financeService.createCG(tokens)
+		render ([message:"Done"] as JSON)
+	}
+	
+	def addCostCenter() {
+		log.debug("Inside addCostCenter with params:"+params)
+	    //format
+	    //name,alias,cg_id,ccat_id,loginid,owner_icsid
+		def tokens = [params.name,params.alias,params.cg_id,params.ccat_id,params.loginid,Individual.get(params.'owner1.id')?.icsid?.toString()]
+		financeService.createCC(tokens)
 		render ([message:"Done"] as JSON)
 	}
 	
@@ -1303,6 +1639,20 @@ def jq_project_list =
 		log.debug("Inside saveRejectProject:"+params)
 		financeService.saveRejectProject(params)		
 		render ([message:"Done"] as JSON)		
+	}
+	
+	def saveRejectExpense() {
+		log.debug("Inside saveRejectExpense:"+params)
+		financeService.saveRejectExpense(params)		
+		render ([message:"Done"] as JSON)		
+	}
+	
+	def saveCompleteReject() {
+		log.debug("Inside saveCompleteReject:"+params)
+		def msg = "Unauthorized"
+      		if(SpringSecurityUtils.ifAllGranted('ROLE_FINANCE'))
+			msg = financeService.saveCompleteReject(params)		
+		render ([message:msg] as JSON)		
 	}
 	
 	def generateCGOLoginId() {
@@ -1322,5 +1672,248 @@ def jq_project_list =
 		}
 		render ([message:loginid] as JSON)			
 	}
+	
+	def calculateDeduction() {
+		log.debug("Inside calculateDeduction with params:"+params)
+      		def retmsg
+      		if(SpringSecurityUtils.ifAllGranted('ROLE_ACC_USER')) {
+			retmsg = financeService.calculateDeduction(params)
+		}
+		render ([message:retmsg] as JSON)					
+	}
+
+def jq_approvedProject_list = 
+         {
+          log.debug("jq_approvedProject_list:"+params)
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'asc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+      
+    		
+    	def result = Project.createCriteria().list(max: maxRows, offset: rowOffset) 
+    	{
+   	   	if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER'))
+   	   	eq('costCenter',financeService.getCostCenter(session.individualid))
+   	   	else if (params.costCenter)
+    	   		costCenter{eq('id', new Long(params.costCenter))}
+    	   		
+    	   	eq('status','APPROVED_REQUEST')
+    	   
+    	   	if (params.name) 
+    	   		ilike('name', params.name)    	   				
+    	   				
+    	   	if (params.description) 
+    	   		ilike('description', params.description)
+    	   				
+    	   	if (params.category) 
+    	   		eq('category', params.category)
+    	   				    	   				
+    	   	if (params.submitDate) {
+    	   		def submitDate = Date.parse('dd-MM-yyyy', params.submitDate)
+    	   		ge('submitDate', submitDate)	
+    	   		lt('submitDate', submitDate+1)	
+    	   		}
+    	   				
+    	   	if (params.amount) 
+    	   		eq('amount', params.amount)	
+    	   		
+    	   	if (params.advanceAmount) 
+    	   		eq('advanceAmount', new BigDecimal(params.advanceAmount))	
+    	   				    	   				
+    	   	if (params.advanceAmountIssued) 
+    	   		eq('advanceAmountIssued', new BigDecimal(params.advanceAmountIssued))	
+    	   				    	   				
+    	   	if (params.priority) 
+    	   		eq('priority', params.priority)	
+    	   				
+    	   	if (params.ref) 
+    	   		ilike('ref', params.ref)	
+    	   				
+    	   	if (params.type) { 
+    	   		if (params.type=='NORMAL') {
+    	   			or {
+					isNull('type')
+					eq('type', params.type)
+    	   			}
+    	   		}
+    	   		else {
+    	   			or {
+					eq('type', 'PARTPAYMENT')
+					eq('type', 'CREDIT')
+    	   			}
+    	   		}
+    	   			
+    	   	}
+
+    	   	if (params.issueTo) 
+    	   		advanceIssuedTo{
+    	   			eq('category', 'EMS_VENDOR')
+    	   			ilike('legalName', params.issueTo)
+    	   		}
+
+    	   	if (params.mode) 
+    	   		advancePaymentMode{
+    	   			eq('name', params.mode)
+    	   			}
+
+    	   	if (params.issueComments) 
+    	   		ilike('advancePaymentComments', params.issueComments)	
+
+    	   	if (params.billNo) 
+    	   		ilike('billNo', params.billNo)	
+
+    	   	if (params.billAmount) 
+    	   		eq('billAmount', new BigDecimal(params.billAmount))	
+
+    	   	if (params.billDate) {
+    	   		def billDate = Date.parse('dd-MM-yyyy', params.billDate)
+    	   		ge('billDate', billDate)	
+    	   		lt('billDate', billDate+1)	
+    	   		}
+
+    	   	if (params.advancePaymentVoucher) 
+    	   		advancePaymentVoucher{
+    	   			ilike('voucherNo', params.advancePaymentVoucher)
+    	   			}
+    	   			
+       		order(sortIndex, sortOrder)
+    
+    	}  
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+    
+          def jsonCells = result.collect {
+                [cell: [
+                	it.ref,                  
+                	it.name,
+                	it.category,
+                	it.submitDate?.format('dd-MM-yyyy'),
+                	it.amount,
+                	it.advanceAmountIssued,
+                	it.type,                  
+                	it.advanceIssuedTo?.toString(),                  
+                    ], id: it.id]
+            }
+         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+               render jsonData as JSON
+        }
+
+	def showChildProjects() {
+		log.debug("showChildProjects:"+params)
+		def mainProject = Project.get(params.pid)
+		def childProjects = Project.findAllByMainProject(mainProject)
+		if(childProjects.size()>0)
+			render(template: "childProjects", model: [childProjects: childProjects]) 
+		else
+			render "No Part Payments found!!"
+	}
+
+    def unlockAndResetVH() {
+	financeService.unlockAndResetVH(params)
+	render([message:"DONE"] as JSON)
+    }
+
+    def unlockAndResetHOD() {
+	financeService.unlockAndResetHOD(params)
+	render([message:"DONE"] as JSON)
+    }
+
+	def expenseSummary() {
+		def costCenters = []
+		costCenters = CostCenter.createCriteria().list{
+			isNull('status')
+			if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER')) {
+				owner{eq('loginid',springSecurityService?.principal.username)}
+				}
+			if(SpringSecurityUtils.ifAllGranted('ROLE_CG_OWNER')) {
+				costCenterGroup{owner{eq('loginid',springSecurityService?.principal.username)}}
+				}
+			order('name')
+			}
+		[costCenters:costCenters]	
+	}
+
+    def jq_expenseSummary_list = {
+      log.debug("jq_expenseSummary_list:"+params)
+      def sortIndex = "id"
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = Expense.createCriteria().list(max:maxRows, offset:rowOffset) {
+		if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER')) {
+			project{costCenter{owner{eq('loginid',springSecurityService?.principal.username)}}}
+			}
+		if(SpringSecurityUtils.ifAllGranted('ROLE_CG_OWNER')) {
+			project{costCenter{costCenterGroup{owner{eq('loginid',springSecurityService?.principal.username)}}}}
+			}
+		if(params.ccat)
+			project{costCenter{costCategory{ilike('name',params.ccat)}}}
+		if(params.name)
+			project{costCenter{ilike('name',params.name)}}
+		if(params.alias)
+			project{costCenter{eq('alias',params.alias)}}
+		
+		order(sortIndex, sortOrder)
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+      
+      def totalExpense=0
+      
+          def jsonCells = result.collect {
+                totalExpense += it.amount
+                [cell: [
+                	it.project?.costCenter?.costCategory?.name,
+                	it.project?.costCenter?.name,
+                	it.invoiceDate?.format('dd-MM-yyyy'),
+                	it.description,
+                	it.ledgerHead?.name,
+                	it.invoiceRaisedBy,
+                	it.amount,
+                	it.project?.ref,
+                	it.paymentVoucher?.voucherNo,
+                    ], id: it.id]
+            }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages,userdata:[invoiceRaisedBy:'Total',amount:totalExpense]]
+        render jsonData as JSON
+        }	
+
+	def oldadvance(){}
+	
+	//generic method to create auto approved EARs for old advances
+	def uploadOldAdvances() {
+	    log.debug("Inside uploadOldAdvances")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		render 'file cannot be empty'
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+	    def category = ""
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	try{
+	    		if(financeService.uploadOldAdvance(tokens))
+	    			numCreated++
+	    	}
+	    	catch(Exception e){log.debug("uploadOldAdvances:Exception:"+e)}
+	    }
+	    
+	    render "Old advances uploaded "+numCreated+"/"+numRecords+" records!!"
+	    return
+	}
+
 
 }

@@ -2798,14 +2798,17 @@ def individualService
     }
 
     def allIndividualsFuzzyAsJSON_JQ = {
-	def individuals = housekeepingService.searchIndividualName(params.term)
+	def individuals
+	if(params.term)
+		individuals = housekeepingService.searchIndividualName(params.term)
+	
         response.setHeader("Cache-Control", "no-store")
 
-        def results = individuals.collect {
+        def results = individuals?.collect {
             [  
                id: it.id,
                value: it.toString(),
-               label: it.toString() ]
+               label: it.toString() +" (ICSid "+(100000+it.id)+")" ]
         }
 
         render results as JSON
@@ -2843,7 +2846,7 @@ def individualService
             [  
                id: it.id,
                value: it.toString(),
-               label: it.toString() ]
+               label: it.toString()+" (ICSid "+it.icsid+")" ]
         }
 
         render results as JSON

@@ -615,8 +615,16 @@ class InvoiceController {
 	
 	if(params.from)
 		  params.from = Date.parse('dd-MM-yyyy',params.from)
+	else
+		  params.from = new Date().resetTime()
+
 	if(params.to)
 		  params.to = Date.parse('dd-MM-yyyy',params.to)
+	else
+		  params.to = new Date().resetTime()
+    	
+    	//move ahead to date by 1 day so that last day is seen
+    	params.to = params.to + 1
     	
     	def invoices = invoiceService.salesReport(params)
     	

@@ -29,6 +29,10 @@
                         
                    	    <th><g:message code="costCenterGroup.owner" default="Owner" /></th>
                    	    
+                   	    <th><g:message code="costCenterGroup.owner1" default="Owner1" /></th>
+                   	    
+                   	    <th><g:message code="costCenterGroup.owner2" default="Owner2" /></th>
+                   	    
                    	    <g:sortableColumn property="dateCreated" title="Date Created" titleKey="costCenterGroup.dateCreated" />
                         
                    	    <g:sortableColumn property="creator" title="Creator" titleKey="costCenterGroup.creator" />
@@ -46,6 +50,10 @@
                             <td>${fieldValue(bean: costCenterGroupInstance, field: "description")}</td>
                         
                             <td>${fieldValue(bean: costCenterGroupInstance, field: "owner")}</td>
+                        
+                            <td>${fieldValue(bean: costCenterGroupInstance, field: "owner1")}</td>
+                        
+                            <td>${fieldValue(bean: costCenterGroupInstance, field: "owner2")}</td>
                         
                             <td><g:formatDate date="${costCenterGroupInstance.dateCreated}" /></td>
                         

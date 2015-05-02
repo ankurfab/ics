@@ -29,6 +29,22 @@ class Voucher {
 		crossUsing(nullable:true)
 		status(nullable:true)
 
+		    dataCaptured(nullable:true)
+		    dataCaptureDate(nullable:true)
+		    dataCapturedBy(nullable:true)
+		    dataCaptureStatus(nullable:true)
+		    dataCaptureComments(nullable:true)
+		    instrumentReady(nullable:true)
+		    instrumentReadyDate(nullable:true)
+		    instrumentReadyBy(nullable:true)
+		    instrumentReadyStatus(nullable:true)
+		    instrumentReadyComments(nullable:true)
+		    instrumentCollected(nullable:true)
+		    instrumentCollectedDate(nullable:true)
+		    instrumentCollectedBy(nullable:true)
+		    instrumentCollectedStatus(nullable:true)
+		    instrumentCollectedComments(nullable:true)
+
 	    dateCreated()
 	    creator()
 	    lastUpdated()
@@ -61,6 +77,23 @@ class Voucher {
     String crossUsing
     String status
     
+    Boolean dataCaptured
+    Date dataCaptureDate
+    Individual dataCapturedBy
+    String dataCaptureStatus
+    String dataCaptureComments
+    
+    Boolean instrumentReady
+    Date instrumentReadyDate
+    Individual instrumentReadyBy
+    String instrumentReadyStatus
+    String instrumentReadyComments
+
+    Boolean instrumentCollected
+    Date instrumentCollectedDate
+    Individual instrumentCollectedBy
+    String instrumentCollectedStatus
+    String instrumentCollectedComments
 
     Date dateCreated
     Date lastUpdated
