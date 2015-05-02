@@ -78,8 +78,9 @@
                         <label for="prefSpMaster">Preferred Aspiring Spiritual Master:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:textField name="prefSpMaster" placeholder="Enter Name of Preferred aspiring Spiritual Master of Partner"
-                                     maxlength="40" value="${mbProfile?.prefSpMaster}"/>
+                        <g:select name="prefSpMaster" class="multiple" multiple="multiple"
+                                  from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefSpMaster).toList()}"/>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleSpMaster">Flexible :</label>

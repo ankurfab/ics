@@ -111,7 +111,7 @@ class MbProfile {
 	financialDiff(nullable: true)
 	physicalMental(nullable: true)
 	depLifelong(nullable: true)
-	personalInfo(nullable: true)
+	personalInfo(nullable: true,maxSize: 500)
     otherExpectations(nullable:true,maxSize: 500)
     noFamilyMembers(nullable: true)
     otherFamilyMember(nullable: true)
@@ -120,6 +120,7 @@ class MbProfile {
     devotionalCulture(nullable: true)
     weight(nullable: true)
     culturalInfluence(nullable: true,maxSize: 40)
+    residenceType(nullable: true,maxSize: 20)
     }
 
     static mapping={
@@ -164,7 +165,7 @@ class MbProfile {
     //step2 fields
     String houseIs
     Short houseArea
-    Boolean otherProperty
+    String otherProperty
     String fatherIncome
     String otherIncome
     String parentsChanting
@@ -258,6 +259,7 @@ class MbProfile {
     String personalInfo
     String otherExpectations
     String culturalInfluence
+    String residenceType
 
 
     Date dateCreated

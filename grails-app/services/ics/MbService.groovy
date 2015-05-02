@@ -137,6 +137,7 @@ class MbService {
         emailadd?.save()
     try{        mbProfile.maritalStatus = params.maritalStatus} catch(Exception e){}
     try{        mbProfile.personalInfo = params.personalInfo} catch(Exception e){}
+    try{        mbProfile.residenceType = params.residenceType} catch(Exception e){}
         //step 2
         mbProfile.nativePlace=params.nativePlace
         mbProfile.nativeState=params.nativeState
@@ -161,7 +162,7 @@ class MbService {
 	try{         mbProfile.parentsInfo = params.parentsInfo } catch(Exception e){}
 	try{         mbProfile.parentsChanting = params.parentsChanting } catch(Exception e){}
 	try{         mbProfile.parentsInitiation = params.parentsInitiation } catch(Exception e){}
-	try{         mbProfile.parentsSpMaster = params.parentsSpMaster } catch(Exception e){}
+	try{         mbProfile.parentsSpMaster = org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.parentsSpMaster)} catch(Exception e){}
 	try{         mbProfile.yourFamily = params.youFamily } catch(Exception e){}
 
         //step3
@@ -224,7 +225,7 @@ class MbService {
 	try{         mbProfile.flexibleManglik = Boolean.valueOf(params.flexibleManglik) } catch(Exception e){}
 	try{         mbProfile.settleAbroadWorkingWife = params.settleAbroadWorkingWife } catch(Exception e){}
 	try{         mbProfile.prefChanting=params.prefChanting } catch(Exception e){}
-	try{         mbProfile.prefSpMaster=params.prefSpMaster } catch(Exception e){}
+	try{         mbProfile.prefSpMaster=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefSpMaster)} catch(Exception e){}
 	try{         mbProfile.prefCentre=params.prefCentre } catch(Exception e){}
 	try{         mbProfile.prefNationality=params.prefNationality } catch(Exception e){}
 	try{         mbProfile.prefCulturalInfluence=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCulturalInfluence) } catch(Exception e){}
@@ -479,6 +480,7 @@ class MbService {
                 if(params.('relativeId'+i))
                 {
                     Individual.findById(params.('relativeId'+i)).legalName = params.('relativeName'+i)
+                    Individual.findById(params.('relavtiveId'+i)).initiatedName = params.('relativeIName'+i)
                     Individual.findById(params.('relativeId'+i)).education = params.('relativeEducation'+i)
                     Individual.findById(params.('relativeId'+i)).profession = params.('relativeProfession'+i)
                 }
