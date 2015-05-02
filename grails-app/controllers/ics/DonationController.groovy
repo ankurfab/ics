@@ -11,6 +11,7 @@ class DonationController {
     def housekeepingService
     def springSecurityService
     def receiptSequenceService
+    def financeService
     def dataSource ; 
 
 def testDatePicker = {
@@ -147,6 +148,8 @@ def testDatePicker = {
 
         def donationInstance = new Donation(params)
         if (donationInstance.save(flush: true)) {
+            financeService.updateProfitCenterBudget(donationInstance)
+            
             //mark the receipt and the receipt book as not blank---TODO later
             //housekeepingService.markNotBlank(donationInstance.id)
             //send SMS
@@ -824,6 +827,9 @@ def testDatePicker = {
 		donationInstance.donorContact = params.donormobile
 		
         if (donationInstance.save(flush: true)) {
+            
+            financeService.updateProfitCenterBudget(donationInstance)
+            
             // disable for now
             //mark the receipt and the receipt book as not blank
             //housekeepingService.markNotBlank(donationInstance.id)
@@ -1229,6 +1235,8 @@ def testDatePicker = {
 					        errArr[j] += it
 					}
 				}
+				else
+					financeService.updateProfitCenterBudget(donationInstance)
 			}
 		}
 		def errString = ""
@@ -2253,7 +2261,7 @@ def jq_donation_list = {
 			params."collectedBy.id"= params."acCollector_id"
 		}
 		
-		params."receivedBy.id" = (session.individualid)?:13918	//todo: hardcoding
+		params."receivedBy.id" = (session.individualid)?:(Individual.findByLoginid(springSecurityService.principal.username)?.id)
 
 		def donor
 		def newDonor = false
@@ -2401,7 +2409,11 @@ def jq_donation_list = {
 			}
 		else
 			{
+
+			financeService.updateProfitCenterBudget(donationInstance)
+
 			//donation saved successfully; sent async sms and email print receipt
+			
 			try{
 				//sms
 				if(params.donorContact)
@@ -2456,7 +2468,61 @@ def jq_donation_list = {
 	}
 	
 
+    def uploadbulkdonation() {
+	    log.debug("Inside uploadbulkdonation")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render(view: 'entry')
+		return
+	    }
 
+	    def numRecords = 0, numCreated=0
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(donationService.autoCreateDonation(tokens))
+	    		numCreated++
+	    }
+	    
+	    flash.message="Auto created "+numCreated+"/"+numRecords+" donations!!"
+	    
+	    redirect (action: "list")
+	    return
+    }
+
+	def bulkPrint() {
+	}
+	
+	def bulkPrintView() {
+	      log.debug("Inside bulkPrintView with params: "+params)
+
+	      def donationList = []
+
+	      params.rbnos?.tokenize(',').each{rbno->
+	      	donationList.add(Donation.findAllByNvccReceiptBookNo(rbno))
+	      	}
+
+	      params.rnos?.tokenize(',').each{rno->
+	      	donationList.add(Donation.findAllByNvccReceiptNo(rno))
+	      	}
+	      	
+	      params.ids?.tokenize(',').each{id->
+	      	donationList.add(Donation.get(id))
+	      	}
+
+           	donationList = donationList.flatten()
+	      
+		render(template: "bulkreceipt", model: [donationList:donationList,printedBy:(params.authority?:'')])
+	      
+	}
+	
+	def submitDTR() {
+		log.debug("Inside submitDTR:"+params)
+		def ret = financeService.createDonationBatch(params)
+		render ret		
+	}
+	
              
 
 

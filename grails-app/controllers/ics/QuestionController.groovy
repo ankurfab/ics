@@ -10,8 +10,15 @@ class QuestionController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def list = {
-        params.max = Math.min(params.max ? params.max.toInteger() : 10,  100)
-        [questionInstanceList: Question.list(params), questionInstanceTotal: Question.count()]
+        //params.max = 200
+        def language  = params.language
+        if(!language)
+        	language = 'ENGLISH'
+        def course = Course.get(params.'course.id')
+        def courses = Course.findAllByDepartment(IndividualRole.findWhere(individual:Individual.findByLoginid(springSecurityService.principal.username),role:Role.findByName('AssessmentAdmin'),status:'VALID')?.department)
+        if(!course && courses?.size()==1)
+        	course = courses[0]
+        [questionInstanceList: course?Question.findAllByCourseAndLanguage(course,language,params):[], courses:courses, course:course, language:language]
     }
 
     def create = {

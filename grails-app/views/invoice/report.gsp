@@ -26,6 +26,21 @@
 				  </tr>
 				  <tr>
 				    <td>
+					<g:link class="list" action="salesReport" controller="Invoice">Sales Report</g:link>
+				    </td>
+				  </tr>
+				  <tr>
+				    <td>
+					<g:link class="list" action="consumptionReport" controller="Invoice">Consumption Report</g:link>
+				    </td>
+				  </tr>
+				  <tr>
+				    <td>
+					<g:link class="list" action="stockReport" controller="Invoice">Stock Report</g:link>
+				    </td>
+				  </tr>
+				  <tr>
+				    <td>
 					<g:link class="list" action="paymentReport" controller="Invoice">Payment Report</g:link>
 				    </td>
 				  </tr>

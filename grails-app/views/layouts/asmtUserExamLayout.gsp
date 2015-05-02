@@ -9,7 +9,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8">
-		<title><g:layoutTitle default="GPL: Gita Premiere League"/></title>
+		<title><g:layoutTitle default="${ia?.eventRegistration?.event?.title?:'GITA Premiere League'}"/></title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="shortcut icon" href="${resource(dir: 'images', file: 'lotus.ico')}" type="image/x-icon">
 		<link rel="apple-touch-icon" href="${resource(dir: 'images', file: 'apple-touch-icon.png')}">
@@ -21,13 +21,13 @@
 		<r:layoutResources />
 	</head>
 	<body>
-		<div data-role="page" id="masterpage">
+		<div data-role="page" id="exampage">
 
 		<div data-role="header" style="overflow:hidden;">
 		
-		<h1>${(ia?.questionPaper?'':'MOCK ')+ia?.assessment?.name}</h1>
-		    <a href="${createLink(controller:'assessment',action:'userDashboard')}" data-transition="flip" data-icon="home" class="ui-btn-left">1/10</a>
-		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" class="ui-btn-right">10:00 Remaining</a>
+		<h1>${(ia?.questionPaper?'':'MOCK ')+(ia?.eventRegistration?.event?.title?:'GITA Premiere League')}</h1>
+		    <a id="qNumText" href="#popupInstructions" data-rel="popup" data-transition="flip" data-icon="" class="ui-btn-left">Instructions</a>
+		    <div id="timeText" class="ui-btn-right"></div>
 		</div><!-- /header -->
 
 		  <div data-role="main" class="ui-content">
@@ -35,9 +35,9 @@
 		  </div>
 
 		  <div data-role="footer">
-		    <h1>Knowledge..Culture..Devotion</h1>
+		    <h1>Please read instructions carefully and do not click the back button else the test would be over!!</h1>
 		    <a href="${createLink(controller:'assessment',action:'userDashboard')}" data-transition="flip" data-icon="home" class="ui-btn-left">Home</a>
-		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" class="ui-btn-right">Logout</a>
+		    <a href="${createLink(controller:'logout')}" data-transition="fade" data-icon="gear" data-ajax="false" class="ui-btn-right">Logout</a>
 		  </div><!-- /footer -->
 		</div> 
 		<r:layoutResources />

@@ -1,5 +1,8 @@
 package ics
 
+//this is mainly for staff
+//for higher roles, pls fetch department from individual role
+
 class IndividualDepartment {
 
     static constraints = {

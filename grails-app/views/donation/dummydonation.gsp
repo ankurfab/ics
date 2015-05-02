@@ -163,7 +163,15 @@
 					/>
 				   </div>
 								-->
-				<g:select name="scheme.id" from="${ics.Scheme.list(sort:'name')}" optionKey="id" value="${donationInstance?.scheme?.id}" noSelection="['':'-Select-']" />
+				<g:select name="scheme.id" from="${
+					ics.Scheme.createCriteria().list{
+						and {
+							le("effectiveFrom", new Date())
+							ge("effectiveTill", new Date())
+						    }
+						    order("name", "asc")
+					}}" 				
+				optionKey="id" value="${donationInstance?.scheme?.id}" noSelection="['':'-Select-']" />
 
                                     
                                 </td>
@@ -1100,6 +1108,11 @@
 	    }
 	    
 		function validate() {  
+		
+		$('#chequeNo').val(replaceSpecialCharAndTrim($('#chequeNo').val()));
+		$('#bankName').val(replaceSpecialCharAndTrim($('#bankName').val()));
+		$('#bankBranch').val(replaceSpecialCharAndTrim($('#bankBranch').val()));
+
 
 			if(document.getElementById('scheme.id').value == "")
 			{

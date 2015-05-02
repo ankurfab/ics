@@ -113,6 +113,11 @@ class PurchaseListController {
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
 	def result = PurchaseList.createCriteria().list(max:maxRows, offset:rowOffset) {
+	    if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_VS_ADMIN,ROLE_VS_USER'))
+	    	department{eq('name','VaishnavSamvardhan')}
+	    if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_VS_USER'))
+	    	preparedBy{eq('id',session.individualid)}
+
 		if (params.name)
 			ilike('name','%'+params.name + '%')
 
@@ -233,40 +238,10 @@ class PurchaseListController {
     }
 
     def jq_requiredItem_list = {
-      def sortOrder  = params.sord ?: 'asc'
-
-      def maxRows = Integer.valueOf(params.rows)
-      def currentPage = Integer.valueOf(params.page) ?: 1
-
-      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
-
-	def result = PurchaseItem.createCriteria().list(max:maxRows, offset:rowOffset) {
-		if (params.'item.name')
-				item{ilike('name','%'+params.'item.name' + '%')}
-
-		if (params.qty)
-			eq('qty',params.qty)
-
-		if (params.unit)
-			ilike('unit','%'+params.unit + '%')
-
-		if (params.rate)
-			eq('rate',params.rate)
-
-		if(params.sidx=="item.name")
-			item{order("name", sortOrder)}
-		else	
-			{
-			def sortIndex = params.sidx ?: 'id'
-			order(sortIndex, sortOrder)
-			}
-
-	}
-      
-      def totalRows = result.totalCount
-      def numberOfPages = Math.ceil(totalRows / maxRows)
-
-      def jsonCells = result.collect {
+      def purchaseList
+      if(params.purchaseListid)
+      	purchaseList=PurchaseList.get(new Long(params.purchaseListid))
+      def jsonCells = purchaseList?.requiredItems?.sort{it.item.name}.collect {
             [cell: [
             	    it.item.name,
             	    it.qty,
@@ -274,7 +249,7 @@ class PurchaseListController {
             	    it.rate,
                 ], id: it.id]
         }
-        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        def jsonData= [rows: jsonCells,page:1,records:purchaseList?.requiredItems?.size(),total:1]
         render jsonData as JSON
         }
 
@@ -334,7 +309,7 @@ class PurchaseListController {
 		    purchaseItem.properties = params
 			  purchaseItem.updator = springSecurityService.principal.username
 		    if (! purchaseItem.hasErrors() && purchaseItem.save()) {
-		      message = "PurchaseItem  ${purchaseItem.regNum} Updated"
+		      message = "PurchaseItem  ${purchaseItem.id} Updated"
 		      id = purchaseItem.id
 		      state = "OK"
 		    } else {
@@ -352,6 +327,95 @@ class PurchaseListController {
 	      render response as JSON
 	    }
     
+    def jq_purchasedItem_list = {
+      def purchaseList
+      if(params.purchaseListid)
+      	purchaseList=PurchaseList.get(new Long(params.purchaseListid))
+      def jsonCells = purchaseList?.purchasedItems?.sort{it.item.name}.collect {
+            [cell: [
+            	    it.item.name,
+            	    it.qty,
+            	    it.unit.toString(),
+            	    it.rate,
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:1,records:purchaseList?.requiredItems?.size(),total:1]
+        render jsonData as JSON
+        }
 
+	def jq_edit_purchasedItem = {
+	      def purchaseItem = null
+	      def message = ""
+	      def state = "FAIL"
+	      def id
+
+	      // determine our action
+	      switch (params.oper) {
+		case 'add':
+		  purchaseItem = new PurchaseItem(params)
+		  purchaseItem.updator=purchaseItem.creator=springSecurityService.principal.username
+		  purchaseItem.nqty = purchaseItem.qty
+		  purchaseItem.nrate = purchaseItem.rate
+		  purchaseItem.nunit = purchaseItem.unit
+		  purchaseItem.item = Item.get(params.'item.name')
+		  if (! purchaseItem.hasErrors() && purchaseItem.save()) {
+		    message = "PurchaseItem Saved.."
+		    id = purchaseItem.id
+		    state = "OK"
+		  } else {
+		    purchaseItem.errors.allErrors.each {
+			log.debug(it)
+			}
+		    message = "Could Not Save PurchaseItem"
+		  }
+		  break;
+		case 'del':
+		  	def idList = params.id.tokenize(',')
+		  	idList.each
+		  	{
+			  // check purchaseItem exists
+			  purchaseItem  = PurchaseItem.get(it)
+			  if (purchaseItem) {
+			    // delete purchaseItem
+			    if(!purchaseItem.delete())
+			    	{
+				    purchaseItem.errors.allErrors.each {
+					log.debug("In jq_purchaseItem_edit: error in deleting purchaseItem:"+ it)
+					}
+			    	}
+			    else {
+				    message = "Deleted!!"
+				    state = "OK"
+			    }
+			  }
+		  	}
+		  break;
+		 default :
+		  // edit action
+		  // first retrieve the purchaseItem by its ID
+		  purchaseItem = PurchaseItem.get(params.id)
+		  if (purchaseItem) {
+		    // set the properties according to passed in parameters
+		    purchaseItem.properties = params
+			  purchaseItem.updator = springSecurityService.principal.username
+		    if (! purchaseItem.hasErrors() && purchaseItem.save()) {
+		      message = "PurchaseItem  ${purchaseItem.id} Updated"
+		      id = purchaseItem.id
+		      state = "OK"
+		    } else {
+			    purchaseItem.errors.allErrors.each {
+				println it
+				}
+		      message = "Could Not Update PurchaseItem"
+		    }
+		  }
+		  break;
+ 	 }
+
+	      def response = [message:message,state:state,id:id]
+
+	      render response as JSON
+	    }
+    
 
 }

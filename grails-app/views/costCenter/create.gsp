@@ -74,10 +74,40 @@
                         
                             <tr class="prop">
                                 <td valign="top" class="name">
+                                    <label for="isProfitCenter"><g:message code="costCenter.isProfitCenter" default="Is Profit Center" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: costCenterInstance, field: 'isProfitCenter', 'errors')}">
+					Yes<g:radio name="isProfitCenter" value="true" checked="${costCenterInstance?.isProfitCenter?'checked':''}"/>
+					No<g:radio name="isProfitCenter" value="false" checked="${costCenterInstance?.isProfitCenter?'':'checked'}"/>
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="isServiceCenter"><g:message code="costCenter.isServiceCenter" default="Is Service Center" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: costCenterInstance, field: 'isServiceCenter', 'errors')}">
+					Yes<g:radio name="isServiceCenter" value="true" checked="${costCenterInstance?.isServiceCenter?'checked':''}"/>
+					No<g:radio name="isServiceCenter" value="false" checked="${costCenterInstance?.isServiceCenter?'':'checked'}"/>
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
                                     <label for="budget"><g:message code="costCenter.budget" default="Budget" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: costCenterInstance, field: 'budget', 'errors')}">
                                     <g:textField name="budget" value="${fieldValue(bean: costCenterInstance, field: 'budget')}" />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="capitalBudget"><g:message code="costCenter.capitalBudget" default="Capital Budget" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: costCenterInstance, field: 'capitalBudget', 'errors')}">
+                                    <g:textField name="capitalBudget" value="${fieldValue(bean: costCenterInstance, field: 'capitalBudget')}" />
 
                                 </td>
                             </tr>
@@ -118,7 +148,17 @@
                                     <label for="costCategory"><g:message code="costCenter.costCategory" default="Cost Category" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: costCenterInstance, field: 'costCategory', 'errors')}">
-                                    <g:select name="costCategory.id" from="${ics.CostCategory.list()}" optionKey="id" value="${costCenterInstance?.costCategory?.id}"  />
+                                    <g:select name="costCategory.id" from="${ics.CostCategory.list([sort:'name'])}" optionKey="id" value="${costCenterInstance?.costCategory?.id}"  />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="costCenterGroup"><g:message code="costCenter.costCenterGroup" default="Cost Center Group" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: costCenterInstance, field: 'costCenterGroup', 'errors')}">
+                                    <g:select name="costCenterGroup.id" from="${ics.CostCenterGroup.list([sort:'name'])}" optionKey="id" value="${costCenterInstance?.costCenterGroup?.id}"  noSelection="['':'-Choose Cost Center Group-']"/>
 
                                 </td>
                             </tr>

@@ -46,6 +46,7 @@ class RelationshipController {
     			rg = new RelationshipGroup()
     			def i2 = Individual.get(params."individual2.id")
     			rg.groupName = "Family of "+ (i2?.legalName?:params."individual2.id")
+    			rg.category='FAMILY'
     			rg.refid = params."individual2.id".toInteger()
     			rg.creator = springSecurityService.principal.username
     			rg.updator = springSecurityService.principal.username

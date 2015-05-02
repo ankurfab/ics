@@ -13,7 +13,7 @@
       url:'${createLink(controller:'commitment',action:'jq_commitment_list',params:['committedBy.id':committedByid])}',
       editurl:'${createLink(controller:'commitment',action:'jq_edit_commitment',params:['committedBy.id':committedByid])}',
       datatype: "json",
-      colNames:['Scheme','DonationCommitment','CollectionCommitment','TotalCommittedAmount','ECSMandate','CommitmentOn','CommitmentTill','id'],
+      colNames:['Scheme','DonationCommitment','CollectionCommitment','TotalCommittedAmount','ECSMandate','CommitmentOn','CommitmentTill','Status','HoldTill','id'],
       colModel:[
 	{name:'scheme.id',editable: true,editrules:{required:true},edittype:"select",
 	editoptions:{value:"${':--Please Select Scheme--;'+(ics.Scheme.createCriteria().list{
@@ -42,6 +42,12 @@
 				  }}
 	
 	},
+	{name:'status',editable:true,editrules:{required:true},edittype:"select",editoptions:{value:"ACTIVE:ACTIVE;INACTIVE:INACTIVE;ON-HOLD:ON-HOLD"}},
+	{name:'holdTill',editable: true,
+		editoptions:{ 
+				  dataInit:function(el){ 
+					$(el).datepicker({dateFormat:'dd-mm-yy'}); 
+				  }}},
 	{name:'id',hidden:true}
      ],
     rowNum:10,

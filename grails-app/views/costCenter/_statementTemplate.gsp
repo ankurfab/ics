@@ -15,6 +15,7 @@
                     <thead>
                         <tr>
                             <th>Date</th>
+                            <th>Reference</th>
                             <th>Details</th>
 			    <th>Income</th>                            
                             <th>Expense</th>
@@ -26,6 +27,7 @@
                     <g:each in="${records}" status="i" var="record">
                         <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
                             <td>${record.date?.format('dd-MM-yyyy')}</td>
+                            <td>${record.ref}</td>
                             <td>${record.details}</td>
                             <td>${record.income}</td>
                             <td>${record.expense}</td>

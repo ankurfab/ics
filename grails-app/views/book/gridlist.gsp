@@ -7,26 +7,35 @@
 		<g:set var="entityName" value="${message(code: 'book.label', default: 'Book')}" />
 		<title><g:message code="default.list.label" args="[entityName]" /></title>
 		<r:require module="grid" />
+		<r:require module="dateTimePicker" />
 	</head>
 	<body>
-		<g:render template="/common/sms" />
-		<g:render template="/common/email" />
-
 		<div class="nav">
 		    <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
 		</div>
 		<div class="body">
+
+			<g:if test="${flash.message}">
+			<div class="message" role="status">${flash.message}</div>
+			</g:if>
+
 		<!-- table tag will hold our grid -->
 		<table id="book_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 		<!-- pager will hold our paginator -->
 		<div id="book_list_pager" class="scroll" style="text-align:center;"></div>
 
 		<!-- table tag will hold our grid -->
-		<table id="bookRead_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
+		<table id="bookstock_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 		<!-- pager will hold our paginator -->
-		<div id="bookRead_list_pager" class="scroll" style="text-align:center;"></div>
-		<input class="menuButton" type="BUTTON" id="btnSMS_BRList" value="SMS" gridName="#bookRead_list" entityName="BookRead"/>
-		<input class="menuButton" type="BUTTON" id="btnEMAIL_BRList" value="EMAIL" gridName="#bookRead_list" entityName="BookRead"/>
+		<div id="bookstock_list_pager" class="scroll" style="text-align:center;"></div>
+		</div>
+
+		<div>
+		Upload book stock in bulk: <br />
+		    <g:uploadForm action="uploadBookStock">
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
 		</div>
 
 		<script type="text/javascript">
@@ -35,17 +44,28 @@
 		      url:'jq_book_list',
 		      editurl:'jq_edit_book',
 		      datatype: "json",
-		      colNames:['Name','Author','Category','id'],
+		      colNames:['Name','Author','Publisher','Category','Type','Language','Alias','CostPrice','SellPrice','Stock','ReorderLevel','id'],
 		      colModel:[
 			{name:'name', editable:true},
-			{name:'author', editable:true},
+			{name:'author', editable:true,editrules:{required:true}},
+			{name:'publisher', editable:true},
 			{name:'category', editable:true,
-				    /*'edittype'    : 'custom',
-				    'editoptions' : {
-				      'custom_element' : autocomplete_element,
-				      'custom_value'   : autocomplete_value
-   					 }*/
+				edittype:"select",editoptions:{value:"${'MahaBig:MahaBig;Big:Big;Medium:Medium;Small:Small;Other:Other'}"},
+				formatter:'select',stype:'select', searchoptions: { value: ':ALL;MahaBig:MahaBig;Big:Big;Medium:Medium;Small:Small;Other:Other'}
 			},
+			{name:'type', editable:true,
+				edittype:"select",editoptions:{value:"${'Normal:Normal;Deluxe:Deluxe;Pocket:Pocket;Other:Other'}"},
+				formatter:'select',stype:'select', searchoptions: { value: ':ALL;Normal:Normal;Deluxe:Deluxe;Pocket:Pocket;Other:Other'}
+			},
+			{name:'language', editable:true,
+				edittype:"select",editoptions:{value:"${'English:English;Hindi:Hindi;Bengali:Bengali;Gujarati:Gujarati;Kannada:Kannada;Malayalam:Malayalam;Marathi:Marathi;Nepali:Nepali;Odiya:Odiya;Punjabi:Punjabi;Sindhi:Sindhi;Tamil:Tamil;Telugu:Telugu;Urdu:Urdu'}"},
+				formatter:'select',stype:'select', searchoptions: { value: ':ALL;English:English;Hindi:Hindi;Bengali:Bengali;Gujarati:Gujarati;Kannada:Kannada;Malayalam:Malayalam;Marathi:Marathi;Nepali:Nepali;Odiya:Odiya;Punjabi:Punjabi;Sindhi:Sindhi;Tamil:Tamil;Telugu:Telugu;Urdu:Urdu'}
+			},
+			{name:'alias', editable:true},
+			{name:'costPrice', editable:true},
+			{name:'sellPrice', editable:true},
+			{name:'stock', editable:true},
+			{name:'reorderLevel', editable:true},
 			{name:'id',hidden:true}
 		     ],
 		    rowNum:10,
@@ -59,10 +79,13 @@
 		    height: "100%",
 		    caption:"Book List",
 			onSelectRow: function(ids) {
-						var selBookName = jQuery('#book_list').jqGrid('getCell', ids, 'name');
-						jQuery("#bookRead_list").jqGrid('setGridParam',{url:"${createLink(controller:'bookRead',action:'jq_depbook_list',params:['book.id':''])}"+ids,page:1});
-						jQuery("#bookRead_list").jqGrid('setGridParam',{editurl:"${createLink(controller:'bookRead',action:'jq_edit_depbook',params:['book.id':''])}"+ids});
-						jQuery("#bookRead_list").jqGrid('setCaption',"BookRead List for Book: "+selBookName) .trigger('reloadGrid');
+					if(ids!='new_row')
+						{
+						var sel = jQuery('#book_list').jqGrid('getCell', ids, 'name');
+						jQuery("#bookstock_list").jqGrid('setCaption',"Stock/Price List for Book: "+sel);
+						$("#editurl").val("jq_edit_bookstock?bookid="+ids);
+						jQuery("#bookstock_list").jqGrid('setGridParam',{url:"jq_bookstock_list?bookid="+ids,editurl:"jq_edit_bookstock?bookid="+ids}).trigger('reloadGrid');    	
+						}
 					}
 		    });
 		   $("#book_list").jqGrid('navGrid',"#book_list_pager",
@@ -74,32 +97,37 @@
 		   $("#book_list").jqGrid('filterToolbar',{autosearch:true});
 
 
-		jQuery("#bookRead_list").jqGrid({ 
+		jQuery("#bookstock_list").jqGrid({ 
 			height: "100%",
 			width: 1200,
-			url:'${createLink(controller:'bookRead',action:'jq_depbook_list',params:['book.id':0])}', 
-			editurl:'${createLink(controller:'bookRead',action:'jq_edit_depbook',params:['book.id':0])}', 
+			url:'jq_bookstock_list', 
+			editurl:'jq_edit_bookstock', 
 			datatype: "json", 
-			colNames:['Individual','Phone','Email','id'], 
+			colNames:['StockDate','Quantity','Price','id'], 
 			colModel:[
-				{name:'name', editable:false},
-				{name:'phone', editable:false,search:false},
-				{name:'email', editable:false,search:false},
+				{name:'stockDate', search:true, editable: true,
+					editoptions:{ 
+							  dataInit:function(el){ 
+								$(el).datepicker({dateFormat:'dd-mm-yy'}); 
+							  }}	
+				},
+				{name:'stock', editable:true},
+				{name:'price', editable:true,search:false},
 				{name:'id',hidden:true}
 				], 
 			rowNum:5, 
 			rowList:[5,10,20,30,50,100],
-			pager: '#bookRead_list_pager', 
-			multiselect: true,
+			pager: '#bookstock_list_pager', 
+			multiselect: false,
 			sortname: 'name', 
 			viewrecords: true, 
-			sortorder: "asc", 
-			caption:"BookRead List" }).navGrid('#bookRead_list_pager',{add:false,edit:false,del:false}, // which buttons to show?
-			{},         // edit options
-			{addCaption:'Create New BookRead',afterSubmit:afterSubmitEvent,savekey:[true,13],closeAfterAdd:true},  // add options
-			{}          // delete options
-			); 
-		  	$("#bookRead_list").jqGrid('filterToolbar',{autosearch:true});
+			sortname: 'id',
+			sortorder: "desc",
+			caption:"BookStock List"
+			});
+		    $("#bookstock_list").jqGrid('filterToolbar',{autosearch:false});
+		    $("#bookstock_list").jqGrid('navGrid',"#bookstock_list_pager",{edit:false,add:false,del:true,search:false});
+		    $("#bookstock_list").jqGrid('inlineNav',"#bookstock_list_pager");
 
 
 		  });

@@ -39,7 +39,26 @@
 		
 	}
 
+	function replaceSpecialCharAndTrim(str) {
+		if(str)
+			{
+			var retStr = str.replace(/[&\/\\#,+\-()$~%.'":*?<>{}]/g,' ');
+			return retStr.trim();
+			}
+		else
+			return "";
+	}
+
+
 		function validate() {  
+			var m = document.getElementById('mode.id');
+			var pm = m.options[m.selectedIndex];
+
+			$('#chequeNo').val(replaceSpecialCharAndTrim($('#chequeNo').val()));
+			$('#bankName').val(replaceSpecialCharAndTrim($('#bankName').val()));
+			$('#bankBranch').val(replaceSpecialCharAndTrim($('#bankBranch').val()));
+
+			//alert("validating.."+pm.text);
 
 			if(document.getElementById('amount').value == "" || document.getElementById('amount').value<=0)
 			{
@@ -48,8 +67,19 @@
 				return false;
 			
 			}
-			else
-				return true;
+			if (pm.text.search(/Cheque/)>-1 || pm.text.search(/Card/)>-1)
+			{
+				
+				
+				if(document.getElementById('chequeNo').value == "" || document.getElementById('chequeDate').value == "" || document.getElementById('bankName').value == "" || document.getElementById('bankBranch').value == "")
+				{
+					alert("Please provide complete payment details (no,date,bank,branch) !!");
+					document.getElementById('chequeNo').focus();
+					return false;
+
+				}
+			}
+			return true;
 		}
         
         $(document).ready(function()
@@ -87,7 +117,7 @@
 		});
 		
 		$( "#donorName" ).autocomplete({
-			source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",
+			source: "${createLink(controller:'individual',action:'allIndividualsFuzzyAsJSON_JQ')}",
 			minLength: 3,
 			  select: function(event, ui) { // event handler when user selects a company from the list.
 			   $("#icsid").val(100000+ui.item.id); // update the hidden field.
@@ -353,6 +383,7 @@
 		                                </td>
 		                                <td valign="top" class="value ${hasErrors(bean: donationRecordInstance, field: 'chequeNo', 'errors')}">
 		                                    <g:textField name="chequeNo" value="${donationRecordInstance?.transactionId}" />
+		                                    Date: <g:textField name="chequeDate" value="${donationRecordInstance?.donationDate?.format('dd-MM-yyyy')}"/>
 		                                    Bank: <g:textField name="bankName" value="${donationRecordInstance?.paymentDetails}"/>		                                    
 		                                    Branch: <g:textField name="branchName" value="${donationRecordInstance?.transactionDetails}"/>		                                    
 		                                </td>
@@ -385,6 +416,34 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div class="dialog" id="collectorDiv">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                        <tbody bgcolor="lavender">
+                            <tr >
+                                <td valign="top" width="18%">
+                                    <label for="collectedBy">Collected By</label>
+                                </td>
+                                <td valign="top" width="82%" align="left" class="value">
+                                    
+				   <g:hiddenField name="collectedBy.id" value="" />
+				   <div style="width: 300px">
+					<gui:autoComplete
+						id="acCollector"
+						width="300px"
+						controller="individual"
+						action="findCollectorsAsJSON"
+						useShadow="true"
+						queryDelay="0.5" minQueryLength='3'
+
+					/>
+					</div>
+				   </td>
+                            </tr>
+
+			</tbody>
+			</table>
+		</div>
 
                 <div class="dialog">
                     <table border="0" cellspacing="0" cellpadding="0">

@@ -222,7 +222,7 @@
                         
                             <td bgcolor="${donationInstance?.status == 'BOUNCED' ? 'red' : ''}"><g:link action="show" id="${donationInstance.id}"><g:formatNumber number="${donationInstance?.id}" format="#" /></g:link></td>
                             
-                            <td bgcolor="${donationInstance?.status == 'BOUNCED' ? 'red' : ''}">${donationInstance?.fundReceiptDate.format("dd-MM-yyyy")}</td>
+                            <td bgcolor="${donationInstance?.status == 'BOUNCED' ? 'red' : ''}">${donationInstance?.fundReceiptDate?.format("dd-MM-yyyy")}</td>
                         
                             <g:if test="${fieldValue(bean: donationInstance, field: 'nvccReceiptBookNo')}">
                             	<td bgcolor="${donationInstance?.status == 'BOUNCED' ? 'red' : ''}">${fieldValue(bean: donationInstance, field: "nvccReceiptBookNo")}</td>

@@ -208,7 +208,7 @@
               url:'${createLink(controller:'helper',action:'schemeMembersGiftListOfCentre')}',
               postData:{gift_id:function(){return $("#gift_id").val();}, centre_id:function(){return $("#centre_id").val();} ,comments:function(){ return $("#comments").val();} },
               datatype: "json",                            
-              colNames:['Gifted To','Gift', 'Gift Date','Centre','Comments','Gift Received Status','Way Gift Collected','id'],
+              colNames:['Gifted To','Gift', 'Gift Date','Centre','Comments','Gift Received Status','Way Gift Collected', 'Member Profile Status','Member Status', 'Member Rank', 'id'],
               colModel:[
                 {name:'individual',search:false},
                 {name:'amount',formatter:'showlink',search:false,formatoptions:{baseLinkUrl:'${createLink(controller:'giftRecord',action:'show')}',target:'_blank'}},
@@ -218,6 +218,9 @@
                 {name:'comments',search:false},            
                 {name:'details',formatter:'showlink',search:false,
                 formatoptions:{baseLinkUrl:'${createLink(controller:'giftRecord',action:'show')}',target:'_blank'}},
+                {name:'isProfileComplete',search:false},
+                {name:'status',search:false},
+                {name:'star',search:false},
                 {name:'id',hidden:true}
                  ],
             rowNum:4,

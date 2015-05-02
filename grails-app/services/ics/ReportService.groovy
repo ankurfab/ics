@@ -314,12 +314,23 @@ class ReportService {
     def ccStatement(CostCenter cc, Date fd, Date td) {
 	def sql = new Sql(dataSource)
 	//def query = "select * from (SELECT date_format(d.fund_receipt_date,'%d-%m-%y') date,concat(ifnull(d.collection_type,''),' by ',IFNULL(i.initiated_name,i.legal_name)) details, d.amount income, 0 expense, 0 balance FROM donation d, scheme s, individual i where d.donated_by_id=i.id and d.scheme_id=s.id and s.cc_id="+cc.id+" and d.fund_receipt_date >= '"+String.format('%tF',fd)+"'  and d.fund_receipt_date <= '"+String.format('%tF',td)+"' union SELECT date_format(v.voucher_date,'%d-%m-%y') date,v.description details, v.amount_settled income, v.amount expense, 0 balance FROM voucher v, cost_center c where v.department_code_id=c.id and c.id="+cc.id+" and v.voucher_date >= '"+String.format('%tF',fd)+"' and v.voucher_date <= '"+String.format('%tF',td)+"') q  order by date"
-	def query = "select * from (SELECT d.fund_receipt_date date,concat(ifnull(d.collection_type,''),' by ',IFNULL(i.initiated_name,i.legal_name)) details, d.amount income, 0 expense, 0 balance, d.updator entryby FROM donation d, scheme s, individual i where d.donated_by_id=i.id and d.scheme_id=s.id and s.cc_id="+cc.id+" and d.fund_receipt_date >= '"+String.format('%tF',fd)+"'  and d.fund_receipt_date <= '"+String.format('%tF',td)+"' union SELECT v.voucher_date date,v.description details, v.amount_settled income, v.amount expense, 0 balance, v.updator entryby FROM voucher v, cost_center c where v.department_code_id=c.id and c.id="+cc.id+" and v.voucher_date >= '"+String.format('%tF',fd)+"' and v.voucher_date <= '"+String.format('%tF',td)+"') q  order by date"
+	def query = "select * from (SELECT d.fund_receipt_date date,concat(d.nvcc_receipt_book_no,'/',d.nvcc_receipt_no) ref, concat(ifnull(d.collection_type,''),' by ',IFNULL(i.initiated_name,i.legal_name)) details, d.amount income, 0 expense, 0 balance, d.updator entryby FROM donation d, scheme s, individual i where d.donated_by_id=i.id and d.scheme_id=s.id and s.cc_id="+cc.id+" and d.fund_receipt_date >= '"+String.format('%tF',fd)+"'  and d.fund_receipt_date <= '"+String.format('%tF',td)+"' union SELECT v.voucher_date date,v.voucher_no ref, v.description details, v.amount_settled income, v.amount expense, 0 balance, v.updator entryby FROM voucher v, cost_center c where v.department_code_id=c.id and c.id="+cc.id+" and v.voucher_date >= '"+String.format('%tF',fd)+"' and v.voucher_date <= '"+String.format('%tF',td)+"') q  order by date"
 	//log.debug(query)
 	def result = sql.rows(query)
 	sql.close() 
 	return result
     }
+
+    // all transactions in costCategory
+    def costCategoryStatement(CostCategory ccat, Date fd, Date td) {
+	def sql = new Sql(dataSource)
+	def query = "select * from (SELECT d.fund_receipt_date date,concat(d.nvcc_receipt_book_no,'/',d.nvcc_receipt_no) ref, concat(ifnull(d.collection_type,''),' by ',IFNULL(i.initiated_name,i.legal_name)) details, d.amount income, 0 expense, 0 balance, d.updator entryby FROM donation d, scheme s, individual i, cost_center cc, cost_category ccat where d.donated_by_id=i.id and d.scheme_id=s.id and s.cc_id=cc.id and cc.cost_category_id="+ccat.id+" and d.fund_receipt_date >= '"+String.format('%tF',fd)+"'  and d.fund_receipt_date <= '"+String.format('%tF',td)+"' union SELECT v.voucher_date date,v.voucher_no ref, v.description details, v.amount_settled income, v.amount expense, 0 balance, v.updator entryby FROM voucher v, cost_center c, cost_category ccat where v.department_code_id=c.id and c.cost_category_id=ccat.id and ccat.id="+ccat.id+" and v.voucher_date >= '"+String.format('%tF',fd)+"' and v.voucher_date <= '"+String.format('%tF',td)+"') q  order by date"
+	log.debug(query)
+	def result = sql.rows(query)
+	sql.close() 
+	return result
+    }
+
 
     //poor performance, new one refers to the cache table..
     def olddonationSummary(Map params) {
@@ -469,12 +480,18 @@ class ReportService {
     	else
     		toDate = '2999-01-01 00:00:00'
     	
-    	//def insertQuery = "insert into "+tableName+" (costcategory,costcenter,scheme,collector,collectorsCounsellor,donor,donorsCounsellor,donorsFamily,amount,pc,pchead) select ad.*,p.pc, p.pchead from (select ccat.name costcategory, cc.name costcenter, s.name scheme, ilcoll.name collector, ilcoll.counsellor collectorsCounsellor, ildonor.name donor, ildonor.counsellor donorsCounsellor,ildonor.familyof donorsFamily, sum(amount) amount from donation d left join scheme s on d.scheme_id=s.id left join cost_center cc on s.cc_id=cc.id left join cost_category ccat on cc.cost_category_id=ccat.id join individuallist ildonor join individuallist ilcoll  where d.donated_by_id=ildonor.indid and d.collected_by_id=ilcoll.indid and fund_receipt_date>='"+fromDate+"' and fund_receipt_date<'"+toDate+"' group by s.name,collected_by_id,donated_by_id) ad left join pclist p on ad.collector=p.pc and ad.donorsCounsellor is null union select ccat.name costcategory, cc.name costcenter,s.name scheme, '', '', ildonor.name donor, ildonor.counsellor donorsCounsellor,'', sum(amount) amount,'','' from donation_record d, scheme s, cost_center cc, cost_category ccat, individuallist ildonor  where d.scheme_id=s.id and s.cc_id=cc.id and cc.cost_category_id=ccat.id and d.donated_by_id=ildonor.indid  and (d.receipt_received_status is null or (receipt_received_status!='GENERATED' and receipt_received_status!='NOTGENERATED')) and donation_date>='"+fromDate+"' and donation_date<'"+toDate+"' group by s.name,donated_by_id"
-    	
-    	
     	def insertQuery = "insert into "+tableName+" (costcategory,costcenter,scheme,collector,collectorsCounsellor,donor,donorsCounsellor,donorsFamily,amount,pc,pchead) select ccat.name costcategory, cc.name costcenter, s.name scheme, ilcoll.name collector, ilcoll.counsellor collectorsCounsellor, ildonor.name donor, ildonor.counsellor donorsCounsellor,ildonor.familyof donorsFamily, sum(amount) amount,'','' from donation d left join scheme s on d.scheme_id=s.id left join cost_center cc on s.cc_id=cc.id left join cost_category ccat on cc.cost_category_id=ccat.id left join individuallist ildonor on d.donated_by_id=ildonor.indid left join individuallist ilcoll  on d.collected_by_id=ilcoll.indid where fund_receipt_date>='"+fromDate+"' and fund_receipt_date<'"+toDate+"' group by s.name,collected_by_id,donated_by_id union all select ccat.name costcategory, cc.name costcenter,s.name scheme, 'ECS', 'ECS', ildonor.name donor, ildonor.counsellor donorsCounsellor,'', sum(amount) amount,'','' from donation_record d, scheme s, cost_center cc, cost_category ccat, individuallist ildonor  where d.scheme_id=s.id and s.cc_id=cc.id and cc.cost_category_id=ccat.id and d.donated_by_id=ildonor.indid  and (d.receipt_received_status is null or (receipt_received_status!='GENERATED' and receipt_received_status!='NOTGENERATED')) and donation_date>='"+fromDate+"' and donation_date<'"+toDate+"' group by s.name,donated_by_id"
     	log.debug(insertQuery)
     	sql.execute insertQuery
+    	
+    	//insert any spill over records
+    	if(params.schemeid)
+    		{
+		def spillQuery = "insert into "+tableName+" (costcategory,costcenter,scheme,collector,collectorsCounsellor,donor,donorsCounsellor,donorsFamily,amount,pc,pchead) select ccat.name costcategory, cc.name costcenter, s.name scheme, ilcoll.name collector, ilcoll.counsellor collectorsCounsellor, ildonor.name donor, ildonor.counsellor donorsCounsellor,ildonor.familyof donorsFamily, sum(amount) amount,'','' from donation d left join scheme s on d.scheme_id=s.id left join cost_center cc on s.cc_id=cc.id left join cost_category ccat on cc.cost_category_id=ccat.id left join individuallist ildonor on d.donated_by_id=ildonor.indid left join individuallist ilcoll  on d.collected_by_id=ilcoll.indid where fund_receipt_date>='"+toDate+"' and scheme_id="+params.schemeid+" group by s.name,collected_by_id,donated_by_id union all select ccat.name costcategory, cc.name costcenter,s.name scheme, 'ECS', 'ECS', ildonor.name donor, ildonor.counsellor donorsCounsellor,'', sum(amount) amount,'','' from donation_record d, scheme s, cost_center cc, cost_category ccat, individuallist ildonor  where d.scheme_id=s.id and s.cc_id=cc.id and cc.cost_category_id=ccat.id and d.donated_by_id=ildonor.indid  and (d.receipt_received_status is null or (receipt_received_status!='GENERATED' and receipt_received_status!='NOTGENERATED')) and donation_date>='"+toDate+"' and d.scheme_id="+params.schemeid+" group by s.name,donated_by_id"
+		log.debug(spillQuery)
+		sql.execute spillQuery
+    		}
+    	
     	
     	sql.executeUpdate "update "+tableName+" c,pclist p set c.pc=p.pc,c.pchead=p.pchead where c.donorsCounsellor is null and c.collector=p.pc"
     	sql.executeUpdate "update "+tableName+" set counsellor=donorsCounsellor,counsellee=donor,donation=amount where donorsCounsellor is not null"

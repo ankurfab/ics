@@ -19,6 +19,7 @@ class DonationRecord {
         rbno(nullable:true)
         rno(nullable:true)
         donation(nullable:true)
+        collectedBy(nullable:true)
         
 	    dateCreated()
 	    creator()
@@ -27,6 +28,7 @@ class DonationRecord {
     }
      static transients = ['donorName','consumberNumber','alreadyExist','samemonthdonations','memberdetails','schemeMember','usepercentagededuction','amountafterdeduction']
 
+    Individual collectedBy
     Individual donatedBy
     String donorName
     String consumberNumber

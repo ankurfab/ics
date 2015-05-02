@@ -21,7 +21,7 @@
 			header: {
 			    left: 'prev,next today',
 			    center: 'title',
-			    right: 'month,agendaWeek,agendaDay'
+			    right: 'year,month,agendaWeek,agendaDay'
 			},
 			eventRender: function(event, element) {
 			    $(element).addClass(event.cssClass);
@@ -92,18 +92,75 @@
 				
 			}
 		});
+
+        $('#category').change(function(){
+            var selected = $('#category').val();
+            var events = {
+                  url: 'list.json',
+                  type: 'POST',
+                  data: {
+                    category: selected
+                  }
+            }
+            $('#calendar').fullCalendar('removeEventSource', events);
+            $('#calendar').fullCalendar('addEventSource', events);
+        });
 		    
+        $('#type').change(function(){
+            var selected = $('#type').val();
+            var events = {
+                  url: 'list.json',
+                  type: 'POST',
+                  data: {
+                    type: selected
+                  }
+            }
+            $('#calendar').fullCalendar('removeEventSource', events);
+            $('#calendar').fullCalendar('addEventSource', events);
+        });
+
 	    });
 
 
 	</script>
         <div class="nav">
-	    <sec:ifAnyGranted roles="ROLE_ADMIN,ROLE_COUNSELLOR,ROLE_EVENTADMIN,ROLE_KITCHEN_ADMIN,ROLE_NVCC_ADMIN,ROLE_TMC,ROLE_VOICE_ADMIN">
+	    <sec:ifAnyGranted roles="ROLE_ADMIN,ROLE_COUNSELLOR,ROLE_EVENTADMIN,ROLE_EVENT_MGR,ROLE_KITCHEN_ADMIN,ROLE_NVCC_ADMIN,ROLE_TMC,ROLE_VOICE_ADMIN">
             	<!--<input class="menuButton" type="BUTTON" id="btn_createEvent" value="New Event" />-->
+                <span class="menuButton"><g:link class="list" action="gridlist">GridView</g:link></span>
             	<span class="menuButton"><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></span>
             </sec:ifAnyGranted>
         </div>
         <div class="body">
+
+            <h1>Calendar of Programs and Events</h1>
+                <div class="dialog">
+                    <table>
+                        <tbody>
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    Category
+                                </td>
+                                <td valign="top" class="value">
+                                    <g:select name="category"
+				              from="${ics.Event.createCriteria().list{projections{distinct('category')}}}"
+				              noSelection="['':'-Choose Category-']"
+				              value=""/>
+                                </td>
+                                <td valign="top" class="name">
+                                    Type
+                                </td>
+                                <td valign="top" class="value">
+                                    <g:select name="type"
+				              from="${ics.Event.createCriteria().list{projections{distinct('type')}}}"
+				              noSelection="['':'-Choose Type-']"				              
+				              value=""/>
+                                </td>
+                            </tr>                                                
+                        </tbody>
+                    </table>
+                </div>                
+
+
             
             <div id='calendar'></div>
 

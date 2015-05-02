@@ -87,6 +87,7 @@
                     <thead>
                         <tr>
                         
+                            <th>DonationId</th>
                            <g:if test="${receiver == '' || receiver == null}">
                            	<th>Receiver</th>
                            </g:if>
@@ -111,6 +112,7 @@
                     <tbody>
                     <g:each in="${donationList}" status="i" var="donationInstance">
                         <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                            <td><g:link location="_new" controller="donation" action="show" id="${donationInstance?.id}">${donationInstance?.id}</g:link></td>
                            <g:if test="${receiver == '' || receiver == null}">
                            	<th>${donationInstance?.receivedBy}</th>
                            </g:if>                            
@@ -230,6 +232,16 @@
             
             </div>
 	</g:if>
+        </div>
+        
+        <div>
+        <g:form name="batchForm" controller="donation" action="submitDTR">
+        	<g:hiddenField name="receiverid" value="${receiver?.id}" />
+        	<g:hiddenField name="donationids" value="${donationList.collect{it.id}.join(',')}" />
+        	<g:hiddenField name="fromDate" value="${fd?.format('dd-MM-yyyy HH:mm:ss')}" />
+        	<g:hiddenField name="toDate" value="${td?.format('dd-MM-yyyy HH:mm:ss')}" />
+        	<g:submitButton name="createBatch" value="Submit DTR Batch" />
+        </g:form>
         </div>
     </body>
 </html>

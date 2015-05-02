@@ -7,9 +7,11 @@
     </head>
     <body>
     
-    <div>
-    	Welcome ${individual?.toString()}
-    </div>
+	<g:each in="${ics.Content.findAllWhere(department:(er?.event?.department?:ics.Department.findByName('GPL')),language:ics.IndividualAssessment.findByIndividual(individual)?.language?:'ENGLISH',category:'POST')?.htmlContent}">
+	    <div>
+		<p>${it}</p><br>
+	    </div>
+	</g:each>
 	
     </body>
 </html>

@@ -27,7 +27,7 @@
 			<g:select id="paymentTo" name='paymentTo.id'
 			    noSelection="${['null':'Paid to...']}"
 			    optionKey="id" 
-			    from='${ics.Individual.findAllByCategory("VENDOR")}'>
+			    from='${ics.Individual.findAllByCategory("VENDOR",[sort:'legalName'])}'>
 			    </g:select>
 		</td>
 	    </tr>

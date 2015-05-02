@@ -1,22 +1,28 @@
 package ics
+import groovy.sql.Sql;
 import org.codehaus.groovy.grails.plugins.springsecurity.*
 
 class IndividualService {
     def springSecurityService
     def housekeepingService
+    def dataSource
 
     def serviceMethod() {
     }
-
-    
+    
     def createIndividual(Map params) {
-	log.debug("creTEW ind"+params)
-    def donor = new Individual(params)
+	params = formatDates(params)
+	def donor = new Individual(params)
 	donor.updator = donor.creator = springSecurityService.principal.username
-	donor.legalName = params.donorName
+	donor.legalName = params.donorName?:params.legalName
+	donor.legalName = donor.legalName?.trim()
+	
 	donor.initiatedName = params.initiatedName?.trim()
+	if(donor.initiatedName && (donor.initiatedName.size()<8))
+		donor.initiatedName = null
+
 	donor.panNo = params.donorPAN
-	log.debug("IndService:Creating new donor: "+donor)
+	log.debug("IndService:createIndividual: "+donor)
 	if(!donor.save())
 		donor.errors.allErrors.each {println it}
 	else
@@ -53,6 +59,8 @@ class IndividualService {
 			}
 
 		def addr = null
+		if(!params.donorAddress && params.addrline1)
+		    params.donorAddress = params.addrline1
 		if(params.donorAddress)
 			{
 			addr = new Address(individual:donor,addressLine1:params.donorAddress,city:city,state:state,country:country,pincode:params.donorPin,category:'Correspondence',creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
@@ -65,6 +73,8 @@ class IndividualService {
 				}
 			}
 		def vc = null
+		if(!params.donorContact && params.contact)
+		    params.donorContact = params.contact
 		if(params.donorContact)
 			{
 			vc = new VoiceContact(category:"CellPhone",number:params.donorContact,individual:donor,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
@@ -77,6 +87,8 @@ class IndividualService {
 				}
 			}
 		def ec = null
+		if(!params.donorEmail && params.email)
+		    params.donorEmail = params.email
 		if(params.donorEmail)
 			{
 			ec = new EmailContact(category:"Personal",emailAddress:params.donorEmail,individual:donor,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
@@ -163,14 +175,22 @@ class IndividualService {
     	//first check for exact duplicate (on legalName or initiatedName)
     	if(!params.name)
     		return null
-    	def individuals = Individual.findAllByLegalNameOrInitiatedName(params.name,params.name)
-    	if(individuals.size()>0)
+
+    	def individuals = []
+    	//@TODO: this is buggy, duplicate check should be more strict
+    	//def individuals = Individual.findAllByLegalNameOrInitiatedName(params.name,params.name)
+    	//try for unique legal name in category
+    	if(params.category)
+    		individuals = Individual.findAllByCategoryAndLegalName(params.category,params.name)
+    	if(individuals?.size()>0)
     		return individuals[0]
     	else
     		{
     		//create basic individual
     		def individual = new Individual(params)
-    		individual.legalName = params.name
+    		if(params.name)
+	    		individual.legalName = params.name
+	    	individual.status=null
     		individual.updator = individual.creator = springSecurityService.principal.username
 		if(!individual.save())
 			{
@@ -210,22 +230,7 @@ class IndividualService {
 		individualInstance.category='VOICE'
 		
 		//date formatting
-		if(params.dob)
-			params.dob = Date.parse('dd-MM-yyyy', params.dob)
-		if(params.marriageAnniversary)
-			params.marriageAnniversary = Date.parse('dd-MM-yyyy', params.marriageAnniversary)
-		if(params.firstInitiation)
-			params.firstInitiation = Date.parse('dd-MM-yyyy', params.firstInitiation)
-		if(params.secondInitiation)
-			params.secondInitiation = Date.parse('dd-MM-yyyy', params.secondInitiation)			
-		if(params.introductionDate)
-			params.introductionDate = Date.parse('dd-MM-yyyy', params.introductionDate)
-		if(params.sixteenRoundsDate)
-			params.sixteenRoundsDate = Date.parse('dd-MM-yyyy', params.sixteenRoundsDate)
-		if(params.voiceDate)
-			params.voiceDate = Date.parse('dd-MM-yyyy', params.voiceDate)
-		if(params.joinAshram)
-			params.joinAshram = Date.parse('dd-MM-yyyy', params.joinAshram)
+		params = formatDates(params)
 			
 		//set the primitive fields
 		individualInstance.properties = params
@@ -403,6 +408,7 @@ class IndividualService {
 					//now create relationship group
 					def rg = new RelationshipGroup()
 					rg.groupName = "Family of "+individualInstance.toString()
+					rg.category='FAMILY'
 					rg.refid = individualInstance.id
 					rg.creator = rg.updator = springSecurityService.principal.username
 					if(!rg.save())
@@ -454,6 +460,7 @@ class IndividualService {
 						{
 						mrg = new RelationshipGroup()
 						mrg.groupName = "Family of "+individualInstance.toString()
+						mrg.category='FAMILY'
 						mrg.refid = individualInstance.id
 						mrg.creator = mrg.updator = springSecurityService.principal.username
 						if(!mrg.save())
@@ -722,6 +729,8 @@ class IndividualService {
 				}								
 			}
 
+		//@TODO : this is buggy and breaks other stuff..need to handle differently
+		/*
 		//roles
 		 def rolelist = params.list("roles")
 		//first clean 
@@ -742,6 +751,7 @@ class IndividualService {
 					individualRole.errors.allErrors.each {println it}
 				}								
 			}
+		*/
 
 		//Services rendered
 		 def listofServices = params.list("listofServices")
@@ -791,7 +801,15 @@ class IndividualService {
 
     def createIndividualFromER(EventRegistration er) {
 	def individual = new Individual()
-	individual.updator = individual.creator = springSecurityService.principal.username
+	def username
+	try{
+		username = springSecurityService.principal.username
+	}
+	catch(Exception e)
+		{
+			username = 'anonymous'
+		}
+	individual.updator = individual.creator = username
 	individual.legalName = er.name?.trim()
 	individual.dob = er.dob
 	individual.isMale = er.isMale
@@ -814,7 +832,7 @@ class IndividualService {
 		def addr = null
 		if(er.address)
 			{
-			addr = new Address(individual:individual,addressLine1:er.address,city:city,state:state,country:country,pincode:er.addressPincode,category:'Correspondence',creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
+			addr = new Address(individual:individual,addressLine1:er.address,city:city,state:state,country:country,pincode:er.addressPincode,category:'Correspondence',creator:username,updator:username)
 			if(!addr.save())
 				addr.errors.allErrors.each {println it}
 			else
@@ -826,7 +844,7 @@ class IndividualService {
 		def vc = null
 		if(er.contactNumber)
 			{
-			vc = new VoiceContact(category:"CellPhone",number:er.contactNumber,individual:individual,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
+			vc = new VoiceContact(category:"CellPhone",number:er.contactNumber,individual:individual,creator:username,updator:username)
 			if(!vc.save())
 				vc.errors.allErrors.each {println it}				
 			else
@@ -838,7 +856,7 @@ class IndividualService {
 		def ec = null
 		if(er.email)
 			{
-			ec = new EmailContact(category:"Personal",emailAddress:er.email,individual:individual,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
+			ec = new EmailContact(category:"Personal",emailAddress:er.email,individual:individual,creator:username,updator:username)
 			if(!ec.save())
 				ec.errors.allErrors.each {println it}				
 			else
@@ -848,7 +866,7 @@ class IndividualService {
 				}
 			}
 		//generate loginid
-		individual.loginid = housekeepingService.createLogin(individual, com.krishna.IcsRole.findByAuthority('ROLE_ASMT_USER'))
+		individual.loginid = housekeepingService.createLogin(individual, com.krishna.IcsRole.findByAuthority('ROLE_ASMT_USERUV'))
 
 		//update icsid
 		individual.icsid = 100000+individual.id
@@ -860,6 +878,134 @@ class IndividualService {
 	return individual
     }
 
+    def createIndividualFromOrder(Map params) {
+	def ind = new Individual(params)
+	try{
+	ind.updator = ind.creator = springSecurityService.principal.username
+	}
+	catch(all) {
+		ind.updator = ind.creator = 'jdorder'
+	}
+	ind.legalName = params.distributorName
+	ind.category = "JivaDayaDistributor"
+	ind.nvccIskconRef = params.acClor
+	ind.nvccId= params.acClor_id
+	if(!ind.save())
+		ind.errors.allErrors.each {println it}
+	else
+		{
+		def vc = null
+		if(params.distributorContact)
+			{
+			vc = new VoiceContact(category:"CellPhone",number:params.distributorContact,individual:ind,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
+			if(!vc.save())
+				vc.errors.allErrors.each {println it}				
+			else
+				{
+				ind.voiceContact = []
+				ind.voiceContact.add(vc)
+				}
+			}
+		def ec = null
+		if(params.distributorEmail)
+			{
+			ec = new EmailContact(category:"Personal",emailAddress:params.distributorEmail,individual:ind,creator:springSecurityService.principal.username,updator:springSecurityService.principal.username)
+			if(!ec.save())
+				ec.errors.allErrors.each {println it}				
+			else
+				{
+				ind.emailContact = []
+				ind.emailContact.add(ec)
+				}
+			}
+		//update icsid
+		ind.icsid = 100000+ind.id
+		if(!ind.save(flush:true))
+			ind.errors.allErrors.each {println it}			
+		}
+	return ind
+    }
+
+
+    def formatDates(Map params) {
+	if(params.dob)
+		try { params.dob = Date.parse('dd-MM-yyyy', params.dob) } catch (Exception e){params.dob=null}
+	if(params.marriageAnniversary)
+		try { params.marriageAnniversary = Date.parse('dd-MM-yyyy', params.marriageAnniversary) } catch (Exception e){params.marriageAnniversary=null}
+	if(params.firstInitiation)
+		try { params.firstInitiation = Date.parse('dd-MM-yyyy', params.firstInitiation) } catch (Exception e){params.firstInitiation=null}
+	if(params.secondInitiation)
+		try { params.secondInitiation = Date.parse('dd-MM-yyyy', params.secondInitiation)	 } catch (Exception e){params.secondInitiation=null}		
+	if(params.introductionDate)
+		try { params.introductionDate = Date.parse('dd-MM-yyyy', params.introductionDate) } catch (Exception e){params.introductionDate=null}
+	if(params.sixteenRoundsDate)
+		try { params.sixteenRoundsDate = Date.parse('dd-MM-yyyy', params.sixteenRoundsDate) } catch (Exception e){params.sixteenRoundsDate=null}
+	if(params.voiceDate)
+		try { params.voiceDate = Date.parse('dd-MM-yyyy', params.voiceDate) } catch (Exception e){params.voiceDate=null}
+	if(params.joinAshram)
+		try { params.joinAshram = Date.parse('dd-MM-yyyy', params.joinAshram) } catch (Exception e){params.joinAshram=null}
+	return params
+    }
+    
+    def getFamily(Individual ind) {
+    	def family=''
+    	//if head of family
+    	def rg = RelationshipGroup.findByCategoryAndRefid('FAMILY',ind.id)
+    	if(rg)
+    		family= rg.groupName
+    	else
+    		{
+    		def rshipList = Relationship.createCriteria().list{
+    			relation{eq('category','FAMILY')}
+    			eq('individual1',ind)
+    			eq('status','ACTIVE')
+    			}
+    		rshipList?.each{
+    			rg = RelationshipGroup.findByCategoryAndRefid('FAMILY',it.individual2.id)
+    			family += rg.groupName+", "
+    			}
+    		}
+    	return family
+    }
+    
+    def getCounsellor(Individual ind) {
+    	def clor=''
+	def rshipList = Relationship.createCriteria().list{
+		relation{eq('name','Councellee of')}
+		eq('individual1',ind)
+		eq('status','ACTIVE')
+		}
+	rshipList?.each{
+		clor += it.individual2.toString()+", "
+		}
+    	return clor
+    }
+    
+    def getDetails(Long indid) {
+	/*def result
+	def sql = new Sql(dataSource)
+	def query = "select * from individuallist where indid="+indid
+	result = sql.rows(query)
+	sql.close()
+	return result[0]*/
+	return IndividualSummary.findByIndid(indid)
+    }
+    
+    def bulkCreateFromPerson(Map params) {
+    	def count=0
+    	def ind
+	Person.findAllWhere(category:params.category,status:params.status,matchedIndividual:null).each{person ->
+		ind = createIndividual(['donorName':person.name,'donorAddress':person.address,'donorContact':person.phone,'donorEmail':person.email,'category':params.status])
+		if(ind) {
+			count++
+			person.matchedIndividual = ind
+			if(!person.save())
+				person.errors.allErrors.each {println it}
+			}
+	}
+    	return count    
+    }
+    
     
  }
   

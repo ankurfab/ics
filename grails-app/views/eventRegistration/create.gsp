@@ -6,7 +6,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta name="layout" content="main" />
-		<title>Registration details for opening of NVCC, Pune</title>
+		<title>Registration form for ${eventRegistrationInstance?.event?.title}</title>
 		<r:require module="jqui" />
 	</head>
 	<body>
@@ -148,7 +148,7 @@
 		</div>
 		
 		<div id="create-eventRegistration" class="content scaffold-create" role="main">
-			<h1>Registration details for opening of NVCC, Pune</h1>
+			<h1>Registration form for ${eventRegistrationInstance?.event?.title}</h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
@@ -158,8 +158,10 @@
 			</jqvalui:renderErrors>
 			</g:hasErrors>
 			<jqvalui:renderErrors style="margin-bottom:10px"/>
+			<p class="blink"><b>Important information: </b></p>${eventRegistrationInstance.event?.description}
+								
 			<g:form action="save" method="post" id="eventRegistrationForm" name="eventRegistrationForm">
-				<g:hiddenField name="eventName" value="RVTO" />
+				<g:hiddenField name="eventName" value="${eventRegistrationInstance?.event?.title?:'RVTO'}" />
 				<fieldset class="form">
 					<g:render template="form"/>
 					<div class="buttons" style="width:100px;">

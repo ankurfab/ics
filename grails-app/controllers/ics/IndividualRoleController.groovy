@@ -355,9 +355,10 @@ def jq_individualRole_list = {
       def numberOfPages = Math.ceil(totalRows / maxRows)
 
       def jsonCells = deps.collect {
-            [cell: [it.individual?.toString(),
+            [cell: [it.individual?.id,it.individual?.toString(),
             	VoiceContact.findByIndividualAndCategory(it.individual,'CellPhone')?.number,
             	EmailContact.findByIndividualAndCategory(it.individual,'Personal')?.emailAddress,
+            	it.individual?.description?:'',
             	it.department?.toString(),
             	it.centre?.toString(),
             	it.remarks,

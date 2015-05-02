@@ -46,9 +46,44 @@
                             </tr>
                             
                             <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.isProfitCenter" default="Is Profit Center" />:</td>
+                                
+                                <td valign="top" class="value">${costCenterInstance.isProfitCenter?'Yes':'No'}</td>
+                                
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.isServiceCenter" default="Is Service Center" />:</td>
+                                
+                                <td valign="top" class="value">${costCenterInstance.isServiceCenter?'Yes':'No'}</td>
+                                
+                            </tr>
+
+                            <tr class="prop">
                                 <td valign="top" class="name"><g:message code="costCenter.budget" default="Budget" />:</td>
                                 
                                 <td valign="top" class="value">${fieldValue(bean: costCenterInstance, field: "budget")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.balance" default="Balance (Consumed Budget)" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: costCenterInstance, field: "balance")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.capitalBudget" default="Capital Budget" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: costCenterInstance, field: "capitalBudget")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.capitalBalance" default="Capital Balance (Consumed Capital Budget)" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: costCenterInstance, field: "capitalBalance")}</td>
                                 
                             </tr>
                             
@@ -111,6 +146,13 @@
                                 <td valign="top" class="name"><g:message code="costCenter.costCategory" default="Cost Category" />:</td>
                                 
                                 <td valign="top" class="value"><g:link controller="costCategory" action="show" id="${costCenterInstance?.costCategory?.id}">${costCenterInstance?.costCategory?.encodeAsHTML()}</g:link></td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="costCenter.costCenterGroup" default="Cost Center Group" />:</td>
+                                
+                                <td valign="top" class="value"><g:link controller="costCenterGroup" action="show" id="${costCenterInstance?.costCenterGroup?.id}">${costCenterInstance?.costCenterGroup?.encodeAsHTML()}</g:link></td>
                                 
                             </tr>
                             

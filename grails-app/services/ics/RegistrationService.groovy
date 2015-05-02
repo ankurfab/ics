@@ -7,6 +7,7 @@ class RegistrationService {
     def springSecurityService
     def housekeepingService
     def helperService
+    def assessmentService
 
     def serviceMethod() {
 
@@ -41,6 +42,24 @@ class RegistrationService {
     def saveForEvent(Map params) {
 	log.debug("save: "+params)
 	
+	//male/female issue
+	switch(params.gender) {
+		case 'female':
+			params.isMale=false
+			break
+		default:
+			params.isMale=true
+			break
+	}
+	
+	//first check for duplicates
+	def existingERs = EventRegistration.findAllWhere(name:params.name,contactNumber:params.contactNumber,email:params.email)
+	if(existingERs?.size()>0)
+		{
+		log.debug(existingERs+" already exists!")
+		return null
+		}
+	
 	if(params.dob)
 		params.dob = Date.parse('dd-MM-yyyy', params.dob)
 	if (springSecurityService.isLoggedIn()) {
@@ -51,6 +70,11 @@ class RegistrationService {
 	}
 	params.updator=params.creator
 	
+	if(!params.'assessment.id')	
+		{
+		params.'assessment.id'=14	//@TODO: hardocoded
+		log.debug("Error saveentry: no assessmentid")
+		}
 	def eventRegistrationInstance = new EventRegistration(params)
 	//eventRegistrationInstance.event = Event.get(params.eid)
 	eventRegistrationInstance.arrivalDate=eventRegistrationInstance.departureDate=new Date()
@@ -63,6 +87,11 @@ class RegistrationService {
 			log.debug("Error in saveForEvent eventRegistrationInstance:"+  it)
 		    }
         }
+        else
+        	{
+        	//now setup  the candidate
+	        	assessmentService.setupUV(eventRegistrationInstance,params.packetcode)
+        	}
         return eventRegistrationInstance
     }
     
@@ -121,6 +150,19 @@ class RegistrationService {
 	
 	def eventRegistrationInstance = new EventRegistration(params)
 
+	if(params.eid)
+		eventRegistrationInstance.event = Event.get(params.eid)
+	def individual
+	if(params.indid)
+		{
+		individual = Individual.get(params.indid)
+		eventRegistrationInstance.name = individual?.toString()
+		eventRegistrationInstance.contactNumber = VoiceContact.findByCategoryAndIndividual('CellPhone',individual)?.number
+		eventRegistrationInstance.individual = individual
+		if(!eventRegistrationInstance.regCode)
+			eventRegistrationInstance.regCode = genRegCode()
+		}
+
 	eventRegistrationInstance.arrivalDate = arrival
 	eventRegistrationInstance.departureDate = departure
 
@@ -141,17 +183,17 @@ class RegistrationService {
 		 eventRegistrationInstance.arrivalFlightCarrier = null
 		 eventRegistrationInstance.arrivalTransportMode = null
 	} else if (!eventRegistrationInstance.arrivalTransportMode){
-		eventRegistrationInstance.arrivalTransportMode = EventRegistration$TransportMode.BUS
+		eventRegistrationInstance.arrivalTransportMode = TransportMode.BUS
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.BUS){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.BUS){
 		 eventRegistrationInstance.arrivalTrainNumber = null
 		 eventRegistrationInstance.arrivalTrainName = null
 		 eventRegistrationInstance.arrivalFlightNumber = null
 		 eventRegistrationInstance.arrivalFlightCarrier = null
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.TRAIN){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.TRAIN){
 		 eventRegistrationInstance.arrivalBusNumber = null
 		 eventRegistrationInstance.arrivalBusStation = null
 		 eventRegistrationInstance.arrivalFlightNumber = null
@@ -161,7 +203,7 @@ class RegistrationService {
 		 }
 	}
 
-	if (eventRegistrationInstance.arrivalTransportMode == EventRegistration$TransportMode.FLIGHT){
+	if (eventRegistrationInstance.arrivalTransportMode == TransportMode.FLIGHT){
 		 eventRegistrationInstance.arrivalBusNumber = null
 		 eventRegistrationInstance.arrivalBusStation = null
 		 eventRegistrationInstance.arrivalTrainNumber = null
@@ -180,17 +222,17 @@ class RegistrationService {
 		 eventRegistrationInstance.departureFlightCarrier = null
 		 eventRegistrationInstance.departureTransportMode = null
 	} else if (!eventRegistrationInstance.departureTransportMode){
-		eventRegistrationInstance.departureTransportMode = EventRegistration$TransportMode.BUS
+		eventRegistrationInstance.departureTransportMode = TransportMode.BUS
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.BUS){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.BUS){
 		 eventRegistrationInstance.departureTrainNumber = null
 		 eventRegistrationInstance.departureTrainName = null
 		 eventRegistrationInstance.departureFlightNumber = null
 		 eventRegistrationInstance.departureFlightCarrier = null
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.TRAIN){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.TRAIN){
 		 eventRegistrationInstance.departureBusNumber = null
 		 eventRegistrationInstance.departureBusStation = null
 		 eventRegistrationInstance.departureFlightNumber = null
@@ -200,7 +242,7 @@ class RegistrationService {
 		 }
 	}
 
-	if (eventRegistrationInstance.departureTransportMode == EventRegistration$TransportMode.FLIGHT){
+	if (eventRegistrationInstance.departureTransportMode == TransportMode.FLIGHT){
 		 eventRegistrationInstance.departureBusNumber = null
 		 eventRegistrationInstance.departureBusStation = null
 		 eventRegistrationInstance.departureTrainNumber = null
@@ -236,9 +278,11 @@ class RegistrationService {
 		eventRegistrationInstance.isVipDevotee = false
 	
 
-	def eventInstance = Event.findByTitle('RVTO')
-	eventRegistrationInstance.event = eventInstance
-	eventRegistrationInstance.verificationStatus = VerificationStatus.UNVERIFIED
+	if(!params.indid)
+		eventRegistrationInstance.verificationStatus = VerificationStatus.UNVERIFIED
+	else
+		eventRegistrationInstance.verificationStatus = VerificationStatus.VERIFIED
+
 	if(eventRegistrationInstance.isAccommodationRequired)
 		eventRegistrationInstance.accommodationAllotmentStatus = AccommodationAllotmentStatus.NOT_ALLOTED
 	
@@ -248,7 +292,7 @@ class RegistrationService {
 		    }
 	    success = false
         }
-	    if(success)
+	    if(success && !params.indid)
 	    	{
 		try {
 			sendRegComms(eventRegistrationInstance)
@@ -947,6 +991,242 @@ class RegistrationService {
 			    }
 		}
         }
+    }
+    
+    //@TODO: hardcoded charges for now
+    def calculateCharges(EventRegistration eventRegistrationInstance) {
+    	def fees = eventRegistrationInstance.assessment.fees
+    	def charge = 0
+    	def courier
+    	if(eventRegistrationInstance.assessment.name.contains('courier'))
+    		courier=true
+	if(courier) {
+		def option
+		if(eventRegistrationInstance.assessment.name.contains('With Gita'))
+			option='Option 1'
+		else if(eventRegistrationInstance.assessment.name.contains('Without Gita'))
+			option='Option 2'
+
+
+		//check pincode
+		def pin=eventRegistrationInstance.addressPincode
+		def area
+		if(pin.startsWith('411'))
+			area='PUNE'
+		else if(pin.startsWith('40') || pin.startsWith('41') ||pin.startsWith('42') ||pin.startsWith('43') ||pin.startsWith('44'))
+			area='MAHARASHTRA'
+		else
+			area='INDIA'
+
+		def ca =Assessment.findByStatusAndName('CANCELLED',option+' charge for '+area)
+		if(ca)
+			charge = ca.fees
+		else
+		{
+			//calculate default charges
+			switch(option) {
+				case 'Option 1':
+					switch(area) {
+						case 'PUNE':
+							charge = 35
+							break
+						case 'MAHARASHTRA':
+							charge = 50
+							break
+						case 'INDIA':
+							charge = 110
+							break
+						default:
+							charge = 0
+							break
+					}
+					break
+				case 'Option 2':
+					switch(area) {
+						case 'PUNE':
+							charge = 15
+							break
+						case 'MAHARASHTRA':
+							charge = 25
+							break
+						case 'INDIA':
+							charge = 55
+							break
+						default:
+							charge = 0
+							break
+					}
+					break
+				default:
+					charge=0
+					break
+			}
+		}
+   	}
+   	return fees+charge    	
+    }
+    
+    def calcuateRegistrationCharge(EventRegistration er) {
+    	def charge = 0
+    	try {
+		def numAdults = er.numberofBrahmacharis+er.numberofPrabhujis+er.numberofMatajis
+		def numChildren = er.numberofChildren
+		charge = (numAdults*(er.event.maxAttendees))+(numChildren*(er.event.minAttendees))
+    	}
+    	catch(Exception e){
+    		log.debug("Exception in calcuateRegistrationCharge "+e)
+    	}
+    	log.debug("Calculated charge for er:"+er+":"+charge)
+    	return charge
+    }
+    
+    //need to get numPersons,erid among other things
+    def registrationDetailsSave(Map params) {
+    	def numPerson = new Integer(params.numPersons)
+    	def person
+    	def er = EventRegistration.get(params.erid)
+
+    	def user="unknown"
+    	try {
+    		user=springSecurityService.principal.username
+    	}
+    	catch(Exception e){}
+    	
+        for(int i=0;i<numPerson;i++) {
+                try{
+                        if(params.firstTime && params.firstTime=='true')
+                            person = new Person()
+                        else
+                            person = Person.get(params.('personid_'+i))
+                        person.name = params.('personname_'+i)
+                        person.email = params.('email_'+i)
+                        person.phone = params.('phone_'+i)
+                        switch(params.('gender_'+i)) {
+                                case 'FEMALE':
+                                        person.isDonor = false	//@TODO: FEMALE:fix the Person domain class, no gender
+                                        break
+                                case 'female':
+                                        person.isDonor = false	//@TODO: FEMALE:fix the Person domain class, no gender
+                                        break
+                                case 'MALE':
+                                        person.isDonor = true	//@TODO: MALE:fix the Person domain class, no gender
+                                        break
+                                case 'male':
+                                        person.isDonor = true	//@TODO: MALE:fix the Person domain class, no gender
+                                        break
+                                default:
+                                        person.isDonor = true	//@TODO: MALE:fix the Person domain class, no gender
+                                        break    				
+                        }
+                        person.dob = Date.parse('dd/MM/yyyy',params.('birthdate_'+i))
+                        person.category=params.erid
+                        person.reference='EventRegistration'
+                        person.updator=person.creator=user
+                        if(!person.save())
+                                        person.errors.allErrors.each {
+                                                log.debug "Error in registrationDetailsSave saving person :"+it
+                                        }
+                        else
+                                {
+                                }
+                }
+                catch(Exception e){
+                        log.debug("registrationDetailsSave:Exception in saving person:"+e)
+                        }
+        }
+                        
+    	def amt = new BigDecimal(params.paymentDue)
+    	//check payment status
+    	if(params.pay && amt>0) {
+    		//check if already some offline payment was made?
+    		def pref = PaymentReference.findByRef('EventRegistration_'+params.erid)
+    		if(!pref)
+    			pref = new PaymentReference()
+    		
+    		pref.ref = 'EventRegistration_'+params.erid
+    		pref.paymentBy = er.individual
+    		pref.amount = (pref.amount?:0) + amt
+    		pref.paymentDate = new Date()
+    		pref.mode = PaymentMode.findByName('Cash')
+    		pref.details = params.accodetails?:''
+    		pref.updator=pref.creator=user
+		if(!pref.save())
+				pref.errors.allErrors.each {
+					log.debug "Error in registrationDetailsSave payment :"+it
+				}
+		else {
+			//update status of er only when paid full amount
+			if(params.markComplete) {
+				er.status='PAID'
+				if(!er.save())
+					er.errors.allErrors.each {
+						log.debug "Error in registrationDetailsSave updating payment status:"+it
+					}
+			}
+		}
+			
+    		
+    	}
+    	
+    	[status:'OK']
+    }
+    
+    //bulk register the specified category of individuals to the specified event and assessment
+    def bulkRegistration(Map params) {
+    	def er,event,addr,assmnt,user,login,icsRole
+    	
+    	event = Event.get(params.eid)
+    	assmnt = Assessment.get(params.aid)
+    	icsRole = IcsRole.findByAuthority('ROLE_ASMT_USER')
+    	
+    	try{
+    		user = springSecurityService.principal.username
+    	}
+    	catch(Exception e) {
+    		user="system"
+    	}
+
+    	Individual.findAllByCategory(params.category).each{ind->
+    		er = EventRegistration.findByIndividual(ind)
+    		if(!er) {
+    			er = new EventRegistration()
+    			er.regCode = genRegCode()
+    			er.name = ind.legalName
+    			addr = Address.findByCategoryAndIndividual('Correspondence',ind)
+    			er.connectedIskconCenter = addr?.addressLine3
+    			er.year = addr?.addressLine1
+    			er.contactNumber = VoiceContact.findByCategoryAndIndividual('CellPhone',ind)?.number
+    			er.email = EmailContact.findByCategoryAndIndividual('Personal',ind)?.emailAddress
+    			er.event = event
+    			er.assessment = assmnt
+    			er.otherGuestType = params.language?:'ENGLISH'
+    			er.arrivalDate = er.departureDate = new Date()	//registration date
+    			er.individual = ind
+    			er.verificationStatus = 'VERIFIED'
+    			er.creator = er.updator = user
+    			if(!er.save())
+    				er.errors.allErrors.each {log.debug("error in bulkRegistration:"+it)}
+    			else {
+    				//now generate the loginid for the user
+    				login = housekeepingService.createLogin(ind,icsRole)
+    				
+    				//create the IA for taking the tests
+				def ia = new IndividualAssessment()
+				ia.individual = ind
+				ia.assessment = assmnt
+				ia.language = er.otherGuestType?.toUpperCase()
+				ia.eventRegistration = er
+				ia.status = 'READY'
+				ia.creator = ia.updator = user
+
+				if(!ia.save())
+					ia.errors.allErrors.each {log.debug("error saving ia in bulkRegistration:"+it)}
+				else
+    					log.debug("bulkRegistration:created er:"+er+":login:"+login)
+    			}
+    			
+    		}
+    	}
     }
 
 }

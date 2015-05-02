@@ -108,6 +108,16 @@
                                 </td>
                             </tr>
 
+                             <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="status"><g:message code="schemeMember.tobesms" default="To Be sent SMS" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: schemeMemberInstance, field: 'toBeSMS', 'errors')}">
+                                    <g:select name="toBeSMS" from="${['No','Yes']}" keys="${['No','Yes']}" value="${fieldValue(bean: schemeMemberInstance, field: 'toBeSMS')}"  />
+                                    
+                                </td>
+                            </tr>
+
                             <tr class="prop">
                                     <td valign="top" class="name">
                                         <label for="counsumerNumber"><g:message code="schemeMember.counsumerNumber" default="Counsumer Number(From Bank/ECS Agency)" />:</label>

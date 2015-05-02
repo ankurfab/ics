@@ -35,8 +35,8 @@ def config = ConfigurationHolder.config
 	{
 		getSession().individualname = individual.toString()
 		getSession().individualid = individual.id
-		getSession().individualemail = EmailContact.findByIndividual(individual)?.emailAddress
-		getSession().individualphone = VoiceContact.findByIndividual(individual)?.number
+		getSession().individualemail = EmailContact.findByIndividualAndCategory(individual,'Personal')?.emailAddress
+		getSession().individualphone = VoiceContact.findByIndividualAndCategory(individual,'CellPhone')?.number
 		getSession().showall = false
 	}
 	getSession().isReceiver = null
@@ -45,7 +45,7 @@ def config = ConfigurationHolder.config
 	println "Authorities:"+authorities
 	authorities.each{if(it=='ROLE_ADMIN') getSession().isAdmin = true}
 	println "session.individualid:"+session.individualid
-	println "getSession().individualid:"+getSession().individualid
+	println "getSession().individualid:"+(getSession().individualid?:'')+":"+(getSession().individualphone?:'')+":"+(getSession().individualemail?:'')
 	println "RequestContextHolder.currentRequestAttributes().getSession()?.user="+RequestContextHolder.currentRequestAttributes().getSession()?.user
 	
 	//access log
@@ -525,7 +525,7 @@ def config = ConfigurationHolder.config
 	   def queryFam = "select sum(amount) amt from donation where (status is null or status <> 'BOUNCED') and donated_by_id in (select individual1_id from relationship where relationship_group_id in (select id from relationship_group where refid="+indId+" and group_name like 'Family%') union select "+indId+" from dual union (select distinct rg.refid from relationship r, relationship_group rg where r.relationship_group_id=rg.id and rg.group_name like 'Family%' and r.individual1_id="+indId+") union select distinct individual1_id from relationship where relationship_group_id = (select distinct rg.id from relationship r, relationship_group rg where r.relationship_group_id=rg.id and rg.group_name like 'Family%' and r.individual1_id="+indId+"))"
 	   def queryCol = "select sum(amount) amt from donation where (status is null or status <> 'BOUNCED') and collected_by_id="+indId
 	   def queryColExclOwn = "select sum(amount) amt from donation where (status is null or status <> 'BOUNCED') and collected_by_id<> donated_by_id and collected_by_id="+indId
-	   def queryScheme = "select s.name scheme,sum(amount) amt from donation d, scheme s where d.scheme_id=s.id and (status is null or status <> 'BOUNCED') and donated_by_id="+indId+" group by s.name"
+	   def queryScheme = "select s.name scheme,sum(amount) amt from donation d, scheme s where d.scheme_id=s.id and (d.status is null or d.status <> 'BOUNCED') and donated_by_id="+indId+" group by s.name"
 	   
  	   def amtInd = sql.firstRow(queryInd).amt
  	   def amtFam = 0
@@ -1325,29 +1325,33 @@ def config = ConfigurationHolder.config
 			name = i.initiatedName?:i.legalName
 			i.loginid = genloginFromName(name)
 			println "generated loginid: "+i.loginid
-			if(!i.save(flush:true))
+			if(!i.save())
 				{
-				iu.errors.allErrors.each {
-					println it
-				}
+				i.errors.allErrors.each {println it}
 				return ""
-				}
-			
-			//now create the user
-			iu = new IcsUser(username: i.loginid, password: 'harekrishna', enabled: true, accountExpired: false, accountLocked: false, passwordExpired: false)
-			if(!iu.save(flush:true)) {
-				iu.errors.allErrors.each {
-					println it
-				}
-				return ""
-				}
+				}			
 			}
-		else
-			iu = IcsUser.findByUsername(i.loginid)
+		else {
+			//supplied by user
+			//check if its unique
+			def ilist = Individual.findAllByLoginid(i.loginid)
+			if(ilist.size()>1) {
+				log.debug("Duplicate loginid found:"+loginid+":"+ilist)
+				return ""
+			}
+		}
+		//now check icsUser
+		iu = IcsUser.findByUsername(i.loginid)
+		if(!iu) {
+			//now create the user
+			iu = new IcsUser(username: i.loginid, password: i.loginid, enabled: true, accountExpired: false, accountLocked: false, passwordExpired: false)
+			if(!iu.save()) {
+				iu.errors.allErrors.each {println it}
+				return ""
+				}
+		}
 		
-		println "IU: "+iu
-		if(!iu)
-			return ""
+		log.debug("createLogin:"+i+":"+iu)
 			
 		//now add the role if not exists
 		/*def ir = IcsRole.findByAuthority(role)
@@ -1363,7 +1367,7 @@ def config = ConfigurationHolder.config
 			def iuir = new IcsUserIcsRole()
 			iuir.icsUser = iu
 			iuir.icsRole = ir
-			if(!iuir.save(flush:true)) {
+			if(!iuir.save()) {
 				iuir.errors.allErrors.each {
 					println it
 				}
@@ -2025,6 +2029,26 @@ def config = ConfigurationHolder.config
 		return fy	
 	}
 	
+	def getFY(Date date) {
+		//@TODO: hardcoded for 1-Apr 31-Mar FY
+		if(!date)
+			date = new Date()
+		def now = date
+		//get day and month
+		def day = now.format('dd')
+		def month = new Integer(now.format('MM'))
+		def year = new Integer(now.format('yy'))
+		
+		def fy = "FY"
+		
+		if(month<=3)
+			fy+=(year-1)+""+year
+		else
+			fy+=year+""+(year+1)
+			
+		return fy	
+	}
+
 	def getFamily(Long indId) {
 		//first check if head of family
 		def headRG = RelationshipGroup.findByRefid(indId)

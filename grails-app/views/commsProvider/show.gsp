@@ -31,9 +31,44 @@
                             </tr>
                             
                             <tr class="prop">
+                                <td valign="top" class="name"><g:message code="commsProvider.name" default="Name" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "name")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
                                 <td valign="top" class="name"><g:message code="commsProvider.type" default="Type" />:</td>
                                 
                                 <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "type")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="commsProvider.baseUrl" default="Base Url" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "baseUrl")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="commsProvider.path" default="Path" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "path")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="commsProvider.query" default="Query" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "query")}</td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="commsProvider.apikey" default="Apikey" />:</td>
+                                
+                                <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "apikey")}</td>
                                 
                             </tr>
                             
@@ -55,13 +90,6 @@
                                 <td valign="top" class="name"><g:message code="commsProvider.pwd" default="Pwd" />:</td>
                                 
                                 <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "pwd")}</td>
-                                
-                            </tr>
-                            
-                            <tr class="prop">
-                                <td valign="top" class="name"><g:message code="commsProvider.apikey" default="Apikey" />:</td>
-                                
-                                <td valign="top" class="value">${fieldValue(bean: commsProviderInstance, field: "apikey")}</td>
                                 
                             </tr>
                             

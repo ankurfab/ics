@@ -147,7 +147,7 @@
 			</ul>
 		</div>
 		<div id="edit-eventRegistration" class="content scaffold-edit" role="main">
-			<h1>Edit - Registration details for opening of NVCC, Pune</h1>
+			<h1>Registration form for ${eventRegistrationInstance?.event?.title}</h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
@@ -157,6 +157,7 @@
 			</jqvalui:renderErrors>
 			</g:hasErrors>
 			<jqvalui:renderErrors style="margin-bottom:10px"/>
+			<p class="blink"><b>Important information: </b></p>${eventRegistrationInstance.event?.description}
 			<g:form method="post" >
 				<g:hiddenField name="id" value="${eventRegistrationInstance?.id}" />
 				<g:hiddenField name="version" value="${eventRegistrationInstance?.version}" />

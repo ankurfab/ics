@@ -5,6 +5,7 @@ import grails.converters.JSON
 
 class RoleController {
     def springSecurityService
+    def dataService
 
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
@@ -215,7 +216,18 @@ class RoleController {
 	      render response as JSON
 	    }
 	    
-	def gridList() {}
+	def gridlist() {}
+	
+	def pairs() {
+		log.debug("inside pairs with params:"+params)
+		def retMap =  dataService.indrolesInPairs(params)
+		[id:params.id,retMap:retMap]
+	}
+
+	def sheet() {
+		def results =  dataService.sheet(params)
+		[id:params.id,results:results]
+	}
 
 
 }

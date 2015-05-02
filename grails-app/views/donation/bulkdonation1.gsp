@@ -386,7 +386,15 @@
 								
 							</td>
 							<td valign="top">
-								<g:select name="scheme.id${i}" from="${ics.Scheme.list(sort:'name')}" optionKey="id" value="${ ics.Scheme.findByName('General')?.id}"  title="Scheme" />
+								<g:select name="scheme.id${i}" from="${
+									ics.Scheme.createCriteria().list{
+										and {
+											le("effectiveFrom", new Date())
+											ge("effectiveTill", new Date())
+										    }
+										    order("name", "asc")
+									}}"
+								optionKey="id" value="${ ics.Scheme.findByName('General')?.id}"  title="Scheme" />
 							</td>
 
 							<td>

@@ -69,7 +69,7 @@ environments {
         dataSource {
 	username = "ics"
 	password = "kr1shna"
-	url = "jdbc:mysql://localhost:3306/ics?autoreconnect=true&zeroDateTimeBehavior=convertToNull"
+	url = "jdbc:mysql://localhost:3306/ics?autoreconnect=true&zeroDateTimeBehavior=convertToNull&useUnicode=yes&characterEncoding=UTF-8"
         }
         //for RVTO
         /*dataSource {

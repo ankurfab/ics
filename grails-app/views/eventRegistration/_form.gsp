@@ -110,22 +110,22 @@ function datePickerCall() {
 	    dateFormat:'dd-mm-yy',
 	    changeYear:true,
 	    changeMonth:true,
-	    defaultDate:'22-02-2013'
+	    defaultDate:"${eventRegistrationInstance?.event?.startDate?.format('dd-MM-yyyy')}"
     });
 
     $("#vipDepartureDate").datepicker({
 	    dateFormat:'dd-mm-yy',
 	    changeYear:true,
 	    changeMonth:true,
-	    defaultDate:'24-02-2013'
+	    defaultDate:"${eventRegistrationInstance?.event?.endDate?.format('dd-MM-yyyy')}"
     });
 }
 
 function customRange(input) { 
-    var min = new Date(2013, 2 - 1, 22), //Set this to your absolute minimum date
+    var min = new Date(${(eventRegistrationInstance?.event?.startDate-1)?.getTime()}), //Set this to your absolute minimum date
         dateMin = min,
         dateMax = null,
-        dayRange = 3; // Set this to the range of days you want to restrict to
+        dayRange = ${eventRegistrationInstance?.event?.endDate-eventRegistrationInstance?.event?.startDate}; // Set this to the range of days you want to restrict to
 
     if (input.id === "arrivalDate") {
         if ($("#departureDate").datepicker("getDate") != null) {
@@ -137,21 +137,21 @@ function customRange(input) {
             }
         }
         else {
-            dateMax = new Date(2013, 2 - 1, 24) //Set this to your absolute maximum date
+            dateMax = new Date(${(eventRegistrationInstance?.event?.endDate+1)?.getTime()}) //Set this to your absolute maximum date
         }                      
     }
     else if (input.id === "departureDate") {
-        var deptMax = new Date(2013, 2 - 1, 24);
+        var deptMax = new Date(${(eventRegistrationInstance?.event?.endDate+1)?.getTime()});
 	dateMax = deptMax; //Set this to your absolute maximum date
         if ($("#arrivalDate").datepicker("getDate") != null) {
             dateMin = $("#arrivalDate").datepicker("getDate");
-            var rangeMax = new Date(2013, 2, dateMin.getDate() + dayRange);
+            var rangeMax = new Date(${eventRegistrationInstance?.event?.startDate?.format('yyyy')}, ${eventRegistrationInstance?.event?.startDate?.format('MM')}, dateMin.getDate() + dayRange);
 
             if(rangeMax < dateMax) {
                 dateMax = rangeMax; 
             }
         } else {
-	    var deptMin = new Date(2013, 2 - 1, 23);
+	    var deptMin = new Date(${(eventRegistrationInstance?.event?.endDate)?.getTime()});
 	    dateMin = deptMin;	
 	}
     }
@@ -204,15 +204,10 @@ $(function(){
 </script>
 
 
-<browser:choice>
-	 <browser:isIE9>
-		<g:hiddenField name="browser" value="IE9" />
-	 </browser:isIE9>
-	 <browser:otherwise>
-		<g:hiddenField name="browser" value="NOTIE9" />
-	 </browser:otherwise>
-</browser:choice>
+<g:hiddenField name="browser" value="NOTIE9" />
 
+<g:hiddenField name="indid" value="${eventRegistrationInstance?.individual?.id}" />
+<g:hiddenField name="eid" value="${eventRegistrationInstance?.event?.id}" />
 
 <div class="collection_group">
 
@@ -370,7 +365,7 @@ $(function(){
 					<g:message code="eventRegistration.name.label" default="Name" />
 				</td>
 				<td class="value">
-					<g:fieldValue bean="${eventRegistrationInstance}" field="name"/>
+					${eventRegistrationInstance?.name}
 				</td>
 			</tr>
 			</g:if>
@@ -485,7 +480,7 @@ $(function(){
 					<g:message code="eventRegistration.contactNumber.label" default="Contact Number" />
 				</td>
 				<td class="value">
-					<g:fieldValue bean="${eventRegistrationInstance}" field="contactNumber"/>
+					${eventRegistrationInstance?.contactNumber}
 				</td>
 			</tr>
 			</g:if>
@@ -514,7 +509,7 @@ $(function(){
 				</label>
 			</td>
 			<td valign="top" class="fieldcontain ${hasErrors(bean: eventRegistrationInstance, field: 'email', 'error')} ">
-				<g:textField name="email" value="${eventRegistrationInstance?.email}" class="email"/>
+				<g:textField name="email" size="50" value="${eventRegistrationInstance?.email}" class="email"/>
 			</td>
 		</tr>
 
@@ -535,7 +530,7 @@ $(function(){
 		<tr class="prop">
 			<td></td>
 			<td><sec:ifNotGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION">
-				<div class="message">Kindly fill up the number of devotees arriving to festival along with you, include yourself in the number.</div>
+				<div class="message">Kindly fill up the number of devotees arriving along with you, include yourself in the number.</div>
 				<div class="message">You can register for an Individual or Family or Others (if traveling together). In case devotees from your group are not traveling together then register each group (which is traveling together) separately.</div>
 			    </sec:ifNotGranted>
 			    <sec:ifAnyGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION">
@@ -605,18 +600,25 @@ $(function(){
 			<td valign="top" class="fieldcontain ${hasErrors(bean: eventRegistrationInstance, field: 'isAccommodationRequired', 'error')} ">
 				
 				<sec:ifNotGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_EGISTRATION,ROLE_EVENTADMIN,ROLE_REGISTRATION_COORDINATOR">
-					<g:checkBox name="isAccommodationRequired" value="${eventRegistrationInstance?.isAccommodationRequired}" disabled="true"/>				
+					<g:checkBox name="isAccommodationRequired" value="${eventRegistrationInstance?.isAccommodationRequired}"/>				
 				</sec:ifNotGranted>			
-				<sec:ifNotGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_EVENTADMIN,ROLE_REGISTRATION_COORDINATOR">
-						<h3 style="color:red">Due to overwhelming response of devotees, we have exceeded our Accommodation capacity. We are unable to provide Accommodation for the time being. For any details or clarification, kindly contact: Kiran pr - 09158164563/ Email - register@iskconpune.in
-						</h3>
-				</sec:ifNotGranted>
 				<sec:ifAnyGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_EGISTRATION,ROLE_EVENTADMIN,ROLE_REGISTRATION_COORDINATOR">
 					<g:checkBox name="isAccommodationRequired" value="${eventRegistrationInstance?.isAccommodationRequired}"/>				
 				</sec:ifAnyGranted>			
 			</td>
 		</tr>
 
+		<tr class="prop">
+			<td valign="top" class="name">
+				<label for="accomodationPreference">
+					<g:message code="eventRegistration.accomodationPreference" default="Accommodation Preference" />
+				</label>
+			</td>
+			<td valign="top" class="fieldcontain ${hasErrors(bean: eventRegistrationInstance, field: 'accomodationPreference', 'error')} ">
+				<g:select name="accomodationPreference" from="${['None','AC','Non-AC']}" value="${eventRegistrationInstance.accomodationPreference}"
+					  noSelection="['':'-Choose Accomodation Preference-']"/>				
+			</td>
+		</tr>
 
 		<sec:ifNotGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION">
 
@@ -751,15 +753,7 @@ $(function(){
 					</label>
 				</td>
 				<td valign="top" class="fieldcontain ${hasErrors(bean: eventRegistrationInstance, field: 'arrivalDate', 'error')} ">
-					<browser:choice>
-						 <browser:isIE9>
-							<g:datePicker name="arrivalDate" value="${eventRegistrationInstance?.arrivalDate}"
-								      precision="day" years="[2013]"/>
-						 </browser:isIE9>
-						 <browser:otherwise>
-							<g:textField name="arrivalDate" value="${(eventRegistrationInstance?.arrivalDate)?.format('dd-MM-yyyy')}" required=""/>
-						 </browser:otherwise>
-					</browser:choice>
+					<g:textField name="arrivalDate" value="${(eventRegistrationInstance?.arrivalDate)?.format('dd-MM-yyyy')}" required=""/>
 				</td>
 			</tr>
 		</sec:ifNotGranted>
@@ -772,15 +766,7 @@ $(function(){
 					</label>
 				</td>
 				<td valign="top" class="fieldcontain ${hasErrors(bean: eventRegistrationInstance, field: 'arrivalDate', 'error')} ">
-					<browser:choice>
-						 <browser:isIE9>
-							<g:datePicker name="arrivalDate" value="${eventRegistrationInstance?.arrivalDate}"
-								      precision="day" years="[2013]"/>
-						 </browser:isIE9>
-						 <browser:otherwise>
-							<g:textField id="vipArrivalDate" name="vipArrivalDate" value="${(eventRegistrationInstance?.arrivalDate)?.format('dd-MM-yyyy')}"/>
-						 </browser:otherwise>
-					</browser:choice>
+					<g:textField id="vipArrivalDate" name="vipArrivalDate" value="${(eventRegistrationInstance?.arrivalDate)?.format('dd-MM-yyyy')}"/>
 				</td>
 			</tr>
 		</sec:ifAnyGranted>
@@ -809,7 +795,8 @@ $(function(){
 		</tr>
 
 		<!-- Pick Up Required -->
-
+		
+		<!--
 		<tr class="prop">
 			<td valign="top" class="name">
 				<label for="pickUpRequired">
@@ -820,6 +807,7 @@ $(function(){
 				<g:checkBox name="pickUpRequired" value="${eventRegistrationInstance?.pickUpRequired}" />
 			</td>
 		</tr>
+		-->
 
 		<tr class="prop" colspan="2">
 
@@ -1026,15 +1014,7 @@ $(function(){
 				</label>
 			</td>
 			<td valign="top" class="fieldcontain ${hasErrors(bean: eventRegistrationInstance, field: 'departureDate', 'error')} ">
-				<browser:choice>
-					 <browser:isIE9>
-						<g:datePicker name="departureDate" value="${eventRegistrationInstance?.departureDate}"
-							      precision="day" years="[2013]"/>
-					 </browser:isIE9>
-					 <browser:otherwise>
-						<g:textField name="departureDate" value="${(eventRegistrationInstance?.departureDate)?.format('dd-MM-yyyy')}" required=""/>
-					 </browser:otherwise>
-				</browser:choice>
+				<g:textField name="departureDate" value="${(eventRegistrationInstance?.departureDate)?.format('dd-MM-yyyy')}" required=""/>
 			</td>
 		</tr>
 		</sec:ifNotGranted>
@@ -1047,15 +1027,7 @@ $(function(){
 				</label>
 			</td>
 			<td valign="top" class="fieldcontain ${hasErrors(bean: eventRegistrationInstance, field: 'departureDate', 'error')} ">
-				<browser:choice>
-					 <browser:isIE9>
-						<g:datePicker name="departureDate" value="${eventRegistrationInstance?.departureDate}"
-							      precision="day" years="[2013]"/>
-					 </browser:isIE9>
-					 <browser:otherwise>
-						<g:textField id="vipDepartureDate" name="vipDepartureDate" value="${(eventRegistrationInstance?.departureDate)?.format('dd-MM-yyyy')}" required=""/>
-					 </browser:otherwise>
-				</browser:choice>
+				<g:textField id="vipDepartureDate" name="vipDepartureDate" value="${(eventRegistrationInstance?.departureDate)?.format('dd-MM-yyyy')}" required=""/>
 			</td>
 		</tr>
 		</sec:ifAnyGranted>
@@ -1085,7 +1057,7 @@ $(function(){
 		</tr>
 
 		<!-- Drop Required -->
-
+		<!--
 		<tr class="prop">
 			<td valign="top" class="name">
 				<label for="dropRequired">
@@ -1096,6 +1068,7 @@ $(function(){
 				<g:checkBox name="dropRequired" value="${eventRegistrationInstance?.dropRequired}" />
 			</td>
 		</tr>
+		-->
 
 		<tr class="prop" colspan="2">
 

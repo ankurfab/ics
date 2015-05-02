@@ -100,6 +100,20 @@
                             </tr>
                         
                             <tr class="prop">
+                                <td valign="top" class="name">Rate:</td>
+                                
+                                <td><g:textField name="rate" value="${fieldValue(bean: itemInstance, field: 'rate')}" /></td>
+                                
+                            </tr>
+                            
+                            <tr class="prop">
+                                <td valign="top" class="name">TaxRate:</td>
+                                
+                                <td><g:textField name="taxRate" value="${fieldValue(bean: itemInstance, field: 'taxRate')}" /></td>
+                                
+                            </tr>
+
+                            <tr class="prop">
                                 <td valign="top" class="name">
                                     <label for="nunitSize"><g:message code="item.nunitSize" default="Normalized Unit Size" />:</label>
                                 </td>

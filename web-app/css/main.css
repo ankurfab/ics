@@ -54,8 +54,8 @@ select {
    padding: 2px 2px 2px 0;
 }
 textarea {
-	width: 250px;
-	height: 150px;
+	width: 100%;
+	height: 50px;
 	vertical-align: middle;
 }
 
@@ -246,11 +246,46 @@ th.desc a {
 .prop {
     padding: 5px;
 }
+
+
 .prop .name {
-	padding: 5px;
+    padding: 5px;
     text-align: right;
     width: 195px;
+}
+
+#step-6 .prop .name{
+    text-align: left;
+    width: 50%;
+}
+
+#searchExpectations .prop .name {
+	padding: 5px 0 0 10px;
+    text-align: left;
+    max-width: 100px;
 	vertical-align: middle;
+    width: auto;
+}
+
+#searchExpectations .prop .value {
+    padding: 5px 0 0 10px;
+    text-align: left;
+    max-width: 250px;
+    vertical-align: middle;
+    width: auto;
+}
+
+#searchExpectations input[type="text"] {
+    width: 98%;
+}
+#searchExpectations .slider-input {
+    width: auto !important;
+}
+#searchExpectations select {
+    width: 100%;
+}
+#searchExpectations .ui-slider{
+    width: 100%;
 }
 .prop .value {
     text-align: left;
@@ -340,7 +375,7 @@ height: 2.5em;
 	color:white;
 	filter: progid:DXImageTransform.Microsoft.gradient(GradientType=1, startColorstr='#278ABB', endColorstr='#ffffff'); /* for IE */
     background: -webkit-gradient(linear, left bottom, right top, from(#278ABB), to(#ffffff)); /* for webkit browsers */
-    background: -moz-linear-gradient(left, #278ABB, #ffffff); /* for firefox 3.6+ */i 
+    background: -moz-linear-gradient(left, #278ABB, #ffffff); /* for firefox 3.6+ i*/
 
 }
 
@@ -393,4 +428,32 @@ height: 2.5em;
     position:absolute;
 	left:880px;
 	top:60px;
+}
+
+.blink {
+    animation-duration: 1s;
+    animation-name: blink;
+    animation-iteration-count: infinite;
+    animation-timing-function: steps(2, start);
+}
+@keyframes blink {
+    80% {
+        visibility: hidden;
+    }
+}
+
+.slider-input{
+    border:0;
+    color:#000000;
+    background: transparent;
+}
+.slider-range{
+    width: 50%;
+}
+
+#step-5 .prop .name{
+    max-width: 25%;
+}
+#step-5 .prop .value{
+    max-width: 25%;
 }

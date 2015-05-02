@@ -176,6 +176,8 @@ class InvoiceController {
 		    //@TODO: remove vendor and payment reference
 		    params.remove('from')
 		    params.remove('paymentReference')
+		    if(params.'from.id')
+		    	params.'preparedBy.id'=params.'from.id'
 		    invoice.properties = params
 		    invoice.updator = springSecurityService.principal.username
 		    //update calculated fields
@@ -183,7 +185,7 @@ class InvoiceController {
 		    invoice.itemTotalAmountWithTax = 0
 		    invoice.lineItems?.each{
 		    		invoice.itemTotalAmount += (it.qty*it.rate)
-		    		invoice.itemTotalAmountWithTax += (it.qty*it.rate*(1+it.taxRate/100)) 
+		    		invoice.itemTotalAmountWithTax += (it.qty*it.rate*(1+(it.taxRate?:0)/100)) 
 		    		}
 		    invoice.invoiceAmount = invoice.itemTotalAmountWithTax + invoice.extraAmount - invoice.discountAmount
 		    //also check status
@@ -235,8 +237,11 @@ class InvoiceController {
 			eq('rate',new BigDecimal(params.rate))
 		if (params.description)
 			ilike('description','%'+params.description + '%')
-
-		order(sortIndex, sortOrder)
+			
+		if(sortIndex=='itemname')
+			item{order('name', sortOrder)}
+		else
+			order(sortIndex, sortOrder)
 
 	}
       
@@ -278,6 +283,11 @@ class InvoiceController {
 	      switch (params.oper) {
 		case 'add':
 		  // add lineItem sent
+		  if(!params.rate && params.'item.id') {
+			def masterItem = Item.get(params.'item.id')
+			params.rate=masterItem?.rate?:0
+			params.taxRate=masterItem?.taxRate?:0
+			}
 		  //first add item if not existing
 		def newItem = false
 		if(!params.'item.id')
@@ -298,7 +308,7 @@ class InvoiceController {
 					newItem = true
 
 			}
-		  lineItem = new InvoiceLineItem(params)
+		  lineItem = new InvoiceLineItem(params)	  	
 		  if(newItem)
 		  	lineItem.item = item
 		  lineItem = invoiceService.setCalculatedFields(lineItem)
@@ -520,6 +530,7 @@ class InvoiceController {
 	def c = Individual.createCriteria()
 	def items = c.list(max:10)
 		{
+		eq('category','VENDOR')
 		like("legalName", query+"%")
 		order("legalName", "asc")
 		}
@@ -537,8 +548,18 @@ class InvoiceController {
     
     def print() {
     	def invoiceInstance = Invoice.get(params.id)
-    	if(invoiceInstance)
-    		render(template: "print", model: [invoiceInstance: invoiceInstance])
+    	if(invoiceInstance) {
+    		if(invoiceInstance.type=="SALES")
+    			{
+    			invoiceInstance.status = "PREPARED"
+    			invoiceInstance.invoiceAmount = invoiceInstance.lineItems?.sum{it.qty*it.rate*(1+((it.taxRate?:0)/100))}?:0
+    			if(!invoiceInstance.save())
+    				invoiceInstance.errors.allErrors.each {log.debug(it)}
+    			render(template: "salesprint", model: [invoiceInstance: invoiceInstance])
+    			}
+    		else
+    			render(template: "print", model: [invoiceInstance: invoiceInstance])
+    	}
     	else
     		render "No invoice found with the specified id. Kindly contact admin!!"
     }
@@ -577,6 +598,84 @@ class InvoiceController {
     	render(template: "vendorReport", model: [invoices: invoices])
     }
 
+    def salesReport() {
+    	def consumers = Invoice.createCriteria().list{
+    		eq('type','SALES')
+    		projections{
+    			distinct('personTo')
+    			}
+    		order('personTo')
+    		}
+    	log.debug("Got consumers:"+consumers)
+    	[consumers:consumers]
+    }
+    
+    def salesReportResult() {
+    	log.debug("Inside salesReportResult with params : "+params)
+	
+	if(params.from)
+		  params.from = Date.parse('dd-MM-yyyy',params.from)
+	else
+		  params.from = new Date().resetTime()
+
+	if(params.to)
+		  params.to = Date.parse('dd-MM-yyyy',params.to)
+	else
+		  params.to = new Date().resetTime()
+    	
+    	//move ahead to date by 1 day so that last day is seen
+    	params.to = params.to + 1
+    	
+    	def invoices = invoiceService.salesReport(params)
+    	
+    	render(template: "salesReport", model: [invoices: invoices])
+    }
+
+    def consumptionReport() {
+    	def consumers = Invoice.createCriteria().list{
+    		eq('type','SALES')
+    		projections{
+    			distinct('personTo')
+    			}
+    		order('personTo')
+    		}
+    	log.debug("Got consumers:"+consumers)
+    	[consumers:consumers]
+    }
+    
+    def consumptionReportResult() {
+    	log.debug("Inside consumptionReportResult with params : "+params)
+	
+	if(params.from)
+		  params.from = Date.parse('dd-MM-yyyy',params.from)
+	if(params.to)
+		  params.to = Date.parse('dd-MM-yyyy',params.to)
+    	
+    	def consumptions = invoiceService.consumptionReport(params)
+    	
+    	render(template: "consumptionReport", model: [consumptions: consumptions])
+    }
+
+    def stockReport() {
+    	def items = Item.createCriteria().list{
+    		order('name')
+    		}
+    	[items:items]
+    }
+    
+    def stockReportResult() {
+    	log.debug("Inside stockReportResult with params : "+params)
+	
+	if(params.from)
+		  params.from = Date.parse('dd-MM-yyyy',params.from)
+	if(params.to)
+		  params.to = Date.parse('dd-MM-yyyy',params.to)
+    	
+    	def stock = invoiceService.stockReport(params)
+    	
+    	render(template: "stockReport", model: [stock: stock])
+    }
+
     def paymentReport() {
     }
 
@@ -591,6 +690,11 @@ class InvoiceController {
     	def invoices = invoiceService.paymentReport(params)
     	
     	render(template: "paymentReport", model: [invoices: invoices])
+    }
+    
+    def fillGaps() {
+    	def result = invoiceService.fillGaps(params)
+    	render result
     }
 
     

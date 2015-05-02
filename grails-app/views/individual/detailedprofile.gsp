@@ -428,7 +428,7 @@
 																	class="itext" readonly="true"/>
 															</g:if> <g:elseif test="${mode == 'EDIT'}">
 																<g:select name="ashram"
-																	from="${['Brahmachari','Grahastha','Vanaprastha','Sanyasi']}"
+																	from="${['Brahmachari','Grahastha','Vanaprastha','Sanyas','Other']}"
 																	value="${individualInstance?.ashram}" class="chzn-select" 
 																	noSelection="['':'-Choose-']"/>
 															</g:elseif></li></td>

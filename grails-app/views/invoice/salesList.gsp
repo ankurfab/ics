@@ -68,18 +68,23 @@
       colNames:['Number','Date','From','FromDepartment','To','ToCostCenter','DueDate','ItemTotal','Extra','Discount','InvoiceAmount','Status','Description','Comments','Mode','PaymentReference','Id'],
       colModel:[
 	{name:'invoiceNumber', search:true, editable: false},
-	{name:'invoiceDate', search:true, editable: false},
+	{name:'invoiceDate', search:true, editable: true,
+		editoptions:{ 
+				  dataInit:function(el){ 
+					$(el).datepicker({dateFormat:'dd-mm-yy',defaultDate: new Date()}); 
+				  }}
+	},
 	{name:'from', search:true, editable: false},
-	{name:'departmentBy.id', search:true, editable: true, editrules:{required:true},
+	{name:'departmentBy.id', search:true, editable: true, editrules:{required:false},
 		edittype:"select",
 		editoptions:{value:"${':--Please Select Department--;'+(ics.Department.findAllByName('Kitchen',[sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"},
 		stype:'select', searchoptions: { value: "${':--Please Select Department--;'+(ics.Department.findAllByName('Kitchen',[sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"}
 	},
 	{name:'personTo', search:true, editable: true},
-	{name:'departmentTo.id', search:true, editable: true, editrules:{required:true},
+	{name:'departmentTo.id', search:true, editable: true, editrules:{required:false},
 		edittype:"select",
-		editoptions:{value:"${':--Please Select Department--;'+(ics.CostCenter.findAll([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"},
-		stype:'select', searchoptions: { value: "${':--Please Select Department--;'+(ics.CostCenter.findAll([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"}
+		editoptions:{value:"${':--Please Select Department--;'+(ics.CostCenter.findAllByStatusIsNull([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"},
+		stype:'select', searchoptions: { value: "${':--Please Select Department--;'+(ics.CostCenter.findAllByStatusIsNull([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"}
 	},	
 	{name:'dueDate', search:true, editable: true,
 		editoptions:{ 
@@ -126,7 +131,7 @@
     	}    
     });
     $("#invoice_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#invoice_list").jqGrid('navGrid',"#invoice_list_pager",{edit:false,add:false,del:true,search:false});
+    $("#invoice_list").jqGrid('navGrid',"#invoice_list_pager",{edit:false,add:false,del:false,search:false});
     $("#invoice_list").jqGrid('inlineNav',"#invoice_list_pager");
 
     $("#invoice_list").jqGrid('navGrid',"#invoice_list_pager").jqGrid('navButtonAdd',"#invoice_list_pager",{caption:"Print", buttonicon:"ui-icon-print", onClickButton:print, position: "last", title:"Print", cursor: "pointer"});
@@ -135,12 +140,12 @@
       url:'jq_lineitem_list',
       editurl:'jq_edit_lineitem',
       datatype: "json",
-      colNames:['ItemName','Category','Variety','Brand','Qty','UnitSize','Unit','Rate','Description','Id'],
+      colNames:['ItemName','Qty','UnitSize','Unit','Rate','TaxRate(%)','TotalWithoutTax','TotalWithTax','Id'],
       colModel:[
 	{name:'itemname', search:true, editable: true,
 		editoptions:{ 
 				  dataInit:function(el){ 
-					$(el).autocomplete({source:'${createLink(controller:'item',action:'allItemsAsJSON_JQ')}',
+					$(el).autocomplete({source:'${createLink(controller:'item',action:'allItemsAsJSON_Fuzzy_JQ')}',
 					minLength: 0,
 					  select: function(event, ui) { // event handler when user selects an  item from the list.
 					  	var newURL = $("#editurl").val();
@@ -150,9 +155,6 @@
 					}); 
 				  }}
 	},
-	{name:'category', search:true, editable: true},
-	{name:'variety', search:true, editable: true},
-	{name:'brand', search:true, editable: true},
 	{name:'qty', search:true, editable: true},
 	{name:'unitSize', search:true, editable: true},
 	{name:'unit', search:true, editable: true, editrules:{required:true},
@@ -160,7 +162,9 @@
 		formatter:'select',stype:'select', searchoptions: { value: "${':ALL;'+(ics.Unit.values())?.collect{it.toString()+':'+it.toString()}.join(';')}"}
 	},
 	{name:'rate', search:true, editable: true},
-	{name:'description', search:true, editable: true},
+	{name:'taxRate', search:true, editable: true},
+	{name:'totalWithoutTax', search:true, editable: true},
+	{name:'totalWithTax', search:true, editable: true},
 	{name:'id',hidden:true}
      ],
     rowNum:10,
@@ -175,7 +179,7 @@
     caption:"Sales Line Item(s)"
     });
     $("#lineitem_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#lineitem_list").jqGrid('navGrid',"#lineitem_list_pager",{edit:false,add:false,del:false,search:false});
+    $("#lineitem_list").jqGrid('navGrid',"#lineitem_list_pager",{edit:false,add:false,del:true,search:false});
     $("#lineitem_list").jqGrid('inlineNav',"#lineitem_list_pager");
 
 	function print() {

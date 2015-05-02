@@ -3,14 +3,15 @@
 <!doctype html>
 <html>
 	<head>
+        	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta name="layout" content="main">
 		<g:set var="entityName" value="${message(code: 'role.label', default: 'Role')}" />
 		<title><g:message code="default.list.label" args="[entityName]" /></title>
 		<r:require module="grid" />
 	</head>
 	<body>
-		<g:render template="/common/sms" />
-		<g:render template="/common/email" />
+		<g:render template="/common/apisms" />
+		<g:render template="/common/mandrillemail" />
 
 		<div class="nav">
 		    <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
@@ -20,13 +21,15 @@
 		<table id="role_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 		<!-- pager will hold our paginator -->
 		<div id="role_list_pager" class="scroll" style="text-align:center;"></div>
+		<input class="menuButton" type="BUTTON" id="btnSMS_RoleList" value="SMS_ALL" gridName="#role_list" entityName="Role"  departmentId="${ics.Department.findByName('TMC')?.id}"/>
+		<input class="menuButton" type="BUTTON" id="btnEMAIL_RoleList" value="EMAIL_ALL" gridName="#role_list" entityName="Role" departmentId="${ics.Department.findByName('TMC')?.id}"/>
 
 		<!-- table tag will hold our grid -->
 		<table id="individualRole_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 		<!-- pager will hold our paginator -->
 		<div id="individualRole_list_pager" class="scroll" style="text-align:center;"></div>
-		<input class="menuButton" type="BUTTON" id="btnSMS_IRList" value="SMS" gridName="#individualRole_list" entityName="IndividualRole"/>
-		<input class="menuButton" type="BUTTON" id="btnEMAIL_IRList" value="EMAIL" gridName="#individualRole_list" entityName="IndividualRole"/>
+		<input class="menuButton" type="BUTTON" id="btnSMS_IndividualRoleList" value="SMS" gridName="#individualRole_list" entityName="IndividualRole"  departmentId="${ics.Department.findByName('TMC')?.id}"/>
+		<input class="menuButton" type="BUTTON" id="btnEMAIL_IndividualRoleList" value="EMAIL" gridName="#individualRole_list" entityName="IndividualRole" departmentId="${ics.Department.findByName('TMC')?.id}"/>
 		</div>
 
 		<script type="text/javascript">
@@ -43,6 +46,7 @@
 			},
 			{name:'description', editable:true},
 			{name:'category', editable:true,
+				stype:'select', searchoptions: { value: "${':ALL;'+(ics.Role.createCriteria().list{projections{distinct('category')}}?.collect{it+':'+it}.join(';'))}"}
 				    /*'edittype'    : 'custom',
 				    'editoptions' : {
 				      'custom_element' : autocomplete_element,
@@ -70,7 +74,7 @@
 					}
 		    });
 		   $("#role_list").jqGrid('navGrid',"#role_list_pager",
-			{add:true,edit:true,del:true}, // which buttons to show?
+			{add:false,edit:false,del:false}, // which buttons to show?
 			{},         // edit options
 			{addCaption:'Create New Role',afterSubmit:afterSubmitEvent,savekey:[true,13],closeAfterAdd:true},  // add options
 			{}          // delete options
@@ -84,14 +88,21 @@
 			url:'${createLink(controller:'individualRole',action:'jq_deprole_list',params:['role.id':0])}', 
 			editurl:'${createLink(controller:'individualRole',action:'jq_edit_deprole',params:['role.id':0])}', 
 			datatype: "json", 
-			colNames:['Individual','Phone','Email','Department','Centre','Remarks','Status','id'], 
+			colNames:['Photo','Individual','Phone','Email','Description','Department','Centre','Remarks','Status','id'], 
 			colModel:[
+				{
+				name: 'photo',
+				formatter: function (cellvalue, options, rowObject) {
+					    return '<img height="70" width="70" src="${createLink(controller:'Individual',action:'avatar_image')}?id='+rowObject[0]+ '"/>'; 
+					}
+				},				
 				{name:'name', editable:false,
 					formatter:'showlink', 
 					formatoptions:{baseLinkUrl:'${createLink(controller:'IndividualRole',action:'show')}'}				
 				},
 				{name:'phone', editable:false,search:false},
 				{name:'email', editable:false,search:false},
+				{name:'description', editable:false,search:false},
 				{name:'department', editable:true},
 				{name:'centre', editable:true},
 				{name:'remarks', editable:true},

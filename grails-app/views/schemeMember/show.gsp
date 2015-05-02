@@ -61,11 +61,27 @@
                                 <td valign="top" class="value">${schemeMemberInstance?.scheme?.encodeAsHTML()}</td>
                                 
                             </tr>
+
+                           
                             
                             <tr class="prop">
                                 <td valign="top" class="name"><g:message code="schemeMember.member" default="Member" />:</td>
                                 
-                                <td valign="top" class="value"><g:link controller="individual" target="_blank" action="show" params="['id':schemeMemberInstance?.member?.id,'profile':'true','detailed':'true']">${schemeMemberInstance?.member?.encodeAsHTML()}</g:link></td>
+                                <td valign="top" class="value"><g:link controller="individual" target="_blank" action="show" params="['id':schemeMemberInstance?.member?.id,'profile':'true','detailed':'true']">${schemeMemberInstance?.member?.encodeAsHTML()}</g:link> ( ${schemeMemberInstance?.member?.legalName?.encodeAsHTML()} )</td>
+                                
+                            </tr>
+
+                             <tr class="prop">
+                                <td valign="top" class="name"><g:message code="schemeMember.scheme" default="Stars" />:</td>
+                                
+                                <td valign="top" class="value">
+                                ${schemeMemberInstance?.star}
+                                <g:if test="${schemeMemberInstance?.star}">
+                                    <g:each in="${(1..schemeMemberInstance?.star).toList()}" var="c" >
+                                      *
+                                    </g:each>
+                                </g:if>
+                                </td>
                                 
                             </tr>
                              <tr class="prop">
@@ -80,6 +96,14 @@
                                 <td valign="top" class="value">${schemeMemberInstance?.toBeCommunicated?.encodeAsHTML()}</td>
                                 
                             </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name"><g:message code="schemeMember.externalName" default="To Be Sent SMS" />:</td>
+                                
+                                <td valign="top" class="value">${schemeMemberInstance?.toBeSMS?.encodeAsHTML()}</td>
+                                
+                            </tr>
+
                              <tr class="prop">
                                 <td valign="top" class="name"><g:message code="schemeMember.counsumerNumber" default="Consumer Number" />:</td>
                                 
@@ -200,7 +224,7 @@
                                 
                             </tr>
                             <tr class="prop">
-                                <td valign="top" class="name"><g:message code="schemeMember.actualCurrentAmount" default="Actual Current Amount" />:</td>
+                                <td valign="top" class="name"><g:message code="schemeMember.actualCurrentAmount" default="Actual Current Amount per month" />:</td>
                                 
                                 <td valign="top" class="value">${fieldValue(bean: schemeMemberInstance, field: "actualCurrentAmount")}</td>
                                 
@@ -363,10 +387,11 @@
             jQuery("#donationsummary_list").jqGrid({
               url:'${createLink(controller:'helper',action:'donationRecordSummaryForSchemeMember')}',
               datatype: "json",
-              postData:{id:${fieldValue(bean: schemeMemberInstance, field: "id")}},
-              colNames:['donationDate','amount','mode','centre','paymentDetails','id'],
+              postData:{id:${fieldValue(bean: schemeMemberInstance, field: "id")}  , donationrecordtype: function(){ return $('input[name=donationrecordtype]:checked').val();}},
+              colNames:['donationDate', 'Scheme','amount','mode','centre','paymentDetails','id'],
               colModel:[
             {name:'donationDate',search:false},
+            {name:'scheme',search:false},
             {name:'amount',formatter:'showlink',search:false,
             formatoptions:{baseLinkUrl:'${createLink(controller:'donationRecord',action:'show')}',target:'_blank'}
             },
@@ -392,16 +417,76 @@
             
             });
 
+            function reloadDonationRecordGrid(){             
+                        $("#donationsummary_list").trigger("reloadGrid");    
+                }
 </script>
    
+    <script type="text/javascript">
+          jQuery(document).ready(function () {
+            jQuery("#donationsummaryByYear_list").jqGrid({
+              url:'${createLink(controller:'helper',action:'donationRecordSummaryForSchemeMemberByYear')}',
+              datatype: "json",
+              postData:{id:${fieldValue(bean: schemeMemberInstance, field: "id")} , donationtype: function(){ return $('input[name=donationtype]:checked').val();}},
+              colNames:['donationYear','Totalamount','id'],
+              colModel:[
+            {name:'donationYear',search:false},
+            {name:'Totalamount',search:false},            
+            {name:'id',hidden:true}
+             ],
+            rowNum:3,
+            rowList:[3,5,10],
+            pager: '#donationsummaryByYear_list_pager',
+            viewrecords: true,
+            gridview: true,
+            sortname: 'amount',
+            sortorder: "asc",
+            width: 500,
+            height: "100%",
+            caption:"Total Donation By Year",
+            hiddengrid: true
+            });
+            $("#donationsummaryByYear_list").jqGrid('filterToolbar',{autosearch:true});
+            $("#donationsummaryByYear_list").jqGrid('navGrid',"#vehicle_list_pager",{edit:false,add:false,del:false,search:false});
+            $("#donationsummaryByYear_list").jqGrid('inlineNav',"#vehicle_list_pager");
+            
+            });
 
+             function reloadDonationYearSummaryGrid(){
+             console.log($('input[name=donationtype]:checked').val());
+                        $("#donationsummaryByYear_list").trigger("reloadGrid");    
+                }
 
-        <div id="donationsummary" style="float:right;padding:10px 10px;margin:30px 50px;">           
+</script>
+   
+        <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE">
+             <div style="float:right;padding:5px 200px;margin:5px 5px;">
+            <input type="radio" onchange="reloadDonationRecordGrid()"  checked=true name="donationrecordtype" value="schemeonly">${schemeMemberInstance?.scheme?.encodeAsHTML()}
+
+            <input type="radio" onchange="reloadDonationRecordGrid()" name="donationrecordtype" value="alldonation">All donations
+             </div>
+
+        </sec:ifAnyGranted>
+
+        <div id="donationsummary" style="float:right;padding:0px 10px;margin:0px 50px;">           
                 <div>
                 <!-- table tag will hold our grid -->
                 <table id="donationsummary_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
                 <!-- pager will hold our paginator -->
                 <div id="donationsummary_list_pager" class="scroll" style="text-align:center;"></div>
+                </div>
+            </div>
+        <div style="float:right;padding:5px 200px;margin:5px 5px;">
+            <input type="radio" onchange="reloadDonationYearSummaryGrid()"  checked=true name="donationtype" value="schemeonly">${schemeMemberInstance?.scheme?.encodeAsHTML()}
+
+            <input type="radio" onchange="reloadDonationYearSummaryGrid()" name="donationtype" value="alldonation">All donations
+        </div>
+        <div id="donationsummaryByYear" style="float:right;padding:0px 10px;margin:0px 50px;">           
+                <div>
+                <!-- table tag will hold our grid -->
+                <table id="donationsummaryByYear_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
+                <!-- pager will hold our paginator -->
+                <div id="donationsummaryByYear_list_pager" class="scroll" style="text-align:center;"></div>
                 </div>
             </div>
 
@@ -410,7 +495,7 @@
             jQuery("#giftsummary_list").jqGrid({
               url:'${createLink(controller:'helper',action:'GiftRecordSummaryForSchemeMember')}',
               datatype: "json",
-              postData:{id:${fieldValue(bean: schemeMemberInstance, field: "id")}},
+              postData:{id:${fieldValue(bean: schemeMemberInstance, field: "id")}, gifttype: function(){ return $('input[name=gifttype]:checked').val();}},
               colNames:['scheme','giftDate','giftName','comments','id'],
               colModel:[
             {name:'scheme',search:false},
@@ -421,8 +506,8 @@
             {name:'comments',search:false},            
             {name:'id',hidden:true}
              ],
-            rowNum:4,
-            rowList:[4,8,12],
+            rowNum:10,
+            rowList:[10,15,20],
             pager: '#giftsummary_list_pager',
             viewrecords: true,
             gridview: true,
@@ -438,8 +523,18 @@
             
             });
 
+            function reloadGiftListGrid(){
+                 $("#giftsummary_list").trigger("reloadGrid");
+            }
+
 </script>
-            <div id="giftsummary" style="float:right;padding:10px 10px;margin:30px 50px;">           
+
+        <div style="float:right;padding:5px 220px;margin:5px 5px;">
+            <input type="radio" onchange="reloadGiftListGrid()" checked=true name="gifttype" value="schemeonly">${schemeMemberInstance?.scheme?.encodeAsHTML()}
+
+            <input type="radio" onchange="reloadGiftListGrid()"  name="gifttype" value="allover">All Gifts
+        </div>
+            <div id="giftsummary" style="float:right;padding:0px 10px;margin:0px 50px;">           
                 <div>
                 <!-- table tag will hold our grid -->
                 <table id="giftsummary_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>

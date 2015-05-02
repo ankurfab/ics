@@ -247,12 +247,13 @@ class TopicController {
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
-	def topic = null
+	def topicInstance = null
 	if(params.topicid)
-		topic=Topic.get(params.topicid)
+		topicInstance=Topic.get(params.topicid)
 		
 	def result = TopicSubscription.createCriteria().list(max:maxRows, offset:rowOffset) {
-		eq('topic',topic)
+		if(topicInstance)
+			eq('topic',topicInstance)
 
 		if (params.name)
 			{
@@ -264,6 +265,12 @@ class TopicController {
 					}
 				}
 			}
+
+		if (params.topic)
+			topic{ilike('name',params.topic)}
+
+		if (params.language)
+			eq('language',params.language)
 
 		if (params.viaSMS)
 			eq('viaSMS',new Boolean(params.viaSMS))
@@ -284,6 +291,8 @@ class TopicController {
       def jsonCells = result.collect {
             [cell: [
             	    (it.person?.toString()?:it.individual?.toString()),
+            	    it.topic.name,
+            	    it.language,
             	    it.viaSMS,
             	    it.viaEmail,
             	    it.viaPost,
@@ -375,7 +384,7 @@ class TopicController {
 		topicids.each{
 			log.debug("topicid:"+it)
 			//@TODO: first check if already exists
-			subscription = new TopicSubscription(person:person, 'topic.id':it)
+			subscription = new TopicSubscription(person:person, 'topic.id':it, language:params.language)
 			if(!subscription.save())
 			    subscription.errors.allErrors.each {
 				println it

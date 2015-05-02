@@ -16,6 +16,9 @@ class Item {
     String variety   /* Basmati, Kolam */
     String brand     /* Laxmi Brand */
     
+    BigDecimal rate  
+    BigDecimal taxRate  
+
     String comments
     
     Department department	//Kitchen, VaishnavSamvardhan, Common (if null)
@@ -34,7 +37,6 @@ class Item {
     String updator
 
     //static belongsTo = [itemCategory: ItemCategory]
-    static transients = ["rate","taxRate"]
 
     static constraints = {
     
@@ -58,6 +60,9 @@ class Item {
 	nunitSize(nullable:true)
 	nunit(nullable:true)
 
+	rate(nullable:true)
+	taxRate(nullable:true)
+
 	creator(nullable:true)
 	dateCreated()
 	updator(nullable:true)
@@ -72,6 +77,7 @@ class Item {
          	return (category?:'')+":"+(subcategory?:'')+":"+(name?:'')+":"+(variety?:'')+":"+(brand?:'')
      	}
 
+/*
     def getRate() {
         def rate = null
         def ili = InvoiceLineItem.findAllByItem(this, [max:1,sort:'id',order:'desc'])
@@ -93,5 +99,6 @@ class Item {
         	}
         return taxRate
     }
+*/
 
 }

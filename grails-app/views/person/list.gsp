@@ -15,6 +15,7 @@
 
 	</head>
 	<body>
+		<g:render template="/common/mandrillemail" />
 		<div class="nav">
 		    <span class="menuButton"></span>
 		</div>
@@ -39,6 +40,10 @@
 			<input class="menuButton" type="BUTTON" id="btnMatch" value="Match Selected" />
 		</sec:ifAnyGranted>
 
+		<sec:ifAnyGranted roles="ROLE_ATITHI_ADMIN">
+			<input class="menuButton" type="BUTTON" id="btnEMAIL" value="EMAIL" gridName="#person_list" entityName="Person" departmentId="${ics.Department.findByName('Guest Reception Department')?.id}"/>
+		</sec:ifAnyGranted>
+
 		<div>
 		Upload contacts in bulk: <br />
 		    <g:uploadForm action="upload">
@@ -53,6 +58,17 @@
 		
 		<script type="text/javascript">
 		  $(document).ready(function () {
+
+    var editOptions = {
+            keys: true,
+            successfunc: function () {
+                var $self = $(this);
+                setTimeout(function () {
+                    $self.trigger("reloadGrid");
+                }, 50);
+            }
+    };
+
 
 		    jQuery("#person_list").jqGrid({
 		      url:'jq_person_list?code=UNMATCHED',
@@ -81,7 +97,8 @@
 		    pager: '#person_list_pager',
 		    viewrecords: true,
 		    gridview: true,
-		    sortorder: "asc",
+		    sortname: "id",
+		    sortorder: "desc",
 		    width: 1250,
 		    height: "100%",
 		    caption:"Contact List"
@@ -94,25 +111,38 @@
 			{}          // delete options
 		    );
 		    jQuery("#person_list").jqGrid('inlineNav',"#person_list_pager",
-			  {addParams: {
-			     addRowParams: {
-				    keys: true,
-				    // This is called if enter key is pressed to save added row
-				    aftersavefunc: afterSaveFunc,
-				},
-			    },
-			add: true,
-			edit: true,
-			save: true,
-			cancel: true
-			});
+				{
+				    addParams: {
+					addRowParams: editOptions
+				    },
+				    editParams: editOptions
+				}    
+			);
 
 		<sec:ifAnyGranted roles="ROLE_ATITHI_ADMIN,ROLE_ATITHI_USER">
 		
 		    $("#person_list").jqGrid('navGrid',"#person_list_pager").jqGrid('navButtonAdd',"#person_list_pager",{caption:"Subscribe", buttonicon:"ui-icon-note", onClickButton:subscribe, position: "last", title:"Subscribe", cursor: "pointer"});
+		    <!--$("#person_list").jqGrid('navGrid',"#person_list_pager").jqGrid('navButtonAdd',"#person_list_pager",{caption:"Email", buttonicon:"ui-icon-mail-closed", onClickButton:email, position: "last", title:"Email", cursor: "pointer"});-->
 
 		</sec:ifAnyGranted>
 
+
+	function email() {
+		var answer = confirm("Are you sure?");
+		if (answer){
+			var ids = $('#person_list').jqGrid('getGridParam','selarrrow');
+			if(ids!="") {
+				var url = "${createLink(controller:'person',action:'mail')}"+"?idlist="+ids
+				$.getJSON(url, {}, function(data) {
+					alert(data.message);
+				    });	
+			}
+			else
+				alert("Please select a row!!");
+		} else {
+		    return false;
+		}
+	}
 
 	function subscribe() {
 		var id = $('#person_list').jqGrid('getGridParam','selrow');

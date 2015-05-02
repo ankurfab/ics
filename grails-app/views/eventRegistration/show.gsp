@@ -14,6 +14,7 @@
 		<div class="nav" role="navigation">
 			<ul>
 				<span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
+				<span class="menuButton"><g:link class="create" action="registrationDetails" params="[id: eventRegistrationInstance.id]">Accommodation and Other Details</g:link></span>
 				<sec:ifAnyGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_REGISTRATION_COORDINATOR,ROLE_EVENTADMIN">				    
 					<span class="menuButton"><g:link class="create" action="create">New Registration</g:link></span>
 					<span class="menuButton"><g:link class="list" action="list">Registration List</g:link></span>
@@ -44,12 +45,12 @@
 						<!-- Event -->
 
 						<g:if test="${eventRegistrationInstance?.event}">
-						<tr class="prop" style="display:none">
+						<tr class="prop">
 							<td class="name">
-								<g:message code="eventRegistration.event.label" default="Event" />
+								<p class="blink"><b>Important information about ${eventRegistrationInstance.event?.title}</b></p>
 							</td>
 							<td class="value">
-								<g:fieldValue bean="${eventRegistrationInstance}" field="event"/>
+								${eventRegistrationInstance.event?.description}
 							</td>
 						</tr>
 						</g:if>
@@ -356,6 +357,17 @@
 							</td>
 						</tr>
 						</g:if>
+						
+						<!-- accomodationPreference -->
+
+						<tr class="prop">
+							<td class="name">
+								<g:message code="eventRegistration.accomodationPreference.label" default="Accommodation Preference" />
+							</td>
+							<td class="value">
+								${eventRegistrationInstance.accomodationPreference}
+							</td>
+						</tr>
 						
 					</tbody></table></div>
 
@@ -803,6 +815,29 @@
 
 				</div>
 				</g:if>
+
+				<div class="collection_group">
+
+					<div class="dialog"><table><tbody>
+
+						<tr class="prop"><div class="caption_title">Payment Information</div></tr>
+
+						<tr class="prop">
+							<td class="name">
+								Payment
+							</td>
+							<td class="value">
+					       			<g:if test="${eventRegistrationInstance?.paymentReference}">
+									${eventRegistrationInstance?.paymentReference}
+								</g:if>
+								<g:else>
+									<g:link action="pay" params="[orderid: eventRegistrationInstance.id, amount: regamount]">Pay Online</g:link>
+								</g:else>
+							</td>
+						</tr>
+					
+					</tbody></table></div>
+				</div>
 
 				<sec:ifAnyGranted roles="ROLE_VIP_COORDINATOR,ROLE_VIP_REGISTRATION,ROLE_COMMUNICATION_COORDINATOR,ROLE_REGISTRATION_COORDINATOR,ROLE_EVENTMANAGER,ROLE_EVENTADMIN,ROLE_NVCC_ADMIN">
 				<g:if test="${eventRegistrationInstance?.verificationComments}">

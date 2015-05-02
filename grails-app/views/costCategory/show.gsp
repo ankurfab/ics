@@ -84,7 +84,7 @@
                                 
                                 <td  valign="top" style="text-align: left;" class="value">
                                     <ul>
-                                    <g:each in="${costCategoryInstance?.costCenters}" var="costCenterInstance">
+                                    <g:each in="${ics.CostCenter.findAllByCostCategoryAndStatusIsNull(costCategoryInstance,[sort:'name'])}" var="costCenterInstance">
                                         <li><g:link controller="costCenter" action="show" id="${costCenterInstance.id}">${costCenterInstance.encodeAsHTML()}</g:link></li>
                                     </g:each>
                                     </ul>

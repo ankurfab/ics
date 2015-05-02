@@ -5,7 +5,7 @@ class Content {
     static constraints = {
 	    name()
 	    description(nullable:true)
-	    htmlContent(nullable:true)
+	    htmlContent(nullable:true,size:0..8000)
 
 	    category inList: ["PRE", "POST"]
 	    type(nullable:true)

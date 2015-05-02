@@ -186,6 +186,591 @@ class DataService {
     		return queryResult
 		
 	}
+	
+	//store the attribute names in a generic csv file
+	//@TODO: take care of dep,centre and other attributes
+	def storeHeader(String domainClassName,Object tokens) {
+		def attr
+		tokens.eachWithIndex{it,idx ->
+			attr = new Attribute()
+			attr.name = it
+			attr.position = idx
+			if(!attr.save())
+				attr.errors.allErrors.each {log.debug("exception in saving arrr:"+ it)}
+		}
+	}
+	
+	//store the attribute values in a generic csv file
+	def storeValues(String objectClassName,Long objectId, Object tokens) {
+		def attrList = Attribute.list()	//@TODO: hardcoded
+		def attrMap = [:]
+		attrList.each{
+			attrMap.put(it.position,it)
+		}
+		def attrValue,attr
+		tokens.eachWithIndex{it,idx ->
+			if(it) {
+				attr = attrMap.get(idx)
+				attrValue = new AttributeValue()
+				attrValue.objectClassName = objectClassName
+				attrValue.objectId = objectId
+				attrValue.attribute = attr
+				attrValue.value = it
+				attrValue.updator = attrValue.creator = 'system'
+				if(!attrValue.save())
+					attrValue.errors.allErrors.each {log.debug("exception in saving attrValue:"+ it)}
+			}
+		}
+	}
+	
+	
+	//refresh the individual summary objects, truncate and rebuild if no params else refresh only for the spefcified ids
+	def refreshIndividualSummary(Map params) {
+		def sql = new Sql(dataSource)
+		def query=""
+		
+		if(params?.idlist) {
+		}
+		else {
+			//blankout
+			query="truncate individual_summary;"
+			sql.execute(query);
+			//basic data
+			query="insert into individual_summary (version,indid,name,refresh_date) select 0,i.id,if(initiated_name is not null and trim(initiated_name)!='',initiated_name,legal_name) name,now() from individual i;"
+			sql.execute(query);
+			//phone
+			//query="update individual_summary il, (select i.id,group_concat(concat(vc.category,':',vc.number)) number from individual i, voice_contact vc where i.id=vc.individual_id group by i.id) vct set il.phone=vct.number where il.indid=vct.id;"
+			query="update individual_summary il, (select i.id,group_concat(concat(vc.number,',')) number from individual i, voice_contact vc where i.id=vc.individual_id and vc.category='CellPhone' group by i.id) vct set il.phone=vct.number where il.indid=vct.id;"
+			sql.executeUpdate(query);
+			//email
+			//query="update individual_summary il, (select i.id,group_concat(concat(ec.category,':',ec.email_address)) email from individual i, email_contact ec where i.id=ec.individual_id group by i.id) ect set il.email=ect.email where il.indid=ect.id;"
+			query="update individual_summary il, (select i.id,group_concat(concat(ec.email_address,',')) email from individual i, email_contact ec where i.id=ec.individual_id and ec.category='Personal' group by i.id) ect set il.email=ect.email where il.indid=ect.id;"
+			sql.executeUpdate(query);
+			//address
+			query="update individual_summary il, (select id,group_concat(concat(category,':',address)) address from (select i.id,a.category,group_concat(concat(a.address_line1,' CITY:',c.name,' STATE:',s.name,' COUNTRY:',ctry.name,' PIN:',ifnull(a.pincode,''))) address from individual i, address a,city c, state s,country ctry  where i.id=a.individual_id and a.city_id=c.id and a.state_id=s.id and a.country_id=ctry.id group by i.id,a.category) q group by id) qa set il.address=qa.address where il.indid=qa.id;"
+			sql.executeUpdate(query);
+			//update familyid
+			query="update individual_summary il, relationship r set il.familyid=r.individual2_id where r.status='ACTIVE' and r.relationship_group_id!=1 and il.indid=r.individual1_id;"
+			sql.executeUpdate(query);
+			//update head of family as root
+			query="update individual_summary il, (select distinct familyid from individual_summary) f set il.familyid=f.familyid where il.indid=f.familyid;"
+			sql.executeUpdate(query);
+			//update family name
+			query="update individual_summary il1, individual_summary il2 set il1.familyof=il2.name where il1.familyid=il2.indid;"
+			sql.executeUpdate(query);
+			//update clor fields
+			query="update individual_summary il,relationship set clorid=individual2_id where individual1_id=il.indid and relation_id=(select id from relation where name='Councellee of') and status='ACTIVE';"
+			sql.executeUpdate(query);
+			query="update individual_summary ilclee, individual_summary clor set ilclee.counsellor=clor.name where ilclee.clorid=clor.indid;"
+			sql.executeUpdate(query);
+			//update guru fields
+			query="update individual_summary il,relationship set guruid=individual2_id where individual1_id=il.indid and relation_id=(select id from relation where name='Disciple of') and status='ACTIVE';"
+			sql.executeUpdate(query);
+			query="update individual_summary ildisc, individual_summary guru set ildisc.guru=guru.name where ildisc.guruid=guru.indid;"
+			sql.executeUpdate(query);
+			//update cult fields
+			query="update individual_summary il,relationship set cultid=individual2_id where individual1_id=il.indid and relation_id=(select id from relation where name='Cultivated by') and status='ACTIVE';"
+			sql.executeUpdate(query);
+			query="update individual_summary il, individual_summary cult set il.cultivator=cult.name where il.cultid=cult.indid;"
+			sql.executeUpdate(query);
 
+			//update summary fields
+			query="update individual_summary il,(select individual_id,count(1) c from address group by individual_id) a set il.numaddresses=c where il.indid=a.individual_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select individual_id,count(1) c from voice_contact group by individual_id) vc set il.numphones=c where il.indid=vc.individual_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select individual_id,count(1) c from email_contact group by individual_id) ec set il.numemails=c where il.indid=ec.individual_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select individual_id,count(1) c from event_participant group by individual_id) e set il.numep=c where il.indid=e.individual_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select individual_id,count(1) c from event_registration group by individual_id) e set il.numer=c where il.indid=e.individual_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select issued_to_id,sum(total_amount) c from challan group by issued_to_id) e set il.bookstaken=c where il.indid=e.issued_to_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select issued_to_id,sum(total_amount+settle_amount) c from challan where status='SETTLED' group by issued_to_id) e set il.booksdist=c where il.indid=e.issued_to_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select donated_by_id,sum(amount) c from donation group by donated_by_id) e set il.donation=c where il.indid=e.donated_by_id;"
+			sql.executeUpdate(query);
+			query="update individual_summary il,(select collected_by_id,sum(amount) c from donation group by collected_by_id) e set il.collection=c where il.indid=e.collected_by_id;"
+			sql.executeUpdate(query);
+			
+		}
+		
+		sql.close();
+	}
+	
+
+	def clorBoardSummaryData(String rolename) {
+		def result = []
+		
+		def sql = new Sql(dataSource)
+		
+		//#clees
+		def query="select qir.individual_id,count(1) c from (select * from individual_role ir where ir.role_id=(select id from role where name='PuneLeadCouncellors') and status='VALID') qir left join individual_summary isum on qir.individual_id=isum.clorid group by clorid order by qir.individual_id"
+		def queryResults = sql.rows(query)
+		def corlist = []
+		queryResults.eachWithIndex{it, index ->
+			corlist.add([it[1],index+1])
+		}
+		result.add(corlist)
+		
+		//#donation
+		query="select qir.individual_id,sum(donation+collection) c from (select * from individual_role ir where ir.role_id=(select id from role where name='PuneLeadCouncellors') and status='VALID') qir left join individual_summary isum on qir.individual_id=isum.clorid group by clorid order by qir.individual_id"
+		queryResults = sql.rows(query)
+		corlist = []
+		queryResults.eachWithIndex{it, index ->
+			corlist.add([(it[1]?:0)/100000,index+1])
+		}
+		result.add(corlist)
+
+		//#books
+		query="select qir.individual_id,sum(booksdist) c from (select * from individual_role ir where ir.role_id=(select id from role where name='PuneLeadCouncellors') and status='VALID') qir left join individual_summary isum on qir.individual_id=isum.clorid group by clorid order by qir.individual_id"
+		queryResults = sql.rows(query)
+		corlist = []
+		queryResults.eachWithIndex{it, index ->
+			corlist.add([(it[1]?:0)/1000,index+1])
+		}
+		result.add(corlist)
+
+
+		sql.close()
+
+		//log.debug("Result:"+result)		
+		return result
+		//return [[[1,25],[2,15],[3,13]]]
+		//return [[[2,1], [4,2], [6,3], [3,4]], [[5,1], [1,2], [3,3], [4,4]], [[4,1], [7,2], [1,3], [2,4]]]
+		//return [dataP,dataM,dataC,dataB]
+	}	
+
+
+	def clorSummaryData(String clorid) {
+		def result = []
+		
+		def sql = new Sql(dataSource)
+		
+		//#clees
+		def query="select clorid,if(is_male,'Prabhuji','Mataji'),count(1) from individual_summary isum,individual i where isum.indid=i.id and (i.status is null or i.status='VALID') group by clorid,is_male having clorid="+clorid
+		def queryResults = sql.rows(query)
+		def corlist = []
+		queryResults.eachWithIndex{it, index ->
+			corlist.add([it[1],it[2]])
+		}
+		result.add(corlist)
+		
+
+		sql.close()
+
+		log.debug("clorSummaryData:"+result)		
+		return result
+		//return [[[1,25],[2,15],[3,13]]]
+		//return [[[2,1], [4,2], [6,3], [3,4]], [[5,1], [1,2], [3,3], [4,4]], [[4,1], [7,2], [1,3], [2,4]]]
+		//return [dataP,dataM,dataC,dataB]
+	}	
+
+	def clorBookDistributionData(String clorid) {
+		def result = []
+		
+		def sql = new Sql(dataSource)
+		
+		//#books per clee
+		def query="""
+			select ibp.*,isum.clorid,isum.counsellor from (
+			select q.*,(q.SmallPoint+q.MediumPoint+q.BigPoint+q.MahaBigPoint) BookPoints  from
+			(SELECT  P.dist_id,P.distributor,
+			    SUM(
+				CASE 
+				    WHEN P.category='Small' 
+				    THEN P.numdist 
+				    ELSE 0
+				END
+			    ) AS 'Small',
+			    SUM(
+				CASE 
+				    WHEN P.category='Medium' 
+				    THEN P.numdist 
+				    ELSE 0
+				END
+			    ) AS 'Medium',
+			    SUM(
+				CASE 
+				    WHEN P.category='Big' 
+				    THEN P.numdist 
+				    ELSE 0
+				END
+			    ) AS 'Big',
+			    SUM(
+				CASE 
+				    WHEN P.category='MahaBig' 
+				    THEN truncate(P.numdist* (P.point/2),0)
+				    ELSE 0
+				END
+			    ) AS 'MahaBig',
+			    SUM(
+				CASE 
+				    WHEN P.category='Small' 
+				    THEN P.numdist * P.point
+				    ELSE 0
+				END
+			    ) AS 'SmallPoint',
+			    SUM(
+				CASE 
+				    WHEN P.category='Medium' 
+				    THEN P.numdist  * P.point
+				    ELSE 0
+				END
+			    ) AS 'MediumPoint',
+			    SUM(
+				CASE 
+				    WHEN P.category='Big' 
+				    THEN P.numdist  * P.point
+				    ELSE 0
+				END
+			    ) AS 'BigPoint',
+			    SUM(
+				CASE
+				    WHEN P.category='MahaBig'
+				    THEN P.numdist * P.point
+				    ELSE 0
+				END
+			    ) AS 'MahaBigPoint'
+			FROM    (select i.id dist_id,ifnull(i.initiated_name,i.legal_name) distributor,b.category,b.point,sum((cli.issued_quantity-cli.returned_quantity)) numdist from challan c, challan_line_item cli, book b, individual i where c.issued_to_id=i.id and c.id=cli.challan_id and c.status='SETTLED' and cli.book_id=b.id group by distributor,b.category having numdist >0) P
+			GROUP BY P.distributor) q) ibp , individual_summary isum where ibp.dist_id=isum.indid and clorid="""
+		query = query+clorid			
+		
+		def queryResults = sql.rows(query)
+		def smallBook = []
+		def mediumBook = []
+		def bigBook = []
+		def mahabigBook = []
+		queryResults.eachWithIndex{it, index ->
+			def datas=[]
+			datas.add(it[1]?:'Others')
+			datas.add(it[2])
+			smallBook.add(datas)
+
+			def datam=[]
+			datam.add(it[1]?:'Others')
+			datam.add(it[3])
+			mediumBook.add(datas)
+
+			def datab=[]
+			datab.add(it[1]?:'Others')
+			datab.add(it[4])
+			bigBook.add(datab)
+
+			def datamb=[]
+			datamb.add(it[1]?:'Others')
+			datamb.add(it[5])
+			mahabigBook.add(datamb)
+		}
+		result.add(smallBook)
+		result.add(mediumBook)
+		result.add(bigBook)
+		result.add(mahabigBook)
+		
+		sql.close()
+
+		log.debug("Result:"+[smallBook,mediumBook,bigBook,mahabigBook])		
+		return [smallBook,mediumBook,bigBook,mahabigBook]
+		//return [[[1,25],[2,15],[3,13]]]
+		//return [[[2,1], [4,2], [6,3], [3,4]], [[5,1], [1,2], [3,3], [4,4]], [[4,1], [7,2], [1,3], [2,4]]]
+		//return [dataP,dataM,dataC,dataB]
+	}	
+
+	def clorDonationData(String clorid) {
+		def result = []
+		def list = []
+		
+		def sql = new Sql(dataSource)
+		
+		//#clee family donation
+		def query="select familyid,familyof,sum(donation+collection) contribution from individual_summary group by clorid,familyid having contribution>0 and clorid="+clorid
+		def queryResults = sql.rows(query)
+		def dlist = []
+		queryResults.eachWithIndex{it, index ->
+			//dlist.add([it[1],it[2]])
+			def data = []
+			data.add(it[1]?:'Others')
+			data.add(it[2])
+			list.add(data)			
+		}
+		//result.add(dlist)
+
+		sql.close()
+
+		log.debug("clorDonationData:"+[list])		
+		return [list]
+		//return [[[1,25],[2,15],[3,13]]]
+		//return [[[2,1], [4,2], [6,3], [3,4]], [[5,1], [1,2], [3,3], [4,4]], [[4,1], [7,2], [1,3], [2,4]]]
+		//return [dataP,dataM,dataC,dataB]
+	}	
+	
+	def clorIndividualData(String clorid) {
+		def result = []
+		
+		def sql = new Sql(dataSource)
+
+		def instation,outstation
+		
+		//#pune @TODO: get home city from counsellor's home city
+		def query="select clorid,counsellor,count(1) from individual_summary isum,address a where isum.indid=a.individual_id and a.category='Correspondence' and a.city_id=(select id from city where name='Pune') group by clorid having clorid="+clorid	
+		def queryResults = sql.rows(query)
+		def instationCount = []
+		queryResults.eachWithIndex{it, index ->
+			instationCount.add(['In-Station',it[2]])
+			instation=it[2]
+		}
+		
+
+		//#outside pune
+		query="select clorid,counsellor,count(1) from individual_summary isum,address a where isum.indid=a.individual_id and a.category='Correspondence' and a.city_id!=(select id from city where name='Pune') group by clorid having clorid="+clorid	
+		queryResults = sql.rows(query)
+		def outstationCount = []
+		queryResults.eachWithIndex{it, index ->
+			outstationCount.add(['Out-station',it[2]])
+			outstation=it[2]
+		}
+
+		def data=[]
+		data.add(['In-Station',instation])
+		data.add(['Out-Station',outstation])
+		
+		result.add(data)
+
+		sql.close()
+
+		log.debug("clorIndividualData:"+result)		
+		return result
+		//return [[[1,25],[2,15],[3,13]]]
+		//return [[[2,1], [4,2], [6,3], [3,4]], [[5,1], [1,2], [3,3], [4,4]], [[4,1], [7,2], [1,3], [2,4]]]
+		//return [dataP,dataM,dataC,dataB]
+	}
+	
+	def eventSummary(String clorid) {
+		def sql = new Sql(dataSource)
+		
+		def query="select q.id,q.name,date_format(q.event,'%d %b') occ,type,phone,email from (select i.id,isum.name,i.dob event,'Birthday' type,isum.phone,isum.email,clorid from individual i, individual_summary isum where i.id=isum.indid and month(i.dob)=month(curdate()) and clorid="+clorid	
+		query += " union "		
+		query += "select i.id,isum.name,i.marriage_anniversary event,'MarriageAnniversary' type,isum.phone,isum.email,clorid from individual i, individual_summary isum where i.id=isum.indid and month(i.marriage_anniversary)=month(curdate()) and clorid="+clorid	+" ) q order by occ"
+		
+		
+		def queryResults = sql.rows(query)
+
+		sql.close()
+
+		log.debug("eventSummary:"+query)		
+		log.debug("eventSummary:"+queryResults)		
+		return queryResults
+	}
+	
+	def eventSummaryCBM() {
+		def sql = new Sql(dataSource)
+		
+		def query="select q.id,q.initiated_name,date_format(q.event,'%d %b') occ,type from (select i.id,i.initiated_name,i.dob event,'Birthday' type from individual i where month(i.dob)=month(curdate()) and i.id in (select distinct individual_id from individual_role where status='VALID' and role_id in (select id from role where name in ('PuneEnglishCouncellors','PuneHindiCouncellors'))) union select i.id,i.initiated_name,i.marriage_anniversary event,'MarriageAnniversary' type from individual i where month(i.marriage_anniversary)=month(curdate()) and i.id in (select distinct individual_id from individual_role where status='VALID' and role_id in (select id from role where name in ('PuneEnglishCouncellors','PuneHindiCouncellors'))) ) q order by occ"
+		
+		
+		def queryResults = sql.rows(query)
+
+		sql.close()
+
+		return queryResults
+	}
+
+	def sheet(Map params) {
+		def results=[],retMap=[:]
+		if(!params.eventid) {
+			def indRoles = IndividualRole.createCriteria().list(){
+					if(params.ids)
+						role{'in'('id',params.ids.tokenize(',').collect{new Long(it)})}
+					if(params.names)
+						role{'in'('name',params.names.tokenize(',').collect{it})}
+					eq('status','VALID')
+					individual{order('initiatedName') order('legalName')}
+				}
+			indRoles.each{ir->
+				results.add(ir.individual)
+			}
+		}
+		def event
+		if(params.eventid) {
+			event = Event.get(params.eventid)
+				def eps = EventParticipant.createCriteria().list(){
+							eq('event',event)
+							individual{order('initiatedName') order('legalName')}
+						}
+				eps.each{ep->
+					results.add(ep.individual)
+				}
+		}
+		//log.debug("results->"+results)
+		retMap.put('results',results)
+
+		//previous attendance
+		def events = Event.createCriteria().list{
+					eq('category',event?.category)
+					lt('startDate',event?.startDate)
+					order('id','desc')
+				}
+		//log.debug("sheet:pastevents:"+events)
+		def attOn = []
+		if(events.size()>0)
+			attOn.add(getAttendance(events[0]))
+		if(events.size()>1)
+			attOn.add(getAttendance(events[1]))
+		if(events.size()>2)
+			attOn.add(getAttendance(events[2]))
+			
+		retMap.put('attOn',attOn)
+		
+		//log.debug("sheet:retMap:"+retMap)
+		return retMap
+	}
+	
+	def getAttendance(Event event) {
+		def results = [:]
+		results.put('eventDate',event.startDate)
+		def eps = EventParticipant.createCriteria().list(){
+					eq('event',event)
+					eq('attended',true)
+					individual{order('initiatedName') order('legalName')}
+				}
+		eps.each{ep->
+			results.put(ep.individual.icsid,ep.individual)
+		}
+		//log.debug("getAttendance:"+event+":"+results)
+		return results
+	}
+
+	def indrolesInPairs(Map params) {
+		def pairs=[], pair=[], retMap=[:]
+		def roleIds = params.id?:params.roleids	//csv from event grid
+		def roleIdsList = []
+		roleIds?.tokenize(',').each{roleIdsList.add(new Long(it))}
+		
+		def indRoles = IndividualRole.createCriteria().list(){
+				role{inList('id',roleIdsList)}
+				eq('status','VALID')
+				individual{order('initiatedName') order('legalName')}
+			}
+		def seen = []
+		indRoles.each{ir->
+			//check if this person is already processed
+			if(!(seen.contains(ir.individual.id))) {
+				pair = findHusbandOrWifeRelationship(ir.individual)
+				if(pair.size()==0)
+					pair = [ir.individual]
+				pair.each{
+					seen.add(it.id)
+					}
+				pairs.add(pair)
+				}
+		}
+		//log.debug("seen->"+seen)
+
+		//now sort them
+		//first add each pair in a map
+		def pairsMap = [:], lead = [], sortedPairs=[]
+		pairs.each {
+			pairsMap.put(it[0].id,it)
+			lead.add(it[0])
+		}
+		//now sort the leads
+		lead.sort{a,b->
+			a.initiatedName <=> b.initiatedName ?: a.legalName <=> b.legalName
+			}
+		//now retrieve back the pairs, but in sorted order
+		lead.each{
+			sortedPairs.add(pairsMap.get(it.id))
+		}
+		log.debug("sortedPairs:"+sortedPairs)
+		if(!sortedPairs)
+			sortedPairs=pairs
+
+		retMap.put('pairs',sortedPairs)
+		
+		//previous attendance
+		if(params.eid) {
+			def event=Event.get(params.eid)
+			def events = Event.createCriteria().list{
+						eq('category',event?.category)
+						lt('startDate',event?.startDate)
+						order('id','desc')
+					}
+			def attOn = []
+			if(events.size()>0)
+				attOn.add(getAttendance(events[0]))
+			if(events.size()>1)
+				attOn.add(getAttendance(events[1]))
+			if(events.size()>2)
+				attOn.add(getAttendance(events[2]))
+
+			retMap.put('attOn',attOn)
+		}
+		
+		return retMap
+	}
+	
+	def sortedPairs(java.util.ArrayList pairs) {
+		//first add each pair in a map
+		def pairsMap = [:], lead = [], sortedPairs=[]
+		pairs.each {pair ->
+			pairsMap.put(pair[0].id,pair)
+			lead.add(pair[0])
+		}
+		//now sort the leads
+		lead.sort{a,b->
+			a.initiatedName <=> b.initiatedName ?: a.legalName <=> b.legalName
+			}
+		//now retrieve back the pairs, but in sorted order
+		lead.each{
+			sortedPairs.add(pairsMap.get(it.id))
+		}
+		log.debug("sortedPairs:"+sortedPairs)
+		if(!sortedPairs)
+			sortedPairs=pairs
+
+		return sortedPairs
+	}
+	
+	def findRelationship(Individual individual, String relationName, Boolean primary) {
+		Relationship.createCriteria().get(){
+					if(primary)
+						eq('individual1',individual)
+					else
+						eq('individual2',individual)
+					eq('status','ACTIVE')						
+					relation{eq('name',relationName)}						
+				}
+	}
+
+	def findHusbandOrWifeRelationship(Individual ind) {
+		//log.debug("findHusbandOrWifeRelationship:"+ind)
+		def rship,pair=[],swappedPair=[]
+		//1. ind is primary, find wife or husband
+		rship = findRelationship(ind,'Wife',true)
+		if(rship)
+			pair = [ind,rship.individual2]
+		else {
+			rship = findRelationship(ind,'Husband',true)
+			if(rship)
+				pair = [ind,rship.individual2]
+		}
+		//2. ind is secondary, find husband or wife
+		if(pair.size()==0) {
+			rship = findRelationship(ind,'Husband',false)
+			if(rship)
+				pair = [rship.individual1,ind]
+			else {
+				rship = findRelationship(ind,'Wife',false)
+				if(rship)
+					pair = [rship.individual1,ind]
+			}
+		}
+		//log.debug("findHusbandOrWifeRelationship Got:"+pair)
+		if(pair)
+			swappedPair = [pair[1],pair[0]]
+		log.debug("findHusbandOrWifeRelationship swappedPair:"+swappedPair)
+		return swappedPair
+	}
 
 }

@@ -8,6 +8,7 @@ class Commitment {
     collectedAmount(nullable:true)
     commitmentOn(nullable:true)
     commitmentTill(nullable:true)
+    holdTill(nullable:true)
     scheme(nullable:true)
     status(nullable:true)
     ecsMandate(nullable:true)
@@ -28,6 +29,7 @@ class Commitment {
     String ecsMandate
     Date commitmentOn
     Date commitmentTill
+    Date holdTill //if status is On Hold then this is useful
     Date dateCreated
     Date lastUpdated
     String creator

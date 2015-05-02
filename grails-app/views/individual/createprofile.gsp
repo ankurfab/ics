@@ -53,8 +53,9 @@
           $(document).ready(function()
           {
 		$( "#legalName" ).autocomplete({
-			source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",
-			minLength: 3,
+			//source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",
+			source: "${createLink(controller:'individual',action:'allIndividualsFuzzyAsJSON_JQ')}",
+			minLength: 1,
 			select: function(event, ui) { // event handler when user selects a company from the list.
 			   $("#id").val(ui.item.id); // update the hidden field.
 			  },

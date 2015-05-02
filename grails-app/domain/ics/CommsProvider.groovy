@@ -3,16 +3,24 @@ package ics
 class CommsProvider {
 
     static constraints = {
+	name(nullable:true)
 	type(nullable:true) 
+	baseUrl(nullable:true)
+	path(nullable:true)
+	query(nullable:true)
+	apikey(nullable:true)
 	uri(nullable:true)
 	user(nullable:true)
 	pwd(nullable:true)
-	apikey(nullable:true)
 	host(nullable:true)
-	port(nullable:true)        
+	port(nullable:true)  
     }
     
+    String name
     String type	//sms , email, smtp
+    String baseUrl
+    String path
+    String query
     String uri
     String user
     String pwd
@@ -21,7 +29,7 @@ class CommsProvider {
     Integer port
     
     String toString() {
-	type+" : "+uri+" : "+host
+	name
 	}
     
     

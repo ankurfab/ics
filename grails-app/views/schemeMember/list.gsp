@@ -28,7 +28,7 @@
 
             $(".export .menuButton a").click(function(){
 
-                var target= this.href + "&memberstatus="+$("#memberstatus").val()+"&selectedcenter="+$("#selectedcenter").val()+"&giftchannel="+$("#giftchannel").val()+"&exportType="+$("#exportType").val()+"&member="+$("#gs_member").val()+"&isProfileComplete="+$("#isProfileComplete").val()+"&giftPrefferedLanguage="+$("#giftPrefferedLanguage").val()+"&toBeCommunicated="+$("#toBeCommunicated").val();
+                var target= this.href + "&memberstatus="+$("#memberstatus").val()+"&selectedcenter="+$("#selectedcenter").val()+"&giftchannel="+$("#giftchannel").val()+"&exportType="+$("#exportType").val()+"&member="+$("#gs_member").val()+"&isProfileComplete="+$("#isProfileComplete").val()+"&giftPrefferedLanguage="+$("#giftPrefferedLanguage").val()+"&toBeCommunicated="+$("#toBeCommunicated").val() +"&committedmode="+$("#committedmode").val()+"&rankvalue="+$("#rankvalue").val()+"&toBeSMS="+$("#toBeSMS").val();
                 window.location.href = target;
                 return false;
             });
@@ -62,12 +62,20 @@
 
            ProfileComplete:<g:select id="isProfileComplete" name="isProfileComplete" from="${['ALL','Yes','No']}" keys="${['ALL','Yes','No']}" value="${isProfileComplete}" onchange="reloadGrid()" />&nbsp;
 
-           To Be Communicated:<g:select id="toBeCommunicated" name="toBeCommunicated" from="${['ALL','Yes','No']}" keys="${['ALL','Yes','No']}" value="${toBeCommunicated}" onchange="reloadGrid()" />&nbsp;
+           To Be Communicated:<g:select id="toBeCommunicated" name="toBeCommunicated" from="${['ALL','Yes','No']}" keys="${['ALL','Yes','No']}" value="${toBeCommunicated}" onchange="reloadGrid()" />&nbsp; <br/>
 
         <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE">
 
-           Gift Preferred Language:<g:select id="giftPrefferedLanguage" name="giftPrefferedLanguage"  from="${ics.Language.list()}" optionKey="id" noSelection="[0: 'ALL']" value="${giftPrefferedLanguage}" onchange="reloadGrid()" />&nbsp;<br/>
+           Gift Preferred Language:<g:select id="giftPrefferedLanguage" name="giftPrefferedLanguage"  from="${ics.Language.list()}" optionKey="id" noSelection="[0: 'ALL']" value="${giftPrefferedLanguage}" onchange="reloadGrid()" />&nbsp;
 
+            Commited Mode:<g:select id="committedmode" name="committedmode"  from="${['ECS','E-PAYMENT','CASH','PDC']}" keys="${['ECS','E-PAYMENT','CASH','PDC']}" noSelection="[0: 'ALL']" value="${giftPrefferedLanguage}" onchange="reloadGrid()" />&nbsp;
+
+            Rank:<g:select id="rankvalue" name="rankvalue" from="${['ALL','0','1','2','3','4']}" keys="${['ALL','0','1','2','3','4']}" value="${rankvalue}" onchange="reloadGrid()" />&nbsp;
+
+            To Be Sent SMS:<g:select id="toBeSMS" name="toBeSMS" from="${['ALL','Yes','No']}" keys="${['ALL','Yes','No']}" value="${toBeSMS}" onchange="reloadGrid()" />&nbsp;
+
+           <br/>
+           <br/>
         </sec:ifAnyGranted>
 
            <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE">
@@ -101,20 +109,23 @@
   jQuery(document).ready(function () {
     jQuery("#schemeMember_list").jqGrid({
       url:'${createLink(controller:'schemeMember',action:'jq_allschemeMember_list')}',
-      postData:{selectedCenter:function(){return $("#selectedcenter").val();}, selectedperiod:function(){return $("#selectedperiod").val();},giftchannel:function(){return $("#giftchannel").val();},memberstatus:function(){return $("#memberstatus").val();},isProfileComplete:function(){return $("#isProfileComplete").val();}, giftPrefferedLanguage:function(){return $("#giftPrefferedLanguage").val()}, toBeCommunicated:function(){return $("#toBeCommunicated").val()}},
+      postData:{selectedCenter:function(){return $("#selectedcenter").val();}, selectedperiod:function(){return $("#selectedperiod").val();},giftchannel:function(){return $("#giftchannel").val();},memberstatus:function(){return $("#memberstatus").val();},isProfileComplete:function(){return $("#isProfileComplete").val();}, giftPrefferedLanguage:function(){return $("#giftPrefferedLanguage").val()}, toBeCommunicated:function(){return $("#toBeCommunicated").val()} , committedmode: function(){return $("#committedmode").val()} , toBeSMS:function(){return $("#toBeSMS").val()}, rankvalue:function(){return $("#rankvalue").val()}},
       datatype: "json",
-      colNames:['Scheme','Member','Status','Comments','RecentCommunication','ConcernToAddress','center','PercentageDeduction','isProfileComplete','To Be Coomunicated','id'],
+      colNames:['Scheme','Member','Legal Name', 'Rank' ,'Status', 'Commited Mode','Comments','RecentCommunication','ConcernToAddress','center','Second Center Deduction','isProfileComplete','To Be Coomunicated','id'],
       colModel:[
 	{name:'scheme',search:false},
 	{name:'member',search:true,formatter:'showlink',
 	formatoptions:{baseLinkUrl:'${createLink(controller:'schemeMember',action:'show')}',target:'_blank'}
 	},
+  {name:'legalname',search:false},
+  {name:'star', search:false},
 	{name:'status',search:false},
+  {name:'committedMode',search:false},
 	{name:'comments',search:false},
 	{name:'recentCommunication',search:false},
     {name:'addressTheConcern',search:false},
     {name:'center',search:false},
-    {name:'PercentageDeduction',search:false},
+    {name:'PercentageDeduction',search:true},
     {name:'isProfileComplete',search:false},
     {name:'toBeCommunicated',search:false},
 	{name:'id',hidden:true}

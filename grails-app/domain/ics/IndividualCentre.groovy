@@ -6,11 +6,13 @@ class IndividualCentre {
 	    individual()
 	    centre()
 	    status()
+	    type(nullable:true)
 	    comments(nullable:true)
 	    since(nullable:true)
 	    till(nullable:true)
     }
     String status
+    String type
     Date since
     Date till
     String comments

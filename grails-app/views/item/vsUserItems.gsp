@@ -23,26 +23,38 @@
 		<div id="dialogIssueForm" title="Item(s) Issue Form">
 		</div>
 
+    <sec:ifAnyGranted roles="ROLE_VS_ADMIN">
+		<div>
+		Upload items in bulk: <br />
+		    <g:uploadForm action="upload">
+			<input type="file" name="myFile" />
+			<input type="submit" value="Upload"/>
+		    </g:uploadForm>
+		</div>
+    </sec:ifAnyGranted>
+
         </div>
 
 <script>
   $(document).ready(function () {
     jQuery("#item_list").jqGrid({
       url:'vsUser_jq_item_list',
+      editurl:'vsUser_jq_edititem_list',
       datatype: "json",
-      colNames:['Name','OtherNames','Category','SubCategory','Variety','Brand','Description','Id'],
+      colNames:['Name','OtherNames','Category','SubCategory','Variety','Brand','Description','Rate','Id'],
       colModel:[
-	{name:'name', search:true},
-	{name:'otherNames', search:true},
-	{name:'category', search:true}, 
-	{name:'subcategory', search:true}, 
-	{name:'variety', search:true},
-	{name:'brand', search:true},
-	{name:'comments', search:true},
+	{name:'name', search:true, editable: true},
+	{name:'otherNames', search:true, editable: true},
+	{name:'category', search:true, editable: true}, 
+	{name:'subcategory', search:true, editable: true}, 
+	{name:'variety', search:true, editable: true},
+	{name:'brand', search:true, editable: true},
+	{name:'comments', search:true, editable: true},
+	{name:'rate', search:false, editable: true},
 	{name:'id',hidden:true}
      ],
     rowNum:20,
-    rowList:[10,20,30,40,50,100,200],
+    rowList:[10,20,30,40,50,100,200,500,1000],
     pager: '#item_list_pager',
     viewrecords: true,
     sortname: 'name',
@@ -53,6 +65,7 @@
     caption:"Item List",
     });
     $("#item_list").jqGrid('filterToolbar',{autosearch:true});
+    <sec:ifAnyGranted roles="ROLE_VS_USER">
     $("#item_list").jqGrid('navGrid',"#item_list_pager",{edit:false,add:false,del:false,search:false});
     $("#item_list").jqGrid('inlineNav',"#item_list_pager",
     	{ 
@@ -62,8 +75,13 @@
 	       save: false,
 	       cancel: false,
 	    }
-);
+	);
     $("#item_list").jqGrid('navGrid',"#item_list_pager").jqGrid('navButtonAdd',"#item_list_pager",{caption:"Issue", buttonicon:"ui-icon-cart", onClickButton:issue, position: "last", title:"Issue", cursor: "pointer"});
+    </sec:ifAnyGranted>
+    <sec:ifAnyGranted roles="ROLE_VS_ADMIN">
+    $("#item_list").jqGrid('navGrid',"#item_list_pager",{edit:false,add:false,del:true,search:false});
+    $("#item_list").jqGrid('inlineNav',"#item_list_pager");
+    </sec:ifAnyGranted>
 
 	function issue() {
 			var ids = $('#item_list').jqGrid('getGridParam','selarrrow');
@@ -83,8 +101,8 @@
 			modal: true,
 			buttons: {
 				"Submit": function() {
-					    $("#erid").val($('#registration_list').jqGrid('getGridParam','selrow'));
-					    $("#formPaymentReference").ajaxForm({
+					    $("#idlist").val($('#item_list').jqGrid('getGridParam','selarrrow'));
+					    $("#formItemIssue").ajaxForm({
 						success: function() {
 							alert("Item(s) issue request submitted");
 							}

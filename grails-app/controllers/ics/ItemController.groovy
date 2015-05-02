@@ -3,6 +3,10 @@ package ics
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 import org.springframework.dao.DataIntegrityViolationException
 import grails.converters.JSON
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 
 class ItemController {
 
@@ -189,6 +193,13 @@ class ItemController {
       def currentPage = Integer.valueOf(params.page) ?: 1
 
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+	if(params.oper=="excel" )
+		{
+			maxRows = 100000
+			rowOffset = 0
+			sortIndex = "name"
+			sortOrder = "asc"
+		}
 
 	def result = Item.createCriteria().list(max:maxRows, offset:rowOffset) {
 		if (params.name)
@@ -218,24 +229,61 @@ class ItemController {
       
       def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
-
-      def jsonCells = result.collect {
-            [cell: [
-            	    it.name,
-            	    it.otherNames,
-            	    it.category,
-            	    it.subcategory,
-            	    it.variety,
-            	    it.brand,
-            	    it.comments,
-            	    it.updator,
-            	    it.lastUpdated?.format('dd-MM-yyyy HH:mm'),
-            	    it.creator,
-            	    it.dateCreated?.format('dd-MM-yyyy HH:mm')
-                ], id: it.id]
-        }
-        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
-        render jsonData as JSON
+      
+	if(params.oper=="excel")
+	 {
+		response.contentType = 'application/zip'
+		def ts = new Date().format('ddMMyyyyHHmmSS')
+		def fname = "item_"+ts+".csv"
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry(fname))
+			//header
+			zipOutputStream << "Id,Name,OtherNames,Category,SubCategory,Variety,Brand,Description,Rate,Tax,Vendors,Consumers,NumVC,QtyPurchased,QtySold,Stock" 
+			def numv,numc,pq,sq
+			result.each{ row ->
+				numv = itemService.numVendors(row)
+				numc = itemService.numConsumers(row)
+				pq = itemService.purchasedQuantity(row)
+				sq = itemService.soldQuantity(row)
+				zipOutputStream << "\n"
+				zipOutputStream <<   row.id +","+(row.name?.replaceAll(',',';')?:'') +","+
+					    (row.otherNames?.replaceAll(',',';')?:'') +","+
+					    (row.category?.replaceAll(',',';')?:'') +","+
+					    (row.subcategory?.replaceAll(',',';')?:'') +","+
+					    (row.variety?.replaceAll(',',';')?:'') +","+
+					    (row.brand?.replaceAll(',',';')?:'') +","+
+					    (row.comments?.replaceAll(',',';')?:'') +","+
+					    (row.rate?:'') +","+
+					    (row.taxRate?:'') +","+
+					    numv +","+
+					    numc +","+
+					    (numv+numc) +","+
+					    pq +","+
+					    sq +","+
+					    (pq-sq)
+			}
+		}
+	 	return
+	 }
+	else {
+	      def jsonCells = result.collect {
+		    [cell: [
+			    it.name,
+			    it.otherNames,
+			    it.category,
+			    it.subcategory,
+			    it.variety,
+			    it.brand,
+			    it.comments,
+			    it.updator,
+			    it.lastUpdated?.format('dd-MM-yyyy HH:mm'),
+			    it.creator,
+			    it.dateCreated?.format('dd-MM-yyyy HH:mm')
+			], id: it.id]
+		}
+		def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+		render jsonData as JSON
+        	}
         }
 
     	def jq_edit_item = {
@@ -571,6 +619,44 @@ class ItemController {
             [cell: [
             	    it.invoice?.preparedBy?.toString(),
             	    it.invoice?.invoiceDate?.format('dd-MM-yyyy'),
+            	    it.invoice?.invoiceNumber,
+            	    it.qty,
+            	    it.unitSize,
+            	    it.unit?.toString(),
+            	    it.rate,
+            	    it.taxRate,
+            	    it.description
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+    
+    def jq_itemTaker_list = {
+      def sortIndex = params.sidx ?: 'invoiceDate'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = InvoiceLineItem.createCriteria().list(max:maxRows, offset:rowOffset) {
+		invoice{eq('type','SALES') order(sortIndex, sortOrder)}
+		if(params.'item.id')
+			item{eq('id',new Long(params.'item.id'))}
+		else
+			item{eq('id',new Long(-1))}
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = result.collect {
+            [cell: [
+            	    it.invoice?.personTo,
+            	    it.invoice?.invoiceDate?.format('dd-MM-yyyy'),
+            	    it.invoice?.invoiceNumber,
             	    it.qty,
             	    it.unitSize,
             	    it.unit?.toString(),
@@ -641,6 +727,7 @@ def upload_image = {
     }
 
     def vsUserIssue() {
+    	log.debug("Inside vsUserIssue with params: "+params)
 	def items = []
 	def idList = params.idlist.tokenize(',')
 	idList.each{
@@ -650,6 +737,9 @@ def upload_image = {
     }
     
     def vsUserSubmitItemIssue() {
+    	log.debug("Inside vsUserSubmitItemIssue with params: "+params)
+    	itemService.createPurchaseList(params)
+    	render "submitted..."
     }
 
     def vsRequests() {
@@ -668,6 +758,8 @@ def upload_image = {
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
 	def result = Item.createCriteria().list(max:maxRows, offset:rowOffset) {
+		department{eq('name','VaishnavSamvardhan')} //@TODO: hardcoded
+		
 		if (params.name)
 			ilike('name',params.name)
 
@@ -705,10 +797,139 @@ def upload_image = {
             	    it.variety,
             	    it.brand,
             	    it.comments,
+            	    it.rate?:''
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
         render jsonData as JSON
         }
 
+
+    def upload() {
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+	    }
+	    else
+	    {
+	    def item
+	    def vsDepartment = null
+	    if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_VS_ADMIN'))
+	    	vsDepartment = Department.findByName('VaishnavSamvardhan')
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    //'Name','OtherNames','Category','SubCategory','Variety','Brand','Description','Rate'
+	    	try{
+	    	item = new Item()
+	    	item.name = tokens[0]
+	    	item.otherNames = tokens[1]
+	    	item.category = tokens[2]
+	    	item.subcategory = tokens[3]
+	    	item.variety = tokens[4]
+	    	item.brand = tokens[5]
+	    	item.comments = tokens[6]
+	    	item.rate = new BigDecimal(tokens[7])
+	    	item.department = vsDepartment
+	    	item.updator = item.creator = springSecurityService.principal.username
+	    	if(!item.save())
+				item.errors.allErrors.each {
+					println "Error in bulk saving item :"+it
+				}
+		else
+			log.debug(item.toString()+" saved!")
+		}
+		catch(Exception e) {
+			log.debug("Exception occurred in parsing tokens for upload items : "+e)
+		}
+	    }
+	    }
+	    
+	if(org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils.ifAnyGranted('ROLE_VS_ADMIN'))
+	    	redirect (action: "vsUserItems")
+	else
+		redirect (action: "list")
+    }
+
+	def vsUser_jq_edititem_list = {
+	      log.debug('In vsUser_jq_edititem_list:'+params)
+	      def item = null
+	      def message = ""
+	      def state = "FAIL"
+	      def id
+
+	      // determine our action
+	      switch (params.oper) {
+		case 'add':
+		  // add item sent
+		  item = new Item(params)
+		  item.updator=item.creator=springSecurityService.principal.username
+		  item.department = Department.findByName('VaishnavSamvardhan')	//@TODO: hardcoded
+		  if (! item.hasErrors() && item.save()) {
+		    message = "Item Saved.."
+		    id = item.id
+		    state = "OK"
+		  } else {
+		    item.errors.allErrors.each {
+			log.debug(it)
+			}
+		    message = "Could Not Save Item"
+		  }
+		  break;
+		case 'del':
+		  	def idList = params.id.tokenize(',')
+		  	idList.each
+		  	{
+			  // check item exists
+			  item  = Item.get(it)
+			  if (item) {
+			    // delete item
+			    if(!item.delete())
+			    	{
+				    item.errors.allErrors.each {
+					log.debug("In jq_item_edit: error in deleting item:"+ it)
+					}
+			    	}
+			    else {
+				    message = "Deleted!!"
+				    state = "OK"
+			    }
+			  }
+		  	}
+		  break;
+		 default :
+		  // edit action
+		  // first retrieve the item by its ID
+		  item = Item.get(params.id)
+		  if (item) {
+		    // set the properties according to passed in parameters
+		    item.properties = params
+			  item.updator = springSecurityService.principal.username
+		    if (! item.hasErrors() && item.save()) {
+		      message = "Item  ${item.name} Updated"
+		      id = item.id
+		      state = "OK"
+		    } else {
+			    item.errors.allErrors.each {
+				println it
+				}
+		      message = "Could Not Update Item"
+		    }
+		  }
+		  break;
+ 	 }
+
+	      def response = [message:message,state:state,id:id]
+
+	      render response as JSON
+	    }
+
+	def updateRate() {
+		def result = itemService.updateRate(params)
+		render result
+	}
+	
+	def merge() {
+		def result = itemService.merge(params)
+		render result
+	}
+	
 }

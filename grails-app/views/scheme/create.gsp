@@ -125,7 +125,7 @@
                                     <label for="costCenter"><g:message code="scheme.costCenter.label" default="Cost Center" /></label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: schemeInstance, field: 'costCenter', 'errors')}">
-                                    <g:select name="cc.id" from="${ics.CostCenter.list([sort:name])}" value="${schemeInstance?.cc?.id}"
+                                    <g:select name="cc.id" from="${ics.CostCenter.findAllByStatusIsNull([sort:name])}" value="${schemeInstance?.cc?.id}"
           					optionKey="id"  noSelection="['':'-Choose Cost Center-']"/>
                                 </td>
                             </tr>

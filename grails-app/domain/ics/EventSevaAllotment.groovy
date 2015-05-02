@@ -7,7 +7,7 @@ class EventSevaAllotment {
     creator()
     lastUpdated()
     updator()
-    eventSeva(unique:['person'])
+    eventSeva(unique:['person','individual'])
     }
 
     Date dateCreated
@@ -15,9 +15,9 @@ class EventSevaAllotment {
     String creator
     String updator
 
-    static belongsTo = [eventSeva: EventSeva, person:Person]
+    static belongsTo = [eventSeva: EventSeva, person:Person,individual:Individual]
     
     String toString() {
-        return person?.name +" in service "+eventSeva?.seva?.name
+        return person?(person?.name +" in service "+eventSeva?.seva?.name):(individual?.toString() +" in service "+eventSeva?.seva?.name)
 	  }
 }

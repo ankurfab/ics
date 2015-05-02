@@ -10,6 +10,7 @@ import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry  
 import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
+import org.grails.mandrill.*
 
 class HelperController {
 //def searchableService
@@ -27,6 +28,8 @@ def grailsApplication  //inject GrailsApplication
 def helperService 
 def individualService
 def donationService
+def mandrillService
+def commsService
     
     def index = { 
 	def birthdayList = [], mAnniversaryList = []
@@ -141,7 +144,7 @@ def donationService
     }
     
     def changePassword = {
-    	log.debug("Inside changePassword with params:"+params)
+    	//log.debug("Inside changePassword with params:"+params)
         def IcsUserInstance
     	def principal = springSecurityService.principal
 	String username = principal.username
@@ -4321,17 +4324,23 @@ def donationService
 	      default:
 	          flash.message = params.entity +" Not found !! Id : " + params.id
 		}
-	    [via:params.via, emailAddrs:emailAddrs, phoneNos:phoneNos, individuals: individuals]
+	    [via:params.via, emailAddrs:emailAddrs, phoneNos:phoneNos, individuals: individuals, entityName:params.entityName, depid:params.depid, ids:params.ids]
     }
     
     def sendmessage(){
+	   log.debug("sendmessage:"+params)
 	   switch (params.via) {
 	      case "EMAIL":
 		  housekeepingService.sendEmail(params.to?.tokenize(',;'),params.sub,params.msg)
 		  flash.message = "EMAIL sent to : "+params.to+"\n with subject : "+params.sub +" and message : "+params.msg
 		  break
 	      case "SMS":
-		  housekeepingService.sendSMS(params.to,params.msg)
+		  //housekeepingService.sendSMS(params.to,params.msg)
+		  //'ids':""+idlist,'smstext':smstext,'ccNos':""+ccNos
+		  params.smstext = params.msg
+		  params.ccNos = params.to
+		  forward action: "eventSendAPISMS", params: params
+		  return
 		  flash.message = "SMS sent to : "+params.to+"\n with message : "+params.msg
 		  break
 		}
@@ -4847,6 +4856,17 @@ def donationService
 		render( result as JSON)
 	}
 	
+	def clorSummaryData() {
+		def result = dataService.clorSummaryData(params.clorid)
+		render( result as JSON)
+	}
+	
+	def clorBoardSummaryData() {
+		def result = dataService.clorBoardSummaryData(params.rolename)
+		render( result as JSON)
+	}
+	
+
 	def genLoginLocal() {
 		def loginMap=""
 		def icsRole = IcsRole.findByAuthority('ROLE_RVTO_COUNSELOR')
@@ -5232,6 +5252,16 @@ def donationService
 							}
 					}
 				break
+			case "Farmer":
+				params.ids?.tokenize(',').each {
+						val=Farmer.get(it)?.mobileNo
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
 			default:
 				break
 				
@@ -5286,7 +5316,17 @@ def donationService
 				break
 			case "IndividualRole":
 				params.ids?.tokenize(',').each {
-						val=EmailContact.findByCategoryAndIndividual('Personal',IndividualRole.get(it)?.individual)?.number
+						val=EmailContact.findByCategoryAndIndividual('Personal',IndividualRole.get(it)?.individual)?.emailAddress
+						if(val)
+							{
+							emailList.add(val)
+							count++
+							}
+					}
+				break
+			case "Person":
+				params.ids?.tokenize(',').each {
+						val=Person.get(it)?.email
 						if(val)
 							{
 							emailList.add(val)
@@ -5301,6 +5341,407 @@ def donationService
 		def emailSet = emailList as Set
 		housekeepingService.sendGenericEMAIL(emailSet as List,params.emailfrom,params.emailsub,params.emailbody,params.ccSender,params.bccRecipients)
 		render([count:emailSet.size()] as JSON)
+	}
+	
+	def eventSendAPISMS() {
+		log.debug("In eventSendAPISMS:"+params)
+		def phonenoList = []
+		def phonenos = ""
+		int count=0
+		def val=""
+		switch(params.entityName) {
+			case "Role":
+				params.ids?.tokenize(',').each {
+						def role=Role.get(it)
+						if(role)
+							{
+							IndividualRole.findAllByRoleAndStatus(role,'VALID')?.each{
+								val = VoiceContact.findByCategoryAndIndividual('CellPhone',it.individual)?.number
+								if(val)
+									{
+									phonenoList.add(val)
+									count++
+									}
+								}
+							}
+					}
+				break
+			case "Event":
+				params.ids?.tokenize(',').each {
+						def event=Event.get(it)
+						if(!params.depid)
+							{
+							//get the department from the event
+							params.depid = event?.department?.id
+							}
+						if(event)
+							{
+							EventParticipant.findAllByEvent(event)?.each{
+								val = VoiceContact.findByCategoryAndIndividual('CellPhone',it.individual)?.number
+								if(val)
+									{
+									phonenoList.add(val)
+									count++
+									}
+								}
+							}
+					}
+				break
+			case "EventParticipant":
+				params.ids?.tokenize(',').each {
+					def eventp=EventParticipant.get(it)
+					if(eventp)
+						{
+						if(!params.depid)
+							{
+							//get the department from the event
+							params.depid = eventp?.event?.department?.id
+							}
+						val = VoiceContact.findByCategoryAndIndividual('CellPhone',eventp.individual)?.number
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+						}
+					}
+				break
+			case "EventRegistration":
+				params.ids?.tokenize(',').each {
+						if(!params.depid)
+							{
+							//get the department from the event
+							params.depid = EventRegistration.get(it)?.event?.department?.id
+							//log.debug("Set depid="+params.depid)
+							}
+						val=EventRegistration.get(it)?.contactNumber
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			case "EventSeva":
+				params.ids?.tokenize(',').each {
+						val=EventSeva.get(it)?.inchargeContact
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			case "EventSevaAllotment":
+				params.ids?.tokenize(',').each {
+						val=EventSevaAllotment.get(it)?.person?.phone
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			case "Person":
+				params.ids?.tokenize(',').each {
+						val=Person.get(it)?.phone
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			case "Vehicle":
+				params.ids?.tokenize(',').each {
+						val=Vehicle.get(it)?.driverNumber
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			case "Individual":
+				params.ids?.tokenize(',').each {
+						val=VoiceContact.findByCategoryAndIndividual('CellPhone',Individual.get(it))?.number
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			case "IndividualRole":
+				params.ids?.tokenize(',').each {
+						val=VoiceContact.findByCategoryAndIndividual('CellPhone',IndividualRole.get(it)?.individual)?.number
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			case "Farmer":
+				params.ids?.tokenize(',').each {
+						val=Farmer.get(it)?.mobileNo
+						if(val)
+							{
+							phonenoList.add(val)
+							count++
+							}
+					}
+				break
+			default:
+				break
+				
+		}
+		
+		//now add ccNos if any
+		if(params.ccNos)
+			phonenoList.add(params.ccNos)
+		
+		def phonenoSet = phonenoList as Set
+		phonenoSet.each{phonenos+=it+","}
+		
+		//replace ; by ,
+		phonenos = phonenos.replaceAll(';',',')
+		
+
+		def depcp = DepartmentCP.createCriteria().get{
+				department{eq('id',new Long(params.depid))}
+				cp{eq('type','SMS')}
+				}
+
+		def decimalCodePoints = ""
+		params.smstext.eachWithIndex { ch, index ->
+		    decimalCodePoints += "$ch:${Character.codePointAt(params.smstext, index)} "
+		}
+		log.debug(decimalCodePoints)
+		
+		commsService.sendSms(depcp?.cp,phonenos,params.smstext)
+		
+		//log the message count
+		try{
+			def commsLog = new CommsLog()
+			commsLog.depcp = depcp
+			commsLog.sender = Individual.get(session.individualid)
+			commsLog.counter = phonenoSet.size()
+			commsLog.dateSent = new Date()
+			if(!commsLog.save()) {
+			    commsLog.errors.allErrors.each {
+				log.debug("Error in saving commsLog:"+it)
+				}			
+			}
+		}
+		catch(Exception e){
+			log.debug("Exception in commsLog:"+e)
+		}
+
+		render([count:phonenoSet.size()] as JSON)
+	}
+	
+	def commsMandrill() {
+		log.debug("In commsMandrill:"+params)			
+		def recpts = []
+		def emailList = []
+		def emails = ""
+		int count=0
+		def val=""
+		switch(params.entityName) {
+			case "Role":
+				params.ids?.tokenize(',').each {
+						def role=Role.get(it)
+						if(role)
+							{
+							IndividualRole.findAllByRoleAndStatus(role,'VALID')?.each{
+								val = EmailContact.findByCategoryAndIndividual('Personal',it.individual)?.emailAddress
+								if(val)
+									{
+									emails += val+","
+									count++
+									}
+								}
+							}
+					}
+				break
+			case "Event":
+				params.ids?.tokenize(',').each {
+						def event=Event.get(it)
+						if(!params.depid)
+							{
+							//get the department from the event
+							params.depid = event?.department?.id
+							log.debug("Set depid="+params.depid)
+							}
+						if(event)
+							{
+							EventParticipant.findAllByEvent(event)?.each{
+								val = EmailContact.findByCategoryAndIndividual('Personal',it.individual)?.emailAddress
+								if(val)
+									{
+									emails += val+","
+									count++
+									}
+								}
+							}
+					}
+				break
+			case "EventParticipant":
+				params.ids?.tokenize(',').each {
+					def eventp=EventParticipant.get(it)
+					if(eventp)
+						{
+						if(!params.depid)
+							{
+							//get the department from the event
+							params.depid = eventp?.event?.department?.id
+							}
+						val = EmailContact.findByCategoryAndIndividual('Personal',eventp.individual)?.emailAddress
+						if(val)
+							{
+							emails += val+","
+							count++
+							}
+						}
+					}
+				break
+			case "EventRegistration":
+				params.ids?.tokenize(',').each {
+						if(!params.depid)
+							{
+							//get the department from the event
+							params.depid = EventRegistration.get(it)?.event?.department?.id
+							//log.debug("Set depid="+params.depid)
+							}
+						val=EventRegistration.get(it)?.email
+						if(val)
+							{
+							emails += val+","
+							count++
+							}
+					}
+				break
+			case "EventSeva":
+				params.ids?.tokenize(',').each {
+						val=EventSeva.get(it)?.inchargeEmail
+						if(val)
+							{
+							emails += val+","
+							count++
+							}
+					}
+				break
+			case "Individual":
+				params.ids?.tokenize(',').each {
+						val=EmailContact.findByCategoryAndIndividual('Personal',Individual.get(it))?.emailAddress
+						if(val)
+							{
+							emails += val+","
+							count++
+							}
+					}
+				break
+			case "IndividualRole":
+				params.ids?.tokenize(',').each {
+						val=EmailContact.findByCategoryAndIndividual('Personal',IndividualRole.get(it)?.individual)?.emailAddress
+						if(val)
+							{
+							emails += val+","
+							count++
+							}
+					}
+				break
+			case "Person":
+				if(params.ids && params.ids!='null')
+					{
+					params.ids?.tokenize(',').each {
+						val=Person.get(it)
+						if(val?.email)
+							{
+							recpts.add(new MandrillRecipient(name:val?.name, email:val?.email))
+							count++
+							}
+						}
+					}
+				else
+					{
+					Person.findAllByCategory(session.individualid).each{
+						if(it.email) {
+							recpts.add(new MandrillRecipient(name:it?.name, email:it?.email))
+							count++
+							}
+						}
+					}
+				break
+			default:
+				break
+				
+		}
+		//add cc addresses
+		if(params.cc)
+			emails += ","+params.cc
+		emails = emails?.replaceAll(';',',')
+		emails?.tokenize(',')?.each{emailList.add(it)}
+		def emailSet = emailList as Set
+		//log.debug(emailSet)
+		emailSet?.each{
+			recpts.add(new MandrillRecipient(name:'', email:it))
+			}
+
+		def depcp = DepartmentCP.createCriteria().get{
+				department{eq('id',new Long(params.depid))}
+				cp{eq('type','Mandrill')}
+				}
+
+	def key = depcp?.cp?.apikey
+	//log.debug("key: "+key)
+	//log.debug("Ping: "+mandrillService.ping(key))
+	//log.debug("Info: "+mandrillService.info(key))
+	def message
+	
+	def senderAddr
+	if(params.from)
+		senderAddr = params.from
+	else
+		senderAddr = depcp?.sender
+	
+	if(params.htmlContent)
+		message = new MandrillMessage(
+			  html:params.emailbody,
+			  subject:params.emailsub,
+			  from_email:senderAddr,
+			  to:recpts)
+	else
+		message = new MandrillMessage(
+			  text:params.emailbody,
+			  subject:params.emailsub,
+			  from_email:senderAddr,
+			  to:recpts)
+		
+	//message.tags.add("test")
+
+		def ret = mandrillService.send(key,message)
+		log.debug("Helper Mandrill mail "+ret?.status+":"+recpts.size())
+		
+		//log the message count
+		try{
+			def commsLog = new CommsLog()
+			commsLog.depcp = depcp
+			commsLog.sender = Individual.get(session.individualid)
+			commsLog.counter = recpts.size()
+			commsLog.dateSent = new Date()
+			if(!commsLog.save()) {
+			    commsLog.errors.allErrors.each {
+				log.debug("Error in saving commsLog:"+it)
+				}			
+			}
+		}
+		catch(Exception e){
+			log.debug("Exception in commsLog:"+e)
+		}
+		
+		render([count:recpts.size()] as JSON)
 	}
 	
 	def eventCheckSMSBalance() {
@@ -5370,8 +5811,10 @@ def donationService
 		def ind
 		def login
 
-	   // f.inputStream.eachCsvLine(['skipLines':'1']) { tokens -> 
-	    f.inputStream.toCsvReader().eachLine{ tokens ->
+	    //file format (generic, used by EMS module as well)
+	    //@TODO: only 1st 2 cols used in this case
+	    //IndividualId,IcsRoleId,LoginId,IndividualCategory,IndividualName
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
 	    	ind = Individual.get(tokens[0])
 	    	icsRole = IcsRole.get(tokens[1])
 
@@ -5865,6 +6308,7 @@ def donationService
 	                or{
 	                	ilike("comments","%BOUNCED%")
 	                	ilike("paymentDetails","%BOUNCED%")
+	                	eq("amount",new java.math.BigDecimal("0"))
 	                }
 	                if(centre!= null){
 	                	centre{
@@ -5980,6 +6424,13 @@ def donationService
     		def individualId = schemeMemberInstance.member?.id
     		
     		def schemeId = schemeMemberInstance.scheme?.id
+
+    		def donationrecordtype = params.donationrecordtype
+
+    		if(donationrecordtype =="" || donationrecordtype == 'undefined')
+			{
+				donationrecordtype  = "schemeonly"
+			}  
     		
 
     		def result = DonationRecord.createCriteria().list(max:maxRows, offset:rowOffset){
@@ -5987,10 +6438,18 @@ def donationService
     			donatedBy{
     				eq("id",individualId)
     			}
-    			scheme{
-    				eq("id",schemeId)
+    			
+    			if(SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE') || SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_HOD') ){
+    				if(donationrecordtype =="schemeonly"){
+    					scheme{
+	    					eq("id",schemeId)
+	    				}
+    				}
     			}
     			if(SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_COORDINATOR')){
+    				scheme{
+    				eq("id",schemeId)
+    				}
     				or{
     					eq('centre',centre)
     				}
@@ -6007,6 +6466,7 @@ def donationService
 	            	   // it.scheme?.name,
 	            	    //it.member?.toString(),
 	            	    it.donationDate?.format('dd-MMM-yyyy')?.toString(),
+	            	    it.scheme?.encodeAsHTML(),
 	            	    it.amount,
 	            	    it.mode?.name,
 	            	    it.centre?.name,
@@ -6021,6 +6481,90 @@ def donationService
     	render( [donationRecordSummary:donationRecordSummary] as JSON)
     	
     }
+
+    def donationRecordSummaryForSchemeMemberByYear(){
+    	println "donationRecordSummaryForSchemeMember"
+    	def role = helperService.getDonationUserRole()
+        def schemes = helperService.getSchemesForRole(role, session.individualid)
+        def centre = helperService.getCenterForIndividualRole(role, session.individualid)
+
+    	def donationRecordSummary
+    	if (SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE') || 
+    		SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_HOD') ||
+    		SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_COORDINATOR')){
+    		def sortIndex = params.sidx ?: 'id'
+		      def sortOrder  = params.sord ?: 'asc'
+
+		      def maxRows = Integer.valueOf(params.rows)
+		      def currentPage = Integer.valueOf(params.page) ?: 1
+
+		      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+    		
+    		def schemeMemberId = params.id
+
+    		
+    		def schemeMemberInstance = SchemeMember.get(schemeMemberId)
+    		
+    		def individualId = schemeMemberInstance.member?.id
+    		
+    		def schemeId = schemeMemberInstance.scheme?.id
+
+    		def donationtype = params.donationtype
+
+    		if(donationtype =="" || donationtype == 'undefined')
+			{
+				donationtype  = "schemeonly"
+			}    		
+    		def sql = new Sql(dataSource)
+
+    		def yearwiseCollectionQuery 
+			
+			 if(donationtype =="schemeonly"){
+			  yearwiseCollectionQuery = "select sum(amount) amt, YEAR(donation_date) year from donation_record where YEAR(donation_date) is not null and donated_by_id = "+ individualId +"  and scheme_id = "+schemeId+" group by YEAR(donation_date) order by year desc"
+			}
+
+			 if(donationtype =="alldonation"){
+			  yearwiseCollectionQuery = "select sum(amount) amt, YEAR(donation_date) year from donation_record where YEAR(donation_date) is not null and donated_by_id = "+ individualId +"  group by YEAR(donation_date) order by year desc"
+			}
+
+			
+			def yearwiseCollection = sql.rows(yearwiseCollectionQuery)
+
+					def years = []
+				def collectionAmount = []
+				def yearwiseCollectionAmount = []
+				for( def i=0; i<yearwiseCollection.size(); i++)
+				{
+					if(yearwiseCollection.year[i])
+					{
+						def a = [year :yearwiseCollection.year[i], amount:yearwiseCollection.amt[i]]
+						//years.add(yearwiseCollection.year[i])
+						//collectionAmount.add(yearwiseCollection.amt[i])
+						yearwiseCollectionAmount.add(a)
+					}
+				}
+    		
+    		//println "donationRecordSummary::length::"+donationRecordSummary.length +" ::"+donationRecordSummary
+    	 def totalRows = (yearwiseCollectionAmount?.size())?:0
+	      def numberOfPages =  Math.ceil(totalRows / maxRows)
+
+	      def jsonCells = yearwiseCollectionAmount.collect {
+	            [cell: [
+	            	   // it.scheme?.name,
+	            	    //it.member?.toString(),
+	            	    it.year,
+	            	    it.amount
+	                ]]
+	        }
+	        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+	        render jsonData as JSON
+
+    	}
+
+    	render( [donationRecordSummary:donationRecordSummary] as JSON)
+    	
+    }
+
 
     def schemeMemberGiftReport(){
     	 if (!SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_EXECUTIVE') &&  !SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_HOD')){
@@ -6188,7 +6732,15 @@ def donationService
 	 		if(comments != null) ilike('comments','%'+comments+'%')  
         }
 
-        
+       giftRecordSummary.each{
+       	record->
+       	def member = SchemeMember.findByMemberAndScheme(record.giftedTo, record.scheme)
+       	if(member != null){
+       		record.isProfileComplete = member.isProfileComplete
+       		record.status = member.status
+       		record.star=member.star
+       	}
+       }
         def totalRows = (giftRecordSummary?.totalCount)?:0
       def numberOfPages = Math.ceil(totalRows / maxRows)
 
@@ -6200,7 +6752,10 @@ def donationService
                     it.centre?.name,
                     it.comments,
                     it.giftReceivedStatus,
-                    it.giftChannel                    
+                    it.giftChannel,
+                    it.isProfileComplete,
+                    it.status,
+                    it.star
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -6291,20 +6846,38 @@ def donationService
 
     		
     		def schemeMemberInstance = SchemeMember.get(schemeMemberId)
+
+    		def role = helperService.getDonationUserRole()
+    		def centre = helperService.getCenterForIndividualRole(role, session.individualid)
     		
     		def individualId = schemeMemberInstance.member?.id
     		
     		def schemeId = schemeMemberInstance.scheme?.id
     		
+    		def gifttype = params.gifttype
+
+    		if(gifttype =="" || gifttype == 'undefined')
+			{
+				gifttype  = "schemeonly"
+			}   
 
     		def result = GiftRecord.createCriteria().list(max:maxRows, offset:rowOffset){
     			
     			giftedTo{
     				eq("id",individualId)
     			}
-    			scheme{
-    				eq("id",schemeId)
+
+    			if(gifttype == "schemeonly"){
+    				scheme{
+    					eq("id",schemeId)
+    				}	
     			}
+    			if(SpringSecurityUtils.ifAnyGranted('ROLE_DONATION_COORDINATOR')){
+    				or{
+    					eq('centre',centre)
+    				}
+    			}
+    			
     			order("giftDate","desc") 
     		}
 
@@ -6579,8 +7152,12 @@ def jq_donor_list = {
 		render([message:num+" cultivators set!!"] as JSON)
 	}
 	
-	def clorDashboard() {
-		[clor:Individual.get(session.individualid)]
+	def clorBoardDashboard() {
+		//[[0,'New'],[1,'VAP'],[2,'JDP'],[3,'KKP']]
+		def clorNames = IndividualRole.findAllByRoleAndStatus(Role.findByName('PuneLeadCouncellors'),'VALID',[sort: "individual.id"])?.collect{it.individual}
+		def clorNameList = []
+		clorNames.eachWithIndex { it, index -> clorNameList.add([100000+it.id,"'"+it.toString()+"'"]) }
+		[clorNameList:clorNameList, eventSummary:dataService.eventSummaryCBM()]
 	}
 
     def donationPeriodReport = {
@@ -6847,5 +7424,76 @@ def jq_donor_list = {
 	return
 
         }
+        
+        def refreshIndividualSummary() {
+        	dataService.refreshIndividualSummary()
+        	render "OK"
+        }
+        
+        def clorResources() {}
+        
+        def clorDashboard(){
+		def clorid=params.clorid?:session.individualid
+		[clor:Individual.get(clorid),eventSummary:dataService.eventSummary(clorid?.toString())]        
+        }
+        
+        def clorBookDistributionData(){
+		def result = dataService.clorBookDistributionData(params.clorid)
+		render( result as JSON)        
+        }
+
+        def clorDonationData(){
+		def result = dataService.clorDonationData(params.clorid)
+		render( result as JSON)
+        }
+
+        def clorIndividualData(){
+		def result = dataService.clorIndividualData(params.clorid)
+		render( result as JSON)
+        }
+
+	  def accesslogdashboard()
+	  {
+	  params.max = Math.min(params.max ?: 10, 100)
+	  params.sort = 'loginTime'
+	  params.order = 'desc'
+	  [accessLogInstanceList: AccessLog.list(params), accessLogInstanceTotal: AccessLog.count()]
+	  }
+
+	def genericComms() {
+		render commsService.genericComms(params)
+	}
+	
+	//generic method to create a custom form
+	def uploadCustomForm() {
+	    log.debug("Inside uploadCustomForm")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render(view: 'advanced')
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+	    def category = ""
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(helperService.uploadCustomForm(tokens))
+	    		numCreated++
+	    }
+	    
+	    flash.message="Custom form template created "+numCreated+"/"+numRecords+" attributes!!"
+	    
+	    render(view: 'advanced')
+	    return
+	}
+	
+	def saveCustomForm() {
+		log.debug("Inside saveCustomForm with params:"+params)
+		helperService.saveCustomForm(params)
+		//render([status:'OK'] as JSON)
+		redirect(controller:params.redirectController,action:params.redirectAction)
+	}
 
   }

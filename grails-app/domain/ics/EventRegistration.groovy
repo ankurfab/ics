@@ -19,6 +19,7 @@ class EventRegistration {
 		verificationComments blank: true, nullable:true
 		accommodationAllotmentStatus blank: true, nullable:true
 		isAccommodationRequired  blank: false, nullable:false
+		accomodationPreference blank: true, nullable:true
 
 		guestType blank:true, nullable:true
 		otherGuestType blank:true, nullable:true
@@ -101,6 +102,7 @@ class EventRegistration {
     String	alternateContactNumber
     String	email
     boolean	isAccommodationRequired
+    String accomodationPreference
     String	otherGuestType
     String 	address
     String comments

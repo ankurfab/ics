@@ -23,43 +23,32 @@
 
 <script>
   $(document).ready(function () {
-    var lastsel3; 
     jQuery("#status_list").jqGrid({
-      url:'jq_status_list?eid=2',
+      url:'jq_status_list',
       datatype: "json",
-      colNames:['Name','DoB','Gender','Mobile','Email','Address','From','Year','IdType','IdNo','Assessment','Language','Comments','PaymentReference','RegistrationCode(Date)','IAid','Id'],
+      colNames:['BookSeries','BookNo','IssuedTo','NumDonations','DonationAmount','BookStatus','Id'],
       colModel:[
-	{name:'name', search:true,formatter:showIndividualAssessment},
-	{name:'dob', search:false},
-	{name:'isMale', search:true},
-	{name:'contactNumber', search:true},
-	{name:'email', search:true},
-	{name:'address', search:true},
-	{name:'connectedIskconCenter', search:true},
-	{name:'year', search:false},
-	{name:'idproofType', search:false},
-	{name:'idProofId', search:false},
-	{name:'assessment', search:false},
-	{name:'otherGuestType', search:true},
-	{name:'comments', search:false},
-	{name:'paymentReference', search:false},
-	{name:'arrivalDate', search:true},
-	{name:'iaid',hidden:true},
+	{name:'bookSeries', search:true},
+	{name:'bookSerialNumber', search:true},
+	{name:'issuedto', search:true},
+	{name:'numdonations', search:true},
+	{name:'donationamount', search:true},
+	{name:'status', search:true},
 	{name:'id',hidden:true}
      ],
     rowNum:50,
     rowList:[10,20,30,40,50,100,200],
     pager: '#status_list_pager',
     viewrecords: true,
-    sortname: 'arrivalDate',
+    sortname: 'id',
     sortorder: "desc",
     width: 1200,
     height: "100%",
     multiselect: false,
-    caption:"Registration List"
+    caption:"Receipt Book Issued Status"
     });
     $("#status_list").jqGrid('filterToolbar',{autosearch:true});
-    $("#status_list").jqGrid('navGrid',"#status_list_pager",{edit:false,add:false,del:true,search:false});
+    $("#status_list").jqGrid('navGrid',"#status_list_pager",{edit:false,add:false,del:false,search:false});
     $("#status_list").jqGrid('inlineNav',"#status_list_pager",
 	    { 
 	       edit: false,

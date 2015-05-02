@@ -29,8 +29,18 @@
                         
                    	    <g:sortableColumn property="alias" title="Alias" titleKey="costCenter.alias" />
                         
+                   	    <g:sortableColumn property="status" title="Status" titleKey="costCenter.status" />
+                        
                    	    <g:sortableColumn property="costCategory" title="CostCategory" titleKey="costCenter.costCategory" />
                         
+                   	    <g:sortableColumn property="isProfitCenter" title="IsProfitCenter" titleKey="costCenter.isProfitCenter" />
+
+                   	    <g:sortableColumn property="isServiceCenter" title="IsServiceCenter" titleKey="costCenter.isServiceCenter" />
+
+                   	    <g:sortableColumn property="budget" title="Budget" titleKey="costCenter.budget" />
+
+                   	    <g:sortableColumn property="capitalBudget" title="CapitalBudget" titleKey="costCenter.capitalBudget" />
+
                    	    <g:sortableColumn property="owner" title="Owner" titleKey="costCenter.owner" />
                         
                    	    <g:sortableColumn property="owner1" title="Owner1" titleKey="costCenter.owner1" />
@@ -53,8 +63,18 @@
                         
                             <td>${fieldValue(bean: costCenterInstance, field: "alias")}</td>
                         
+                            <td>${fieldValue(bean: costCenterInstance, field: "status")}</td>
+                        
                             <td>${fieldValue(bean: costCenterInstance, field: "costCategory")}</td>
                         
+                            <td>${costCenterInstance.isProfitCenter?'Yes':'No'}</td>
+                                                
+                            <td>${costCenterInstance.isServiceCenter?'Yes':'No'}</td>
+                                                
+                            <td>${fieldValue(bean: costCenterInstance, field: "budget")}</td>
+                                                
+                            <td>${fieldValue(bean: costCenterInstance, field: "capitalBudget")}</td>
+                                                
                             <td>${fieldValue(bean: costCenterInstance, field: "owner")}</td>
                                                 
                             <td>${fieldValue(bean: costCenterInstance, field: "owner1")}</td>

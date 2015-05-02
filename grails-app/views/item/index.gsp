@@ -27,6 +27,12 @@
 	    </div>
             <div>
 			<!-- table tag will hold our grid -->
+			<table id="itemTaker_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
+			<!-- pager will hold our paginator -->
+			<div id="itemTaker_list_pager" class="scroll" style="text-align:center;"></div>
+	    </div>
+            <div>
+			<!-- table tag will hold our grid -->
 			<table id="itemStock_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 			<!-- pager will hold our paginator -->
 			<div id="itemStock_list_pager" class="scroll" style="text-align:center;"></div>
@@ -67,23 +73,35 @@
     multiselect: false,
     caption:"Item List",
     onSelectRow: function(ids) { 
-    		jQuery("#itemStock_list").jqGrid('setGridParam',{url:"jq_itemStock_list?itemid="+ids}).trigger('reloadGrid');    	
 		var selName = jQuery('#item_list').jqGrid('getCell', ids, 'name');
 		jQuery("#itemVendor_list").jqGrid('setGridParam',{url:"jq_itemVendor_list?item.id="+ids});
 		jQuery("#itemVendor_list").jqGrid('setCaption',"Vendors for Item: "+selName).trigger('reloadGrid');   	
+		jQuery("#itemTaker_list").jqGrid('setGridParam',{url:"jq_itemTaker_list?item.id="+ids});
+		jQuery("#itemTaker_list").jqGrid('setCaption',"Takers for Item: "+selName).trigger('reloadGrid');   	
+    		jQuery("#itemStock_list").jqGrid('setGridParam',{url:"jq_itemStock_list?itemid="+ids});    	
+		jQuery("#itemStock_list").jqGrid('setCaption',"Stock for Item: "+selName).trigger('reloadGrid');   	
     	}        
     });
     $("#item_list").jqGrid('filterToolbar',{autosearch:true});
     $("#item_list").jqGrid('navGrid',"#item_list_pager",{edit:false,add:false,del:true,search:false});
     $("#item_list").jqGrid('inlineNav',"#item_list_pager");
-
+	// add custom button to export the detail data to excel	
+	jQuery("#item_list").jqGrid('navGrid',"#item_list_pager").jqGrid('navButtonAdd',"#item_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+	       onClickButton : function () { 
+			var query = 'jq_item_list';			
+			jQuery("#item_list").jqGrid('excelExport',{"url":query});
+	       }
+	       });
+	       
+	       
     jQuery("#itemVendor_list").jqGrid({
       url:'jq_itemVendor_list',
       datatype: "json",
-      colNames:['Vendor','PurchaseDate','Qty','UnitSize','Unit','Rate','TaxRate(%)','Description','Id'],
+      colNames:['Vendor','PurchaseDate','InvoiceNo','Qty','UnitSize','Unit','Rate','TaxRate(%)','Description','Id'],
       colModel:[
 	{name:'vendor', search:true, editable: true, editoptions:{defaultValue:selectedItemName}},
 	{name:'invoiceDate', search:true, editable: true},
+	{name:'invoiceNumber', search:true, editable: true},
 	{name:'qty', search:true, editable: true},
 	{name:'unitSize', search:true, editable: true},
 	{name:'unit', search:true, editable: true, editrules:{required:true},
@@ -107,6 +125,38 @@
     caption:"Item Vendor List"
     });
     $("#itemVendor_list").jqGrid('navGrid',"#itemVendor_list_pager",{edit:false,add:false,del:false,search:false});
+
+    jQuery("#itemTaker_list").jqGrid({
+      url:'jq_itemTaker_list',
+      datatype: "json",
+      colNames:['Taker','DateTaken','InvoiceNo','Qty','UnitSize','Unit','Rate','TaxRate(%)','Description','Id'],
+      colModel:[
+	{name:'taker', search:true, editable: true, editoptions:{defaultValue:selectedItemName}},
+	{name:'invoiceDate', search:true, editable: true},
+	{name:'invoiceNumber', search:true, editable: true},
+	{name:'qty', search:true, editable: true},
+	{name:'unitSize', search:true, editable: true},
+	{name:'unit', search:true, editable: true, editrules:{required:true},
+		edittype:"select",editoptions:{value:"${':--Please Select Unit--;'+(ics.Unit.values())?.collect{it.toString()+':'+it.toString()}.join(';')}"},
+		formatter:'select',stype:'select', searchoptions: { value: "${':ALL;'+(ics.Unit.values())?.collect{it.toString()+':'+it.toString()}.join(';')}"}
+	},
+	{name:'rate', search:true, editable: true},
+	{name:'taxRate', search:true, editable: true},
+	{name:'description', search:true, editable: true},
+	{name:'id',hidden:true}
+     ],
+    rowNum:10,
+    rowList:[10,20,30,40,50,100,200],
+    pager: '#itemTaker_list_pager',
+    viewrecords: true,
+    sortname: 'invoiceDate',
+    sortorder: "desc",
+    width: 1200,
+    height: "100%",
+    multiselect: false,
+    caption:"Item Taker List"
+    });
+    $("#itemTaker_list").jqGrid('navGrid',"#itemTaker_list_pager",{edit:false,add:false,del:false,search:false});
 
     jQuery("#itemStock_list").jqGrid({
       url:'jq_itemStock_list',
@@ -163,6 +213,7 @@
 		    cancel: true
 		}
     );
+   
     });
 
 function selectedItemId() {

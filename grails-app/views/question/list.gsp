@@ -15,8 +15,18 @@
         <div class="body">
             <h1><g:message code="question.list" default="Question List" /></h1>
             <g:if test="${flash.message}">
-            <div class="message"><g:message code="${flash.message}" args="${flash.args}" default="${flash.defaultMessage}" /></div>
+            <div class="message">${flash.message}</div>
             </g:if>
+
+            <g:form name="courseForm" action="list">
+		<g:select name='course.id' value="${course?.id}"
+		    noSelection="${['':'Select a course...']}"
+		    from='${courses}'
+		    optionKey="id" optionValue="name" onchange="updatecid()"></g:select>
+		<g:select name='language' value="${language}" from='${['ENGLISH','HINDI','MARATHI']}'></g:select>
+		<g:submitButton name="refresh" value="Refresh" />
+            </g:form>
+            
             <div class="list">
                 <table>
                     <thead>
@@ -33,6 +43,12 @@
                    	    <g:sortableColumn property="choice3" title="Choice3" titleKey="question.choice3" />
                         
                    	    <g:sortableColumn property="choice4" title="Choice4" titleKey="question.choice4" />
+                        
+                   	    <th>Answer</th>
+                        
+                   	    <g:sortableColumn property="category" title="Category" titleKey="question.category" />
+                        
+                   	    <g:sortableColumn property="language" title="Language" titleKey="question.language" />
                         
                         </tr>
                     </thead>
@@ -51,24 +67,37 @@
                             <td>${fieldValue(bean: questionInstance, field: "choice3")}</td>
                         
                             <td>${fieldValue(bean: questionInstance, field: "choice4")}</td>
+                            
+                            <td>${questionInstance.isChoice1Correct?1:(questionInstance.isChoice2Correct?2:(questionInstance.isChoice3Correct?3:(questionInstance.isChoice4Correct?4:(''))))}</td>
+                        
+                            <td>${fieldValue(bean: questionInstance, field: "category")}</td>
+                        
+                            <td>${fieldValue(bean: questionInstance, field: "language")}</td>
                         
                         </tr>
                     </g:each>
                     </tbody>
                 </table>
             </div>
-            <div class="paginateButtons">
-                <g:paginate total="${questionInstanceTotal}" />
-            </div>
 
 	<div>
 	Upload questions in bulk: <br />
 	    <g:uploadForm controller="Assessment" action="importQB">
+		<g:hiddenField name="cid" value="${course?.id}" />
 		<input type="file" name="myFile" />
 		<input type="submit" value="Upload"/>
 	    </g:uploadForm>
 	</div>            
 
         </div>
+
+<script type="text/javascript">
+function updatecid() {
+	var elem = document.getElementById("cid");
+	elem.value = document.getElementById("course\.id").value;
+	//alert(elem.value);
+	}
+</script>
+
     </body>
 </html>

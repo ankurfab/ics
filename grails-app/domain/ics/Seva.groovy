@@ -7,12 +7,16 @@ class Seva {
 	    type()
 	    name()
 	    description()
+	    department(nullable:true)
+	    incharge(nullable:true)
     }
 
     String category
     String type
     String name
     String description
+    Department department
+    Individual incharge
     
     Date dateCreated
     Date lastUpdated
@@ -20,7 +24,7 @@ class Seva {
     String updator 
     
     String toString() {
-	type+"."+name
+	category+"."+type+"."+name
 	}
     
 }
