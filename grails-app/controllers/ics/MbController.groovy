@@ -299,8 +299,7 @@ def showImage = {
                 }
 
                 if (params.flexibleSpMaster == "false" && params.prefSpMaster) {
-                    def valList = params.prefSpMaster.split(',')
-                    and { 'in'('spiritualMaster', valList) }
+                    and { 'in'('spiritualMaster', params.prefSpMaster) }
                 }
 
                 if (params.flexibleCentre == "false" && params.prefCentre) {
@@ -424,32 +423,32 @@ def showImage = {
       //def jsonCells = mbprofile?.matches?.findAll{it.candidateStatus==null || it.candidateStatus!='DECLINE'}?.sort{it.prospect?.candidate?.legalName}?.collect {
       def jsonCells = mbprofile?.matches?.sort{it.lastUpdated}?.collect {
             [cell: [
-            	    it.prospect.id,
-            	    it.candidateStatus,
-            	    it.prospect?.workflowStatus,
-            	    it.lastUpdated?.format('dd-MM-yyyy HH:mm:ss'),
-            	    it.prospect?.candidate?.legalName,
-            	    it.prospect?.candidate?.initiatedName,
-            	    it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
-			it.prospect?.candidate?.pob,
-			it.prospect?.candidate?.dob?.format('HH:mm:ss'),
-			it.prospect?.candidate?.iskconCentre,
-			it.prospect.candCounsellor,
-			it.prospect?.candidate?.origin,
-			it.prospect?.candidate?.varna,
-			it.prospect.scstCategory,
-			it.prospect.candidate?.caste,
-			it.prospect.candidate?.subCaste,
-			it.prospect.candidate?.height,
-			it.prospect.candidate?.motherTongue,
-			it.prospect.candidate?.income,
-			it.prospect.eduCat,
-			it.prospect.eduQual,
-			it.prospect.regulated,
-			it.prospect.numberOfRounds,
-			it.prospect.chantingSixteenSince,
-			it.candidateStatus,
-			it.mbStatus
+                it.prospect.id,
+                it.candidateStatus,
+                it.prospect?.workflowStatus,
+                //it.lastUpdated?.format('dd-MM-yyyy HH:mm:ss'),
+                it.prospect?.candidate?.legalName,
+                //it.prospect?.candidate?.initiatedName,
+                it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
+                it.prospect?.candidate?.pob,
+                it.prospect?.candidate?.dob?.format('HH:mm:ss'),
+                //it.prospect?.candidate?.iskconCentre,
+                //it.prospect.candCounsellor,
+                //it.prospect?.candidate?.origin,
+                //it.prospect?.candidate?.varna,
+                //it.prospect.scstCategory,
+                it.prospect.candidate?.caste,
+                //it.prospect.candidate?.subCaste,
+                it.prospect.candidate?.height,
+                //it.prospect.candidate?.motherTongue,
+                it.prospect.candidate?.income,
+                //it.prospect.eduCat,
+                //it.prospect.eduQual,
+                //it.prospect.regulated,
+                //it.prospect.numberOfRounds,
+                //it.prospect.chantingSixteenSince,
+                it.candidateStatus,
+                it.mbStatus
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
@@ -775,12 +774,22 @@ def showImage = {
     def fullProfile() {
     	log.debug("Inside fullProfile:"+params)
     	def match = MbProfileMatch.get(params.matchid)
-    	if(match && match.mbStatus=='FULLPROFILE' && match.candidate.candidate.loginid==springSecurityService.principal.username) {    		    		
-    		render(template: "fullProfile", model: [profile: match.prospect.candidate])
+    	if(match && match.mbStatus=='FULLPROFILE' && match.candidate.candidate.loginid==springSecurityService.principal.username) {
+            render(template: "fullProfile", model: [profile: match.prospect])
     	}
     	else
     		render "Unavailable!!"
     	
+    }
+    def limitedProfile() {
+    	log.debug("Inside limitedProfile:"+params)
+    	def match = MbProfileMatch.get(params.matchid)
+    	if(match && match.candidate.candidate.loginid==springSecurityService.principal.username) {
+            render(template: "limitedProfile", model: [profile: match.prospect])
+    	}
+    	else
+    		render "Unavailable!!"
+
     }
     
     def dashboard() {

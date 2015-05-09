@@ -482,7 +482,7 @@ class MbService {
                 if(params.('relativeId'+i))
                 {
                     Individual.findById(params.('relativeId'+i)).legalName = params.('relativeName'+i)
-                    Individual.findById(params.('relavtiveId'+i)).initiatedName = params.('relativeIName'+i)
+                    Individual.findById(params.('relativeId'+i)).initiatedName = params.('relativeIName'+i)
                     Individual.findById(params.('relativeId'+i)).education = params.('relativeEducation'+i)
                     Individual.findById(params.('relativeId'+i)).profession = params.('relativeProfession'+i)
                 }

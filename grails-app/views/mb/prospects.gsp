@@ -43,14 +43,11 @@
 
 		<div id="dialogcandidateReason" title="Reason">
 			<g:textArea name="candidateReason" value="" rows="5" cols="40"/>
-		</div>            
-
-		<div id="dialogFullProfile" title="Full Profile">
-			<div id="divFullProfile"></div>
 		</div>
-
-		
-            <div>
+        <div id="dialoglimitedProfile" title="Full Profile">
+            <div id="divlimitedProfile"></div>
+		</div>
+        <div>
 			<!-- table tag will hold our grid -->
 			<table id="prospect_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 			<!-- pager will hold our paginator -->
@@ -65,7 +62,7 @@
     jQuery("#prospect_list").jqGrid({
       url:'jq_prospects_list',
       datatype: "json",
-      colNames:['Photo','Stage','Status','LastUpdated','LegalName','InitiatedName','DoB','PlaceofBirth','TimeofBirth','Centre','Counselor','OriginState','Varna','Category','Caste','SubCaste','Height(cms)','MotherTongue','Income','Education','Qualification','FourRegulativePrinciples','Rounds','SixteenRoundsSince','candidateStatus','mbStatus','Id'],
+      colNames:['Photo','Stage','Status','LegalName','DoB','PoB','ToB','Caste','Height(cms)','income','candidateStatus','mbStatus','Id'],
       colModel:[
 	{
 	name: 'photo',
@@ -75,27 +72,13 @@
 	},				
 	{name:'candidateStatus'},
 	{name:'workflowStatus'},
-	{name:'lastUpdated'},
 	{name:'legalName'},
-	{name:'initiatedName'},
 	{name:'dob'},
 	{name:'pob'},
 	{name:'tob'},
-	{name:'centre'},
-	{name:'counselor'},
-	{name:'originState'},
-	{name:'varna'},
-	{name:'category'},
 	{name:'caste'},
-	{name:'subCaste'},
 	{name:'height'},
-	{name:'motherTongue'},
-	{name:'candidateIncome'},
-	{name:'educationCategory'},
-	{name:'qualification'},
-	{name:'4regprin'},
-	{name:'currentRounds'},
-	{name:'chanting16Since'},
+    {name:'income'},
 	{name:'candidateStatus',hidden:true},
 	{name:'mbStatus',hidden:true},
 	{name:'id',hidden:true}
@@ -137,47 +120,64 @@
 	       save: false,
 	       cancel: false,
 	    });
-    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"NotSuitable", buttonicon:"ui-icon-cancel", onClickButton:decline, position: "last", title:"NotSuitable", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Not Suitable", buttonicon:"ui-icon-cancel", onClickButton:decline, position: "last", title:"NotSuitable", cursor: "pointer"});
     $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Proceed", buttonicon:"ui-icon-check", onClickButton:proceed, position: "last", title:"Proceed", cursor: "pointer"});
-    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"FullProfile", buttonicon:"ui-icon-script", onClickButton:fullProfile, position: "last", title:"Full Profile", cursor: "pointer"});
-    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"MeetProspect", buttonicon:"ui-icon-transferthick-e-w", onClickButton:meetProspect, position: "last", title:"Meet Prospect", cursor: "pointer"});
-    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"MeetParents", buttonicon:"ui-icon-arrow-4-diag", onClickButton:meetParent, position: "last", title:"Meet Parents", cursor: "pointer"});
-    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"AgreeProposal", buttonicon:"ui-icon-heart", onClickButton:agreeProposal, position: "last", title:"Agree Proposal", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Limited Profile", buttonicon:"ui-icon-script", onClickButton:limitedProfile, position: "last", title:"Limited Profile", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Full Profile", buttonicon:"ui-icon-script", onClickButton:fullProfile, position: "last", title:"Full Profile", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Meet Prospect", buttonicon:"ui-icon-transferthick-e-w", onClickButton:meetProspect, position: "last", title:"Meet Prospect", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Meet Parents", buttonicon:"ui-icon-arrow-4-diag", onClickButton:meetParent, position: "last", title:"Meet Parents", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Agree Proposal", buttonicon:"ui-icon-heart", onClickButton:agreeProposal, position: "last", title:"Agree Proposal", cursor: "pointer"});
 
 
 	function fullProfile() {
 		var id = $('#prospect_list').jqGrid('getGridParam','selrow');
 		if(id) {
-			var url = "${createLink(controller:'Mb',action:'fullProfile')}"+"?matchid="+id;
-			$( "#divFullProfile" ).val("");
-			$( "#divFullProfile" ).load( url, function(responseTxt,statusTxt,xhr){
-			    if(statusTxt=="success")
-			    {
-				$( "#dialogFullProfile" ).dialog( "open" );	
-			    }
-			    if(statusTxt=="error")
-			      alert("Error: "+xhr.status+": "+xhr.statusText);
-			  });
+        var url = "${createLink(controller:'Mb',action:'fullProfile')}"+"?matchid="+id;
+            var win = window.open(url, '_blank');
+            if(win){
+                //Browser has allowed it to be opened
+                win.focus();
+            }else{
+                //Broswer has blocked it
+                alert('Please allow popups for this site');
+            }
 		}
 		else
 			alert("Please select the profile!!");
 	}
+      $( "#dialoglimitedProfile" ).dialog({
+          autoOpen: false,
+          width:800,
+          height:500,
+          modal: true,
+          buttons: {
+              "Print": function() {
+                  $('#divlimitedProfile').printArea();
+                  $( this ).dialog( "close" );
+              },
+              Cancel: function() {
+                  $( this ).dialog( "close" );
+              }
+          }
+      });
 
-	 $( "#dialogFullProfile" ).dialog({
-		autoOpen: false,
-		 width:800,
-		 height:500,
-		modal: true,
-		buttons: {
-		"Print": function() {
-		$('#divFullProfile').printArea();
-		$( this ).dialog( "close" );
-		},
-		Cancel: function() {
-		$( this ).dialog( "close" );
-		}
-		}
-	});
+      function limitedProfile() {
+        var id = $('#prospect_list').jqGrid('getGridParam','selrow');
+          if(id) {
+          var url = "${createLink(controller:'Mb',action:'limitedProfile')}"+"?matchid="+id;
+          $( "#divlimitedProfile" ).val("");
+          $( "#divlimitedProfile" ).load( url, function(responseTxt,statusTxt,xhr){
+            if(statusTxt=="success")
+            {
+              $( "#dialoglimitedProfile" ).dialog( "open" );
+            }
+            if(statusTxt=="error")
+              alert("Error: "+xhr.status+": "+xhr.statusText);
+            });
+          }
+          else
+            alert("Please select the profile!!");
+        }
 
 	function decline() {
 			var id = $('#prospect_list').jqGrid('getGridParam','selrow');
