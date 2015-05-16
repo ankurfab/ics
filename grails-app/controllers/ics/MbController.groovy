@@ -15,7 +15,40 @@ class MbController {
     def individualService
     def springSecurityService
     
-    def index = { redirect(action: "manage", params: params) }
+    def index = {
+
+    }
+
+    def pendingApprovals = {
+        def objIds = AttributeValue.withCriteria {
+            projections {
+                distinct("objectId")
+            }
+        }
+        def paramsArr = []
+        objIds.each {
+            def Map params = [:]
+            params.put("objId",it)
+            def attrVals = AttributeValue.findAllByObjectId(it)
+            attrVals.each {
+                params.put(it.attribute.name,it.value)
+            }
+            paramsArr.push(params)
+        }
+        log.debug(paramsArr)
+        [profiles: paramsArr]
+    }
+
+    def approveProfile = {
+        mbService.initiateProfile(params)
+        deleteTempProfile(params)
+    }
+
+    def deleteTempProfile =  {
+        def idToDelete = Long.parseLong(params.profId)
+        AttributeValue.executeUpdate("delete AttributeValue where objectId=:objId",[objId:idToDelete])
+        redirect(action:"pendingApprovals")
+    }
 
     // the delete, save and update actions only accept POST requests
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
@@ -26,6 +59,18 @@ class MbController {
     }
 
     def startProfile = {
+        def ts = new Date().format('dd-MM-yyyy HH:mm:ss')
+        params.remove("action")
+        params.remove("controller")
+            dataService.storeHeader('MB',params.keySet())
+            def objId = AttributeValue.createCriteria().get{
+                projections {
+                    max "objectId"
+                }
+            } as Long
+            objId = objId ? objId : 0
+            dataService.storeValues('MB-'+ts,objId + 1,params.values())
+            render (view: "index",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
     }
     
     def editProfile() {
@@ -509,8 +554,15 @@ def showImage = {
 	    	i++
 	    	if(i==0)
 	    		dataService.storeHeader('MB',tokens)
-	    	else
-	    		dataService.storeValues('MB-'+ts,new Long(i),tokens)
+	    	else {
+                def objId = AttributeValue.createCriteria().get{
+                    projections {
+                        max "objectId"
+                    }
+                } as Long
+                objId = objId ? objId : 0
+                dataService.storeValues('MB-' + ts, objId, tokens)
+            }
 	    }
 	    
 	    flash.message = i+' records processed!!'
@@ -532,7 +584,7 @@ def showImage = {
     }
     
     def propose() {
-    	log.debug("proposing.."+params)
+    log.debug("proposing.."+params)
 	mbService.propose(params)
 	render([status:"OK"] as JSON)    	
     }

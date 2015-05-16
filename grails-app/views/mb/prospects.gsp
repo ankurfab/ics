@@ -44,7 +44,7 @@
 		<div id="dialogcandidateReason" title="Reason">
 			<g:textArea name="candidateReason" value="" rows="5" cols="40"/>
 		</div>
-        <div id="dialoglimitedProfile" title="Full Profile">
+        <div id="dialoglimitedProfile" title="Limited Profile for Horoscope Match">
             <div id="divlimitedProfile"></div>
 		</div>
         <div>

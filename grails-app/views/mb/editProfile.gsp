@@ -152,7 +152,7 @@
                      value="${mbProfile?.candidate?.iskconCentre}"/>
     </td>
     <td valign="top" class="name">
-        <label for="counselor">Counselor:</label>
+        <label for="counselor">Counselor / Mentor:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="counselor" placeholder="Enter Counselor Name here" required="required"
@@ -171,7 +171,7 @@
         <label for="nationality">Nationality:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="nationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.candidate?.nationality}"/>
+        <g:select name="nationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.candidate?.nationality}"/>
     </td>
     <td valign="top" class="name">
         <label for="originState">State Of Birth</label>
@@ -281,7 +281,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="maritalStatus" required="required"
-                  from="${['Never Married','Divorcee','Married & Separated','Physically Challenged','Widow']}"
+                  from="${['Never Married','Divorcee','Married & Separated','Widow / Widower','Divorcee with Children']}"
                   value="${mbProfile?.maritalStatus?: 'Never Married'}"/>
     </td>
 </tr>
@@ -1135,7 +1135,7 @@
         <label for="prefNationality">Preferred Nationality:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefNationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.prefNationality}"/>
+        <g:select name="prefNationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.prefNationality}"/>
     </td>
     <td valign="top" class="name">
         <label for="flexibleNationality">I am flexible  on Nationality:</label>
@@ -1600,7 +1600,7 @@
         },0);
 
         $('.multiple').multiselect({
-            noneSelectedText: 'Select One',
+            noneSelectedText: 'Select One/More option',
             menuWidth: 225,
             checkAllText: 'Select All',
             uncheckAllText: 'Select None',
