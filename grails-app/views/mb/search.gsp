@@ -613,7 +613,7 @@
                 $("#expectationsForm")[0].reset();
                 setTimeout(function(){
                     $('.multiple').multiselect({
-                        noneSelectedText: 'Select One',
+                        noneSelectedText: 'Select One/More option',
                         menuWidth: 225,
                         checkAllText: 'Select All',
                         uncheckAllText: 'Select None',

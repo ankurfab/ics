@@ -15,7 +15,40 @@ class MbController {
     def individualService
     def springSecurityService
     
-    def index = { redirect(action: "manage", params: params) }
+    def index = {
+
+    }
+
+    def pendingApprovals = {
+        def objIds = AttributeValue.withCriteria {
+            projections {
+                distinct("objectId")
+            }
+        }
+        def paramsArr = []
+        objIds.each {
+            def Map params = [:]
+            params.put("objId",it)
+            def attrVals = AttributeValue.findAllByObjectId(it)
+            attrVals.each {
+                params.put(it.attribute.name,it.value)
+            }
+            paramsArr.push(params)
+        }
+        log.debug(paramsArr)
+        [profiles: paramsArr]
+    }
+
+    def approveProfile = {
+        mbService.initiateProfile(params)
+        deleteTempProfile(params)
+    }
+
+    def deleteTempProfile =  {
+        def idToDelete = Long.parseLong(params.profId)
+        AttributeValue.executeUpdate("delete AttributeValue where objectId=:objId",[objId:idToDelete])
+        redirect(action:"pendingApprovals")
+    }
 
     // the delete, save and update actions only accept POST requests
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
@@ -26,6 +59,18 @@ class MbController {
     }
 
     def startProfile = {
+        def ts = new Date().format('dd-MM-yyyy HH:mm:ss')
+        params.remove("action")
+        params.remove("controller")
+            dataService.storeHeader('MB',params.keySet())
+            def objId = AttributeValue.createCriteria().get{
+                projections {
+                    max "objectId"
+                }
+            } as Long
+            objId = objId ? objId : 0
+            dataService.storeValues('MB-'+ts,objId + 1,params.values())
+            render (view: "index",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
     }
     
     def editProfile() {
@@ -299,8 +344,7 @@ def showImage = {
                 }
 
                 if (params.flexibleSpMaster == "false" && params.prefSpMaster) {
-                    def valList = params.prefSpMaster.split(',')
-                    and { 'in'('spiritualMaster', valList) }
+                    and { 'in'('spiritualMaster', params.prefSpMaster) }
                 }
 
                 if (params.flexibleCentre == "false" && params.prefCentre) {
@@ -424,32 +468,32 @@ def showImage = {
       //def jsonCells = mbprofile?.matches?.findAll{it.candidateStatus==null || it.candidateStatus!='DECLINE'}?.sort{it.prospect?.candidate?.legalName}?.collect {
       def jsonCells = mbprofile?.matches?.sort{it.lastUpdated}?.collect {
             [cell: [
-            	    it.prospect.id,
-            	    it.candidateStatus,
-            	    it.prospect?.workflowStatus,
-            	    it.lastUpdated?.format('dd-MM-yyyy HH:mm:ss'),
-            	    it.prospect?.candidate?.legalName,
-            	    it.prospect?.candidate?.initiatedName,
-            	    it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
-			it.prospect?.candidate?.pob,
-			it.prospect?.candidate?.dob?.format('HH:mm:ss'),
-			it.prospect?.candidate?.iskconCentre,
-			it.prospect.candCounsellor,
-			it.prospect?.candidate?.origin,
-			it.prospect?.candidate?.varna,
-			it.prospect.scstCategory,
-			it.prospect.candidate?.caste,
-			it.prospect.candidate?.subCaste,
-			it.prospect.candidate?.height,
-			it.prospect.candidate?.motherTongue,
-			it.prospect.candidate?.income,
-			it.prospect.eduCat,
-			it.prospect.eduQual,
-			it.prospect.regulated,
-			it.prospect.numberOfRounds,
-			it.prospect.chantingSixteenSince,
-			it.candidateStatus,
-			it.mbStatus
+                it.prospect.id,
+                it.candidateStatus,
+                it.prospect?.workflowStatus,
+                //it.lastUpdated?.format('dd-MM-yyyy HH:mm:ss'),
+                it.prospect?.candidate?.legalName,
+                //it.prospect?.candidate?.initiatedName,
+                it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
+                it.prospect?.candidate?.pob,
+                it.prospect?.candidate?.dob?.format('HH:mm:ss'),
+                //it.prospect?.candidate?.iskconCentre,
+                //it.prospect.candCounsellor,
+                //it.prospect?.candidate?.origin,
+                //it.prospect?.candidate?.varna,
+                //it.prospect.scstCategory,
+                it.prospect.candidate?.caste,
+                //it.prospect.candidate?.subCaste,
+                it.prospect.candidate?.height,
+                //it.prospect.candidate?.motherTongue,
+                it.prospect.candidate?.income,
+                //it.prospect.eduCat,
+                //it.prospect.eduQual,
+                //it.prospect.regulated,
+                //it.prospect.numberOfRounds,
+                //it.prospect.chantingSixteenSince,
+                it.candidateStatus,
+                it.mbStatus
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
@@ -510,8 +554,15 @@ def showImage = {
 	    	i++
 	    	if(i==0)
 	    		dataService.storeHeader('MB',tokens)
-	    	else
-	    		dataService.storeValues('MB-'+ts,new Long(i),tokens)
+	    	else {
+                def objId = AttributeValue.createCriteria().get{
+                    projections {
+                        max "objectId"
+                    }
+                } as Long
+                objId = objId ? objId : 0
+                dataService.storeValues('MB-' + ts, objId, tokens)
+            }
 	    }
 	    
 	    flash.message = i+' records processed!!'
@@ -533,7 +584,7 @@ def showImage = {
     }
     
     def propose() {
-    	log.debug("proposing.."+params)
+    log.debug("proposing.."+params)
 	mbService.propose(params)
 	render([status:"OK"] as JSON)    	
     }
@@ -775,12 +826,22 @@ def showImage = {
     def fullProfile() {
     	log.debug("Inside fullProfile:"+params)
     	def match = MbProfileMatch.get(params.matchid)
-    	if(match && match.mbStatus=='FULLPROFILE' && match.candidate.candidate.loginid==springSecurityService.principal.username) {    		    		
-    		render(template: "fullProfile", model: [profile: match.prospect.candidate])
+    	if(match && match.mbStatus=='FULLPROFILE' && match.candidate.candidate.loginid==springSecurityService.principal.username) {
+            render(template: "fullProfile", model: [profile: match.prospect])
     	}
     	else
     		render "Unavailable!!"
     	
+    }
+    def limitedProfile() {
+    	log.debug("Inside limitedProfile:"+params)
+    	def match = MbProfileMatch.get(params.matchid)
+    	if(match && match.candidate.candidate.loginid==springSecurityService.principal.username) {
+            render(template: "limitedProfile", model: [profile: match.prospect])
+    	}
+    	else
+    		render "Unavailable!!"
+
     }
     
     def dashboard() {

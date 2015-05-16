@@ -132,7 +132,7 @@
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
         <g:textField name="pob" placeholder="Enter Actual Region with State" required="required"
-                     value="${mbProfile?.candidate?.pob}"/>
+                         value="${mbProfile?.candidate?.pob}"/>
     </td>
     <td valign="top" class="name">
         <label for="tob">Time of Birth:</label>
@@ -152,11 +152,11 @@
                      value="${mbProfile?.candidate?.iskconCentre}"/>
     </td>
     <td valign="top" class="name">
-        <label for="counselor">Counselor:</label>
+        <label for="counselor">Counselor / Mentor:</label>
     </td>
     <td valign="top" class="value">
         <g:textField name="counselor" placeholder="Enter Counselor Name here" required="required"
-                     value="${mbProfile?.candCounsellor}"/>
+                         value="${mbProfile?.candCounsellor}"/>
     </td>
     <td valign="top" class="name">
         <label for="counselorAshram">Counselor is a:</label>
@@ -171,7 +171,7 @@
         <label for="nationality">Nationality:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="nationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.candidate?.nationality}"/>
+        <g:select name="nationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.candidate?.nationality}"/>
     </td>
     <td valign="top" class="name">
         <label for="originState">State Of Birth</label>
@@ -204,7 +204,7 @@
     </td>
     <td valign="top" class="value">
         <g:textField name="caste" placeholder="Enter the Actual Caste here" required="required"
-                     value="${mbProfile?.candidate?.caste}" maxlength="40"/>
+             value="${mbProfile?.candidate?.caste}" maxlength="40"/>
     </td>
     <td valign="top" class="name">
         <label for="subCaste">Sub-Caste:</label>
@@ -281,7 +281,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="maritalStatus" required="required"
-                  from="${['Never Married','Divorcee','Married & Separated','Physically Challenged','Widow']}"
+                  from="${['Never Married','Divorcee','Married & Separated','Widow / Widower','Divorcee with Children']}"
                   value="${mbProfile?.maritalStatus?: 'Never Married'}"/>
     </td>
 </tr>
@@ -310,7 +310,7 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="addrline1">Present Address</label>
+        <label for="addrline1">Present Address : </label>
     </td>
     <td valign="top" class="value">
         <g:textArea name="addrline1" placeholder="Enter Address here" required="required" maxLength="100"
@@ -337,7 +337,7 @@
         <label for="pincode">Pin Code:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="pincode" maxLength="6" placeholder="Enter Pin Code here"
+        <g:textField name="pincode" maxLength="6" placeholder="Enter Pin Code here" required="required"
                      value="${candAddr?.pincode}"/>
     </td>
     <td valign="top" class="name">
@@ -392,7 +392,7 @@
     </td>
     <td valign="top" class="value">
         <g:textField name="nativePlace" maxLength="40" placeholder="Enter Region of Native place" required="required"
-                     value="${mbProfile?.nativePlace}"/>
+                         value="${mbProfile?.nativePlace}"/>
     </td>
     <td valign="top" class="name">
         <label for="nativeState">Native(State):</label>
@@ -430,7 +430,7 @@
         <label for="permpincode">Pin Code:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="permpincode" maxLength="6" placeholder="Enter Pin Code here" value="${mbProfile?.familyAddress?.pincode}"/>
+        <g:textField name="permpincode" maxLength="6" placeholder="Enter Pin Code here" required="required" value="${mbProfile?.familyAddress?.pincode}"/>
     </td>
     <td valign="top" class="name">
         <label for="houseIs">Above House is:</label>
@@ -537,6 +537,8 @@
         <g:textField name="relativeProfession1" placeholder="Enter Father's Occupation here"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.profession}"/>
     </td>
+    <g:hiddenField name="relationName1" value="Father"/>
+    <g:hiddenField name="relativeId1" value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.id}"/>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
@@ -942,7 +944,7 @@
                     <label for="regulated">Are you following 4 <br>regulative principles:</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="regulated" from="${['Yes', 'No']}" value="${mbProfile?.regulated}"/>
+                    <g:select name="regulated" from="${['Yes', 'No']}" value="${mbProfile?.regulated ? 'Yes':'No'}"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="regulatedSince">If yes, since when:</label>
@@ -1133,7 +1135,7 @@
         <label for="prefNationality">Preferred Nationality:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefNationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.prefNationality}"/>
+        <g:select name="prefNationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.prefNationality}"/>
     </td>
     <td valign="top" class="name">
         <label for="flexibleNationality">I am flexible  on Nationality:</label>
@@ -1598,7 +1600,7 @@
         },0);
 
         $('.multiple').multiselect({
-            noneSelectedText: 'Select One',
+            noneSelectedText: 'Select One/More option',
             menuWidth: 225,
             checkAllText: 'Select All',
             uncheckAllText: 'Select None',

@@ -190,13 +190,17 @@ class DataService {
 	//store the attribute names in a generic csv file
 	//@TODO: take care of dep,centre and other attributes
 	def storeHeader(String domainClassName,Object tokens) {
-		def attr
+        def attr
 		tokens.eachWithIndex{it,idx ->
-			attr = new Attribute()
-			attr.name = it
-			attr.position = idx
-			if(!attr.save())
-				attr.errors.allErrors.each {log.debug("exception in saving arrr:"+ it)}
+            def tempIt  = it.toString()
+            if(!Attribute.createCriteria().get{ eq("name",tempIt) })
+            {
+                attr = new Attribute()
+                attr.name = it
+                attr.position = idx
+                if (!attr.save())
+                    attr.errors.allErrors.each { log.debug("exception in saving arrr:" + it) }
+            }
 		}
 	}
 	
@@ -209,17 +213,15 @@ class DataService {
 		}
 		def attrValue,attr
 		tokens.eachWithIndex{it,idx ->
-			if(it) {
-				attr = attrMap.get(idx)
-				attrValue = new AttributeValue()
-				attrValue.objectClassName = objectClassName
-				attrValue.objectId = objectId
-				attrValue.attribute = attr
-				attrValue.value = it
-				attrValue.updator = attrValue.creator = 'system'
-				if(!attrValue.save())
-					attrValue.errors.allErrors.each {log.debug("exception in saving attrValue:"+ it)}
-			}
+            attr = attrMap.get(idx)
+            attrValue = new AttributeValue()
+            attrValue.objectClassName = objectClassName
+            attrValue.objectId = objectId
+            attrValue.attribute = attr
+            attrValue.value = it
+            attrValue.updator = attrValue.creator = 'system'
+            if(!attrValue.save())
+                attrValue.errors.allErrors.each {log.debug("exception in saving attrValue:"+ it)}
 		}
 	}
 	

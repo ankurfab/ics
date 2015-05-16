@@ -457,3 +457,33 @@ height: 2.5em;
 #step-5 .prop .value{
     max-width: 25%;
 }
+.inforow{
+    margin: 10px 20px;
+    display: table;
+
+}
+.inforow p{
+    font-family: cursive;
+    font-weight: bold;
+    font-size: 16px;
+    display: table-cell;
+    vertical-align: middle;
+}
+.inforow p:first-child{
+    width: 325px;
+}
+.pageHead{
+    text-align: center;
+    text-decoration: underline;
+    font-weight: bold;
+    color:black;
+    font-family: cursive;
+    font-size: 30px
+}
+
+#prospect_list_pager_left{
+    width: 60%;
+}
+#prospect_list_pager_left .ui-pg-button {
+    padding: 1px 5px;
+}
