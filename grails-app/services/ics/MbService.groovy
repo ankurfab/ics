@@ -605,47 +605,28 @@ class MbService {
 	    	case 'MEMBER':
 			    //assign the role
 			    role = mrole
-			    if(role) {
-				def indRole = new IndividualRole()
-				indRole.individual = individual
-				indRole.role = role
-				indRole.status = 'VALID'
-				indRole.creator = indRole.updator = springSecurityService.principal.username
-				if(!indRole.save()) {
-					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
-				}
-			    }
 	    		break
 	    	case 'SECRETARY':
 			    //assign the role
-			    role = mrole
-			    if(role) {
-				def indRole = new IndividualRole()
-				indRole.individual = individual
-				indRole.role = role
-				indRole.status = 'VALID'
-				indRole.creator = indRole.updator = springSecurityService.principal.username
-				if(!indRole.save()) {
-					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
-				}
-			    }
-			    //assign the role
 			    role = srole
-			    if(role) {
-				def indRole = new IndividualRole()
-				indRole.individual = individual
-				indRole.role = role
-				indRole.status = 'VALID'
-				indRole.creator = indRole.updator = springSecurityService.principal.username
-				if(!indRole.save()) {
-					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
-				}
-			    }
 	    		break
 	    	default:
 	    		break
 	    		
 	    }
+	    if(role) {
+		def indRole = new IndividualRole()
+		indRole.individual = individual
+		indRole.role = role
+		indRole.status = 'VALID'
+		indRole.creator = indRole.updator = springSecurityService.principal.username
+		if(!indRole.save()) {
+			indRole.errors.allErrors.each {log.debug("indRole:"+it)}
+		}
+		//now create the loginid
+		housekeepingService.createLogin(individual,IcsRole.findByAuthority(role.authority))
+	    }
+
 	   }
     }
     
@@ -740,5 +721,61 @@ class MbService {
         def inch = Integer.parseInt(height.split('"')[1].replace("'",""))
         return (ft*12 + inch)
     }    
+
+    def unlockAndResetUser(Individual individual) {
+    	def iuser  = IcsUser.findByUsername(individual?.loginid)
+    	iuser?.accountLocked = false
+    	iuser?.setPassword('harekrishna')
+    	if(iuser)
+    		return true
+    	else
+    		return false
+    }
+
+	def genderwiseReport(Map params) {
+		def result = MbProfile.createCriteria().list{
+				if(params.centre)
+					eq('referrerCenter',params.centre)
+				candidate{
+					projections {
+					groupProperty('isMale')
+					rowCount('id')
+					}
+				}
+				}
+		def series = []
+		result.each{series.add([it[0]?'Prabhuji':'Mataji',it[1]])}
+		return [series]
+	}	
+
+	def candidateAttributeReport(Map params) {
+		def result = MbProfile.createCriteria().list{
+				if(params.centre)
+					eq('referrerCenter',params.centre)
+				candidate{
+					projections {
+					groupProperty(params.attribute)
+					rowCount('id')
+					}
+				}
+				}
+		def series = []
+		result.each{series.add([it[0],it[1]])}
+		return [series]
+	}	
+
+	def mbProfileAttributeReport(Map params) {
+		def result = MbProfile.createCriteria().list{
+				if(params.centre)
+					eq('referrerCenter',params.centre)
+				projections {
+				groupProperty(params.attribute)
+				rowCount('id')
+				}
+				}
+		def series = []
+		result.each{series.add([it[0],it[1]])}
+		return [series]
+	}	
 
 }

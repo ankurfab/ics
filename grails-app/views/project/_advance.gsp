@@ -19,7 +19,14 @@
 
 <div>
 	<label for="advanceAmountIssued">Advance Amount Issued</label>
-	<g:field name="advanceAmountIssued"  type="number" id="advanceAmountIssued" value="${fieldValue(bean: projectInstance, field: 'advanceAmountIssued')}"   />
+	<g:field name="advanceAmountIssued"  type="number"/>
+</div>
+
+<div>
+	<label for="comments">Comments</label>
+</div>
+<div>
+	<g:field name="comments" type="text"/>
 </div>
 
 </fieldset>

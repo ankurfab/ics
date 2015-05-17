@@ -81,7 +81,13 @@
     });
     $("#incomeSummary_list").jqGrid('filterToolbar',{autosearch:true,});
     $("#incomeSummary_list").jqGrid('navGrid', "#incomeSummary_list_pager", {edit: false, add: false, del: false, search: false});
-    
+	jQuery("#incomeSummary_list").jqGrid('navGrid',"#incomeSummary_list_pager").jqGrid('navButtonAdd',"#incomeSummary_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+	   onClickButton : function () {
+	   var url = "exportIncomeSummaryEntries";
+		jQuery("#incomeSummary_list").jqGrid('excelExport',{"url":url});
+	   }
+	});
+
     });
 
 </script>

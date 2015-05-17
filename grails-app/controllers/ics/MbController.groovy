@@ -2,9 +2,8 @@ package ics
 
 import grails.converters.JSON
 import java.util.zip.ZipOutputStream  
-import java.util.zip.ZipEntry  
-import org.grails.plugins.csv.CSVWriter
-import org.apache.commons.lang.StringEscapeUtils.*
+import java.util.zip.ZipEntry
+
 import groovy.time.TimeCategory
 
 
@@ -18,7 +17,9 @@ class MbController {
     def index = {
 
     }
+    def mbLogin = {
 
+    }
     def pendingApprovals = {
         def objIds = AttributeValue.withCriteria {
             projections {
@@ -70,7 +71,7 @@ class MbController {
             } as Long
             objId = objId ? objId : 0
             dataService.storeValues('MB-'+ts,objId + 1,params.values())
-            render (view: "index",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
+            render (view: "mbLogin",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
     }
     
     def editProfile() {
@@ -276,6 +277,8 @@ def showImage = {
 			candidate{eq('icsid',new Long(params.icsid))}
 		if(params.name)
 			candidate{ilike('legalName',params.name)}
+		if(params.loginid)
+			candidate{eq('loginid',params.loginid)}
 		if(params.referrerCenter)
 			eq('referrerCenter',params.referrerCenter)
 		if(params.contactNumber)
@@ -304,6 +307,7 @@ def showImage = {
             	    it.assignedTo?.toString(),
             	    it.profileStatus,
             	    it.workflowStatus,
+            	    it.candidate.loginid,
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -688,6 +692,8 @@ def showImage = {
 			eq('icsid',params.icsid)
 		if (params.name)
 			ilike('legalName',params.name)
+		if (params.loginid)
+			eq('loginid',params.loginid)
 		if (params.phone)
 			VoiceContact{
 				eq('category','CellPhone')
@@ -723,6 +729,7 @@ def showImage = {
             	    EmailContact.findByIndividualAndCategory(it,'Personal')?.emailAddress,
             	    it.iskconCentre,
             	    it.individualRoles?.collect{it?.role?.name},
+            	    it.loginid,
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -739,7 +746,8 @@ def showImage = {
 	      // determine our action
 	      switch (params.oper) {
 		case 'add':
-		  if(mbService.addBoardMember(params)) {
+		  individual = mbService.addBoardMember(params)
+		  if(individual) {
 			    message = "Individual Saved.."
 			    id = individual.id
 			    state = "OK"
@@ -778,7 +786,7 @@ def showImage = {
 		    individual.properties = params
 			  individual.updator = springSecurityService.principal.username
 		    if (! individual.hasErrors() && individual.save()) {
-		      message = "Individual  ${individual.regNum} Updated"
+		      message = "Individual  ${individual.icsid} Updated"
 		      id = individual.id
 		      state = "OK"
 		    } else {
@@ -856,7 +864,7 @@ def showImage = {
     def report() {}
     
     def showReportResult() {
-    	log.debug("Inside showReportResult with params : "+params)	    	
+    	//log.debug("Inside showReportResult with params : "+params)	    	
     	render(template: params.reportName)
     }
     
@@ -949,6 +957,256 @@ def showImage = {
             }
     }
     
+    def jq_varnaCategory_list() {
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'desc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+              
+    	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
+    				
+    		    
+    	if(params.db)
+    		eq('category',params.db)
+    	if(params.centre)
+    		eq('referrerCenter',params.centre)
+    	if(params.gender) {
+    		if(params.gender=='BOY')
+    			candidate{eq('isMale',true)}
+    		else
+    			candidate{eq('isMale',false)}
+    		}
+    	if(params.workflowStatus)
+    		eq('workflowStatus',params.workflowStatus)
+    	if(params.name)
+    		candidate{
+    			or{
+    			ilike('legalName',params.name)
+    			ilike('initiatedName',params.name)
+    			}
+    		}
+    	if(params.nationality)
+    		candidate{ilike('nationality',params.nationality)}
+    	if(params.origin)
+    		candidate{ilike('origin',params.origin)}
+    	if(params.varna)
+    		candidate{ilike('varna',params.varna)}
+    	if(params.caste)
+    		candidate{ilike('caste',params.caste)}
+    	if(params.nationality)
+    		candidate{ilike('nationality',params.nationality)}
+    	if(params.subCaste)
+    		candidate{ilike('subCaste',params.subCaste)}
+    	if(params.scstCategory)
+    		ilike('scstCategory',params.scstCategory)
+    	if(params.manglik)
+    		ilike('manglik',params.manglik)
+    
+    
+    	order(sortIndex, sortOrder)
+    	}
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+          
+         
+          def jsonCells
+          jsonCells = result.collect {
+                [cell: [
+                	    it.category,
+                	    it.referrerCenter,
+                	    it.candidate.isMale?'Boy':'Girl',
+                	    it.workflowStatus,
+                	    it.candidate.toString(),
+                	    it.candidate.nationality,
+                	    it.candidate.origin,
+                	    it.candidate.varna,
+                	    it.scstCategory,
+                	    it.candidate.caste,
+                	    it.candidate.subCaste,
+                	    it.manglik,
+                    ], id: it.id]
+            }
+            def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+            render jsonData as JSON
+    }
+
+    def jq_salientFeatures_list() {
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'desc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+              
+    	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
+    				
+    		    
+    	if(params.db)
+    		eq('category',params.db)
+    	if(params.centre)
+    		eq('referrerCenter',params.centre)
+    	if(params.gender) {
+    		if(params.gender=='BOY')
+    			candidate{eq('isMale',true)}
+    		else
+    			candidate{eq('isMale',false)}
+    		}
+    	if(params.workflowStatus)
+    		eq('workflowStatus',params.workflowStatus)
+    	if(params.name)
+    		candidate{
+    			or{
+    			ilike('legalName',params.name)
+    			ilike('initiatedName',params.name)
+    			}
+    		}
+    	if(params.income)
+    		candidate{ilike('income',params.income)}
+    	if(params.languagesKnown)
+    		ilike('languagesKnown',params.languagesKnown)
+    	if(params.height)
+    		candidate{ilike('height',params.height)}
+    	if(params.weight)
+    		ilike('weight',params.weight)
+    	if(params.eduCat)
+    		candidate{ilike('eduCat',params.eduCat)}
+    	if(params.eduQual)
+    		candidate{ilike('eduQual',params.eduQual)}
+    	if(params.spiritualMaster)
+    		ilike('spiritualMaster',params.spiritualMaster)    
+    
+    	order(sortIndex, sortOrder)
+    	}
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+          
+         
+          def jsonCells
+          jsonCells = result.collect {
+                [cell: [
+                	    it.category,
+                	    it.referrerCenter,
+                	    it.candidate.isMale?'Boy':'Girl',
+                	    it.workflowStatus,
+                	    it.candidate.toString(),
+                	    it.candidate.income,
+                	    it.languagesKnown,
+                	    it.candidate.height,
+                	    it.weight,
+                	    it.candidate.eduCat,
+                	    it.candidate.eduQual,
+                	    it.spiritualMaster
+                    ], id: it.id]
+            }
+            def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+            render jsonData as JSON
+    }
+
+    def jq_rejectionReason_list() {
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'desc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+          
+    	def result = MbProfileMatch.createCriteria().list(max:maxRows, offset:rowOffset) {
+    				
+    	isNotNull('candidateReason')	    
+    	if(params.db)
+    		candidate{eq('category',params.db)}
+    	if(params.centre)
+    		candidate{eq('referrerCenter',params.centre)}
+    	if(params.gender) {
+    		if(params.gender=='BOY')
+    			candidate{candidate{eq('isMale',true)}}
+    		else
+    			candidate{candidate{eq('isMale',false)}}
+    		}
+    	if(params.workflowStatus)
+    		candidate{eq('workflowStatus',params.workflowStatus)}
+    	if(params.name)
+    		candidate{candidate{
+    			or{
+    			ilike('legalName',params.name)
+    			ilike('initiatedName',params.name)
+    			}
+    		}}
+    
+    
+    	order(sortIndex, sortOrder)
+    	}
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+          
+         
+          
+          def jsonCells
+          jsonCells = result.collect {
+                [cell: [
+                	    it.candidate.category,
+                	    it.candidate.referrerCenter,
+                	    it.candidate.candidate.isMale?'Boy':'Girl',
+                	    it.candidate.candidate.toString(),
+                	    it.candidate.workflowStatus,
+                	    it.candidateStatus,
+                	    it.candidateReason,
+                	    it.candidateDate?.format('dd-MM-yy HH:mm:ss')
+                    ], id: it.id]
+            }
+            def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+            render jsonData as JSON
+    }
+    
+    def unlockAndResetUser() {
+	def flag
+	if(params.idlist) {
+		def idList = params.idlist.tokenize(',')
+		def individual
+		idList.each{
+			individual = Individual.get(it)
+			if(individual.category=='MB_BOARD')
+				flag = mbService.unlockAndResetUser(individual)
+			}
+    	}
+    	else if(params.mbprofile_idlist) {
+		def pidList = params.mbprofile_idlist.tokenize(',')
+		def individual
+		pidList.each{
+			individual = MbProfile.get(it)?.candidate
+			if(individual.category=='MB')
+				flag = mbService.unlockAndResetUser(individual)
+			}
+    	}
+	render([message:flag] as JSON)
+    }
+    
+    def snapshot() {[centre:params.centre]}
+    
+    def genderwiseReport() {
+		def result = mbService.genderwiseReport(params)
+		render( result as JSON)
+    }
+
+    def candidateAttributeReport() {
+		def result = mbService.candidateAttributeReport(params)
+		render( result as JSON)
+    }
+
+    def mbProfileAttributeReport() {
+		def result = mbService.mbProfileAttributeReport(params)
+		render( result as JSON)
+    }
+    
+    def activityStream() {}    
 
     
 }

@@ -29,7 +29,7 @@
       url:'jq_mb_list',
       editurl:'jq_edit_mb',
       datatype: "json",
-      colNames:['IcsId','Name','Phone','Email','Centre','Role','Id'],
+      colNames:['IcsId','Name','Phone','Email','Centre','Role','LoginId','Id'],
       colModel:[
 	{name:'icsid',search:true},
 	{name:'name',search:true,editable:true,editrules:{required:true}},         
@@ -45,6 +45,7 @@
 		edittype:"select",editoptions:{ value: "MEMBER:MEMBER;SECRETARY:SECRETARY;ADMIN:ADMIN"},
 		stype:'select', searchoptions: { value: "${':ALL;'+'MEMBER:MEMBER;SECRETARY:SECRETARY;ADMIN:ADMIN'}"}						
 	},
+	{name:'loginid',search:true},
 	{name:'id',hidden:true}
      ],
      
@@ -59,14 +60,28 @@
     multiselect: false,
     caption:"Mb List"
     });
-  $("#mb_list").jqGrid('filterToolbar',{autosearch:true,});
-    $("#mb_list").jqGrid('navGrid', "#mb_list_pager", {edit: true, add: true, del: true, search: true});
-    jQuery("#mb_list").jqGrid('navGrid',"#mb_list_pager").jqGrid('navButtonAdd',"#mb_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
-    onClickButton : function () { 
-    var query = 'jq_mb_list?eid='+$('#event').val();            
-    jQuery("#mb_list").jqGrid('excelExport',{"url":query});
-         }
-      });
+    $("#mb_list").jqGrid('filterToolbar',{autosearch:true,});
+    $("#mb_list").jqGrid('navGrid', "#mb_list_pager", {edit: false, add: true, del: false, search: false});
+    $("#mb_list").jqGrid('navGrid',"#mb_list_pager").jqGrid('navButtonAdd',"#mb_list_pager",{caption:"User", buttonicon:"ui-icon-unlocked", onClickButton:unlockUser, position: "last", title:"UnlockUser", cursor: "pointer"});
+
+	function unlockUser() {
+		var answer = confirm("Are you sure?");
+		if (answer){
+			var idlist = $('#mb_list').jqGrid('getGridParam','selrow');
+			if(idlist) {
+				var url = "${createLink(controller:'mb',action:'unlockAndResetUser')}"+"?idlist="+idlist
+				$.getJSON(url, {}, function(data) {
+					alert(data.message);
+				    });	
+			}
+			else
+				alert("Please select a row!!");
+		} else {
+		    return false;
+		}
+	}
+
+    
     });
 </script>
 

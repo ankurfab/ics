@@ -187,7 +187,7 @@ class InvoiceController {
 		    		invoice.itemTotalAmount += (it.qty*it.rate)
 		    		invoice.itemTotalAmountWithTax += (it.qty*it.rate*(1+(it.taxRate?:0)/100)) 
 		    		}
-		    invoice.invoiceAmount = invoice.itemTotalAmountWithTax + invoice.extraAmount - invoice.discountAmount
+		    invoice.invoiceAmount = (invoice.itemTotalAmountWithTax?:0) + (invoice.extraAmount?:0) - (invoice.discountAmount?:0)
 		    //also check status
 		    if(invoice.status=='PREPARED' && invoice.mode=="CASH")
 		    	invoice.status='PAID'	//since alread paid in cash
@@ -308,7 +308,11 @@ class InvoiceController {
 					newItem = true
 
 			}
-		  lineItem = new InvoiceLineItem(params)	  	
+		  lineItem = new InvoiceLineItem(params)
+
+		  if(!lineItem.taxRate)
+		  	lineItem.taxRate =0
+		  	
 		  if(newItem)
 		  	lineItem.item = item
 		  lineItem = invoiceService.setCalculatedFields(lineItem)
@@ -674,6 +678,46 @@ class InvoiceController {
     	def stock = invoiceService.stockReport(params)
     	
     	render(template: "stockReport", model: [stock: stock])
+    }
+
+    def itemPurchaseReport() {
+    	def items = Item.createCriteria().list{
+    		order('name')
+    		}
+    	[items:items]
+    }
+    
+    def itemPurchaseReportResult() {
+    	log.debug("Inside itemPurchaseReportResult with params : "+params)
+	
+	if(params.from)
+		  params.from = Date.parse('dd-MM-yyyy',params.from)
+	if(params.to)
+		  params.to = Date.parse('dd-MM-yyyy',params.to)
+    	
+    	def ilis = invoiceService.itemPurchaseReport(params)
+    	
+    	render(template: "itemPurchaseReport", model: [ilis: ilis])
+    }
+
+    def itemSaleReport() {
+    	def items = Item.createCriteria().list{
+    		order('name')
+    		}
+    	[items:items]
+    }
+    
+    def itemSaleReportResult() {
+    	log.debug("Inside itemSaleReportResult with params : "+params)
+	
+	if(params.from)
+		  params.from = Date.parse('dd-MM-yyyy',params.from)
+	if(params.to)
+		  params.to = Date.parse('dd-MM-yyyy',params.to)
+    	
+    	def ilis = invoiceService.itemSaleReport(params)
+    	
+    	render(template: "itemSaleReport", model: [ilis: ilis])
     }
 
     def paymentReport() {

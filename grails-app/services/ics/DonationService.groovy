@@ -67,7 +67,24 @@ class DonationService {
 	donation.donorAddress = Address.findByIndividualAndCategory(dr.donatedBy,'Correspondence')?.toString()?:''
 	donation.donorContact = VoiceContact.findByIndividualAndCategory(dr.donatedBy,'CellPhone')?.number?:''
 	donation.collectionType = 'Donation'
-	donation.scheme = dr.scheme
+	//@TODO: hardcoding for EASY
+	if(dr.scheme?.name!='EASY')
+		donation.scheme = dr.scheme
+	else {
+		//get appropriate scheme from centre
+		def scheme
+		try{
+		scheme = Scheme.findByStatusIsNullAndCc(Department.findByCentreAndName(dr.schemeMember?.centre,'ECS-DONATION')?.costCenter)
+		}
+		catch(Exception e){log.debug('Exception in createDonation:get scheme for EASY:'+e)}
+		if(!scheme)
+			scheme = Scheme.findByStatusIsNullAndName('CENTRAL FUND (IYF)')	//@TODO: hardcoded default scheme for EASY
+		if(scheme)
+			donation.scheme = scheme
+		else
+			donation.scheme = dr.scheme		
+	}
+	
 	donation.mode = dr.mode
 	donation.donationDate = dr.donationDate
 	if(backDated)
@@ -144,7 +161,7 @@ class DonationService {
 		   	recent = true
 		}
 		try{
-			if(donation.donorContact && donation.donorName && recent && donation.scheme?.name!='EASY') {	//@TODO: harcoded, whether sms to be sent or not should be picked up from profile
+			if(donation.donorContact && donation.donorName && recent && dr.scheme?.name!='EASY') {	//@TODO: harcoded, whether sms to be sent or not should be picked up from profile
 				def donorNameForSMS = donation.donorName.replace(" ","%20")
 				housekeepingService.sendSMS(donation.donorContact,'Dear%20'+donorNameForSMS+',%20Hare%20Krishna!%20Thank%20you%20for%20the%20donation%20of%20Rs'+donation.amount+'.%20May%20Lord%20Krishna%20shower%20His%20choicest%20blessings%20upon%20you.%20ISKCON%20Pune')			
 			}
@@ -510,11 +527,11 @@ class DonationService {
 				                        secondrecord.transactionId = dr.transactionId
 				                        secondrecord.reference = dr.reference
 
-				                         secondrecord.amount = (dr.amount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower
+				                         secondrecord.amount = new Double((dr.amount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower).round(2)
 				                         dr.amount = dr.amount - secondrecord.amount
 
 				                         if(secondrecord.amount ==0){
-				                         	secondrecord.expectedamount = (dr.expectedamount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower
+				                         	secondrecord.expectedamount = new Double((dr.expectedamount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower).round(2)
 				                         	dr.expectedamount = dr.expectedamount - secondrecord.expectedamount
 				                         }
 				                         println "creating second donation record for "+ schemeMember?.externalName
@@ -558,9 +575,9 @@ class DonationService {
                         newDR.transactionId = dr.transactionId
                         newDR.reference = dr.reference
 
-                         newDR.amount = ((it.committedAmount/12)/totalCommittedAmount)*donatedAmount	//commitments are annual; also split as per ratio
+                         newDR.amount = new Double(((it.committedAmount/12)/totalCommittedAmount)*donatedAmount).round(2)	//commitments are annual; also split as per ratio
                          if(newDR.amount ==0){
-                         	newDR.expectedamount = ((it.committedAmount/12)/totalCommittedAmount) * dr.expectedamount
+                         	newDR.expectedamount = new Double(((it.committedAmount/12)/totalCommittedAmount) * dr.expectedamount).round(2)
                          }
                          dr.amount = dr.amount - newDR.amount
                          
@@ -601,11 +618,11 @@ class DonationService {
 				                        secondrecord.transactionId = newDR.transactionId
 				                        secondrecord.reference = newDR.reference
 
-				                         secondrecord.amount = (newDR.amount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower
+				                         secondrecord.amount = new Double((newDR.amount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower).round(2)
 				                         newDR.amount = newDR.amount - secondrecord.amount
 
 				                         if(secondrecord.amount ==0){
-				                         	secondrecord.expectedamount = (newDR.expectedamount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower
+				                         	secondrecord.expectedamount = new Double((newDR.expectedamount *schemeMember.percentageDeductionSecondCentreUpper)/ schemeMember.percentageDeductionSecondCentreLower).round(2)
 				                         	newDR.expectedamount = newDR.expectedamount - secondrecord.expectedamount
 				                         }
 				                         println "creating second donation record for "+ schemeMember?.externalName
@@ -648,7 +665,7 @@ class DonationService {
     	def drList = DonationRecord.createCriteria().list(){
     				isNull('receiptReceivedStatus')
     				isNull('donation')
-    				ge('amount',new BigDecimal(0))
+    				gt('amount',new BigDecimal(0))
     				if(params.fromDate)
     					ge('donationDate',Date.parse('dd-MM-yyyy', params.fromDate))
     				if(params.tillDate)

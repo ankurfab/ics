@@ -27,7 +27,9 @@
 		<g:each var="score" in="${scores}">
 		<!-- find the team -->
 		<g:set var="team" value=""/>
-		<g:set var="bo" value="${ics.BookOrder.createCriteria().get{challan{eq('id',score.challan_id)}}}" /> 
+		<g:set var="bo" value="${ics.BookOrder.createCriteria().list(max:1){
+				challan{eq('id',score.challan_id)}
+				order('id','desc')}}"/> 
 		<g:if test="${bo}">
 			<g:set var="team" value="${bo.team?.comments}"/>
 		</g:if>

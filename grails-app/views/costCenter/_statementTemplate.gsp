@@ -14,9 +14,12 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>CC</th>
                             <th>Date</th>
                             <th>Reference</th>
                             <th>Details</th>
+                            <th>Phone</th>
+                            <th>Email</th>
 			    <th>Income</th>                            
                             <th>Expense</th>
                             <th>Balance</th>
@@ -26,9 +29,12 @@
                     <tbody>
                     <g:each in="${records}" status="i" var="record">
                         <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                            <td>${record.ccname}</td>
                             <td>${record.date?.format('dd-MM-yyyy')}</td>
                             <td>${record.ref}</td>
                             <td>${record.details}</td>
+                            <td>${record.contact}</td>
+                            <td>${record.email}</td>
                             <td>${record.income}</td>
                             <td>${record.expense}</td>
                             <g:set var="balance" value="${balance + (record?.income?:0) - (record?.expense?:0)}" />

@@ -238,7 +238,7 @@ class ItemController {
 		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
 			zipOutputStream.putNextEntry(new ZipEntry(fname))
 			//header
-			zipOutputStream << "Id,Name,OtherNames,Category,SubCategory,Variety,Brand,Description,Rate,Tax,Vendors,Consumers,NumVC,QtyPurchased,QtySold,Stock" 
+			zipOutputStream << "Id,Name,OtherNames,Category,SubCategory,Variety,Brand,Description,Rate,Tax,Vendors,Consumers,NumVC,QtyPurchased,QtySold,Stock,Worth" 
 			def numv,numc,pq,sq
 			result.each{ row ->
 				numv = itemService.numVendors(row)
@@ -260,7 +260,8 @@ class ItemController {
 					    (numv+numc) +","+
 					    pq +","+
 					    sq +","+
-					    (pq-sq)
+					    (pq-sq)+","+
+					    new Double((pq-sq)*row.rate*(1+((row.taxRate?:0)/100))).round(2)
 			}
 		}
 	 	return
@@ -525,7 +526,9 @@ class ItemController {
 			query += it +"~ "
 		}
 	
-	def result = Item.search(query,[max: 10,reload:true])
+	def result = []
+	if(query)
+		result = Item.search(query,[max: 10,reload:true])
 
         response.setHeader("Cache-Control", "no-store")
 
@@ -605,11 +608,14 @@ class ItemController {
       def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
 	def result = InvoiceLineItem.createCriteria().list(max:maxRows, offset:rowOffset) {
-		invoice{eq('type','PURCHASE') order(sortIndex, sortOrder)}
 		if(params.'item.id')
 			item{eq('id',new Long(params.'item.id'))}
 		else
 			item{eq('id',new Long(-1))}
+		invoice{
+			eq('type','PURCHASE')
+			order(sortIndex, sortOrder)
+			}
 	}
       
       def totalRows = result.totalCount

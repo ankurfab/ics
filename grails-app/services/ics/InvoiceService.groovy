@@ -335,6 +335,64 @@ class InvoiceService {
 	return results	
     }
 
+    def itemPurchaseReport(Map params) {
+    	if(!params.from)
+    		params.from = new Date()-30
+    	def fromDate = params.from.format('yyyy-MM-dd HH:mm:ss')
+
+    	if(!params.to)
+    		params.to = new Date()
+    		
+    	
+    	//for last day boundary condition
+    	params.to = params.to + 1
+
+    	def toDate = params.to.format('yyyy-MM-dd HH:mm:ss')
+
+
+	def ilis = InvoiceLineItem.createCriteria().list{
+			invoice{eq('type','PURCHASE')}
+			if(params.itemid)
+				item{eq('id',new Long(params.itemid))}
+			if(params.from)
+				invoice{ge('invoiceDate',params.from)}
+			if(params.to)
+				invoice{le('invoiceDate',params.to)}
+			item{order("name", "asc")}
+			invoice{order("invoiceDate", "asc")}
+			}
+	return ilis	
+    }
+
+    def itemSaleReport(Map params) {
+    	if(!params.from)
+    		params.from = new Date()-30
+    	def fromDate = params.from.format('yyyy-MM-dd HH:mm:ss')
+
+    	if(!params.to)
+    		params.to = new Date()
+    		
+    	
+    	//for last day boundary condition
+    	params.to = params.to + 1
+
+    	def toDate = params.to.format('yyyy-MM-dd HH:mm:ss')
+
+
+	def ilis = InvoiceLineItem.createCriteria().list{
+			invoice{eq('type','SALES')}
+			if(params.itemid)
+				item{eq('id',new Long(params.itemid))}
+			if(params.from)
+				invoice{ge('invoiceDate',params.from)}
+			if(params.to)
+				invoice{le('invoiceDate',params.to)}
+			item{order("name", "asc")}
+			invoice{order("invoiceDate", "asc")}
+			}
+	return ilis	
+    }
+
     def paymentReport(Map params) {
 	def invoices = Invoice.createCriteria().list{
 			eq('type','PURCHASE')

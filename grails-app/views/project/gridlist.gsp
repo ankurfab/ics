@@ -7,6 +7,7 @@
 	<r:require module="grid" />
 	<r:require module="ajaxform"/>
 	<r:require module="printarea" />
+    <r:require module="jqbarcode" />
 </head>
 
 <body>
@@ -321,6 +322,13 @@
     		<g:if test="${s_status=='APPROVED_REPORT'}">
 	    <!--$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "Reject", buttonicon: "ui-icon-cancel", onClickButton: rejectProject, position: "last", title: "Reject", cursor: "pointer"});-->
     	    $("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"MarkSettled", buttonicon:"ui-icon-check", onClickButton:markSettled, position: "last", title:"Mark Settled", cursor: "pointer"});
+			
+			jQuery("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+			   onClickButton : function () {
+			   var url = "exportExpenseList";
+				jQuery("#project_list").jqGrid('excelExport',{"url":url});
+			   }
+			});
     	    <!--$("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"PrintReimbursement", buttonicon:"ui-icon-print", onClickButton:printReimbursement, position: "last", title:"Print Expense Reimbursement Form", cursor: "pointer"});-->
     	    $("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"PartPayments", buttonicon:"ui-icon-copy", onClickButton:showChildProjects, position: "last", title:"Part Payments", cursor: "pointer"});
     	    	</g:if>
@@ -470,7 +478,7 @@
 			    {name: 'ref', search:true, editable: false},
 			    {name:'id',hidden:true}
                             ],
-	                    rowNum: 10,
+	                    rowNum: 50,
 	                    rowList: [5, 10, 20, 30, 40, 50],
 	                    pager: '#expense_list_pager',
 	                    viewrecords: true,
@@ -559,7 +567,7 @@
 	
 	function payExpense() {
 		var ids = $('#expense_list').jqGrid('getGridParam','selarrrow');
-		if(ids) {
+		if(ids != '') {
 			var url = "${createLink(controller:'Voucher',action:'payExpense')}"+"?expids="+ids;
 			
 			$( "#divPayExpense" ).val("");
@@ -621,7 +629,7 @@
 
 	function ledgerHead() {
 		var ids = $('#expense_list').jqGrid('getGridParam','selarrrow');
-		if(ids) {
+		if(ids!='') {
 			$("#dialogLedgerHeadForm").dialog("open");
 		}
 		else

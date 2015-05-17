@@ -77,6 +77,10 @@
                     <br><br>
                     <tr>
                     <g:set var="sanctioned" value="${ics.Project.findByAdvancePaymentVoucher(voucherInstance)?.reviewer1}" />
+ 		    <!-- try if the voucher is associated with an expense -->
+ 		    <g:if test="${!sanctioned}">
+ 		    	<g:set var="sanctioned" value="${ics.Expense.findByPaymentVoucher(voucherInstance)?.project?.reviewer1}" />
+ 		    </g:if>
  		    <td><p>${sanctioned}</p></td>
  			 <td><p> </p> </td>
  			 <td><p></p></td>

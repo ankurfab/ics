@@ -75,7 +75,12 @@ $(document).ready(function () {
 	
 	 
       $("#addprojectForm").submit(function(e){
-
+	  if(e.keyCode == 13) {
+		e.preventDefault();
+	  }
+	  $("#prjCreationBtn").button().button('disable');
+	  $("#addprojectForm").attr('disabled', true);
+	  
      var amount=0;
      if($('#amount').val())
      	amount = parseFloat($('#amount').val());

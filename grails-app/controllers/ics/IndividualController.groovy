@@ -3507,11 +3507,28 @@ def self() {
 		{
 		//redirect(action: "show", id: Individual.findByLoginid(springSecurityService.principal.username)?.id)
 		//forward(action: "show", id: session.individualid,params:[profile:"true"])
-		forward(action: "show", id: session.individualid,params:[profile:"true"])
+		//forward(action: "show", id: session.individualid,params:[profile:"true"])
+		forward(action: "selfContact")
 		}
 	else
 		render "This loginid is not associated with any person. Please contact admin!"
 }
+
+def selfContact() {
+	def individual = Individual.get(session.individualid)
+	def phone = VoiceContact.findAllByIndividualAndCategory(individual,'CellPhone').collect{it.number}.join(',')
+	def email = EmailContact.findAllByIndividualAndCategory(individual,'Personal').collect{it.emailAddress}.join(',')
+	[phone:phone,email:email]
+}
+
+def selfContactUpdate() {
+	log.debug("selfContactUpdate:"+params) 
+	def individual = Individual.get(session.individualid)
+	individualService.contactUpdate(individual,params)
+	flash.message = "Contacts updated..."
+	forward(action: "selfContact")	
+}
+
 
 def updateCultivator = {
 	println "Saving relationship with params: " + params
@@ -4268,7 +4285,7 @@ def updateCultivator = {
 		}
 		
 		//we could try .findAll{it.status!='MERGED'}
-		if(params.fuzzy=="true" && (params.address || params.phone || params.email))
+		if(params.fuzzy=="true" && ((params.address || params.phone || params.email) && !params.legalName))
 			{
 			//for fuzzy search on addresses/phone/email
 			jsonCells = rows.collect {
@@ -4972,6 +4989,29 @@ def updateCultivator = {
 		}
 	render(template: "donationSummary", model: [individualInstance : individualInstance, amtInd:summaryDonation?.amtInd,amtIndDR:summaryDonationRecord?.amtIndDR, amtFam: summaryDonation?.amtFam, amtCol:summaryDonation?.amtCol, sList: summaryDonation?.sList, sListDR: summaryDonationRecord?.sListDR, amtColExclOwn: summaryDonation?.amtColExclOwn, amtGiftInd :summaryDonation?.amtGiftInd , amtGiftFam: summaryDonation?.amtGiftFam, amtBCInd: summaryDonation?.amtBCInd, amtBCFam: summaryDonation?.amtBCFam])
 	return
+    }
+    
+    def downloadCongregationData() {
+    	response.contentType = 'application/zip'
+    	def query = "select r.id rid,i2.id clorid,i2.initiated_name clor,i1.id cleeid,i1.legal_name cleeLegalName,ifnull(i1.initiated_name,'') cleeInitiatedName,rln.name relation from relationship r, individual i1, individual i2,relation rln where r.status='ACTIVE' and r.relation_id=rln.id and rln.name in ('Cultivated by','Councellee of') and r.individual1_id=i1.id and r.individual2_id=i2.id and r.individual2_id in (select distinct individual_id from individual_role where status='VALID' and role_id in (select id from role where name in ('PuneEnglishCouncellors','PuneHindiCouncellors')))"
+    	def sql = new Sql(dataSource)
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		def fileName = "congregation_"+new Date().format('ddMMyyyyHHmmss')+".csv"
+		zipOutputStream.putNextEntry(new ZipEntry(fileName))
+		//header
+		def headers = null;
+
+		sql.rows(query).each{ row ->
+			   if (headers == null) {
+				headers = row.keySet()
+				zipOutputStream << headers
+			        zipOutputStream << "\n"
+			   }
+			//with escaping for excel
+			zipOutputStream << row.values().collect{it.toString()}
+			zipOutputStream << "\n"
+		}
+	}    	    	
     }
 
 

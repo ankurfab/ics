@@ -172,7 +172,7 @@ grails.resources.modules = {
     }
 
     jq {
-        resource url:'/js/jquery-1.11.1.min.js'
+        resource url:'/js/jquery-2.1.3.min.js' 
     }
 
     jqmigrate {
@@ -224,14 +224,11 @@ grails.resources.modules = {
     mbHome{
         dependsOn 'bootstrap'
         resource url:'/css/form-elements.css'
-        resource url:'/css/style.css'
+        resource url:'/css/stylish-portfolio.css'
         resource url:'/js/jquery.backstretch.min.js'
-        resource url:'/js/scripts.js'
-        resource url:'/js/placeholder.js'
         resource url:'/css/select2.min.css'
         resource url:'/js/select2.full.min.js'
     }
-
 }
 
 

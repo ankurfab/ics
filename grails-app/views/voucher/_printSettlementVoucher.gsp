@@ -121,14 +121,13 @@ text-align: center;
     <h5>(<b>Regd.Office:</b>Hare Krishna Land,Juhu, Mumbai-400 049.)</h5>
     <h5>(<b>Branch:</b>Survey No. 50/2, Katraj Kondhwa Road, Opp Shantrujay Temple, Kondhwa Budruk,Pune-411 048.)</h5>
     <h5>(<b>Branch:</b>4,Tarapore Road,Camp,Pune-411 001.)</h5> <br>
-    
+ <div id="barCode"></div>
  <table class="reimtoptable">
              <tr></tr>       
                      <tr>
                          <td><span style="float: left;"></span></td>
-                         <td></td>
-                         <td><span style="float: right;">No:${voucherInstance.voucherNo}</span></td>
-                     </tr>  
+                         <td></td>						 
+                     </tr>
                       
                      <tr>
                           <td><span style="float: left;"></span></td>
@@ -317,3 +316,13 @@ text-align: center;
     </div>   <!-- End of subpageOffice Div -->  
 </div>    <!-- End of Page Div --> 
 </div>                    <!-- End of allBody Div --> 
+
+<script>
+$(document).ready(function()
+{
+	$("#barCode").barcode(
+		"${voucherInstance.voucherNo}", // Value barcode (dependent on the type of barcode)
+		"code39" // type (string)
+	);
+});
+</script>

@@ -675,6 +675,11 @@ class AssessmentService {
 						makeVerified(er)
 					}
 					catch(Exception e){log.debug("Exception in veriying in setupuv"+e)}
+					//@TODO: some hardcodings for GPL
+					try{
+						setupForExam([timeLimit:'2100',totalMarks:'100',numQuestions:'100',regcode:er.regCode])
+					}
+					catch(Exception e){log.debug("Exception in setupexam during verification:"+e)}
 					}				
 				}
 			}

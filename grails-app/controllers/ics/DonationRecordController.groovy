@@ -345,7 +345,7 @@ class DonationRecordController {
      println "Size: ${uploadedFile.size}"
      println "ContentType: ${uploadedFile.contentType}"
      
-    if(!(uploadedFile.contentType?.toString()=="application/vnd.ms-excel")){
+    if((uploadedFile.contentType?.toString()=="application/vnd.ms-excel")){
         flash.message = 'please upload a CVS file only.'
         redirect(action: "uploadpaymentdata")
         return
@@ -1318,6 +1318,11 @@ def donationRecordDataForPC(){
 
 	def saveQuickCreate() {
 		log.debug("Inside saveQuickCreate with params:"+params)
+		try{
+		//remove , from amount if any
+		params.amount = params.amount?.replaceAll(',','')
+		}
+		catch(Exception e){log.debug('Exception in removing ,:'+e)}
 		def dr = donationService.createDonationRecord(params)
 		if(dr)
 			{

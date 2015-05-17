@@ -684,7 +684,7 @@ class DataService {
 		lead.each{
 			sortedPairs.add(pairsMap.get(it.id))
 		}
-		log.debug("sortedPairs:"+sortedPairs)
+		//log.debug("sortedPairs:"+sortedPairs)
 		if(!sortedPairs)
 			sortedPairs=pairs
 
@@ -696,7 +696,7 @@ class DataService {
 			def events = Event.createCriteria().list{
 						eq('category',event?.category)
 						lt('startDate',event?.startDate)
-						order('id','desc')
+						order('startDate','desc')
 					}
 			def attOn = []
 			if(events.size()>0)
@@ -705,6 +705,10 @@ class DataService {
 				attOn.add(getAttendance(events[1]))
 			if(events.size()>2)
 				attOn.add(getAttendance(events[2]))
+			if(events.size()>3)
+				attOn.add(getAttendance(events[3]))
+			if(events.size()>4)
+				attOn.add(getAttendance(events[4]))
 
 			retMap.put('attOn',attOn)
 		}
@@ -727,7 +731,7 @@ class DataService {
 		lead.each{
 			sortedPairs.add(pairsMap.get(it.id))
 		}
-		log.debug("sortedPairs:"+sortedPairs)
+		//log.debug("sortedPairs:"+sortedPairs)
 		if(!sortedPairs)
 			sortedPairs=pairs
 
@@ -771,7 +775,7 @@ class DataService {
 		//log.debug("findHusbandOrWifeRelationship Got:"+pair)
 		if(pair)
 			swappedPair = [pair[1],pair[0]]
-		log.debug("findHusbandOrWifeRelationship swappedPair:"+swappedPair)
+		//log.debug("findHusbandOrWifeRelationship swappedPair:"+swappedPair)
 		return swappedPair
 	}
 

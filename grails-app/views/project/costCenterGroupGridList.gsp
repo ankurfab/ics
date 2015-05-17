@@ -124,7 +124,14 @@
   		    $("#costcentergroup_list").jqGrid('navGrid', "#costcentergroup_list_pager", {edit: false, add: false, del: false, search: false});  		    
   		    //$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"UpdateVertical", buttonicon:"ui-icon-document", onClickButton:editCostCenterGroup, position: "last", title:"updateVertical", cursor: "pointer"}); 
           	    <sec:ifAnyGranted roles="ROLE_FINANCE">
-  		        $("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"NewVertical", buttonicon:"ui-icon-document", onClickButton:newCostCenterGroup, position: "last", title:"NewVertical", cursor: "pointer"}); 
+
+				$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"NewVertical", buttonicon:"ui-icon-document", onClickButton:newCostCenterGroup, position: "last", title:"NewVertical", cursor: "pointer"});				
+				jQuery("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+			   onClickButton : function () {
+			   var url = "exportCostCenterGroupEntries";
+				jQuery("#costcentergroup_list").jqGrid('excelExport',{"url":url});
+			   }
+			});
   		    	//$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"GenerateLoginId", buttonicon:"ui-icon-gear", onClickButton:generateCGOLoginId, position: "last", title:"Generate Login Id", cursor: "pointer"}); 
 			$("#costcentergroup_list").jqGrid('navGrid',"#costcentergroup_list_pager").jqGrid('navButtonAdd',"#costcentergroup_list_pager",{caption:"UnlockUser", buttonicon:"ui-icon-unlocked", onClickButton:unlockVH, position: "last", title:"UnlockUser", cursor: "pointer"});
   		    </sec:ifAnyGranted>
@@ -242,6 +249,13 @@
   		   //$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"EditCostCenter", buttonicon:"ui-icon-document", onClickButton:editCostCenter, position: "last", title:"editCostCenter", cursor: "pointer"}); 
           	    <sec:ifAnyGranted roles="ROLE_FINANCE">
   		   	$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"NewCostCenter", buttonicon:"ui-icon-document", onClickButton:newCostCenter, position: "last", title:"NewCostCenter", cursor: "pointer"}); 
+			
+			jQuery("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+	   onClickButton : function () {
+	   var url = "exportCostCenterEntries";
+		jQuery("#costcenter_list").jqGrid('excelExport',{"url":url});
+	   }
+	});
   		   	//$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"GenerateLoginId", buttonicon:"ui-icon-gear", onClickButton:generateCCLoginid, position: "last", title:"Generate LoginId", cursor: "pointer"}); 
 			$("#costcenter_list").jqGrid('navGrid',"#costcenter_list_pager").jqGrid('navButtonAdd',"#costcenter_list_pager",{caption:"UnlockUser", buttonicon:"ui-icon-unlocked", onClickButton:unlockHOD, position: "last", title:"UnlockUser", cursor: "pointer"});
   		    </sec:ifAnyGranted>

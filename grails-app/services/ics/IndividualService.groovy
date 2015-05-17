@@ -1006,6 +1006,36 @@ class IndividualService {
     	return count    
     }
     
+    def contactUpdate(Individual individual, Map params) {
+    	def vcList = VoiceContact.findAllByIndividualAndCategory(individual,'CellPhone')
+	//delete all expect 1st
+	vcList.eachWithIndex{vc,index->
+		if(index>0)
+			vc.delete()
+		else {
+			//update the number
+			vc.number = params.phone
+			vc.updator = springSecurityService.principal.username
+			if(!vc.save())
+				vc.errors.allErrors.each {log.debug("Exception in contactUpdate:vcList:"+it)}
+		}			
+	}
+
+    	def ecList = EmailContact.findAllByIndividualAndCategory(individual,'Personal')
+	//delete all expect 1st
+	ecList.eachWithIndex{ec,index->
+		if(index>0)
+			ec.delete()
+		else {
+			//update the email address
+			ec.emailAddress = params.email
+			ec.updator = springSecurityService.principal.username
+			if(!ec.save())
+				ec.errors.allErrors.each {log.debug("Exception in contactUpdate:ecList:"+it)}
+		}			
+	}
+
+    }
     
  }
   

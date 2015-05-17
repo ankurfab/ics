@@ -5574,6 +5574,15 @@ def commsService
 							params.depid = event?.department?.id
 							log.debug("Set depid="+params.depid)
 							}
+						//@TODO: review, for EVENT, mail would be sent to ERs + EPs
+						EventRegistration.findAllByEvent(event)?.each{
+							val = it.email
+							if(val)
+								{
+								emails += val+","
+								count++
+								}
+							}
 						if(event)
 							{
 							EventParticipant.findAllByEvent(event)?.each{
@@ -5901,7 +5910,7 @@ def commsService
             	membersprofileCompleteCount.add(value.getAt(1))
             	centers.add("'"+key+"'") 
             }
-            maxmembercount = memberscount.max()
+            maxmembercount = memberscount.max()?:0
             maxmembercount = maxmembercount + (10- maxmembercount%10 )
 
         }
@@ -6955,7 +6964,8 @@ def commsService
 			if(!params.reportName) {
 				response.contentType = 'application/zip'
 				new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
-					zipOutputStream.putNextEntry(new ZipEntry("Transactions.csv"))
+					def fileName = "Transactions_"+params.dtFrom.format('dd-MM-yyyy')+"_"+params.dtTill.format('dd-MM-yyyy')+"_"+(new Date()).format('ddMMyyyyHHmmss')+".csv"
+					zipOutputStream.putNextEntry(new ZipEntry(fileName))
 					//header
 					zipOutputStream << "Receipt No,Date,Ledger,Cost Category,Cost Center,Credit Amount,Transaction Type,Instrument No,Instrument Date,Bank Name,Branch,Ledger Name,Debit Amount,Narration" 
 

@@ -385,7 +385,66 @@ class CostCenterController {
                 redirect(controller:"individual",action: "show", id: ownerid)    	
                 return
     }
+
+    def downloadCurrentBudget() {
+    	log.debug("Inside downloadCurrentBudget with params:"+params)
+
+    	def cclist = CostCenter.findAllByStatusIsNull()
+    	
+    	response.contentType = 'application/zip'
+
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		def now = new Date()
+		def ts = now.format('dd-MM-yyyy HH:mm:ss')
+		def fileName = "budget_"+now.format('ddMMyyHHmmss')+".csv"
+		zipOutputStream.putNextEntry(new ZipEntry(fileName))
+		//header
+		zipOutputStream << "Date,ccId,ccCode,costcategory,costcenter,vertical,isProfitCenter,isServiceCenter,assigned,consumed,available" 
+		cclist.each{ cc ->
+			zipOutputStream << "\n"
+			zipOutputStream <<ts+","+cc.id +","+cc.alias +","+
+				cc.costCategory?.name +","+
+				cc.name +","+
+				cc.costCenterGroup?.name +","+
+				(cc.isProfitCenter?'Y':'N') +","+
+				(cc.isServiceCenter?'Y':'N') +","+
+				(cc.budget?:'') +","+
+				(cc.balance?:'') +","+
+				((cc.budget?:0)-(cc.balance?:0))
+		}
+	}    	    	
+    }
     
+    def uploadCurrentBudget() {
+    	log.debug("Inside uploadCurrentBudget with params:"+params)
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render flash.message
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+
+	    //lock expense creation first
+	    financeService.lockExpenseCreation()
+	    
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(financeService.uploadCurrentBudget(tokens))
+	    		numCreated++
+	    }
+	    
+	    //unlock expense creation
+	    financeService.unlockExpenseCreation()
+	    
+	    flash.message="Uploaded "+numCreated+"/"+numRecords+" records!!"
+	    
+	    render flash.message
+	    return
+    }
+
+
     def downloadBudget() {
     	log.debug("Inside downloadBudget with params:"+params)
 	def year = params.dlyear
@@ -603,38 +662,43 @@ class CostCenterController {
       def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
       
-      def totalBudget=0,totalAvailableBudget=0,totalBalance=0,s_totalExpense=0,s_approvedExpense=0,s_draftSettlement=0
-      def s_rejectedSettlement=0,s_submittedSettlement=0,s_approvedSettlement=0,s_settledExpense=0
+      def totalBudget=0,totalAvailableBudget=0,totalBalance=0,s_totalExpense=0,s_submittedExpense=0,s_approvedExpense=0,s_draftSettlement=0
+      def s_rejectedSettlement=0,s_submittedSettlement=0,s_approvedSettlement=0,s_settledExpense=0,s_advanceIssued=0
       
           def jsonCells = result.collect {
                 def stats = financeService.getMonthSummaryStats(it)
-                totalBudget += it.budget
+                totalBudget += (it.budget?:0)
                 totalAvailableBudget += ((it.budget?:0)-(it.balance?:0))
-                totalBalance += it.balance
+                totalBalance += (it.balance?:0)
                 s_totalExpense += stats.totalExpense?:0
+                s_submittedExpense += stats.submittedExpense?:0
                 s_approvedExpense += stats.approvedExpense?:0
                 s_draftSettlement += stats.draftSettlement?:0
                 s_rejectedSettlement += stats.rejectedSettlement?:0
                 s_submittedSettlement += stats.submittedSettlement?:0
                 s_approvedSettlement += stats.approvedSettlement?:0
                 s_settledExpense += stats.settledExpense?:0
+                s_advanceIssued += stats.advanceIssued?:0
                 [cell: [
+                	it.id,
                 	it.costCategory?.name,
                 	it.name,
                 	it.alias,
                 	it.budget,
-                	(it.budget?:0)-(it.balance),
+                	(it.budget?:0)-(it.balance?:0),
                 	it.balance,
+                	stats.submittedExpense,
                 	stats.approvedExpense,
                 	stats.draftSettlement,
                 	stats.rejectedSettlement,
                 	stats.submittedSettlement,
                 	stats.approvedSettlement,
                 	stats.settledExpense,
+                	stats.advanceIssued,
                 	(it.balance==stats.totalExpense)?'ok':'notok'
                     ], id: it.id]
             }
-        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages,userdata:[alias:'Total',budget:totalBudget,remainingbudget:totalAvailableBudget,balance:totalBalance,approvedExpense:s_approvedExpense,draftSettlement:s_draftSettlement,rejectedSettlement:s_rejectedSettlement,submittedSettlement:s_submittedSettlement,approvedSettlement:s_approvedSettlement,settledExpense:s_settledExpense]]
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages,userdata:[alias:'Total',budget:totalBudget,remainingbudget:totalAvailableBudget,balance:totalBalance,submittedExpense:s_submittedExpense,approvedExpense:s_approvedExpense,draftSettlement:s_draftSettlement,rejectedSettlement:s_rejectedSettlement,submittedSettlement:s_submittedSettlement,approvedSettlement:s_approvedSettlement,settledExpense:s_settledExpense,advanceIssued:s_advanceIssued]]
         render jsonData as JSON
         }	
 
@@ -701,7 +765,300 @@ class CostCenterController {
             }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages,userdata:[alias:'Total',apr:totalApr,may:totalMay,june:totalJune,july:totalJuly,aug:totalAug,sep:totalSep,oct:totalOct,nov:totalNov,dec:totalDec,jan:totalJan,feb:totalFeb,mar:totalMar]]
         render jsonData as JSON
+        }
+        
+        def updateBudget() {
+        	log.debug("Inside updateBudget with params:"+params)
+        	financeService.updateBudget(params)
+        	render "OK"
+        }
+
+    def jq_audit_list = {
+      log.debug("jq_audit_list:"+params)
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def result = AttributeValue.createCriteria().list(max:maxRows, offset:rowOffset) {
+		eq('objectClassName','CostCenter')
+		eq('objectId',new Long(params.ccid?:0))
+		attribute{eq('name','BudgetAuditTrail')}		
+		order(sortIndex, sortOrder)
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+            
+          def jsonCells = result.collect {
+                [cell: [
+                	it.dateCreated.format('dd-MM-yyyy HH:mm:ss'),
+                	it.creator,
+                	it.value,
+                    ], id: it.id]
+            }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
         }	
 
+	def incomeSheet() {}
 
+    def jq_incomeSheet_list = {
+      log.debug("jq_incomeSheet_list:"+params)
+
+	  def sortIndex = params.sidx ?: 'name'
+      def sortOrder  = params.sord ?: 'asc'
+	  def currentPage = Integer.valueOf(params.page) ?: 1
+	  def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+      def maxRows = Integer.valueOf(params.rows)
+
+      def jsonBMSRow = getDonationsByDonorName("Shri Chaitanya Shikshan Sanstha (BMS)", '1) BMS')
+	  def jsonHundiRow = getDonationsByDonorName("Hundi%", '2) Hundi')
+	  def jsonNityaRow = getDonationsBySchemeName("NITYA%", '3) Nitya Seva')
+	  def jsonJanamashtamiRow = getDonationsBySchemeName("Janmastami%", '4) Janamashtami')
+	  def jsonNVCCTempleRow = getDonationsByCostCategoryName("Temple", '6) NVCC Temple')
+	  def jsonCampTempleRow = getDonationsByCostCategoryName("CAMP TEMPLE", '7) Camp Temple')
+	  
+		def totalAprFromSpecifics = jsonBMSRow.cell[1] + jsonHundiRow.cell[1] + jsonNityaRow.cell[1] + jsonJanamashtamiRow.cell[1]
+		def totalMayFromSpecifics = jsonBMSRow.cell[2] + jsonHundiRow.cell[2] + jsonNityaRow.cell[2] + jsonJanamashtamiRow.cell[2]
+		def totalJuneFromSpecifics = jsonBMSRow.cell[3] + jsonHundiRow.cell[3] + jsonNityaRow.cell[3] + jsonJanamashtamiRow.cell[3]
+		def totalJulyFromSpecifics = jsonBMSRow.cell[4] + jsonHundiRow.cell[4] + jsonNityaRow.cell[4] + jsonJanamashtamiRow.cell[4]
+		def totalAugFromSpecifics = jsonBMSRow.cell[5] + jsonHundiRow.cell[5] + jsonNityaRow.cell[5] + jsonJanamashtamiRow.cell[5]
+		def totalSepFromSpecifics = jsonBMSRow.cell[6] + jsonHundiRow.cell[6] + jsonNityaRow.cell[6] + jsonJanamashtamiRow.cell[6]
+		def totalOctFromSpecifics = jsonBMSRow.cell[7] + jsonHundiRow.cell[7] + jsonNityaRow.cell[7] + jsonJanamashtamiRow.cell[7]
+		def totalNovFromSpecifics = jsonBMSRow.cell[8] + jsonHundiRow.cell[8] + jsonNityaRow.cell[8] + jsonJanamashtamiRow.cell[8]
+		def totalDecFromSpecifics = jsonBMSRow.cell[9] + jsonHundiRow.cell[9] + jsonNityaRow.cell[9] + jsonJanamashtamiRow.cell[9]
+		def totalJanFromSpecifics = jsonBMSRow.cell[10] + jsonHundiRow.cell[10] + jsonNityaRow.cell[10] + jsonJanamashtamiRow.cell[10]
+		def totalFebFromSpecifics = jsonBMSRow.cell[11] + jsonHundiRow.cell[11] + jsonNityaRow.cell[11] + jsonJanamashtamiRow.cell[11]
+		def totalMarFromSpecifics = jsonBMSRow.cell[12] + jsonHundiRow.cell[12] + jsonNityaRow.cell[12] + jsonJanamashtamiRow.cell[12]
+
+		def jsonIncomeFromSpecifics = [cell: [
+					'5) Total of specific donations',
+					totalAprFromSpecifics,
+					totalMayFromSpecifics,
+					totalJuneFromSpecifics,
+					totalJulyFromSpecifics,
+					totalAugFromSpecifics,
+					totalSepFromSpecifics,
+					totalOctFromSpecifics,
+					totalNovFromSpecifics,
+					totalDecFromSpecifics,
+					totalJanFromSpecifics,
+					totalFebFromSpecifics,
+					totalMarFromSpecifics,
+					], 
+					id: ""]
+	  
+	  def totalAprFromTemples = jsonNVCCTempleRow.cell[1] + jsonCampTempleRow.cell[1]
+	  def totalMayFromTemples = jsonNVCCTempleRow.cell[2] + jsonCampTempleRow.cell[2]
+	  def totalJuneFromTemples = jsonNVCCTempleRow.cell[3] + jsonCampTempleRow.cell[3]
+	  def totalJulyFromTemples = jsonNVCCTempleRow.cell[4] + jsonCampTempleRow.cell[4]
+	  def totalAugFromTemples = jsonNVCCTempleRow.cell[5] + jsonCampTempleRow.cell[5]
+	  def totalSepFromTemples = jsonNVCCTempleRow.cell[6] + jsonCampTempleRow.cell[6]
+	  def totalOctFromTemples = jsonNVCCTempleRow.cell[7] + jsonCampTempleRow.cell[7]
+	  def totalNovFromTemples = jsonNVCCTempleRow.cell[8] + jsonCampTempleRow.cell[8]
+	  def totalDecFromTemples = jsonNVCCTempleRow.cell[9] + jsonCampTempleRow.cell[9]
+	  def totalJanFromTemples = jsonNVCCTempleRow.cell[10] + jsonCampTempleRow.cell[10]
+	  def totalFebFromTemples = jsonNVCCTempleRow.cell[11] + jsonCampTempleRow.cell[11]
+	  def totalMarFromTemples = jsonNVCCTempleRow.cell[12] + jsonCampTempleRow.cell[12]
+
+	  def jsonData= [rows: [jsonBMSRow, jsonHundiRow, jsonNityaRow, jsonJanamashtamiRow, jsonIncomeFromSpecifics, jsonNVCCTempleRow, jsonCampTempleRow], page:currentPage, records:1, total:1, userdata:[name:'Total', apr:totalAprFromTemples, may:totalMayFromTemples, june:totalJuneFromTemples, july:totalJulyFromTemples, aug:totalAugFromTemples, sep:totalSepFromTemples, oct:totalOctFromTemples, nov:totalNovFromTemples, dec:totalDecFromTemples, jan:totalJanFromTemples, feb:totalFebFromTemples, mar:totalMarFromTemples]]
+
+      render jsonData as JSON
+    }
+
+	def getDonationsByCostCategoryName (String nameUsedForSearch, String nameUsedForDisplay)
+	{
+		def stats = financeService.getAllDonationByCostCategoryNameIncomeSummaryStats(nameUsedForSearch)
+		def jsonCells = [cell: [
+					nameUsedForDisplay,
+					stats.month_4,
+					stats.month_5,
+					stats.month_6,
+					stats.month_7,
+					stats.month_8,
+					stats.month_9,
+					stats.month_10,
+					stats.month_11,
+					stats.month_12,
+					stats.month_1,
+					stats.month_2,
+					stats.month_3,
+                    ], 
+					id: "testID"]
+        return jsonCells
+	}
+
+	def getDonationsBySchemeName (String nameUsedForSearch, String nameUsedForDisplay)
+	{
+		def stats = financeService.getAllDonationBySchemeNameIncomeSummaryStats(nameUsedForSearch)
+		def jsonCells = [cell: [
+					nameUsedForDisplay,
+					stats.month_4,
+					stats.month_5,
+					stats.month_6,
+					stats.month_7,
+					stats.month_8,
+					stats.month_9,
+					stats.month_10,
+					stats.month_11,
+					stats.month_12,
+					stats.month_1,
+					stats.month_2,
+					stats.month_3,
+                    ], 
+					id: "testID"]
+        return jsonCells
+	}
+		
+	def getDonationsByDonorName (String nameUsedForSearch, String nameUsedForDisplay)
+	{
+		def stats = financeService.getAllDonationByDonorNameIncomeSummaryStats(nameUsedForSearch)
+		def jsonCells = [cell: [
+					nameUsedForDisplay,
+					stats.month_4,
+					stats.month_5,
+					stats.month_6,
+					stats.month_7,
+					stats.month_8,
+					stats.month_9,
+					stats.month_10,
+					stats.month_11,
+					stats.month_12,
+					stats.month_1,
+					stats.month_2,
+					stats.month_3,
+                    ], 
+					id: "testID"]
+        return jsonCells
+	}
+
+	def exportIncomeSheetEntries() {
+		def jsonBMSRow = getDonationsByDonorName("Shri Chaitanya Shikshan Sanstha (BMS)", '1) BMS')
+		def jsonHundiRow = getDonationsByDonorName("Hundi%", '2) Hundi')
+		def jsonNityaRow = getDonationsBySchemeName("NITYA%", '3) Nitya Seva')
+		def jsonJanamashtamiRow = getDonationsBySchemeName("Janmastami%", '4) Janamashtami')
+		def jsonNVCCTempleRow = getDonationsByCostCategoryName("Temple", '6) NVCC Temple')
+		def jsonCampTempleRow = getDonationsByCostCategoryName("CAMP TEMPLE", '7) Camp Temple')
+		def totalAprFromTemples = jsonNVCCTempleRow.cell[1] + jsonCampTempleRow.cell[1]
+
+		def totalMayFromTemples = jsonNVCCTempleRow.cell[2] + jsonCampTempleRow.cell[2]
+		def totalJuneFromTemples = jsonNVCCTempleRow.cell[3] + jsonCampTempleRow.cell[3]
+		def totalJulyFromTemples = jsonNVCCTempleRow.cell[4] + jsonCampTempleRow.cell[4]
+		def totalAugFromTemples = jsonNVCCTempleRow.cell[5] + jsonCampTempleRow.cell[5]
+		def totalSepFromTemples = jsonNVCCTempleRow.cell[6] + jsonCampTempleRow.cell[6]
+		def totalOctFromTemples = jsonNVCCTempleRow.cell[7] + jsonCampTempleRow.cell[7]
+		def totalNovFromTemples = jsonNVCCTempleRow.cell[8] + jsonCampTempleRow.cell[8]
+		def totalDecFromTemples = jsonNVCCTempleRow.cell[9] + jsonCampTempleRow.cell[9]
+		def totalJanFromTemples = jsonNVCCTempleRow.cell[10] + jsonCampTempleRow.cell[10]
+		def totalFebFromTemples = jsonNVCCTempleRow.cell[11] + jsonCampTempleRow.cell[11]
+		def totalMarFromTemples = jsonNVCCTempleRow.cell[12] + jsonCampTempleRow.cell[12]
+
+		def totalAprFromSpecifics = jsonBMSRow.cell[1] + jsonHundiRow.cell[1] + jsonNityaRow.cell[1] + jsonJanamashtamiRow.cell[1]
+		def totalMayFromSpecifics = jsonBMSRow.cell[2] + jsonHundiRow.cell[2] + jsonNityaRow.cell[2] + jsonJanamashtamiRow.cell[2]
+		def totalJuneFromSpecifics = jsonBMSRow.cell[3] + jsonHundiRow.cell[3] + jsonNityaRow.cell[3] + jsonJanamashtamiRow.cell[3]
+		def totalJulyFromSpecifics = jsonBMSRow.cell[4] + jsonHundiRow.cell[4] + jsonNityaRow.cell[4] + jsonJanamashtamiRow.cell[4]
+		def totalAugFromSpecifics = jsonBMSRow.cell[5] + jsonHundiRow.cell[5] + jsonNityaRow.cell[5] + jsonJanamashtamiRow.cell[5]
+		def totalSepFromSpecifics = jsonBMSRow.cell[6] + jsonHundiRow.cell[6] + jsonNityaRow.cell[6] + jsonJanamashtamiRow.cell[6]
+		def totalOctFromSpecifics = jsonBMSRow.cell[7] + jsonHundiRow.cell[7] + jsonNityaRow.cell[7] + jsonJanamashtamiRow.cell[7]
+		def totalNovFromSpecifics = jsonBMSRow.cell[8] + jsonHundiRow.cell[8] + jsonNityaRow.cell[8] + jsonJanamashtamiRow.cell[8]
+		def totalDecFromSpecifics = jsonBMSRow.cell[9] + jsonHundiRow.cell[9] + jsonNityaRow.cell[9] + jsonJanamashtamiRow.cell[9]
+		def totalJanFromSpecifics = jsonBMSRow.cell[10] + jsonHundiRow.cell[10] + jsonNityaRow.cell[10] + jsonJanamashtamiRow.cell[10]
+		def totalFebFromSpecifics = jsonBMSRow.cell[11] + jsonHundiRow.cell[11] + jsonNityaRow.cell[11] + jsonJanamashtamiRow.cell[11]
+		def totalMarFromSpecifics = jsonBMSRow.cell[12] + jsonHundiRow.cell[12] + jsonNityaRow.cell[12] + jsonJanamashtamiRow.cell[12]
+
+    	response.contentType = 'application/zip'
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry("incomeSheet.csv"))
+			zipOutputStream << "Name,April,May,June,July,August,September,October,November,December,January,February,March"
+
+			zipOutputStream << "\n"
+			zipOutputStream << "BMS"+","+jsonBMSRow.cell[1]+","+jsonBMSRow.cell[2]+","+jsonBMSRow.cell[3]+","+jsonBMSRow.cell[4]+","+jsonBMSRow.cell[5]+","+jsonBMSRow.cell[6]+","+jsonBMSRow.cell[7]+","+jsonBMSRow.cell[8]+","+jsonBMSRow.cell[9]+","+jsonBMSRow.cell[10]+","+jsonBMSRow.cell[11]+","+jsonBMSRow.cell[12]
+
+			zipOutputStream << "\n"
+			zipOutputStream << "Hundi"+","+jsonHundiRow.cell[1]+","+jsonHundiRow.cell[2]+","+jsonHundiRow.cell[3]+","+jsonHundiRow.cell[4]+","+jsonHundiRow.cell[5]+","+jsonHundiRow.cell[6]+","+jsonHundiRow.cell[7]+","+jsonHundiRow.cell[8]+","+jsonHundiRow.cell[9]+","+jsonHundiRow.cell[10]+","+jsonHundiRow.cell[11]+","+jsonHundiRow.cell[12]
+
+			zipOutputStream << "\n"
+			zipOutputStream << "Nitya Seva"+","+jsonNityaRow.cell[1]+","+jsonNityaRow.cell[2]+","+jsonNityaRow.cell[3]+","+jsonNityaRow.cell[4]+","+jsonNityaRow.cell[5]+","+jsonNityaRow.cell[6]+","+jsonNityaRow.cell[7]+","+jsonNityaRow.cell[8]+","+jsonNityaRow.cell[9]+","+jsonNityaRow.cell[10]+","+jsonNityaRow.cell[11]+","+jsonNityaRow.cell[12]
+
+			zipOutputStream << "\n"
+			zipOutputStream << "Janamashtami"+","+jsonJanamashtamiRow.cell[1]+","+jsonJanamashtamiRow.cell[2]+","+jsonJanamashtamiRow.cell[3]+","+jsonJanamashtamiRow.cell[4]+","+jsonJanamashtamiRow.cell[5]+","+jsonJanamashtamiRow.cell[6]+","+jsonJanamashtamiRow.cell[7]+","+jsonJanamashtamiRow.cell[8]+","+jsonJanamashtamiRow.cell[9]+","+jsonJanamashtamiRow.cell[10]+","+jsonJanamashtamiRow.cell[11]+","+jsonJanamashtamiRow.cell[12]
+
+			zipOutputStream << "\n"
+			zipOutputStream << "Total from Specifics"+","+totalAprFromTemples+","+totalMayFromTemples+","+totalJuneFromTemples+","+totalJulyFromTemples+","+totalAugFromTemples+","+totalSepFromTemples+","+totalOctFromTemples+","+totalNovFromTemples+","+totalDecFromTemples+","+totalJanFromTemples+","+totalFebFromTemples+","+totalMarFromTemples
+
+			zipOutputStream << "\n"
+			zipOutputStream << "NVCC Temple"+","+jsonNVCCTempleRow.cell[1]+","+jsonNVCCTempleRow.cell[2]+","+jsonNVCCTempleRow.cell[3]+","+jsonNVCCTempleRow.cell[4]+","+jsonNVCCTempleRow.cell[5]+","+jsonNVCCTempleRow.cell[6]+","+jsonNVCCTempleRow.cell[7]+","+jsonNVCCTempleRow.cell[8]+","+jsonNVCCTempleRow.cell[9]+","+jsonNVCCTempleRow.cell[10]+","+jsonNVCCTempleRow.cell[11]+","+jsonNVCCTempleRow.cell[12]
+
+			zipOutputStream << "\n"
+			zipOutputStream << "Camp Temple"+","+jsonCampTempleRow.cell[1]+","+jsonCampTempleRow.cell[2]+","+jsonCampTempleRow.cell[3]+","+jsonCampTempleRow.cell[4]+","+jsonCampTempleRow.cell[5]+","+jsonCampTempleRow.cell[6]+","+jsonCampTempleRow.cell[7]+","+jsonCampTempleRow.cell[8]+","+jsonCampTempleRow.cell[9]+","+jsonCampTempleRow.cell[10]+","+jsonCampTempleRow.cell[11]+","+jsonCampTempleRow.cell[12]
+
+			zipOutputStream << "\n"
+			zipOutputStream << "Total"+","+totalAprFromSpecifics+","+totalMayFromSpecifics+","+totalJuneFromSpecifics+","+totalJulyFromSpecifics+","+totalAugFromSpecifics+","+totalSepFromSpecifics+","+totalOctFromSpecifics+","+totalNovFromSpecifics+","+totalDecFromSpecifics+","+totalJanFromSpecifics+","+totalFebFromSpecifics+","+totalMarFromTemples
+		}
+    }
+	
+	def exportIncomeSummaryEntries() {
+		log.debug("from within exportIncomeSummaryEntries")
+		response.contentType = 'application/zip'
+		def maxRows = 1000000
+		def rowOffset = 0
+		def result = CostCenter.createCriteria().list(max:maxRows, offset:rowOffset) {
+			isNull('status')
+			if(params.ccat)
+				costCategory{ilike('name',params.ccat)}
+			if(params.name)
+				ilike('name',params.name)
+			if(params.alias)
+				eq('alias',params.alias)
+			order(params.sidx, params.sord)
+		}
+
+		def totalRows = result.totalCount
+
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry("incomeSummary.csv"))
+			zipOutputStream << "CostCategory,Name,Alias,April,May,June,July,August,September,October,November,December,January,February,March"
+
+			result.each{ row ->
+			def stats = financeService.getIncomeSummaryStats(row)
+			zipOutputStream << "\n"
+			zipOutputStream << row.costCategory?.name+","+row.name+","+row.alias+","+stats.month_4+","+stats.month_5+","+stats.month_6+","+stats.month_7+","+stats.month_8+","+stats.month_9+","+stats.month_10+","+stats.month_11+","+stats.month_12+","+stats.month_1+","+stats.month_2+","+stats.month_3
+			}
+		}
+    }
+
+	def exportMonthlySummaryEntries() {
+		log.debug("from within exportMonthlySummaryEntries")
+		response.contentType = 'application/zip'
+		def maxRows = 1000000
+		def rowOffset = 0
+		def result = CostCenter.createCriteria().list(max:maxRows, offset:rowOffset) {
+			isNull('status')
+			if(params.ccat)
+				costCategory{ilike('name',params.ccat)}
+			if(params.name)
+				ilike('name',params.name)
+			if(params.alias)
+				eq('alias',params.alias)
+			order(params.sidx, params.sord)
+		}
+
+		def totalRows = result.totalCount
+
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry("monthlySummary.csv"))
+			zipOutputStream << "CostCategory,Name,Alias,April,May,June,July,August,September,October,November,December,January,February,March"
+
+			result.each{ row ->
+			def stats = financeService.getMonthSummaryStats(row)
+			zipOutputStream << "\n"
+			zipOutputStream << row.costCategory?.name+","+row.name+","+row.alias+","+stats.month_4+","+stats.month_5+","+stats.month_6+","+stats.month_7+","+stats.month_8+","+stats.month_9+","+stats.month_10+","+stats.month_11+","+stats.month_12+","+stats.month_1+","+stats.month_2+","+stats.month_3
+			}
+		}
+    }
 }

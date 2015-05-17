@@ -1,5 +1,7 @@
 package ics
 import grails.converters.JSON
+import java.util.zip.ZipOutputStream
+import java.util.zip.ZipEntry
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 
 class ProjectController {
@@ -38,7 +40,10 @@ class ProjectController {
         			else
         				eq('status',params.status)
         		}
-        		order("dateCreated", "desc")
+				def currDate = new Date()
+				ge('submitDate', currDate-30)//displaying records not more than 30 days old
+
+				order("dateCreated", "desc")
         		order("priority", "desc")
         	}
         log.debug("Project:list:params:"+params+":result"+result)
@@ -687,7 +692,6 @@ def jq_project_list =
         	   			if (params.paymentVoucher) 
 					        paymentVoucher{ilike('voucherNo', params.paymentVoucher)}
 
-
            			order(sortIndex, sortOrder)
         
         	}
@@ -771,31 +775,10 @@ def jq_project_list =
 				def idList = params.id.tokenize(',')
 				idList.each
 				{
-				  // check if exists
-				  expense  = Expense.get(it)
-				  def voucher = expense.paymentVoucher
-				  if (expense && (!expense.paymentVoucher || !expense.paymentVoucher.dataCaptured)) {
-				    // delete
-				    if(!expense.delete())
-					{
-					    expense.errors.allErrors.each {
-						log.debug("In jq_edit_expense: error in deleting exp:"+ it)
-						}
-					}
-				    else {
-					    //soft-delete paymentVoucher, if exists
-					    if(voucher) {
-					    	voucher.status='DELETED'
-					    	if(!voucher.save())
-					    		voucher.errors.allErrors.each {log.debug("excp in sofdel voucher:"+it)}
-					    	else {
-						    message = "Deleted!!"
-						    state = "OK"
-					    	}					    
-					    }
-				    }
-				  }
+					financeService.deleteExpense(it)
 				}
+			    message = "Deleted!!"
+			    state = "OK"				
 		  break;
 		          
 		        default:
@@ -862,7 +845,23 @@ def jq_project_list =
     def changeState() {
     	log.debug("changeState:"+params)
     	flash.message = financeService.changeState(params)
-    	redirect(action: "index")
+    	//handle redirection appropriately
+    	if(params.approver=='ROLE_CG_OWNER') {
+		try{
+			def project = Project.get(params.projectid)
+			if(project?.status?.endsWith('REQUEST')) {
+				redirect(action: "list",params:['status':'SUBMITTED_REQUEST'])
+				return
+			}
+			else{
+				redirect(action: "list",params:['status':'SUBMITTED_REPORT'])
+				return
+			}
+		}
+		catch(Exception e){log.debug("Exception in changeState:"+e)}
+    	}
+    	else
+	    	redirect(action: "index")
     }
     
     def selectProject() {    	
@@ -1593,6 +1592,16 @@ def jq_project_list =
 	    }         
 
 	def markSettled() {
+
+         def reviewer3 = null
+         def username=''
+         try{
+		 username = springSecurityService.principal.username
+		 reviewer3 = Individual.findByLoginid(username)
+         }
+         catch(Exception e){username='unknown'}
+
+
 		def project = Project.get(params.projectid)
 		if(project)
 			{
@@ -1602,15 +1611,23 @@ def jq_project_list =
     				return
     			}
 
-    			def expenses = Expense.findAllByProjectAndStatus(project,'SUBMITTED')
+    			def expenses = Expense.findAllByProject(project)
 			//change the status and do other computations
 			if(project.status=='APPROVED_REPORT')
 				{
+					 project.settleAmount = expenses.sum{it.amount}
+					 log.debug("markSettled:pid:"+project.id+":settleAmount="+project.settleAmount)
 					 project.status='SETTLED_REPORT'
-					 if(!project.save())
+					 project.reviewer3 = reviewer3
+					 project.review3Date = new Date()
+					 if(!project.save()) {
 		      			    project.errors.allErrors.each {
 		      				log.debug("Exception in markSettled:"+it)
-		      				}					 	
+		      				}
+		      			} else {
+		      				//now calculate and adjust the budgets
+		      				financeService.adjustBudgetAfterSettlement(project)
+		      			}
 				}
 			render(template: "expenseReimburesemt", model: [projectInstance: project,expenses: expenses])
 			}
@@ -1914,6 +1931,182 @@ def jq_approvedProject_list =
 	    render "Old advances uploaded "+numCreated+"/"+numRecords+" records!!"
 	    return
 	}
+	
+	def exportCostCenterGroupEntries () {
+		log.debug("from within exportCostCenterGroupEntries")
+		response.contentType = 'application/zip'
+		def maxRows = 1000000
+		def rowOffset = 0
+		def result = CostCenterGroup.createCriteria().list(max: maxRows, offset: rowOffset)
+		{
+			if (params.name)
+				ilike('name', params.name)
+			if (params.alias)
+				ilike('alias', params.alias)
+			if (params.owner)
+				owner1 {
+					or{
+						ilike('legalName', params.owner)
+						ilike('initiatedName', params.owner)
+					}
+				}
+			if (params.loginid)
+				owner{eq('loginid',params.loginid)}
+			order(params.sidx, params.sord)
+		}
 
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry("costCenterGroupList.csv"))
+			zipOutputStream << "Name,Description,Owner,Phone,Email,Loginid"
 
+			result.each{ row ->
+			zipOutputStream << "\n"
+			def contactNum = row.owner1?(VoiceContact.findByIndividualAndCategory(row.owner1,'CellPhone')?.number?:''):''
+			def emailAdd = row.owner1?(EmailContact.findByIndividualAndCategory(row.owner1,'Personal')?.emailAddress?:''):''
+			zipOutputStream << row.name+","+row.description+","+row.owner1?.toString()+","+contactNum+","+emailAdd+","+row.owner1?.loginid
+			}
+		}
+	}
+
+	def exportCostCenterEntries () {
+		log.debug("from within exportCostCenterEntries")
+		response.contentType = 'application/zip'
+		def maxRows = 1000000
+		def rowOffset = 0
+		def result = CostCenter.createCriteria().list(max: maxRows, offset: rowOffset) 
+		{       
+			isNull('status')
+			if(params.ccatid)
+				costCategory{eq('id',new Long(params.ccatid))}
+			if(params.cgid)
+				costCenterGroup{eq('id',new Long(params.cgid))}
+			if (params.name)
+				ilike('name', params.name)
+			if (params.alias)
+				ilike('alias', params.alias)
+			if (params.owner)
+				owner1{
+					or{
+						ilike('legalName', params.owner)
+						ilike('initiatedName', params.owner)
+					}
+				}
+			if (params.loginid)
+				owner{eq('loginid',params.loginid)}
+			order(params.sidx, params.sord)
+		}
+
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry("costCenterList.csv"))
+			zipOutputStream << "Name,Alias,Owner,Phone,Email,Loginid"
+
+			result.each{ row ->
+			zipOutputStream << "\n"
+			def contactNum = row.owner1?(VoiceContact.findByIndividualAndCategory(row.owner1,'CellPhone')?.number?:''):''
+			def emailAdd = row.owner1?(EmailContact.findByIndividualAndCategory(row.owner1,'Personal')?.emailAddress?:''):''
+			zipOutputStream << row.name+","+row.alias+","+row.owner1?.toString()+","+contactNum+","+emailAdd+","+row.owner1?.loginid
+			}
+		}
+	}
+	
+	def exportExpenseList () {
+		log.debug("from within exportExpenseList")
+		log.debug("params from within exportExpenseList:"+params)
+		response.contentType = 'application/zip'
+		def maxRows = 1000000
+		def rowOffset = 0
+		def result = Project.createCriteria().list(max: maxRows, offset: rowOffset)
+    	{
+			if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER'))
+				eq('costCenter',financeService.getCostCenter(session.individualid))
+			else if (params.costCenter)
+				costCenter{eq('id', new Long(params.costCenter))}
+			if (params.name)
+				ilike('name', params.name)
+			if (params.description)
+				ilike('description', params.description)
+			if (params.category)
+				ilike('category', params.category)
+			if (params.expectedStartDate)
+				eq('expectedStartDate', Date.parse('dd-MM-yyyy', params.expectedStartDate))
+			if (params.submitDate) {
+				def submitDate = Date.parse('dd-MM-yyyy', params.submitDate)
+				ge('submitDate', submitDate)
+				lt('submitDate', submitDate+1)
+			}
+			if (params.amount)
+				eq('amount', new BigDecimal(params.amount))
+			if(params.onlyAdv && params.onlyAdv=='onlyAdv')
+				gt('advanceAmount', new BigDecimal(0))
+			if (params.advanceAmount)
+				eq('advanceAmount', new BigDecimal(params.advanceAmount))
+			if (params.advAmtIssued && !params.advanceAmountIssued) {
+				if (params.advAmtIssued=='NO')
+					isNull('advanceAmountIssued')
+				else
+					isNotNull('advanceAmountIssued')
+			}
+			if (params.advanceAmountIssued) {
+				if (params.advanceAmountIssued=='NO')
+					isNull('advanceAmountIssued')
+				else if (params.advanceAmountIssued=='YES')
+					isNotNull('advanceAmountIssued')
+			}
+			if (params.priority)
+				eq('priority', params.priority)
+			if (params.s_status && params.s_status!='SU' && !params.status && !params.advanceAmountIssued) {
+				eq('status', params.s_status)
+				if(params.s_status=='APPROVED_REPORT' && !params.status)
+					ne('type', 'PARTPAYMENT')
+			}
+			if (params.status)
+				eq('status', params.status)
+			if (params.ref)
+				ilike('ref', params.ref)
+			if (params.type)
+				eq('type', params.type)
+			if (params.issueTo)
+				advanceIssuedTo{
+					eq('category', 'EMS_VENDOR')
+					ilike('legalName', params.issueTo)
+				}
+			if (params.mode)
+				advancePaymentMode{
+					eq('name', params.mode)
+				}
+			if (params.issueComments)
+				ilike('advancePaymentComments', params.issueComments)
+			if (params.billNo)
+				ilike('billNo', params.billNo)
+			if (params.billAmount)
+				eq('billAmount', new BigDecimal(params.billAmount))
+			if (params.billDate) {
+				def billDate = Date.parse('dd-MM-yyyy', params.billDate)
+				ge('billDate', billDate)
+				lt('billDate', billDate+1)
+			}
+			if (params.advancePaymentVoucher)
+				advancePaymentVoucher{
+					ilike('voucherNo', params.advancePaymentVoucher)
+				}
+			if (params.mainProject) {
+				if (params.mainProject=='YES')
+					isNull('mainProject')
+				else
+					isNotNull('mainProject')
+			}
+			order(params.sidx, params.sord)    
+    	}
+
+		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+			zipOutputStream.putNextEntry(new ZipEntry("expenseList.csv"))
+			zipOutputStream << "CostCenter,Name,Description,SubmitDate,Amount,Requested Advance Amount,Issued Advance Amount,Type,Voucher,MainExpense,Priority,Status,Reference,Id"
+
+			result.each{ row ->
+			log.debug("a single row from within exportExpenseList:"+params)
+			zipOutputStream << "\n"
+			zipOutputStream << row.name+","+row.description+","+row.submitDate?.format('dd-MM-yyyy')+","+row.amount+","+row.advanceAmount+","+row.advanceAmountIssued+","+row.type+","+row.advancePaymentVoucher?.voucherNo+","+row.mainProject?.ref+","+row.priority+","+row.status+","+row.ref+","+row.id
+			}
+		}
+	}
 }

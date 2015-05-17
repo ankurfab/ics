@@ -84,6 +84,7 @@
 		    <h3>Dashboard</h3>
 		    <ul data-role="listview">
 		        <li><g:link controller="project" action="expenseSummary" data-ajax="false">ExpenseSummary</g:link></li>
+		        <li><g:link controller="costCenter" action="statement" data-ajax="false">Statement</g:link></li>
 		    </ul>
 		</div><!-- /collapsible -->
 	</sec:ifAnyGranted>         
@@ -96,6 +97,7 @@
 		        <li><g:link controller="costCenter" action="summary" data-ajax="false">Summary</g:link></li>
 		        <li><g:link controller="costCenter" action="monthSummary" data-ajax="false">CurrentMonthSummary</g:link></li>
 		        <li><g:link controller="costCenter" action="incomeSummary" data-ajax="false">IncomeSummary</g:link></li>
+		        <li><g:link controller="costCenter" action="incomeSheet" data-ajax="false">Income Sheet</g:link></li>
 		    </ul>
 		</div><!-- /collapsible -->
 	</sec:ifAnyGranted>         

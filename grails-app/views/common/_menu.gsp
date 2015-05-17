@@ -224,14 +224,17 @@
 				  <li><g:link controller="helper" action="costcenterReport">Transactions</g:link></li>
 			      </sec:ifAnyGranted>      
 
-			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
+			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN,ROLE_FINANCE">
 				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_CG_OWNER,ROLE_CC_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
 				  <li><g:link controller="project" action="index">Expense Management</g:link></li>
-				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>      
+				  
+				  <sec:ifAnyGranted roles="ROLE_CG_OWNER,ROLE_CC_OWNER,ROLE_ACC_USER">
+				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
+			      </sec:ifAnyGranted>
 			<!-- Account Office/Finance Roles End-->
 
 			<!-- Marriage Board Based Roles Start-->
@@ -248,6 +251,9 @@
 			      <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
 					<li><g:link controller="mb" action="editProfile">Profile</g:link></li>
 					<li><g:link controller="mb" action="prospects">Prospects</g:link></li>
+			      </sec:ifAnyGranted> 
+			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER,ROLE_MB_CANDIDATE">
+					<li><g:link controller="mb" action="activityStream">Activity Stream</g:link></li>
 			      </sec:ifAnyGranted> 
 			<!-- Marriage Board Roles End-->
 
@@ -278,6 +284,7 @@
 		      	      	  <li><g:link controller="book" action="scores">Scores</g:link></li>
 		      	      	  <li><g:link controller="book" action="reports">Reports</g:link></li>
 		      	      	  <li><g:link controller="book" action="dashboard">Dashboard</g:link></li>
+		      	      	  <li><g:link controller="challan" action="search">Search</g:link></li>
 		      	      </sec:ifAnyGranted>
 		      	      <sec:ifAnyGranted roles="ROLE_JIVADAYA_CLERK">
 				  <li><g:link controller="individual" action="list">Individual Master</g:link></li>		      	      	  
@@ -285,6 +292,7 @@
 		      	      	  <li><g:link controller="book" action="order">Order Management</g:link></li>
 		      	      	  <li><g:link controller="challan" action="outward">Challan Management</g:link></li>
 		      	      	  <li><g:link controller="book" action="scores">Scores</g:link></li>
+		      	      	  <li><g:link controller="challan" action="search">Search</g:link></li>
 		      	      </sec:ifAnyGranted>
 		      	      <sec:ifAnyGranted roles="ROLE_JIVADAYA_USER">
 		      	      	  <li><g:link controller="book" action="team">Team</g:link></li>
@@ -322,7 +330,7 @@
 				    <img src="${resource(dir:'images',file:'lock_break.png')}" alt="Reset Password" title="Reset Password" /></a>
 				    </sec:ifAnyGranted>
 
-				    <a href='<g:createLink controller="individual" action="self" />'><img src="${resource(dir:'images',file:'profile.png')}"
+				    <a href='<g:createLink controller="individual" action="selfContact" />'><img src="${resource(dir:'images',file:'profile.png')}"
 				    alt="Profile" title="Profile" /></a> 
 
 				    )

@@ -23,7 +23,7 @@
 		    noSelection="${['':'Select a course...']}"
 		    from='${courses}'
 		    optionKey="id" optionValue="name" onchange="updatecid()"></g:select>
-		<g:select name='language' value="${language}" from='${['ENGLISH','HINDI','MARATHI']}'></g:select>
+		<g:select name='language' value="${language}" from='${['ENGLISH','HINDI','MARATHI','TELUGU']}'></g:select>
 		<g:submitButton name="refresh" value="Refresh" />
             </g:form>
             

@@ -596,6 +596,8 @@ class SchemeMemberController {
                   it.star,
             	    it.status,
                   it.committedMode,
+				  it.committedAmount,
+				  it.actualCurrentAmount,
             	    it.comments,
             	    it.recentCommunication,
                     it.addressTheConcern,
@@ -1286,10 +1288,37 @@ in-active --those not marked as prospect ,and suspended and not given any donati
  }
 
 	def syncdonation() {
-		def query="insert into donation_record (version,amount,creator,date_created,donated_by_id,donation_date,last_updated,mode_id,scheme_id,updator,donation_id,payment_details) select 0,amount,creator,date_created,donated_by_id,donation_date,last_updated,mode_id,scheme_id,updator,id,comments from donation d where scheme_id=(select id from scheme where name='EASY') and not exists (select 1 from donation_record dr where dr.donation_id=d.id);"
+		def query="insert into donation_record (version,amount,creator,date_created,donated_by_id,donation_date,last_updated,mode_id,scheme_id,updator,donation_id,payment_details) select 0,amount,creator,date_created,donated_by_id,donation_date,last_updated,mode_id,scheme_id,updator,id,comments from donation d where scheme_id=(select id from scheme where name='EASY' and status is null) and not exists (select 1 from donation_record dr where dr.donation_id=d.id);"
 		def sql = new Sql(dataSource);
 		sql.execute(query)
 		sql.close()
 		render "OK"
 	}
+	
+	def mapCostCenter() {}
+
+    def uploadCostCenterMapping() {
+	    log.debug("Inside uploadCostCenterMapping")
+	    
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		flash.message = 'file cannot be empty'
+		render flash.message
+		return
+	    }
+
+	    def numRecords = 0, numCreated=0
+	    //format
+	    //centre_id	centre_name	cc_id	cc_name
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	numRecords++
+	    	if(helperService.uploadCostCenterMapping(tokens))
+	    		numCreated++
+	    }
+	    
+	    flash.message="Mapped "+numCreated+"/"+numRecords+" CCs!!"
+	    render flash.message
+	    
+    }		
+	
 }

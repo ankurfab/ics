@@ -97,7 +97,7 @@
                         <tbody>
                             <tr class="prop">
                                 <td valign="top" class="name">
-                                    <label for="legalName">Legal Name:</label>
+                                    <label for="legalName">Legal Name:</label><span class="mand">*</span>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'legalName', 'errors')}">
 <g:textField name="legalName" maxlength="40" placeholder="Enter Full name (first name middle name last name)"
@@ -112,7 +112,7 @@
                  value="${mbProfile?.candidate?.initiatedName}"/>
 </td>
 <td valign="top" class="name">
-    <label for="isMale">Gender:</label>
+    <label for="isMale">Gender:</label><span class="mand">*</span>
 </td>
 <!-- Checking for adding comments -->
 <td valign="top" class="value">
@@ -121,21 +121,21 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="dob">Date of Birth:</label>
+        <label for="dob">Date of Birth:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
         <g:textField name="dob" id="dob" placeholder="Format of DD/MM/YYYY"
                      value="${mbProfile?.candidate?.dob?.format('dd/MM/yyyy')}" required="required"/>
     </td>
     <td valign="top" class="name">
-        <label for="pob">Place of Birth:</label>
+        <label for="pob">Place of Birth:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
         <g:textField name="pob" placeholder="Enter Actual Region with State" required="required"
                          value="${mbProfile?.candidate?.pob}"/>
     </td>
     <td valign="top" class="name">
-        <label for="tob">Time of Birth:</label>
+        <label for="tob">Time of Birth:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
 
@@ -145,14 +145,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="iskconCentre">ISKCON Centre:</label>
+        <label for="iskconCentre">ISKCON Centre:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="iskconCentre" placeholder="Enter ISKCON Centre Name here" required="required"
                      value="${mbProfile?.candidate?.iskconCentre}"/>
     </td>
     <td valign="top" class="name">
-        <label for="counselor">Counselor / Mentor:</label>
+        <label for="counselor">Counselor / Mentor:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="counselor" placeholder="Enter Counselor Name here" required="required"
@@ -200,7 +200,7 @@
                   value="${mbProfile?.scstCategory ?: 'Open'}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="caste">Caste:</label>
+        <label for="caste">Caste:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="caste" placeholder="Enter the Actual Caste here" required="required"
@@ -277,7 +277,7 @@
         <g:select name="manglik"  from="${['No', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="maritalStatus">Marital Status:</label>
+        <label for="maritalStatus">Marital Status:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:select name="maritalStatus" required="required"
@@ -310,14 +310,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="addrline1">Present Address : </label>
+        <label for="addrline1">Present Address : </label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textArea name="addrline1" placeholder="Enter Address here" required="required" maxLength="100"
                      value="${candAddr?.addressLine1}"/>
     </td>
     <td valign="top" class="name">
-        <label for="city">City:</label>
+        <label for="city">City:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="city" maxLength="20" placeholder="Enter City here" required="required"
@@ -334,14 +334,14 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="pincode">Pin Code:</label>
+        <label for="pincode">Pin Code:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="pincode" maxLength="6" placeholder="Enter Pin Code here" required="required"
                      value="${candAddr?.pincode}"/>
     </td>
     <td valign="top" class="name">
-        <label for="contact">Contact Number:</label>
+        <label for="contact">Contact Number:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'contact', 'errors')}">
         <g:textField name="contact" type="tel"
@@ -349,7 +349,7 @@
                      required="required"/>
     </td>
     <td valign="top" class="name">
-        <label for="email">Email Address:</label>
+        <label for="email">Email Address:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'email', 'errors')}">
         <g:textField name="email" type="email"
@@ -388,14 +388,14 @@
 <tbody>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="nativePlace">Native Place:</label>
+        <label for="nativePlace">Native Place:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="nativePlace" maxLength="40" placeholder="Enter Region of Native place" required="required"
                          value="${mbProfile?.nativePlace}"/>
     </td>
     <td valign="top" class="name">
-        <label for="nativeState">Native(State):</label>
+        <label for="nativeState">Native(State):</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:select name="nativeState" required="required"
@@ -405,13 +405,13 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="famaddrline1">Present Address<br>of family:</label>
+        <label for="famaddrline1">Present Address<br>of family:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textArea name="famaddrline1" maxLength="100" placeholder="Enter Address here" required="required" value="${mbProfile?.familyAddress?.addressLine1}"/>
     </td>
     <td valign="top" class="name">
-        <label for="permcity">City:</label>
+        <label for="permcity">City:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="permcity" maxLength="20" placeholder="Enter City here" required="required" value="${mbProfile?.familyAddress?.city}"/>
@@ -427,7 +427,7 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="permpincode">Pin Code:</label>
+        <label for="permpincode">Pin Code:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="permpincode" maxLength="6" placeholder="Enter Pin Code here" required="required" value="${mbProfile?.familyAddress?.pincode}"/>

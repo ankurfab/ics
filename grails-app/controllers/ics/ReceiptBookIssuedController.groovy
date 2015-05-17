@@ -2,6 +2,10 @@ package ics
 
 import grails.converters.*
 import groovy.sql.Sql;
+import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 
 class ReceiptBookIssuedController {
 def housekeepingService
@@ -720,5 +724,27 @@ def dataSource
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
         render jsonData as JSON
         }
-    
+
+    def downloadRBIssuedData() {
+    	response.contentType = 'application/zip'
+    	def query = "select clorid,counsellor,familyof,indid cleeid,name clee,rb.book_series,book_serial_number,date_format(rbi.issue_date,'%d-%m-%Y') issue_date from individual_summary isum,receipt_book_issued rbi,receipt_book rb where rbi.receipt_book_id=rb.id and isum.indid=rbi.issued_to_id and rbi.status='Issued' and isum.clorid is not null and clorid in (select distinct individual_id from individual_role where status='VALID' and role_id in (select id from role where name in ('PuneEnglishCouncellors','PuneHindiCouncellors'))) order by counsellor,familyof,name"
+    	def sql = new Sql(dataSource)
+    	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
+		def fileName = "rbissued_"+new Date().format('ddMMyyyyHHmmss')+".csv"
+		zipOutputStream.putNextEntry(new ZipEntry(fileName))
+		//header
+		def headers = null;
+
+		sql.rows(query).each{ row ->
+			   if (headers == null) {
+				headers = row.keySet()
+				zipOutputStream << headers
+			        zipOutputStream << "\n"
+			   }
+			//with escaping for excel
+			zipOutputStream << row.values().collect{it.toString()}
+			zipOutputStream << "\n"
+		}
+	}    	    	
+    }
 }

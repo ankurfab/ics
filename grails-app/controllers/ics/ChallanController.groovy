@@ -665,7 +665,8 @@ class ChallanController {
 	}
 	
 	def search() {
-	render challanService.search(params)
+		if(params.type)
+			render challanService.search(params)
 	}
 
 }

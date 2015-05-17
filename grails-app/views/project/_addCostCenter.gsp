@@ -49,7 +49,7 @@
 		<g:message code="costCenter.owner1.label" default="Owner" />
 		
 	</label>
-	    <g:hiddenField name="owner1.id" value=""/>
+	    <g:hiddenField name="ccOwner.id" value=""/>
 	    <input id="ind" size="40" />
 	
 </div>
@@ -64,7 +64,7 @@ $(function() {
 		source: "${createLink(controller:'individual',action:'allIndividualsAsJSON_JQ')}",//todo take care of data from other departments
 		minLength: 3,
 		  select: function(event, ui) { // event handler when user selects a company from the list.
-		   $(document.getElementById('owner1.id')).val(ui.item.id); // update the hidden field.
+		   $(document.getElementById('ccOwner.id')).val(ui.item.id); // update the hidden field.
 		  }
 	});
 });

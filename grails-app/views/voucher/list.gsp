@@ -8,6 +8,7 @@
 	<r:require module="jqui" />
 	<r:require module="grid" />
 	<r:require module="printarea" />
+        <r:require module="jqbarcode" />
     </head>
     <body>
         <div class="nav">
@@ -51,7 +52,7 @@
     jQuery("#voucher_list").jqGrid({
       url:'jq_voucher_list',
       datatype: "json",
-      colNames:['VoucherDate','VoucherNo','DepartmentCode','Description','Deposit(Dr)','Withdrawal(Cr)','Type','From','To','Amount','Debit/Credit','Ready','InstrumentNo','InstrumentDate','BankName','BankBranch','Collected','Entered','RefNo','Status','Id'],
+      colNames:['VoucherDate','VoucherNo','DepartmentCode','Description','Deposit(Dr)','Withdrawal(Cr)','Type','From','To','Amount','Debit/Credit','Ready','InstrumentNo','InstrumentDate','BankName','BankBranch','Collected','Entered','RefNo','Id'],
       colModel:[
 	{name:'voucherDate',search:true,
 		searchoptions: {dataInit: function(el){$(el).datepicker({dateFormat:'dd-mm-yy'});}}                    			    
@@ -81,7 +82,6 @@
 			formatter:'showlink', 
 			formatoptions:{target:"_new",baseLinkUrl:'${createLink(controller:'Voucher',action:'showRef')}'}
 	},	
-	{name:'status',search:true},
 	{name:'id',hidden:true}
      ],
      

@@ -335,9 +335,13 @@
 			buttons: {
 				"Submit": function() {
 					    $("#formOrder").ajaxForm({
-						success: function() {
-							alert("New order created");
-							jQuery("#order_list").jqGrid().trigger("reloadGrid");
+						success: function(responseText, statusText, xhr, $form) {
+							if(!responseText.success)
+								alert(responseText.message);
+							else {
+								alert("New order created");
+								jQuery("#order_list").jqGrid().trigger("reloadGrid");
+							}
 							}
 					    }).submit();
 

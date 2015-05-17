@@ -949,7 +949,9 @@ def config = ConfigurationHolder.config
 				if(it.size()>3)
 					searchStr += it +"~ "
 				}
-			println "In searchIndividualName: fuzzy search string 1st pass: " + searchStr
+			//println "In searchIndividualName: fuzzy search string 1st pass: " + searchStr
+			if(!searchStr)
+				return []
 			sresults = Individual.search(searchStr)
 			if(sresults.total>0)
 				{
@@ -964,7 +966,7 @@ def config = ConfigurationHolder.config
 					searchStr = tokens[0]+" "+tokens[tokens.size()-1]
 				else
 					searchStr = tokens[0]
-				println "In searchIndividualName: fuzzy search string 2nd pass: " + searchStr
+				//println "In searchIndividualName: fuzzy search string 2nd pass: " + searchStr
 				sresults = Individual.search(searchStr)
 				if(sresults.total>0)
 					{
@@ -979,7 +981,7 @@ def config = ConfigurationHolder.config
 						if(i>0)
 							searchStr += obj+" "
 					}
-					println "In searchIndividualName: fuzzy search string 3rd pass: " + searchStr
+					//println "In searchIndividualName: fuzzy search string 3rd pass: " + searchStr
 					sresults = Individual.search(searchStr)
 					if(sresults.total>0)
 						{

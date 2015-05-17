@@ -1,51 +1,58 @@
 <%@ page import="ics.Mb" %>
 <!DOCTYPE html>
-<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
-<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
-<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
-<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"><!--<![endif]-->
+<html lang="en">
+
 <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
     <title>ICS : Marriage Board</title>
     <r:require module="mbHome"/>
     <r:layoutResources />
+    <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
 </head>
-<body>
-<r:img id="bg" dir="images" file="1.jpg" hidden="hidden"/>
-<nav class="navbar navbar-inverse navbar-no-bg" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#top-navbar-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <div class="navbar-brand"></div>
-        </div>
-        <h3 class="site-head hidden-xs hidden-sm">ISKCON Community Services : Marriage Board</h3>
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="top-navbar-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li>
-                    <a href="#">Tutorials</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
 
+<body>
+
+<!-- Navigation -->
+<a id="menu-toggle" href="#" class="btn btn-dark btn-lg toggle"><i class="fa fa-bars"></i></a>
+<a id="navbrand" href="#" class="pull-left"><r:img dir="images" file="mb_logo1.png"/></a>
+<nav id="sidebar-wrapper">
+    <ul class="sidebar-nav">
+        <a id="menu-close" href="#" class="btn btn-light btn-lg pull-right toggle"><i class="fa fa-times"></i></a>
+        <li class="sidebar-brand">
+            <a href="#"  onclick = $("#menu-close").click(); >ICS MB</a>
+        </li>
+        <li>
+            <a href="#" onclick = $("#menu-close").click(); >Home</a>
+        </li>
+        <li>
+            <a href="#" onclick = $("#menu-close").click(); >About</a>
+        </li>
+        <li>
+            <a href="#" onclick = $("#menu-close").click(); >Services</a>
+        </li>
+        <li>
+            <a href="#" onclick = $("#menu-close").click(); >Portfolio</a>
+        </li>
+        <li>
+            <a href="#" onclick = $("#menu-close").click(); >Others</a>
+        </li>
+    </ul>
+</nav>
+<r:img id="bg" dir="images" file="mb_sec_bg.jpg" hidden="hidden"/>
 <!-- Top content -->
-<div class="top-content">
-    <div class="inner-bg">
-        <div class="container">
-            <h3 style="text-align: center;color: black;margin: -30px 0 40px 0"><strong>The Following Profiles are new and Seek your approval. Once approved the repective candidate will be informed via SMS and Mail to edit their profile.</strong></h3>
+        <div class="container transback">
+            <h3 style="text-align: center;margin: 75px 0 20px"><strong>The Following Profiles are new and Seek your approval. Once approved the repective candidate will be informed via SMS and Mail to edit their profile.</strong></h3>
             <div class="panel-group" id="accordion">
                 <g:each in="${profiles}">
-                <div class="panel panel-default">
+                <div class="panel panel-default transback">
                     <div class="panel-heading panel-title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse${it.objId}"><h4>${it.donorName}</h4></a>
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse${it.objId}"><h4><strong>${it.donorName}</strong></h4></a>
                     </div>
                     <div id="collapse${it.objId}" class="panel-collapse collapse">
                         <g:form action="approveProfile" method="post">
@@ -84,16 +91,20 @@
                 </g:each>
             </div>
         </div>
-    </div>
-</div>
 <r:layoutResources />
 <script type="text/javascript">
     $(document).ready(function(){
-        $('#approveProfile').click(function(){
-            $.ajax({
+        $.backstretch($('#bg').attr('src'));
+        $("#menu-close").click(function(e) {
+            e.preventDefault();
+            $("#sidebar-wrapper").toggleClass("active");
+        });
 
-            });
-        })
+        // Opens the sidebar menu
+        $("#menu-toggle").click(function(e) {
+            e.preventDefault();
+            $("#sidebar-wrapper").toggleClass("active");
+        });
     });
 </script>
 </body>

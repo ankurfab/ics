@@ -126,7 +126,7 @@
 </div>
 
 <div>
-<g:actionSubmit value="Submit" action="Save" />
+<g:actionSubmit id="prjCreationBtn" value="Submit" action="Save" />
 </div>
 
 </fieldset>
