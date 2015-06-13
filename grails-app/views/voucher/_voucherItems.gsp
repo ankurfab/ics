@@ -37,12 +37,12 @@
             </tbody>         
                   <tr>
  			<td><b>Debit</b>  </td>
- 			<td>${voucherInstance?.anotherLedger?:0}</td>
+				<td>${voucherInstance?.ledger?:0}</td>
                     </tr>
                               
                      <tr>
  			<td><b>Credit</b>  </td>
- 		        <td>${voucherInstance?.ledger?:0}</td>
+				<td>${voucherInstance?.anotherLedger?:0}</td>
                      </tr>
             
                      <tr>

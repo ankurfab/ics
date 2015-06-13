@@ -127,6 +127,9 @@ class DepartmentController {
             if (params.'centre.id')
                 eq('centre.id',new Long(params."centre.id"))
 
+            if (params.'costCenter.id')
+                eq('costCentre.id',new Long(params."costCenter.id"))
+
             order(sortIndex, sortOrder)
       }
       def totalRows = deps.totalCount
@@ -135,7 +138,8 @@ class DepartmentController {
       def jsonCells = deps.collect {
             [cell: [it.name,
             	it.description,
-            	it.alias
+            	it.alias,
+            	it.costCenter?.name
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]

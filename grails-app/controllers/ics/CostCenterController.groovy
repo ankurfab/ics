@@ -207,12 +207,27 @@ class CostCenterController {
 
 	
 	def result
+	def initialBalance = 0
+	def totalIncome = 0
+	def totalExpense = 0
 	
-	if(ccat)
+	if(ccat){
 		result = reportService.costCategoryStatement(ccat,fd,td)
+		initialBalance = result.first()?.balance?:0
+	}
 	else
+	{
 		result = reportService.ccStatement(cc,fd,td)
-    	[ccat:ccat, cc: cc,fd:fd, td: td, balance:cc?.budget?:0, records: result]
+		if(result.size() > 0){
+			initialBalance = result.first()?.balance?:0
+			result.each {
+				totalIncome += it.income?:0
+				totalExpense += it.expense?:0
+			}
+		}
+		def finalBalance = initialBalance + totalIncome - totalExpense
+	}
+    [ccat:ccat, cc: cc,fd:fd, td: td, balance:initialBalance, records: result, totalIncome:totalIncome, totalExpense:totalExpense]
     }
 
     def budget(){}
@@ -790,7 +805,8 @@ class CostCenterController {
 		order(sortIndex, sortOrder)
 	}
       
-      def totalRows = result.totalCount
+      
+	  def totalRows = result.totalCount
       def numberOfPages = Math.ceil(totalRows / maxRows)
             
           def jsonCells = result.collect {

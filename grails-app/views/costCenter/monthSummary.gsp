@@ -46,7 +46,9 @@
 	    </div>
 
 		<div>
-		Upload Budget for Cost Centers : <br />
+		Upload Budget for Cost Centers<br />
+		Format of upload file<br/>
+		ccId,amount<br/>
 		    <g:uploadForm controller="CostCenter" action="uploadCurrentBudget">
 			<input type="file" name="myFile" />
 			<input type="submit" value="UploadBudget"/>

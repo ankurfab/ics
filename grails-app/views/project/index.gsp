@@ -123,6 +123,15 @@
 		    </ul>
 		</div><!-- /collapsible -->
 	</sec:ifAnyGranted>  
+
+        <sec:ifAnyGranted roles="ROLE_CC_OWNER">
+		<div data-role="collapsible" data-inset="true">
+		    <h3>HR (beta version)</h3>
+		    <ul data-role="listview">
+			<li><g:link controller="IndividualDepartment" action="gridlist" data-ajax="false">HR Management</g:link></li>
+		    </ul>
+		</div><!-- /collapsible -->
+	</sec:ifAnyGranted>         
 	
     </div><!-- /content -->
 

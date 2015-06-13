@@ -11,6 +11,7 @@
 	</head>
 	<body>
 		<g:render template="/common/apisms" />
+		<g:render template="/common/apismsUnicode" />
 		<g:render template="/common/mandrillemail" />
 
 		<div class="nav">
@@ -29,6 +30,7 @@
 		<!-- pager will hold our paginator -->
 		<div id="individualRole_list_pager" class="scroll" style="text-align:center;"></div>
 		<input class="menuButton" type="BUTTON" id="btnSMS_IndividualRoleList" value="SMS" gridName="#individualRole_list" entityName="IndividualRole"  departmentId="${ics.Department.findByName('TMC')?.id}"/>
+		<input class="menuButton" type="BUTTON" id="unicodebtnSMS_IndividualRoleList" value="SMS(Unicode)" gridName="#individualRole_list" entityName="IndividualRole"  departmentId="${ics.Department.findByName('TMC')?.id}"/>
 		<input class="menuButton" type="BUTTON" id="btnEMAIL_IndividualRoleList" value="EMAIL" gridName="#individualRole_list" entityName="IndividualRole" departmentId="${ics.Department.findByName('TMC')?.id}"/>
 		</div>
 

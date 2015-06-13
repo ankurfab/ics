@@ -11,24 +11,24 @@
     <meta name="author" content="">
 
     <title>ICS : Marriage Board</title>
+    <link rel="shortcut icon" href="${resource(dir: 'images', file: 'icsmb.ico')}" type="image/x-icon">
     <r:require module="mbHome"/>
     <r:layoutResources />
     <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
 </head>
 
 <body>
-<r:img id="bg" dir="images" file="mb_sec_bg.jpg" hidden="hidden"/>
 <section id="services" class="services" style="background-color: #337ab7">
         <div class="container">
             <div class="row">
                 <div class="col-sm-5 text">
                     <div class="form-top-left" style="color: white">
                         <h3><strong>Already a member</strong></h3>
-                        <p style="font-weight: 600">Login if you are a registered candidate or a marriage board admin.</p>
+                        <p style="font-weight: 600">Login if you are a registered candidate or marriage board member.</p>
                     </div>
                     <form action='${request.contextPath}/j_spring_security_check' method="POST" class="registration-form" id='loginForm' name='loginForm'>
                         <h4 style="color: white;font-weight: 600">Login Details : </h4>
-                        <g:hiddenField name="successHandler.targetUrlParameter" value="${createLink(controller:'individual',action:'index')}" />
+                        <g:hiddenField name="spring-security-redirect" value="/mb/home" />
                         <div class="form-group">
                             <input type="text" name="j_username" placeholder="Login ID..." class="form-control" id="username">
                         </div>

@@ -6,6 +6,7 @@ import grails.converters.JSON
 class IndividualDepartmentController {
 
     def individualService
+    def hrService
     def springSecurityService
     
     def index = { redirect(action: "list", params: params) }
@@ -119,7 +120,17 @@ class IndividualDepartmentController {
         }
     }
     
-    def gridlist() {}
+    def gridlist() {
+    	def departments
+    	
+    	if(SpringSecurityUtils.ifAllGranted('ROLE_FINANCE'))
+    		departments = Department.findAllByCostCenterIsNotNull([sort:'name'])
+    	else {
+	    	def cc = CostCenter.findByStatusIsNullAndOwner(Individual.findByLoginid(springSecurityService.principal.username))
+    		departments = Department.findAllByCostCenter(cc,[sort:'name'])
+    	}
+    	[departments:departments]
+    }
 
     def jq_individualDepartment_list = {
       log.debug("Inside jq_individualDepartment_list with params : "+params)
@@ -133,6 +144,15 @@ class IndividualDepartmentController {
 
 	def result = IndividualDepartment.createCriteria().list(max:maxRows, offset:rowOffset) {
 
+    		if(SpringSecurityUtils.ifNotGranted('ROLE_FINANCE')) {
+			department{
+				costCenter{
+					owner{
+						eq('loginid',springSecurityService.principal.username)
+					}
+				}
+			}
+		}
 		if (params.name)
 			individual{or{ilike('legalName','%'+params.name + '%') ilike('initiatedName','%'+params.name + '%')}}
 		if (params.since)
@@ -145,6 +165,10 @@ class IndividualDepartmentController {
 			ilike('comments','%'+params.comments + '%')
 		if (params.salary)
 			ge('salary',new Integer(params.salary))
+		if (params.accNo)
+			eq('accNo',params.accNo)
+		if (params.accRef)
+			eq('accRef',params.accRef)
 		if (params.'department.id')
 			department{eq('id',new Long(params.'department.id'))}
 
@@ -163,6 +187,8 @@ class IndividualDepartmentController {
             	    it.status,
             	    it.comments,
             	    it.salary,
+            	    it.accNo,
+            	    it.accRef,
             	    it.department.toString(),
             	    it.individual.id
                 ], id: it.id]
@@ -188,6 +214,7 @@ class IndividualDepartmentController {
 		  if(params.till)
 		  	params.till = Date.parse('dd-MM-yyyy',params.till)
 
+		  params.category = "DEPARTMENT"
 		  params.'individual.id' = individualService.createBasicIndividual(params)?.id
 		  
 		  individualDepartment = new IndividualDepartment(params)
@@ -265,8 +292,7 @@ class IndividualDepartmentController {
 		individualDepartment=IndividualDepartment.get(params.individualDepartmentid)
 		
 	def result = LeaveRecord.createCriteria().list(max:maxRows, offset:rowOffset) {
-		if(individualDepartment)
-			eq('individualDepartment',individualDepartment)
+		eq('individualDepartment',individualDepartment)
 
 		if (params.name)
 			individualDepartment{individual{or{ilike('legalName','%'+params.name + '%') ilike('initiatedName','%'+params.name + '%')}}}
@@ -394,8 +420,7 @@ class IndividualDepartmentController {
 		individualDepartment=IndividualDepartment.get(params.individualDepartmentid)
 		
 	def result = SalaryRecord.createCriteria().list(max:maxRows, offset:rowOffset) {
-		if(individualDepartment)
-			eq('individualDepartment',individualDepartment)
+		eq('individualDepartment',individualDepartment)
 
 		if (params.name)
 			individualDepartment{individual{or{ilike('legalName','%'+params.name + '%') ilike('initiatedName','%'+params.name + '%')}}}
@@ -505,5 +530,233 @@ class IndividualDepartmentController {
 
 	      render response as JSON
 	    }        
+
+    def jq_loan_list = {
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def individualDepartment = null
+	if(params.individualDepartmentid)
+		individualDepartment=IndividualDepartment.get(params.individualDepartmentid)
+		
+	def result = Loan.createCriteria().list(max:maxRows, offset:rowOffset) {
+		eq('loanedBy',individualDepartment?.individual)
+
+		if (params.name)
+			loanedBy{or{ilike('legalName','%'+params.name + '%') ilike('initiatedName','%'+params.name + '%')}}
+		if (params.loanDate)
+			ge('loanDate',Date.parse('dd-MM-yyyy',params.loanDate))
+
+		if (params.amount)
+			eq('amount',new Integer(params.amount))
+
+		if (params.numInstallments)
+			eq('numInstallments',new Integer(params.numInstallments))
+
+		if (params.accoutsReceiptNo)
+			eq('accoutsReceiptNo',params.accoutsReceiptNo)
+
+		if (params.comments)
+			ilike('comments',params.comments)
+
+		if (params.status)
+			eq('status',params.status)
+
+		order(sortIndex, sortOrder)
+
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = result.collect {
+            [cell: [
+            	    it.loanedBy?.toString(),
+            	    it.loanDate?.format('dd-MM-yyyy'),
+            	    it.amount,
+            	    it.numInstallments,
+            	    it.accoutsReceiptNo,
+            	    it.comments,
+            	    it.status
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+
+	def jq_edit_loan = {
+	      def loan = null
+	      def message = ""
+	      def state = "FAIL"
+	      def id
+	      
+	  //format the dates
+	  params.loanDate = Date.parse('dd-MM-yyyy',params.loanDate)
+
+	def individualDepartment = null
+	if(params.'individualDepartment.id')
+		individualDepartment=IndividualDepartment.get(params.'individualDepartment.id')
+
+	      // determine our action
+	      switch (params.oper) {
+		case 'add':
+		  // add 
+		  
+		  params.loanedBy = individualDepartment?.individual
+		  params.category = 'DEPARTMENT'
+		  params.loanReceiptNo = 'NOTGENERATED'
+		  if(!params.status)
+		  	params.status = 'APPLIED'
+		  loan = new Loan(params)
+		  loan.updator=loan.creator=springSecurityService.principal.username
+		  if (! loan.hasErrors() && loan.save()) {
+		    message = "loan Saved.."
+		    id = loan.id
+		    state = "OK"
+		  } else {
+		    loan.errors.allErrors.each {
+			log.debug(it)
+			}
+		    message = "Could Not Save loan"
+		  }
+		  break;
+		case 'del':
+		  	def idList = params.id.tokenize(',')
+		  	idList.each
+		  	{
+			  // check loan exists
+			  loan  = loan.get(it)
+			  if (loan) {
+			    // delete loan
+			    if(!loan.delete())
+			    	{
+				    loan.errors.allErrors.each {
+					log.debug("In jq_loan_edit: error in deleting loan:"+ it)
+					}
+			    	}
+			    else {
+				    message = "Deleted!!"
+				    state = "OK"
+			    }
+			  }
+		  	}
+		  break;
+		 default :
+		  // edit action
+		  // first retrieve the loan by its ID
+		  loan = Loan.get(params.id)
+		  if (loan) {
+		    // set the properties according to passed in parameters
+		    loan.properties = params
+			  loan.updator = springSecurityService.principal.username
+		    if (! loan.hasErrors() && loan.save()) {
+		      message = "loan  ${loan.toString()} Updated"
+		      id = loan.id
+		      state = "OK"
+		    } else {
+			    loan.errors.allErrors.each {
+				println it
+				}
+		      message = "Could Not Update loan"
+		    }
+		  }
+		  break;
+ 	 }
+
+	      def response = [message:message,state:state,id:id]
+
+	      render response as JSON
+	    }        
+
+    def jq_loanrecord_list = {
+      def sortIndex = params.sidx ?: 'id'
+      def sortOrder  = params.sord ?: 'desc'
+
+      def maxRows = Integer.valueOf(params.rows)
+      def currentPage = Integer.valueOf(params.page) ?: 1
+
+      def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+	def individualDepartment = null
+	if(params.individualDepartmentid)
+		individualDepartment=IndividualDepartment.get(params.individualDepartmentid)
+		
+	def result = LoanRecord.createCriteria().list(max:maxRows, offset:rowOffset) {
+		eq('individualDepartment',individualDepartment)
+
+		if (params.name)
+			individualDepartment{individual{or{ilike('legalName','%'+params.name + '%') ilike('initiatedName','%'+params.name + '%')}}}
+		if (params.voucherdate)
+			receiptVoucher{ge('voucherDate',Date.parse('dd-MM-yyyy',params.voucherdate))}
+
+		if (params.amount)
+			receiptVoucher{eq('amount',new BigDecimal(params.amount))}
+
+		if (params.details)
+			receiptVoucher{eq('voucherNo',details)}
+
+		if (params.comments)
+			ilike('comments',params.comments)
+
+		if (params.status)
+			eq('status',params.status)
+
+		order(sortIndex, sortOrder)
+
+	}
+      
+      def totalRows = result.totalCount
+      def numberOfPages = Math.ceil(totalRows / maxRows)
+
+      def jsonCells = result.collect {
+            [cell: [
+            	    it.individualDepartment.individual?.toString(),
+            	    it.receiptVoucher?.voucherDate?.format('dd-MM-yyyy'),
+            	    it.receiptVoucher?.amount,
+            	    it.receiptVoucher?.voucherNo,
+            	    it.comments,
+            	    it.status
+                ], id: it.id]
+        }
+        def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+        render jsonData as JSON
+        }
+        
+        def salaryEAR()  {
+        	def message = hrService.salaryEAR(params)
+        	render ([message:message] as JSON)
+        }
+    
+        def loanEAR()  {
+        	def message = hrService.loanEAR(params)
+        	render ([message:message] as JSON)
+        }
+        
+        def payroll() {
+        	def now = new Date()
+        	def currentMonth = now.format('MMMM')+"'"+now.format('YYYY')
+
+		def departments
+
+		if(SpringSecurityUtils.ifAllGranted('ROLE_FINANCE'))
+			departments = Department.findAllByCostCenterIsNotNull([sort:'name'])
+		else {
+			def cc = CostCenter.findByStatusIsNullAndOwner(Individual.findByLoginid(springSecurityService.principal.username))
+			departments = Department.findAllByCostCenter(cc,[sort:'name'])
+		}
+
+        	def indDepList = IndividualDepartment.findAllByStatusAndDepartmentInList('ACTIVE',departments,['sort':'individual.legalName'])
+        	[currentMonth:currentMonth,indDepList:indDepList]
+        }
+        
+        def processPayroll() {
+        	def message = hrService.processPayroll(params)
+        	render ([message:message] as JSON)
+        }
     
 }

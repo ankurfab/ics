@@ -229,6 +229,24 @@ grails.resources.modules = {
         resource url:'/css/select2.min.css'
         resource url:'/js/select2.full.min.js'
     }
+
+    jqui1114 {
+        dependsOn 'jq'
+        resource url:'/js/jquery-ui.min-1.11.4.js'
+        resource url: '/css/jquery-ui.min-1.11.4.css'
+        resource url: '/css/jquery-ui.structure.min-1.11.4.css'
+        resource url: '/css/jquery-ui.theme.min-1.11.4.css'
+    }
+
+    grid482 {
+        dependsOn 'jqui1114'
+        resource url: '/js/grid.locale-en-4.8.2.js'
+        resource url: '/js/jquery.jqGrid-4.8.2.min.js'
+        resource url: '/css/ui.jqgrid-bootstarp-4.8.2.css'
+        resource url: '/css/ui.jqgrid-4.8.2.css'
+    }
+
+
 }
 
 

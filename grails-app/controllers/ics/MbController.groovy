@@ -2,9 +2,11 @@ package ics
 
 import grails.converters.JSON
 import java.util.zip.ZipOutputStream  
-import java.util.zip.ZipEntry
-
+import java.util.zip.ZipEntry  
+import org.grails.plugins.csv.CSVWriter
+import org.apache.commons.lang.StringEscapeUtils.*
 import groovy.time.TimeCategory
+import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 
 
 class MbController {
@@ -20,6 +22,15 @@ class MbController {
     def mbLogin = {
 
     }
+    
+    def home() {
+    	if(SpringSecurityUtils.ifAllGranted('ROLE_MB_CANDIDATE'))
+    		render (view: "chome")
+    	else
+    		redirect(action:"dashboard")
+    }
+    
+    
     def pendingApprovals = {
         def objIds = AttributeValue.withCriteria {
             projections {

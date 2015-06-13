@@ -218,11 +218,25 @@ class FinanceService {
     	populateStats(params)
     	return "Stats reset for year "+params.year+" !!"
     }
+	
+	def checkUploadValidityOfCC (String ccId) {
+		Boolean bRet = false
+		def result = AttributeValue.createCriteria().list() {
+			eq('objectClassName','CostCenter')
+			eq('objectId',new Long(ccId))
+			attribute{eq('name','BudgetAuditTrail')}
+			attribute{eq('type','InitialBudgetUploadAuditTrail')}
+			order('id', 'desc')
+		}
+		if (0 == result.size())
+			bRet = true
+		return bRet
+	}
 
     def uploadCurrentBudget(Object tokens) {
     	//tokens as per download csv format
     	//ccId,amount
-    	try{
+		try{
     		log.debug("uploadCurrentBudget..processing ccid:"+tokens[0])
     		def cc = CostCenter.get(tokens[0])
     		if(!cc || !tokens[1]) {
@@ -233,20 +247,30 @@ class FinanceService {
     			log.debug("uploadCurrentBudget..got profit centre ccid:"+tokens[0])
     			return false
     		}
-    		def amount = new BigDecimal(tokens[1])
+			def bValidToUpload = checkUploadValidityOfCC(tokens[0])
+    		if(true == bValidToUpload) {
+				def amount = new BigDecimal(tokens[1])
 
-    		def oldBalance = cc.balance?:0
-    		cc.balance = (Project.findAllByCostCenterAndStatusInList(cc,['APPROVED_REPORT','SUBMITTED_REPORT','DRAFT_REPORT','APPROVED_REQUEST','SUBMITTED_REQUEST','ESCALATED_REQUEST'])?.sum{it.amount})?:0
+				def oldBalance = cc.balance?:0
+				cc.balance = (Project.findAllByCostCenterAndStatusInList(cc,['APPROVED_REPORT','SUBMITTED_REPORT','DRAFT_REPORT','APPROVED_REQUEST','SUBMITTED_REQUEST','ESCALATED_REQUEST'])?.sum{it.amount})?:0
 
-    		def oldBudget = cc.budget?:0
-    		cc.budget = amount + cc.balance	//carry forward from last month
-    		
-    		if(!cc.save())
-			cc.errors.allErrors.each {log.debug("uploadCurrentBudget:exception in setting budget:"+it)}    	
-		else {
-			log.debug("uploadCurrentBudget:cc:"+cc.id+":name:"+cc+":oldbudget="+oldBudget+":newbudget="+cc.budget+":oldbalance="+oldBalance+":newbalance="+cc.balance)
+				def oldBudget = cc.budget?:0
+				cc.budget = amount + cc.balance	//carry forward from last month
+				
+				if(!cc.save())
+					cc.errors.allErrors.each {log.debug("uploadCurrentBudget:exception in setting budget:"+it)}    	
+				else {
+					def curDate = new Date()
+					curDate.format('dd-MM-yyyy')
+					def value = "Old budget was = "+oldBudget+" , new budget is = "+cc.budget+" , upload date is "+curDate
+					addBudgetAuditTrail(cc.id, 'BudgetAuditTrail', 'InitialBudgetUploadAuditTrail', value)
+				}
+			}
+			else {
+				log.debug("Budget has already been uploaded once for this cost center!!!")
+				return false
+			}
 		}
-    	}
     	catch(Exception e){
     		log.debug("Exception in uploadCurrentBudget:"+tokens[0]+":"+e)
     		return false
@@ -1936,45 +1960,53 @@ class FinanceService {
 	  return false
     }
 
-        def updateBudget(Map params) {
-        	def cc = CostCenter.get(params.ccid_updatebudget)
-        	def oldBudget = cc.budget
-        	cc.budget = new BigDecimal(params.amount)
-        	if(!cc.save())
-        		cc.errors.allErrors.each {log.debug("updateBudget:exception:"+it)}
-        	else {
-        		log.debug("updateBudget:budget updated for cc:"+cc)
-        		//now record for audit
-        		//1st create attribute , if not exists
-        		def attr = Attribute.findByDomainClassNameAndDomainClassAttributeNameAndName('CostCenter',cc.id.toString(),'BudgetAuditTrail')
-        		if(!attr) {
-        			attr = new Attribute()
-        			attr.domainClassName = 'CostCenter'
-        			attr.domainClassAttributeName = cc.id.toString()
-        			attr.name = 'BudgetAuditTrail'
-        			if(!attr.save())
-        				attr.errors.allErrors.each {log.debug("updateBudget:create attr:exception:"+it)}
-        		}
-        		//now store the change
+	def updateBudget(Map params) {
+		def cc = CostCenter.get(params.ccid_updatebudget)
+		def oldBudget = cc.budget
+		cc.budget = new BigDecimal(params.amount)
+		if(!cc.save())
+			cc.errors.allErrors.each {log.debug("updateBudget:exception:"+it)}
+		else {
+			def details = 'old='+oldBudget+' new='+cc.budget+' details = '+params.details
+			addBudgetAuditTrail(cc.id, 'BudgetAuditTrail', 'BudgetUpdateAuditTrail', details)
+		}
+	}
 
-			def username = ''
-			try{
+	def addBudgetAuditTrail (Long ccId, String attrName, String attrType, String value) {
+		log.debug("ccId:"+ccId)
+		//now record for audit
+		//1st create attribute , if not exists
+		def attr = Attribute.findByDomainClassNameAndDomainClassAttributeNameAndNameAndType('CostCenter',ccId.toString(),attrName,attrType)
+		if(!attr) {
+			attr = new Attribute()
+			attr.domainClassName = 'CostCenter'
+			attr.domainClassAttributeName = ccId.toString()
+			attr.name = attrName
+			attr.type = attrType
+			if(!attr.save())
+			attr.errors.allErrors.each {log.debug("updateBudget:create attr:exception:"+it)}
+		}
+		//now store the change
+		def username = ''
+		try{
 			username = springSecurityService.principal.username
+		}
+		catch(Exception e){username='unknown'}
+		def av = new AttributeValue()
+		if (!attr.type) {
+			attr.type = attrType
+			if(!attr.save()){
+				attr.errors.allErrors.each{log.debug("attr.type save exception:"+it)}
 			}
-			catch(Exception e){username='unknown'}
-
-
-        		def av = new AttributeValue()
-        		av.attribute = attr
-        		av.objectClassName  = 'CostCenter'
-        		av.objectId = cc.id
-        		av.value = 'old='+oldBudget+' new='+cc.budget+' details='+params.details
-        		av.updator = av.creator = username
-        		if(!av.save())
-        			av.errors.allErrors.each {log.debug("updateBudget:create av:exception:"+it)}
-        	}
-        }
-
+		}
+		av.attribute = attr
+		av.objectClassName  = 'CostCenter'
+		av.objectId = ccId
+		av.value = value
+		av.updator = av.creator = username
+		if(!av.save())
+		av.errors.allErrors.each {log.debug("updateBudget:create av:exception:"+it)}
+	}
 
 	def getAllDonationByDonorNameIncomeSummaryStats(String donorName) {
 		def stats=[:]
@@ -2189,6 +2221,46 @@ class FinanceService {
 						log.debug("adjustBudgetAfterSettlement:Exception in updating cc"+it)
 					    }
 		}
+	}
+	
+	//utility method to create departments for the cost centers
+	//@TODO: take care of cc mods + manuals dep creation + fin year change related issues
+	//@TODO: add multitenancy logic
+	def createDepartments() {
+		def dep
+		def ccList = CostCenter.findAllByStatusIsNull()
+		ccList.each{cc->
+			//check if there is a corresponing dep
+			dep = Department.findByCostCenterAndName(cc,cc.name)
+			if(!dep) {
+				//no associated dep found, create and associate
+				dep = new Department()
+				dep.name = cc.name	//@TODO: problematic when name changes
+				dep.centre = cc.centre
+				dep.costCenter = cc
+				dep.description = "Autocreated for related cost center"
+				dep.creator = dep.updator = "system"
+				if(!dep.save())
+				    dep.errors.allErrors.each {log.debug("createDepartments:Exception in saving dep"+it)}
+					
+			}
+		}
+	}
+	
+	def markSettleLinkedPP(Project project) {
+   		if(project.type=='CREDIT') {
+   			def linkedPPList = Project.findAllByMainProject(project)
+   			linkedPPList.each{pp->
+				 pp.status='SETTLED_REPORT'
+				 pp.reviewer3 = project.reviewer3
+				 pp.review3Date = new Date()
+				 if(!pp.save()) {
+				    pp.errors.allErrors.each {
+					log.debug("Exception in markSettleLinkedPP:"+it)
+					}
+				}
+   			}
+   		}
 	}
 	
 }

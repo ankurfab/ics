@@ -58,7 +58,8 @@ class DonationRecordController {
         def donationExecRole = Role.findByAuthority('ROLE_DONATION_EXECUTIVE')
         def dep = IndividualRole.findWhere('individual.id':session.individualid,role:donationExecRole,status:'VALID')?.department
         if(dep)
-            schemes = Scheme.findAllByDepartment(dep,[sort:'name'])
+        	//@TODO: dep not set for schemes for new FY..need to think and fix..FROZEN issue
+            schemes = Scheme.findAllByDepartmentAndStatusIsNull(dep,[sort:'name'])
         }
 	else if (SpringSecurityUtils.ifAnyGranted('ROLE_PATRONCARE,ROLE_PATRONCARE_USER')){
 		schemes = Scheme.createCriteria().list{
@@ -1240,8 +1241,10 @@ def donationRecordDataWithFilters(){
                   ilike("rno",'%'+params.rno+'%')
                 }
 
-
-                order(sortIndex,sortOrder)
+		if(sortIndex=='member')
+                	donatedBy{order('legalName',sortOrder)}
+                else
+                	order(sortIndex,sortOrder)
               }
         return result  
 }
@@ -1311,7 +1314,11 @@ def donationRecordDataForPC(){
                   ilike("rno",'%'+params.rno+'%')
                 }
                 
-                order(sortIndex,sortOrder)
+		if(sortIndex=='member')
+                	donatedBy{order('legalName',sortOrder)}
+                else
+                	order(sortIndex,sortOrder)
+
               }
         return result  
 }

@@ -10,6 +10,7 @@
     <meta name="author" content="">
 
     <title>ICS : Marriage Board</title>
+    <link rel="shortcut icon" href="${resource(dir: 'images', file: 'icsmb.ico')}" type="image/x-icon">
     <r:require module="mbHome"/>
     <r:layoutResources />
     <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
@@ -47,8 +48,8 @@
     <!-- Header -->
     <header id="top" class="header">
         <div class="text-vertical-center" style="color: #E0FF84;">
-            <h1>ISKCON Community Services</h1>
-            <h2>Marriage Board</h2>
+            <h2>ISKCON Community Services</h2>
+            <h1>Marriage Board</h1>
             <br>
             <a href="/ics/mb/mbLogin" class="btn btn-dark btn-lg">Proceed</a>
         </div>
@@ -223,7 +224,7 @@
                 <div class="col-lg-10 col-lg-offset-1 text-center">
                     <h4><strong>ISKCON Community Services : Marriage Board</strong>
                     </h4>
-                    <p>ISKCON NVCC, Katraj Kondhwa Road Pune<br>IKSCON Chowpatty, 7 K.M.Munshi Road, Girgaon Chowpatty, Mumbai</p>
+                    <p>ISKCON Chowpatty, 7 K.M.Munshi Road, Girgaon Chowpatty, Mumbai<br>ISKCON NVCC, Katraj Kondhwa Road Pune</p>
                     <ul class="list-unstyled">
                         <li><i class="fa fa-phone fa-fw"></i>+918983410723</li>
                         <li><i class="fa fa-envelope-o fa-fw"></i>  <a href="spd@gmail.com">spd@gmail.com</a>
@@ -241,7 +242,7 @@
                         </li>
                     </ul>--}%
                     <hr class="small">
-                    <p class="text-muted">Copyright &copy; Your Website 2014</p>
+                    <p class="text-muted">Served by <a href="http://konsoftech.in">Konsoftech</a></p>
                 </div>
             </div>
         </div>

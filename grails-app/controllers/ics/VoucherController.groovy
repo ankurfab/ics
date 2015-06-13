@@ -409,7 +409,24 @@ class VoucherController {
     	render([message:msg] as JSON)
     }
  
-    def printVoucher() {
+    def bounceCheque() {
+		log.debug("params from within bounceCheque:"+params)
+		def voucherInstance = Voucher.get(params.id)
+		def result = Expense.createCriteria().list(max:20, offset:0) {
+			isNotNull('paymentVoucher')
+			paymentVoucher{eq('voucherNo', voucherInstance.voucherNo)}
+		}
+		voucherInstance.refNo = null;
+		voucherInstance.status = "BOUNCED_CHEQUE";
+		result.collect {
+			it.paymentVoucher = null;
+			it.status = "BOUNCED_CHEQUE";
+		}
+		
+		return
+	}
+
+	def printVoucher() {
         def voucherInstance
         
         if(params.id) {

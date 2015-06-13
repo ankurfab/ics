@@ -109,6 +109,7 @@
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Ready", buttonicon:"ui-icon-lightbulb", onClickButton:ready, position: "last", title:"Ready", cursor: "pointer"});
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Collected", buttonicon:"ui-icon-key", onClickButton:collected, position: "last", title:"Collected", cursor: "pointer"});
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Entered", buttonicon:"ui-icon-extlink", onClickButton:entered, position: "last", title:"Entered", cursor: "pointer"});
+	$("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"BounceCheque", buttonicon:"ui-icon-check", onClickButton:bounceCheque, position: "last", title:"BounceCheque", cursor: "pointer"});
 
     function ready() {
 	var id = $('#voucher_list').jqGrid('getGridParam','selrow');
@@ -192,6 +193,21 @@
             
             });
 
+ function bounceCheque() {
+	var answer = confirm("Are you sure?");
+		if (!answer){
+			return false;
+			}
+		var id = $('#voucher_list').jqGrid('getGridParam','selrow');
+		if(id) {
+			var url = "${createLink(controller:'Voucher',action:'bounceCheque')}"+"?id="+id;
+			$.getJSON(url, {}, function(data) {
+				jQuery("#voucher_list").jqGrid().trigger("reloadGrid");
+			    });
+		}
+		else
+			alert("Please select a row!!");
+	}
  function printVoucher()
 	  {
 	 

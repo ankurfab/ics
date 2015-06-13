@@ -5517,7 +5517,7 @@ def commsService
 		params.smstext.eachWithIndex { ch, index ->
 		    decimalCodePoints += "$ch:${Character.codePointAt(params.smstext, index)} "
 		}
-		log.debug(decimalCodePoints)
+		log.debug("Sending decimalcodepoints:"+decimalCodePoints+" to nos:"+phonenos)
 		
 		commsService.sendSms(depcp?.cp,phonenos,params.smstext)
 		

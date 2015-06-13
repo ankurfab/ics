@@ -13,6 +13,7 @@
             <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
         </div>
         <div class="body">
+
 	    <div>
 	    	<table>
 	    		<thead>
@@ -35,7 +36,12 @@
 	    		</tbody>
 	    	</table>
 	    </div>
+
             <div>
+			<table id="budgetDetails_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
+			<div id="budgetDetails_list_pager" class="scroll" style="text-align:center;"></div>
+			<table id="audit_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
+			<div id="audit_list_pager" class="scroll" style="text-align:center;"></div>
 			<!-- table tag will hold our grid -->
 			<table id="expenseSummary_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 			<!-- pager will hold our paginator -->
@@ -46,7 +52,7 @@
 
 <script>
   $(document).ready(function () {
-    jQuery("#expenseSummary_list").jqGrid({
+	jQuery("#expenseSummary_list").jqGrid({
       url:'jq_expenseSummary_list',
       datatype: "json",
       colNames:['CostCategory','Name','Date','Particulars','Ledger','Vendor','Amount','ExpenseRef','VoucherRef','Id'],
@@ -75,8 +81,58 @@
     multiselect: false,
 	footerrow : true,
 	userDataOnFooter : true,							    
-    caption:"Expense Summary"
+    caption:"Expense Line Items"
     });
+	jQuery("#audit_list").jqGrid({
+      url:'jq_audit_list',
+      datatype: "json",
+      colNames:['Date','By','Details','Id'],
+      colModel:[
+		{name:'dateCreated', search:false, editable: false},
+		{name:'creator', search:false, editable: false},
+		{name:'value', search:false, editable: false},
+		{name:'id',hidden:true}
+     ],
+    rowNum:5,
+    rowList:[5,10,20,30],
+    pager: '#audit_list_pager',
+    viewrecords: true,
+    sortname: 'id',
+    sortorder: 'desc',
+    width: 1200,
+    height: "100%",
+    multiselect: false,
+    caption:"Audit Records"
+    });
+	jQuery("#budgetDetails_list").jqGrid({
+      url:'jq_budgetDetails_list',
+      datatype: "json",
+      colNames:['Cost Category','Cost Center','Initial Budget','Sum of all Budget Updates','Sum of all Income','Current Allocated Budget','Consumed Budget','Available Budget'],
+      colModel:[
+		{name:'costCategory', search:false, editable: false},
+		{name:'costCenter', search:false, editable: false},
+		{name:'initialBudget', search:false, editable: false},
+		{name:'sumOfAllBudgetUpdates', search:false, editable: false},
+		{name:'sumOfAllIncome', search:false, editable: false},
+		{name:'currentAllocatedBudget', search:false, editable: false},
+		{name:'consumedBudget', search:false, editable: false},
+		{name:'availableBudget', search:false, editable: false}
+     ],
+    rowNum:5,
+    rowList:[5,10,20,30],
+    pager: '#budgetDetails_list_pager',
+    viewrecords: true,
+    sortname: 'id',
+    sortorder: 'desc',
+    width: 1200,
+    height: "100%",
+    multiselect: false,
+    caption:"Budget Details"
+    });
+	$("#budgetDetails_list").jqGrid('navGrid',"#budgetDetails_list_pager",{edit:false,add:false,del:false,search:false});
+	$("#budgetDetails_list").jqGrid('inlineNav',"#budgetDetails_list_pager",{edit:false,add:false,save:false,cancel:false});
+    $("#audit_list").jqGrid('navGrid',"#audit_list_pager",{edit:false,add:false,del:false,search:false});
+    $("#audit_list").jqGrid('inlineNav',"#audit_list_pager",{edit:false,add:false,save:false,cancel:false});
     $("#expenseSummary_list").jqGrid('filterToolbar',{autosearch:true,});
     $("#expenseSummary_list").jqGrid('navGrid', "#expenseSummary_list_pager", {edit: false, add: false, del: false, search: false});
     

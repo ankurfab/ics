@@ -235,7 +235,19 @@
 				  <sec:ifAnyGranted roles="ROLE_CG_OWNER,ROLE_CC_OWNER,ROLE_ACC_USER">
 				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>
+
 			<!-- Account Office/Finance Roles End-->
+
+			<!-- HR Based Roles Start-->
+			      <sec:ifAnyGranted roles="ROLE_FINANCE">
+            			  <li><g:link controller="Centre" action="list">Department Management</g:link></li>
+				  <li><g:link controller="IndividualDepartment" action="gridlist">HR Management</g:link></li>
+            			  <li><g:link controller="Project" action="report">Report</g:link></li>
+			      </sec:ifAnyGranted>      
+			      <sec:ifAnyGranted roles="ROLE_CC_OWNER">
+				  <li><g:link controller="IndividualDepartment" action="gridlist">HR Management</g:link></li>
+			      </sec:ifAnyGranted>      
+			<!-- HR Roles End-->
 
 			<!-- Marriage Board Based Roles Start-->
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
@@ -321,7 +333,13 @@
 		    <span id='loginLink' style='position: relative; margin-right: 20px; float: right'>
 			    <sec:ifLoggedIn>
 				    <g:set var="loguser" value="${new Date() + 1}" />
-				    Hare Krishna -  ${ics.Individual.findByLoginid(sec.loggedInUserInfo(field:"username"))} (<sec:username/>) ( <g:link controller='logout'><img src="${resource(dir:'images',file:'lock.png')}" alt="Logout" title="Logout"/></g:link>
+				    Hare Krishna -  ${ics.Individual.findByLoginid(sec.loggedInUserInfo(field:"username"))} (<sec:username/>) ( 
+				    <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER,ROLE_MB_CANDIDATE">
+				    	<g:link controller='logout' params="['logoutUri': '/mb']"><img src="${resource(dir:'images',file:'lock.png')}" alt="Logout" title="Logout"/></g:link>
+				    </sec:ifAnyGranted>
+				    <sec:ifNotGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER,ROLE_MB_CANDIDATE">
+				    	<g:link controller='logout'><img src="${resource(dir:'images',file:'lock.png')}" alt="Logout" title="Logout"/></g:link>
+				    </sec:ifNotGranted>
 				    <a href='#' onclick='showChangePassword(); return false;'><img src="${resource(dir:'images',file:'lock_edit.png')}"
 				    alt="Change Password" title="Change Password" /></a> 
 

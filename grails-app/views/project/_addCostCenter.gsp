@@ -44,8 +44,8 @@
 	<g:textField name="loginid" value=""/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: costCenterInstance, field: 'owner1', 'error')} ">
-	<label for="owner1">
+<div class="fieldcontain ${hasErrors(bean: costCenterInstance, field: 'ccOwner', 'error')} ">
+	<label for="ccOwner">
 		<g:message code="costCenter.owner1.label" default="Owner" />
 		
 	</label>

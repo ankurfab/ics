@@ -312,6 +312,7 @@
 		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "RejectEAR", buttonicon: "ui-icon-cancel", onClickButton: rejectProject, position: "last", title: "RejectEAR", cursor: "pointer"});
 		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "RejectERR", buttonicon: "ui-icon-cancel", onClickButton: rejectExpense, position: "last", title: "RejectERR", cursor: "pointer"});
 		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "RejectCompleteEAR_ERR", buttonicon: "ui-icon-cancel", onClickButton: rejectComplete, position: "last", title: "RejectERR", cursor: "pointer"});
+		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "Export", buttonicon: "ui-icon-cancel", onClickButton: exportExpenseList, position: "last", title: "Export", cursor: "pointer"});
     	    </sec:ifAnyGranted>
 
             <sec:ifAnyGranted roles="ROLE_ACC_USER">
@@ -1139,6 +1140,12 @@
 		else
 			alert("Please select a row!!");
 
+	}
+
+	function exportExpenseList() {
+		var url = "${createLink(controller:'Project',action:'exportExpenseList')}";
+		$.post(url , function(returnData){
+	      })
 	}
 
 	function rejectExpense() {
