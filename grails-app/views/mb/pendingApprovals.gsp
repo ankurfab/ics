@@ -44,10 +44,10 @@
         </li>
     </ul>
 </nav>
-<r:img id="bg" dir="images" file="mb_sec_bg.jpg" hidden="hidden"/>
+<r:img id="bg" dir="images" file="mb_bg.jpg" hidden="hidden"/>
 <!-- Top content -->
         <div class="container transback">
-            <h3 style="text-align: center;margin: 75px 0 20px"><strong>The Following Profiles are new and Seek your approval. Once approved the repective candidate will be informed via SMS and Mail to edit their profile.</strong></h3>
+            <h3 style="text-align: center;margin: 75px 0 20px"><strong>The following profiles are new and seek your approval. Once approved the repective candidate will be informed via SMS and Mail to edit their profile.</strong></h3>
             <div class="panel-group" id="accordion">
                 <g:each in="${profiles}">
                 <div class="panel panel-default transback">
@@ -82,7 +82,7 @@
                             </div>
                             <div class="col-sm-4">
                                 <button type="submit" class="btn btn-success">Approve</button>
-                                <a href="/ics/mb/deleteTempProfile?profId=${it.objId}" class="btn btn-danger" style="margin-left: 20px">Deny</a>
+                                <g:link action="deleteTempProfile" params="['profId': it.objId]" class="btn btn-danger" style="margin-left: 20px">Deny</g:link>
                             </div>
                         </div>
                         </g:form>

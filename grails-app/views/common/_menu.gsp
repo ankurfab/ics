@@ -255,6 +255,7 @@
 					<li><g:link class="list" action="manage" controller="mb">Mb Profile Management</g:link></li>
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
+					<li><g:link controller="mb" action="pendingApprovals">PendingApprovals</g:link></li>
 					<li><g:link controller="mb" action="report">Mb Report</g:link></li>
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN">

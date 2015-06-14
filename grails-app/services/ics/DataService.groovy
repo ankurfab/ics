@@ -189,39 +189,35 @@ class DataService {
 	
 	//store the attribute names in a generic csv file
 	//@TODO: take care of dep,centre and other attributes
-	def storeHeader(String domainClassName,Object tokens) {
-        def attr
-		tokens.eachWithIndex{it,idx ->
-            def tempIt  = it.toString()
-            if(!Attribute.createCriteria().get{ eq("name",tempIt) })
-            {
-                attr = new Attribute()
-                attr.name = it
-                attr.position = idx
-                if (!attr.save())
-                    attr.errors.allErrors.each { log.debug("exception in saving arrr:" + it) }
-            }
+	def storeHeader(String domainClassName, Object tokens) {
+            def attr
+	    tokens.eachWithIndex{it,idx ->
+		    def tempIt  = it.toString()
+		    if(!Attribute.createCriteria().get{ eq("name",tempIt) eq("domainClassName",domainClassName)})
+		    {
+			attr = new Attribute()
+			attr.name = it
+			attr.domainClassName = domainClassName
+			attr.position = idx
+			if (!attr.save())
+			    attr.errors.allErrors.each { log.debug("storeHeader:exception in saving arrr:" + it) }
+		    }
 		}
 	}
 	
 	//store the attribute values in a generic csv file
 	def storeValues(String objectClassName,Long objectId, Object tokens) {
-		def attrList = Attribute.list()	//@TODO: hardcoded
-		def attrMap = [:]
-		attrList.each{
-			attrMap.put(it.position,it)
-		}
-		def attrValue,attr
-		tokens.eachWithIndex{it,idx ->
-            attr = attrMap.get(idx)
-            attrValue = new AttributeValue()
-            attrValue.objectClassName = objectClassName
-            attrValue.objectId = objectId
-            attrValue.attribute = attr
-            attrValue.value = it
-            attrValue.updator = attrValue.creator = 'system'
-            if(!attrValue.save())
-                attrValue.errors.allErrors.each {log.debug("exception in saving attrValue:"+ it)}
+		def attrValue,attr		
+		tokens.each{ k, v ->
+			attr = Attribute.findByDomainClassNameAndName(objectClassName,k)
+			attrValue = new AttributeValue()
+			attrValue.objectClassName = objectClassName
+			attrValue.objectId = objectId
+			attrValue.attribute = attr
+			attrValue.value = v
+			attrValue.updator = attrValue.creator = 'anonymous'
+			if(!attrValue.save())
+				attrValue.errors.allErrors.each {log.debug("storeValues:exception in saving attrValue:"+ it)}
 		}
 	}
 	

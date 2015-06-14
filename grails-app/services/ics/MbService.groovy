@@ -65,25 +65,9 @@ class MbService {
 	def ir = IcsRole.findByAuthority(indRole.role?.authority)
 	def loginid = housekeepingService.createLogin(candidate,ir)
 	
-    	//step 4
-		if(params.donorContact)
-			housekeepingService.sendSMS(params.donorContact,"Hare Krishna! Your registration for MB Profile creation is successful. Please login with "+loginid+" and complete the profile. ISKCON(MB).")
-		if(params.donorEmail)
-		{
-			//replace ; in email by ,
-			def emailStr = params.donorEmail.replaceAll(';',',')
-			List mailIds = []
-			mailIds = emailStr.split(",")
-			/*def aList = []
-			mailIds?.collect{aList.add(it)}*/
-			housekeepingService.sendEmail(mailIds,"Login created by ISKCON Marriage Board!","Hare Krishna! Your registration for MB Profile creation is successful. Please login with "+loginid+" and complete the profile. ISKCON(MB).")
-		}
-		
-	//comms
+    	//step 4: comms
 	    def contentParams = [loginid]
-	    commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), params.donorContact, params.donorEmail, contentParams)
-	
-
+	    commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), params.donorContact, params.donorEmail, contentParams)	
     	
     	return mbProfile?.id
     }

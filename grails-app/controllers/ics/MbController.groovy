@@ -33,6 +33,7 @@ class MbController {
     
     def pendingApprovals = {
         def objIds = AttributeValue.withCriteria {
+            eq('objectClassName','TempMbProfile')
             projections {
                 distinct("objectId")
             }
@@ -47,7 +48,6 @@ class MbController {
             }
             paramsArr.push(params)
         }
-        log.debug(paramsArr)
         [profiles: paramsArr]
     }
 
@@ -71,18 +71,12 @@ class MbController {
     }
 
     def startProfile = {
-        def ts = new Date().format('dd-MM-yyyy HH:mm:ss')
-        params.remove("action")
-        params.remove("controller")
-            dataService.storeHeader('MB',params.keySet())
-            def objId = AttributeValue.createCriteria().get{
-                projections {
-                    max "objectId"
-                }
-            } as Long
-            objId = objId ? objId : 0
-            dataService.storeValues('MB-'+ts,objId + 1,params.values())
-            render (view: "mbLogin",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
+	    params.remove("action")
+	    params.remove("controller")
+	    dataService.storeHeader('TempMbProfile',params.keySet())
+	    def objId = System.currentTimeMillis()
+	    dataService.storeValues('TempMbProfile',objId,params)
+	    render (view: "mbLogin",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
     }
     
     def editProfile() {
