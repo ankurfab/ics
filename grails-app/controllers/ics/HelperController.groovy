@@ -6,7 +6,8 @@ import groovy.sql.Sql;
 import org.codehaus.groovy.grails.commons.ConfigurationHolder
 import org.springframework.util.ClassUtils
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
-import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipOutputStream
+import groovy.time.TimeCategory
 import java.util.zip.ZipEntry  
 import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
@@ -172,26 +173,62 @@ def commsService
     	//IcsUserInstance.setPassword(springSecurityService.encodePassword(params.password))
     	IcsUserInstance.setPassword(params.password)
     	IcsUserInstance.setPasswordExpired(false)
-	render([success: true, message: 'Password changed successfully!'] as JSON)
+	    render([success: true, message: 'Password changed successfully!'] as JSON)
 	}
 
     def resetPassword = {
-	if(!params.username)
-		{
-		response.status = 500
-		render('No username provided')
-		return
-		}
-        
-        def IcsUserInstance = IcsUser.findByUsername(params.username)
+        //log.debug("Inside changePassword with params:"+params)
+        def codeInst = Code.findByCodenoAndType(params.tokKey, 'MB')
+        def now = new Date()
+        String newPassword = params.password
+        String newPassword2 = params.rpassword
+        if (now > codeInst.validTill) {
+            render([success: false, message: 'The token is no longer valid. Please request new token by clicking forgot password on login page.'] as JSON)
+            return
+        }
+        if (newPassword != newPassword2) {
+            //response.status = 500
+            render([success: false, message: 'Entered Passwords donot match. Password and confirm password field should be same.'] as JSON)
+            return
+        }
+        if (params.userName != codeInst.category) {
+            //response.status = 500
+            render([success: false, message: 'Invalid user name. Please enter the correct user name or contact admin.'] as JSON)
+            return
+        }
+        def IcsUserInstance = IcsUser.findByUsername(params.userName)
+        IcsUserInstance.setPassword(newPassword)
+        render([success: true, message: 'Password Changed SuccessFully...'] as JSON)
+    }
+
+    def forgotPassword = {
+	    def IcsUserInstance = IcsUser.findByUsername(params.loginId)
     	//IcsUserInstance.setPassword(springSecurityService.encodePassword('harekrishna'))
     	if(IcsUserInstance)
     	{
-		IcsUserInstance.setPassword('harekrishna')
-		render([success: true, data: 'krishna', errors:''] as JSON)
-	}
-	else
-		render([success: false, data: 'krishna', errors:'Username '+params.username+' not found!'] as JSON)
+            def keyToken = org.apache.commons.lang.RandomStringUtils.randomAlphanumeric(10)
+            //TODO : create email link and add url parameter tokKey= keyToken value.
+            def currEntry = Code.findByCategoryAndType(params.loginId,'MB')
+
+            use (TimeCategory) {
+
+            if(!currEntry)
+            {
+                currEntry = new Code(category: params.loginId,codeno: keyToken,type: 'MB',validFrom: new Date(),validTill: new Date() + 7.days)
+                currEntry.save()
+            }
+            else
+            {
+                currEntry.codeno = keyToken
+                currEntry.validFrom = new Date()
+                currEntry.validTill = new Date() + 7.days
+                currEntry.save()
+            }
+            }
+            render([success: true, message: 'A change password link has been sent to your registered email address. Please check your mail and change your password.'] as JSON)
+	    }
+	    else
+            render([success: false, message: 'Specified username is not in the system. Please supply a valid userid or contact the admin.'] as JSON)
 	}
 	
 	def ajaxListIcsUsers = {

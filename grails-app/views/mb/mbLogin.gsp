@@ -21,7 +21,7 @@
 <section id="services" class="services" style="background-color: #337ab7">
         <div class="container">
             <div class="row">
-                <div class="col-sm-5 text">
+                <div id="loginFrmWrapper" class="col-sm-5 text">
                     <div class="form-top-left" style="color: white">
                         <h3><strong>Already a member</strong></h3>
                         <p style="font-weight: 600">Login if you are a registered candidate or marriage board member.</p>
@@ -35,10 +35,23 @@
                         <div class="form-group">
                             <input type="password" name="j_password" placeholder="Password..." class="form-control" id="password">
                         </div>
+                        <div class="form-group">
+                            <a onclick="resetPwd()" style="color: white">Forgot Password?</a>
+                        </div>
                         <button type="submit" class="btn btn-success">Login</button>
                     </form>
                 </div>
-
+                <div id="forgotPwdWrapper" class="col-sm-5 text" style="display: none">
+                    <div class="form-top-left" style="color: white">
+                        <h3><strong>Forgot Password</strong></h3>
+                        <p style="font-weight: 600">Enter your user Id here and we shall revert with link to reset your password to your registered Email Address.</p>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="loginId" placeholder="User Name..." class="form-control" id="loginId" required="required">
+                    </div>
+                    <button type="submit" class="btn btn-success">Request</button>
+                    <a class="btn btn-danger" style="margin-left: 15px">Cancel</a>
+                </div>
                 <div class="col-sm-offset-2 col-sm-5 form-box">
                     <div class="form-top">
                     <g:if test="${textMsg}">
@@ -89,9 +102,8 @@
                                 <input type="text" name="refEmail" required="required" placeholder="Referrer Email..." class="form-control" id="refEmail">
                                 <span class="mand input-group-addon">*</span>
                             </div>
-                            <div class="form-group input-group">
-                                <input type="text" name="refReln" required="required" placeholder="Relation to Candidate..." class="form-control" id="refReln">
-                                <span class="mand input-group-addon">*</span>
+                            <div class="form-group">
+                                <g:select id="refReln" style="width: 100%;height: 50px" name="refCentre" from="${['Counsellor/Mentor','Spiritual Master','Friend','Relative','Acquaintance']}" noSelection="['':'Centre...']"/>
                             </div>
                             <button type="submit" class="btn btn-success">Register</button>
                         </g:form>
@@ -103,6 +115,26 @@
     </section>
 <r:layoutResources />
 <script type="text/javascript">
+    function resetPwd(){
+        $('#loginFrmWrapper').hide();
+        $('#forgotPwdWrapper').show();
+        $('.btn-success','#forgotPwdWrapper').click(function() {
+            $.ajax({
+                method: "POST",
+                url: "/ics/helper/forgotPassword",
+                data: { loginId : $('#loginId').val()}
+            }).success(function(data){
+               $('#forgotPwdWrapper').html('<h2 style="text-align: center;font-weight:600;color:ghostwhite">'+data.message+'</h2>');
+            });
+            $('#loginId').val('');
+        });
+        $('.btn-danger','#forgotPwdWrapper').click(function(){
+            $('#loginId').val('');
+            $('#loginFrmWrapper').show();
+            $('#forgotPwdWrapper').hide();
+        });
+
+    }
     $(document).ready(function() {
         $('#refCentre').select2({
             minimumResultsForSearch: -1

@@ -37,10 +37,10 @@
                 <a href="#services" onclick = $("#menu-close").click(); >Services</a>
             </li>
             <li>
-                <a href="#portfolio" onclick = $("#menu-close").click(); >Portfolio</a>
+                <a href="#howto" onclick = $("#menu-close").click(); >How Tos</a>
             </li>
             <li>
-                <a href="#Tutorials" onclick = $("#menu-close").click(); >Others</a>
+                <a href="#faq" onclick = $("#menu-close").click(); >FAQs</a>
             </li>
         </ul>
     </nav>
@@ -60,7 +60,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 text-center">
-                    <h2>We at Marriage Board are Committed to Finding you the perfect Krishna Counscious Life partner to assist you in your Service to their Lordships..</h2>
+                    <h2>We at Marriage Board are Committed to Finding you the suitable Krishna Counscious Life partner to assist you in your Service to Their Lordships..</h2>
                     <p class="lead">Register for the Marriage Board by <a target="_blank" href="http://join.deathtothestockphoto.com/">Clicking here.</a>.</p>
                 </div>
             </div>
@@ -75,10 +75,10 @@
         <div class="container">
             <div class="row text-center">
                 <div class="col-lg-10 col-lg-offset-1">
-                    <h2>Features</h2>
+                    <h2>MB Services</h2>
                     <hr class="small">
                     <div class="row">
-                        <div class="col-md-3 col-sm-6">
+                        <div class="col-md-4 col-sm-6">
                             <div class="service-item">
                                 <span class="fa-stack fa-4x">
                                 <i class="fa fa-circle fa-stack-2x"></i>
@@ -91,7 +91,7 @@
                                 <a href="#" class="btn btn-light">Learn More</a>
                             </div>
                         </div>
-                        <div class="col-md-3 col-sm-6">
+                        <div class="col-md-4 col-sm-6">
                             <div class="service-item">
                                 <span class="fa-stack fa-4x">
                                 <i class="fa fa-circle fa-stack-2x"></i>
@@ -104,7 +104,7 @@
                                 <a href="#" class="btn btn-light">Learn More</a>
                             </div>
                         </div>
-                        <div class="col-md-3 col-sm-6">
+                        <div class="col-md-4 col-sm-6">
                             <div class="service-item">
                                 <span class="fa-stack fa-4x">
                                 <i class="fa fa-circle fa-stack-2x"></i>
@@ -117,19 +117,6 @@
                                 <a href="#" class="btn btn-light">Learn More</a>
                             </div>
                         </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="service-item">
-                                <span class="fa-stack fa-4x">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-shield fa-stack-1x text-primary"></i>
-                            </span>
-                                <h4>
-                                    <strong>Help Tutorials</strong>
-                                </h4>
-                                <p>Understand the functioning of marriage board in detail.</p>
-                                <a href="#" class="btn btn-light">Learn More</a>
-                            </div>
-                        </div>
                     </div>
                     <!-- /.row (nested) -->
                 </div>
@@ -139,86 +126,46 @@
         </div>
         <!-- /.container -->
     </section>
-
-    <!-- Callout -->
-    %{--<aside class="callout">
-        <div class="text-vertical-center">
-            <h1>Vertically Centered Text</h1>
-        </div>
-    </aside>--}%
-
     <!-- Portfolio -->
-    %{--<section id="portfolio" class="portfolio">
+    <section id="howto" class="portfolio">
         <div class="container">
             <div class="row">
                 <div class="col-lg-10 col-lg-offset-1 text-center">
-                    <h2>Our Work</h2>
+                    <h2>How Tos</h2>
                     <hr class="small">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="#">
-                                    <img class="img-portfolio img-responsive" src="img/portfolio-1.jpg">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="#">
-                                    <img class="img-portfolio img-responsive" src="img/portfolio-2.jpg">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="#">
-                                    <img class="img-portfolio img-responsive" src="img/portfolio-3.jpg">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="#">
-                                    <img class="img-portfolio img-responsive" src="img/portfolio-4.jpg">
-                                </a>
-                            </div>
+                    <div class="row text-left">
+                        <div class="col-xs-12">
+                            ${ics.Content.findWhere(name:'hotos',language:'ENGLISH',category:'MB')?.htmlContent}
                         </div>
                     </div>
-                    <!-- /.row (nested) -->
-                    <a href="#" class="btn btn-dark">View More Items</a>
                 </div>
                 <!-- /.col-lg-10 -->
             </div>
             <!-- /.row -->
         </div>
         <!-- /.container -->
-    </section>--}%
+    </section>
 
-    <!-- Call to Action -->
-    %{--<aside id="Tutorials" class="call-to-action bg-primary">
+    <section id="faq" class="portfolio">
         <div class="container">
             <div class="row">
-                <div class="col-lg-12 text-center">
-                    <h3>Checkout our activities or Learn more about our process</h3>
-                    <a href="#" class="btn btn-lg btn-light">Photo Gallery</a>
-                    <a href="#" class="btn btn-lg btn-dark">Tutorials</a>
+                <div class="col-lg-10 col-lg-offset-1 text-center">
+                    <h2>Frequently Asked Questions</h2>
+                    <hr class="small">
+                    <div class="row text-left">
+                        <div class="col-xs-12">
+                            ${ics.Content.findWhere(name:'faqs',language:'ENGLISH',category:'MB')?.htmlContent}
+                        </div>
+                    </div>
                 </div>
+                <!-- /.col-lg-10 -->
             </div>
+            <!-- /.row -->
         </div>
-    </aside>--}%
-
-    %{--<!-- Map -->
-    <section id="contact" class="map">
-        <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?f=q&amp;source=s_q&amp;hl=en&amp;geocode=&amp;q=Twitter,+Inc.,+Market+Street,+San+Francisco,+CA&amp;aq=0&amp;oq=twitter&amp;sll=28.659344,-81.187888&amp;sspn=0.128789,0.264187&amp;ie=UTF8&amp;hq=Twitter,+Inc.,+Market+Street,+San+Francisco,+CA&amp;t=m&amp;z=15&amp;iwloc=A&amp;output=embed"></iframe>
-        <br />
-        <small>
-            <a href="https://maps.google.com/maps?f=q&amp;source=embed&amp;hl=en&amp;geocode=&amp;q=Twitter,+Inc.,+Market+Street,+San+Francisco,+CA&amp;aq=0&amp;oq=twitter&amp;sll=28.659344,-81.187888&amp;sspn=0.128789,0.264187&amp;ie=UTF8&amp;hq=Twitter,+Inc.,+Market+Street,+San+Francisco,+CA&amp;t=m&amp;z=15&amp;iwloc=A"></a>
-        </small>
-        </iframe>
+        <!-- /.container -->
     </section>
---}%
-    <!-- Footer -->
-    <footer>
+<hr>
+<footer>
         <div class="container">
             <div class="row">
                 <div class="col-lg-10 col-lg-offset-1 text-center">
@@ -226,8 +173,7 @@
                     </h4>
                     <p>ISKCON Chowpatty, 7 K.M.Munshi Road, Girgaon Chowpatty, Mumbai<br>ISKCON NVCC, Katraj Kondhwa Road Pune</p>
                     <ul class="list-unstyled">
-                        <li><i class="fa fa-phone fa-fw"></i>+918983410723</li>
-                        <li><i class="fa fa-envelope-o fa-fw"></i>  <a href="spd@gmail.com">spd@gmail.com</a>
+                        <li><i class="fa fa-envelope-o fa-fw"></i>  <a href="spd@gmail.com">rk.mb.system@gmail.com</a>
                         </li>
                     </ul>
                     %{--<ul class="list-inline">

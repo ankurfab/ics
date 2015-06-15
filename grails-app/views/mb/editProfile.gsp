@@ -131,7 +131,7 @@
         <label for="pob">Place of Birth:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
-        <g:textField name="pob" placeholder="Enter Actual Region with State" required="required"
+        <g:textField name="pob" placeholder="Actual City/Village" required="required"
                          value="${mbProfile?.candidate?.pob}"/>
     </td>
     <td valign="top" class="name">
@@ -168,18 +168,20 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="nationality">Nationality:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="nationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.candidate?.nationality}"/>
-    </td>
-    <td valign="top" class="name">
         <label for="originState">State Of Birth</label>
     </td>
     <td valign="top" class="value">
         <g:select name="originState"
                   from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.candidate?.origin}" noSelection="['':'Select One']"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="currentCountry">Are you currently settled in India or Abroad : </label>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="currentCountry" style="width: 100%"
+                  from="${['India','Abroad']}"
+                  value="${mbProfile?.currentCountry}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="culturalInfluence">Primary Cultural Background:</label>
@@ -246,20 +248,19 @@
                   value="${mbProfile?.candidate?.motherTongue ?: 'Marathi'}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="languagesKnown">Languages <br>Known:</label>
+        <label for="nationality">Nationality:</label>
     </td>
     <td valign="top" class="value">
-        <g:select class="multiple" name="languagesKnown" multiple="multiple"
-                  from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
-                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.languagesKnown).toList()}"/>
+        <g:select name="nationality" from="${['Indian', 'Others']}" value="${mbProfile?.candidate?.nationality}"/>
     </td>
     <td valign="top" class="name">
         <label for="candidateIncome">Candidate's <br>Income(p.a):</label>
     </td>
     <td valign="top" class="value">
         <g:select name="candidateIncome"
-                  from="${['1 Lakhs','2 Lakhs','3 Lakhs','4 Lakhs','5 Lakhs','6 Lakhs','7 Lakhs','8 Lakhs','9 Lakhs','10 Lakhs','11 Lakhs','12 Lakhs','13 Lakhs','14 Lakhs','15 Lakhs','16 Lakhs','17 Lakhs','18 Lakhs','19 Lakhs','20 Lakhs']}"
-                  value="${mbProfile?.candidate?.income}" noSelection="['':'Select One']"/>
+                  from="${1..100}"
+                  value="${Integer.parseInt(mbProfile?.candidate?.income.split(' ')[0])}" noSelection="['':'Select One']"/>
+        <span>Lakhs per Annum</span>
     </td>
 </tr>
 <tr class="prop">
@@ -281,31 +282,8 @@
     </td>
     <td valign="top" class="value">
         <g:select name="maritalStatus" required="required"
-                  from="${['Never Married','Divorcee','Married & Separated','Widow / Widower','Divorcee with Children']}"
-                  value="${mbProfile?.maritalStatus?: 'Never Married'}"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="referrer">Reference Name:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="referrer" maxLength="80" placeholder="Enter name of someone who knows you"
-                     value="${mbProfile?.referrer}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="referrerEmail">Reference Email:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="referrerEmail" maxLength="50" placeholder="Enter reference's email address"
-                     value="${mbProfile?.referrerEmail}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="referrerContact">Reference Contact No.:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="referrerContact" maxLength="20" placeholder="Enter reference's phone number"
-                     value="${mbProfile?.referrerContact}"/>
+                  from="${['Never Married','Divorcee','Divorcee with children', 'Divorcee without children', 'Widow with children', 'Widow without children', 'Widower with children', 'Widower without children']}"
+                  value="${mbProfile?.maritalStatus?: 'Never Married'}"/>`
     </td>
 </tr>
 <tr class="prop">
@@ -341,6 +319,23 @@
                      value="${candAddr?.pincode}"/>
     </td>
     <td valign="top" class="name">
+        <label for="residenceType">Above Residence is:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="residenceType"
+                  from="${['Rented','Owned','Company provided','BACE / VOICE']}"
+                  value="${mbProfile?.residenceType}" noSelection="['':'Select One']"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="areaCurrHouse">Area (in sq.ft):</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="areaCurrHouse" maxLength="6" placeholder="Enter the area value"
+                     value="${mbProfile?.areaCurrHouse}"/>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
         <label for="contact">Contact Number:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'contact', 'errors')}">
@@ -356,20 +351,43 @@
                      value="${EmailContact.findByCategoryAndIndividual('Personal', mbProfile?.candidate)?.emailAddress}"
                      required="required"/>
     </td>
+    <td valign="top" class="name">
+        <label for="languagesKnown">Languages <br>Known:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:select class="multiple" name="languagesKnown" multiple="multiple"
+                  from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.languagesKnown).toList()}"/>
+    </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="residenceType">Above Residence is : </label>
+        <label for="referrer">Reference Name:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="residenceType"
-                  from="${['Rented','Owned','Company provided','BACE / VOICE']}"
-                  value="${mbProfile?.residenceType}" noSelection="['':'Select One']"/>
+        <g:textField name="referrer" maxLength="80" placeholder="Enter name of someone who knows you"
+                     value="${mbProfile?.referrer}"/>
     </td>
+    <td valign="top" class="name">
+        <label for="referrerEmail">Reference Email:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="referrerEmail" maxLength="50" placeholder="Enter reference's email address"
+                     value="${mbProfile?.referrerEmail}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="referrerContact">Reference Contact No.:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="referrerContact" maxLength="20" placeholder="Enter reference's phone number"
+                     value="${mbProfile?.referrerContact}"/>
+    </td>
+</tr>
+<tr class="prop">
     <td valign="top" class="name">
         <label for="personalInfo">Any Personal or Important information you would like us to know:</label>
     </td>
-    <td colspan="3" valign="top" class="value">
+    <td colspan="4" valign="top" class="value">
         <g:textArea name="personalInfo"
                     placeholder="Enter any Personal information you would like us to know as a Marriage board"
                     value="${mbProfile?.personalInfo}"/>
@@ -767,7 +785,7 @@
                 </td>
                 <td valign="top" class="value">
                     <g:select name="eduCat"
-                              from="${['Below SSC','SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
+                              from="${['Below SSC','SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                               value="${mbProfile?.eduCat}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
@@ -1135,7 +1153,7 @@
         <label for="prefNationality">Preferred Nationality:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefNationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.prefNationality}"/>
+        <g:select name="prefNationality" from="${['Indian', 'Others']}" value="${mbProfile?.prefNationality}"/>
     </td>
     <td valign="top" class="name">
         <label for="flexibleNationality">I am flexible  on Nationality:</label>
@@ -1143,6 +1161,23 @@
     <td>
         <g:radioGroup name="flexibleNationality" labels="['No', 'Yes']" values="[false, true]"
                       value="${mbProfile?.flexibleNationality}">
+            <span>${it.radio} ${it.label}</span>
+        </g:radioGroup>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="prefCurrentCountry">Preferred Current Country:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="prefCurrentCountry" from="${['India', 'Abroad']}" value="${mbProfile?.prefCurrentCountry}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="flexibleCurrentCountry">I am flexible on prospect's Current Country:</label>
+    </td>
+    <td>
+        <g:radioGroup name="flexibleCurrentCountry" labels="['No', 'Yes']" values="[false, true]"
+                      value="${mbProfile?.flexibleCurrentCountry}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1244,7 +1279,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefeducationCategory"
-                  from="${['SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
+                  from="${['SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                   value="${mbProfile?.prefeducationCategory}"/>
         <span> & above</span>
     </td>
@@ -1336,7 +1371,7 @@
         <label for="prefCandIncome">Preferred Candidate Income:</label>
     </td>
     <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:1}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
+        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="100" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:4}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
         <div class="slider-range"></div>
     </td>
     <td valign="top" class="name">

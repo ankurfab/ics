@@ -109,17 +109,17 @@
                         </g:radioGroup>
                     </td>
                     <td valign="top" class="name">
-                        <label for="prefNationality">Preferred Nationality:</label>
+                        <label for="prefCurrentCountry">Preferred Current Country:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:select name="prefNationality" from="${['Indian', 'Non-Indian']}" value="${mbProfile?.prefNationality}"/>
+                        <g:select name="prefCurrentCountry" from="${['India', 'Abroad']}" value="${mbProfile?.prefCurrentCountry}"/>
                     </td>
                     <td valign="top" class="name">
-                        <label for="flexibleNationality">Flexible :</label>
+                        <label for="flexibleCurrentCountry">I am flexible on prospect's Current Country:</label>
                     </td>
                     <td>
-                        <g:radioGroup name="flexibleNationality" labels="['No', 'Yes']" values="[false, true]"
-                                      value="${mbProfile?.flexibleNationality}">
+                        <g:radioGroup name="flexibleCurrentCountry" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleCurrentCountry}">
                             <span>${it.radio} ${it.label}</span>
                         </g:radioGroup>
                     </td>
@@ -214,7 +214,7 @@
                     </td>
                     <td valign="top" class="value">
                         <g:select name="prefeducationCategory" style="width: 80%"
-                                  from="${['SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
+                                  from="${['SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                                   value="${mbProfile?.prefeducationCategory}"/>
                         <span> & above</span>
                     </td>
@@ -233,7 +233,7 @@
                         <label for="prefCandIncome">Preferred Candidate Income:</label>
                     </td>
                     <td valign="top" class="value">
-                        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:1}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
+                        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="100" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:4}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
                         <div class="slider-range"></div>
                     </td>
                     <td valign="top" class="name">

@@ -121,6 +121,8 @@ class MbProfile {
     weight(nullable: true)
     culturalInfluence(nullable: true,maxSize: 40)
     residenceType(nullable: true,maxSize: 20)
+    currentCountry(nullable: true,maxSize: 10)
+    areaCurrHouse(nullable: true,maxSize: 6)
     }
 
     static mapping={
@@ -238,6 +240,8 @@ class MbProfile {
     String prefHeight
     Boolean flexibleHeight
     String prefLooks
+    String prefCurrentCountry
+    Boolean flexibleCurrentCountry
     Boolean flexibleLooks
     String prefCandIncome
     Boolean flexibleCandidateIncome
@@ -260,8 +264,8 @@ class MbProfile {
     String otherExpectations
     String culturalInfluence
     String residenceType
-
-
+    String currentCountry
+    Integer areaCurrHouse
     Date dateCreated
     Date lastUpdated
     String creator

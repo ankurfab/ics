@@ -100,7 +100,7 @@ class MbService {
     try{         mbProfile.weight=Integer.parseInt(params.weight) } catch(Exception e){}
     try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
     try{         mbProfile.languagesKnown=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.languagesKnown)} catch(Exception e){}
-	try{         mbProfile.candidate.income=params.candidateIncome //change the type of the column in db
+	try{         mbProfile.candidate.income=params.candidateIncome + ' Lakhs' //change the type of the column in db
 	} catch(Exception e){}
 	try{         mbProfile.horoscopeToBeMatched=params.horoscopeToBeMatched } catch(Exception e){}
 	try{         mbProfile.manglik=params.manglik } catch(Exception e){}
@@ -124,6 +124,8 @@ class MbService {
     try{        mbProfile.maritalStatus = params.maritalStatus} catch(Exception e){}
     try{        mbProfile.personalInfo = params.personalInfo} catch(Exception e){}
     try{        mbProfile.residenceType = params.residenceType} catch(Exception e){}
+    try{        mbProfile.currentCountry = params.currentCountry} catch(Exception e){}
+    try{        mbProfile.areaCurrHouse = Integer.parseInt(params.areaCurrHouse)} catch(Exception e){}
         //step 2
         mbProfile.nativePlace=params.nativePlace
         mbProfile.nativeState=params.nativeState
@@ -196,6 +198,7 @@ class MbService {
 	try{         mbProfile.flexibleSpMaster = Boolean.valueOf(params.flexibleSpMaster) } catch(Exception e){}
 	try{         mbProfile.flexibleCentre = Boolean.valueOf(params.flexibleCentre) } catch(Exception e){}
 	try{         mbProfile.flexibleNationality = Boolean.valueOf(params.flexibleNationality) } catch(Exception e){}
+    try{         mbProfile.flexibleCurrentCountry = Boolean.valueOf(params.flexibleCurrentCountry) } catch(Exception e){}
 	try{         mbProfile.flexibleCulturalInfluence = Boolean.valueOf(params.flexibleCulturalInfluence) } catch(Exception e){}
 	try{         mbProfile.flexibleVarna = Boolean.valueOf(params.flexibleVarna) } catch(Exception e){}
 	try{         mbProfile.flexibleCategory = Boolean.valueOf(params.flexibleCategory) } catch(Exception e){}
@@ -214,6 +217,7 @@ class MbService {
 	try{         mbProfile.prefSpMaster=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefSpMaster)} catch(Exception e){}
 	try{         mbProfile.prefCentre=params.prefCentre } catch(Exception e){}
 	try{         mbProfile.prefNationality=params.prefNationality } catch(Exception e){}
+    try{         mbProfile.prefCurrentCountry=params.prefCurrentCountry } catch(Exception e){}
 	try{         mbProfile.prefCulturalInfluence=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCulturalInfluence) } catch(Exception e){}
 	try{         mbProfile.prefVarna=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefVarna) } catch(Exception e){}
 	try{         mbProfile.prefCategory=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCategory) } catch(Exception e){}

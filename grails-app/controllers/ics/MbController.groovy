@@ -361,8 +361,8 @@ def showImage = {
                     and { candidate { 'in'('iskconCentre', valList) } }
                 }
 
-                if (params.flexibleNationality == "false" && params.prefNationality) {
-                    and { candidate { eq('nationality', params.prefNationality, [ignoreCase: true]) } }
+                if (params.flexibleCurrentCountry == "false" && params.prefCurrentCountry) {
+                    and { candidate { eq('nationality', params.prefCurrentCountry, [ignoreCase: true]) } }
                 }
 
                 if (params.flexibleCulturalInfluence == "false" && params.prefCulturalInfluence) {
@@ -392,7 +392,7 @@ def showImage = {
                 }
 
                 if (params.flexibleEducationCat == "false" && params.prefeducationCategory) {
-                    ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
+                    ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
                     def pos = categories.indexOf(params.prefeducationCategory)
                     categories = categories.subList(pos,categories.size())
                     and {'in'('eduCat',categories)}
@@ -1210,7 +1210,10 @@ def showImage = {
 		def result = mbService.mbProfileAttributeReport(params)
 		render( result as JSON)
     }
-    
+
+    def forgotPassword ()    {
+
+    }
     def activityStream() {}    
 
     
