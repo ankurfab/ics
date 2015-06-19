@@ -123,6 +123,8 @@ class MbProfile {
     residenceType(nullable: true,maxSize: 20)
     currentCountry(nullable: true,maxSize: 10)
     areaCurrHouse(nullable: true,maxSize: 6)
+    flexibleCurrentCountry(nullable: true)
+    prefCurrentCountry(nullable: true,maxSize: 10)
     }
 
     static mapping={

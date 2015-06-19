@@ -58,6 +58,10 @@ class MbController {
 
     def deleteTempProfile =  {
         def idToDelete = Long.parseLong(params.profId)
+        if(params.profDenied) {
+            def contentParams = [params.donorName]
+            commsService.sendComms('MarriageBoard', "PROFILE_START_DENIED", params.donorName, params.donorContact, params.donorEmail, contentParams)
+        }
         AttributeValue.executeUpdate("delete AttributeValue where objectId=:objId",[objId:idToDelete])
         redirect(action:"pendingApprovals")
     }
@@ -71,12 +75,22 @@ class MbController {
     }
 
     def startProfile = {
+        log.debug(params)
 	    params.remove("action")
 	    params.remove("controller")
 	    dataService.storeHeader('TempMbProfile',params.keySet())
 	    def objId = System.currentTimeMillis()
-	    dataService.storeValues('TempMbProfile',objId,params)
-	    render (view: "mbLogin",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
+        def result = AttributeValue.createCriteria().list{
+            eq("value",params.donorContact)
+        }
+        if(result.isEmpty()) {
+            dataService.storeValues('TempMbProfile', objId, params)
+            render(view: "mbLogin", model: [textMsg: "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
+        }
+        else
+        {
+            render(view: "mbLogin", model: [textMsg: "We are sorry but we already have your profile under pending approval status. Please wait while it is processed and approved."])
+        }
     }
     
     def editProfile() {

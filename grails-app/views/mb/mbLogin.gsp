@@ -75,11 +75,11 @@
                                 <input type="text" name="initiatedName" placeholder="Initiated Name..." class="form-control" id="initiatedName">
                             </div>
                             <div class="form-group input-group">
-                                <input type="text" name="donorContact" required="required" placeholder="Contact Number..." class="form-control" id="donorContact">
+                                <input type="text" name="donorContact" required="required" placeholder="Contact Number..." class="form-control" id="donorContact" pattern="^[+]?([0-9]*[\.\s\-\(\)]|[0-9]+){3,24}$">
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group input-group">
-                                <input type="text" name="donorEmail" required="required" placeholder="Email Address..." class="form-control" id="donorEmail">
+                                <input type="email" name="donorEmail" required="required" placeholder="Email Address..." class="form-control" id="donorEmail">
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group input-group">
@@ -91,19 +91,21 @@
                                 <input type="text" name="refName" required="required" placeholder="Referred By..." class="form-control" id="refName">
                                 <span class="mand input-group-addon">*</span>
                             </div>
+                            <g:set var="attr" value="${ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','Centre','Config')}" />
+                            <g:set var="centres" value="${ics.AttributeValue.findAllByAttribute(attr)?.collect{it.value}}" />
                             <div class="form-group">
-                                <g:select id="refCentre" style="width: 100%;height: 50px" name="refCentre" from="${['Pune','Mumbai']}" noSelection="['':'Centre...']"/>
+                                <g:select id="refCentre" style="width: 100%;height: 50px" name="refCentre" from="${centres}" noSelection="['':'Centre...']"/>
                             </div>
                             <div class="form-group input-group">
-                                <input type="text" name="refContact" required="required" placeholder="Referrer Contact Number..." class="form-control" id="refContact">
+                                <input type="text" name="refContact" required="required" placeholder="Referrer Contact Number..." class="form-control" id="refContact" pattern="^[+]?([0-9]*[\.\s\-\(\)]|[0-9]+){3,24}$">
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group input-group">
-                                <input type="text" name="refEmail" required="required" placeholder="Referrer Email..." class="form-control" id="refEmail">
+                                <input type="email" name="refEmail" required="required" placeholder="Referrer Email..." class="form-control" id="refEmail">
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group">
-                                <g:select id="refReln" style="width: 100%;height: 50px" name="refCentre" from="${['Counsellor/Mentor','Spiritual Master','Friend','Relative','Acquaintance']}" noSelection="['':'Centre...']"/>
+                                <g:select id="refReln" style="width: 100%;height: 50px" name="refReln" from="${['Counsellor/Mentor','Spiritual Master','Friend','Relative','Acquaintance']}" noSelection="['':'Relationship to Candidate...']"/>
                             </div>
                             <button type="submit" class="btn btn-success">Register</button>
                         </g:form>
@@ -137,6 +139,9 @@
     }
     $(document).ready(function() {
         $('#refCentre').select2({
+            minimumResultsForSearch: -1
+        });
+        $('#refReln').select2({
             minimumResultsForSearch: -1
         });
         $("#menu-close").click(function (e) {
