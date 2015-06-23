@@ -119,11 +119,11 @@
    <div class="page">
     
     <div class="subpageTop">
-       <g:render template="voucherItems"  />
+       <g:render template="/voucher/voucherItems"  />
     </div> 
      
      <div class="subpageBottom">  <!-- bottom Copy -->
-      <g:render template="voucherItems"  />
+      <g:render template="/voucher/voucherItems"  />
      </div>   <!-- End of subpageBottom Div -->  
      
    </div> 

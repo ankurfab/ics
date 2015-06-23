@@ -5,6 +5,7 @@ import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
 import org.codehaus.groovy.grails.plugins.springsecurity.*
 import grails.converters.JSON
+import groovy.time.TimeCategory
 
 class VoucherController {
     def springSecurityService
@@ -18,12 +19,7 @@ class VoucherController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def list = {
-        params.max = Math.min(params.max ? params.max.toInteger() : 10,  100)
-        if(!params.sort)
-        	params.sort='lastUpdated'
-        if(!params.order)
-        	params.order='desc'
-        [voucherInstanceList: Voucher.list(params), voucherInstanceTotal: Voucher.count()]
+    	[overdue:params.overdue]
     }
 
     def create = {
@@ -37,7 +33,14 @@ class VoucherController {
         params.updator=params.creator
 	if(params.voucherDate)
 		params.voucherDate = Date.parse('dd-MM-yyyy', params.voucherDate)
+	if(params.instrumentDate)
+		params.instrumentDate = Date.parse('dd-MM-yyyy', params.instrumentDate)
+
         def voucherInstance = new Voucher(params)
+
+	voucherInstance.departmentCode=CostCenter.get(params.ledger)
+	voucherInstance.ledger=voucherInstance.departmentCode?.costCategory.alias + voucherInstance.departmentCode?.alias
+        voucherInstance.status='CREATED'
 
 	if(!params.voucherNo)
 	try{
@@ -167,6 +170,25 @@ class VoucherController {
     
     	def result = Voucher.createCriteria().list(max:maxRows, offset:rowOffset) {
     				
+	if(params.overdue && params.overdue=='overdue') {
+		def now = new Date()
+		now = now.clearTime()
+		def cutoffdate
+		use (TimeCategory) {
+			cutoffdate = now - 2.days
+		}
+
+		//@TODO: REMOVE HARDCODED DATE
+		def currentFYStartDate = Date.parse('dd-MM-yyyy', '01-04-2015')
+
+			eq('creator',springSecurityService?.principal?.username?:'')
+			ge('dateCreated',currentFYStartDate)
+			lt('dateCreated',cutoffdate)
+			isNull('instrumentReadyStatus')
+			mode{eq('name','Cheque')}
+		
+	}
+
 	ne('status','DELETED')
 	
 	if (params.voucherDate) {

@@ -32,7 +32,15 @@ class MbController {
     
     
     def pendingApprovals = {
+        def centre = Individual.get(session.individualid)?.iskconCentre?:''
         def objIds = AttributeValue.withCriteria {
+            if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
+            	attribute{
+            		eq('domainClassName','TempMbProfile')
+            		eq('name','refCentre')
+            	}
+            	eq('value',centre)
+            }
             eq('objectClassName','TempMbProfile')
             projections {
                 distinct("objectId")
@@ -75,17 +83,18 @@ class MbController {
     }
 
     def startProfile = {
-        log.debug(params)
+        log.debug("startProfile:"+params)
 	    params.remove("action")
 	    params.remove("controller")
 	    dataService.storeHeader('TempMbProfile',params.keySet())
 	    def objId = System.currentTimeMillis()
         def result = AttributeValue.createCriteria().list{
+            eq("objectClassName",'TempMbProfile')
             eq("value",params.donorContact)
         }
         if(result.isEmpty()) {
             dataService.storeValues('TempMbProfile', objId, params)
-            render(view: "mbLogin", model: [textMsg: "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
+            render(view: "mbLogin", model: [textMsg: "Your Profile has been created successfully and sent to Marriage Board for approval. Once approved you will receive an update from us to complete your profile."])
         }
         else
         {

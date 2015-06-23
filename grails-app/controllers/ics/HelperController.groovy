@@ -177,29 +177,50 @@ def commsService
 	}
 
     def resetPassword = {
-        //log.debug("Inside changePassword with params:"+params)
-        def codeInst = Code.findByCodenoAndType(params.tokKey, 'MB')
-        def now = new Date()
-        String newPassword = params.password
-        String newPassword2 = params.rpassword
-        if (now > codeInst.validTill) {
-            render([success: false, message: 'The token is no longer valid. Please request new token by clicking forgot password on login page.'] as JSON)
-            return
-        }
-        if (newPassword != newPassword2) {
-            //response.status = 500
-            render([success: false, message: 'Entered Passwords donot match. Password and confirm password field should be same.'] as JSON)
-            return
-        }
-        if (params.userName != codeInst.category) {
-            //response.status = 500
-            render([success: false, message: 'Invalid user name. Please enter the correct user name or contact admin.'] as JSON)
-            return
-        }
-        def IcsUserInstance = IcsUser.findByUsername(params.userName)
-        IcsUserInstance.setPassword(newPassword)
-        render([success: true, message: 'Password Changed SuccessFully...'] as JSON)
-    }
+	if(!params.username)
+		{
+		response.status = 500
+		render('No username provided')
+		return
+		}
+
+		//generic reset password
+		if(params.tokKey) {
+			def codeInst = Code.findByCodenoAndType(params.tokKey, 'MB')
+			def now = new Date()
+			String newPassword = params.password
+			String newPassword2 = params.rpassword
+			if (now > codeInst.validTill) {
+			    render([success: false, message: 'The token is no longer valid. Please request new token by clicking forgot password on login page.'] as JSON)
+			    return
+			}
+			if (newPassword != newPassword2) {
+			    //response.status = 500
+			    render([success: false, message: 'Entered Passwords donot match. Password and confirm password field should be same.'] as JSON)
+			    return
+			}
+			if (params.userName != codeInst.category) {
+			    //response.status = 500
+			    render([success: false, message: 'Invalid user name. Please enter the correct user name or contact admin.'] as JSON)
+			    return
+			}
+			def IcsUserInstance = IcsUser.findByUsername(params.userName)
+			IcsUserInstance.setPassword(newPassword)
+			render([success: true, message: 'Password Changed SuccessFully...'] as JSON)
+			return
+		}
+
+		//normal flow..hardcoded new passowrd
+		def IcsUserInstance = IcsUser.findByUsername(params.username)
+		//IcsUserInstance.setPassword(springSecurityService.encodePassword('harekrishna'))
+		if(IcsUserInstance)
+		{
+			IcsUserInstance.setPassword('harekrishna')
+			render([success: true, data: 'krishna', errors:''] as JSON)
+		}
+		else
+			render([success: false, data: 'krishna', errors:'Username '+params.username+' not found!'] as JSON)
+	}
 
     def forgotPassword = {
 	    def IcsUserInstance = IcsUser.findByUsername(params.loginId)
@@ -5868,6 +5889,43 @@ def commsService
 			login=housekeepingService.createLogin(ind,icsRole)
 			if(login)
 				loginMap += ind.id+"->"+ind.legalName+"->"+ind.initiatedName+"->"+login+";"
+	    }
+	    
+	    render loginMap
+    }	
+
+    def uploadForLoginChange() {
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		render('file cannot be empty')
+		return
+	    	}
+
+		def icsUser
+		def ind
+		def loginMap = ''
+		def newLogin
+
+	    //file format (generic, used by EMS module as well)
+	    //@TODO: only 1st 2 cols used in this case
+	    //currentLoginid,newLoginid
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	ind = Individual.findByLoginid(tokens[0])
+	    	icsUser = IcsUser.findByUsername(tokens[0])
+	    	newLogin = tokens[1]?.trim()?:''
+
+		if(ind && icsUser && newLogin) {
+			icsUser.username = newLogin
+			if(!icsUser.save())
+				icsUser.errors.allErrors.each {log.debug("Exception in icsUser update:"+it)}
+			else {
+			ind.loginid = newLogin
+			if(!ind.save())
+				ind.errors.allErrors.each {log.debug("Exception in ind loginid update:"+it)}
+			else
+				loginMap += tokens[0]+"->"+newLogin+";"
+			}
+		}
 	    }
 	    
 	    render loginMap

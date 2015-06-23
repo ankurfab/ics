@@ -76,7 +76,7 @@
 		$('#ResetPasswordMessage').show();
 
 		$("#ajaxResetPasswordForm :input").prop("disabled", true);
-
+		
 		$.ajax({
 			type : 'POST',
 			url : $('#ajaxResetPasswordForm').attr( 'action' ),

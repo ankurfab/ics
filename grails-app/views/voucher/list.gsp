@@ -50,7 +50,7 @@
 <script>
   $(document).ready(function () {
     jQuery("#voucher_list").jqGrid({
-      url:'jq_voucher_list',
+      url:'jq_voucher_list?overdue='+'${overdue}',
       datatype: "json",
       colNames:['VoucherDate','VoucherNo','DepartmentCode','Description','Deposit(Dr)','Withdrawal(Cr)','Type','From','To','Amount','Debit/Credit','Ready','InstrumentNo','InstrumentDate','BankName','BankBranch','Collected','Entered','RefNo','Id'],
       colModel:[
@@ -109,7 +109,9 @@
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Ready", buttonicon:"ui-icon-lightbulb", onClickButton:ready, position: "last", title:"Ready", cursor: "pointer"});
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Collected", buttonicon:"ui-icon-key", onClickButton:collected, position: "last", title:"Collected", cursor: "pointer"});
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Entered", buttonicon:"ui-icon-extlink", onClickButton:entered, position: "last", title:"Entered", cursor: "pointer"});
-	$("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"BounceCheque", buttonicon:"ui-icon-check", onClickButton:bounceCheque, position: "last", title:"BounceCheque", cursor: "pointer"});
+    <sec:ifAnyGranted roles="ROLE_FINANCE">
+	    $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"BounceCheque", buttonicon:"ui-icon-check", onClickButton:bounceCheque, position: "last", title:"BounceCheque", cursor: "pointer"});
+    </sec:ifAnyGranted>
 
     function ready() {
 	var id = $('#voucher_list').jqGrid('getGridParam','selrow');

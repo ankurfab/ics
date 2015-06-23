@@ -217,7 +217,7 @@
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_ACC_VE">
-				  <li><g:link controller="voucher" action="create">Voucher</g:link></li>
+				  <li><g:link controller="voucher" action="list">Voucher</g:link></li>
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN,ROLE_ACC_USER">

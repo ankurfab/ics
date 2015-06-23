@@ -789,7 +789,7 @@ class CostCenterController {
         }
 
     def jq_audit_list = {
-      log.debug("jq_audit_list:"+params)
+      //log.debug("jq_audit_list:"+params)
       def sortIndex = params.sidx ?: 'id'
       def sortOrder  = params.sord ?: 'desc'
 
@@ -801,7 +801,7 @@ class CostCenterController {
 	def result = AttributeValue.createCriteria().list(max:maxRows, offset:rowOffset) {
 		eq('objectClassName','CostCenter')
 		eq('objectId',new Long(params.ccid?:0))
-		attribute{eq('name','BudgetAuditTrail')}		
+		//attribute{eq('name','BudgetAuditTrail')}		
 		order(sortIndex, sortOrder)
 	}
       

@@ -51,7 +51,12 @@
             <h2>ISKCON Community Services</h2>
             <h1>Marriage Board</h1>
             <br>
-            <a href="/ics/mb/mbLogin" class="btn btn-dark btn-lg">Proceed</a>
+            <sec:ifLoggedIn>
+            	<a href="${createLink(controller:'Mb',action:'home')}" class="btn btn-dark btn-lg">Proceed</a>
+            </sec:ifLoggedIn>
+            <sec:ifNotLoggedIn>
+            	<a href="${createLink(controller:'Mb',action:'mbLogin')}" class="btn btn-dark btn-lg">Proceed</a>
+            </sec:ifNotLoggedIn>
         </div>
     </header>
 
@@ -61,7 +66,7 @@
             <div class="row">
                 <div class="col-lg-12 text-center">
                     <h2>We at Marriage Board are Committed to Finding you the suitable Krishna Counscious Life partner to assist you in your Service to Their Lordships..</h2>
-                    <p class="lead">Register for the Marriage Board by <a target="_blank" href="http://join.deathtothestockphoto.com/">Clicking here.</a>.</p>
+                    <p class="lead">Register for the Marriage Board by <a target="_blank" href="${createLink(controller:'Mb',action:'mbLogin')}">Clicking here.</a>.</p>
                 </div>
             </div>
             <!-- /.row -->
@@ -135,7 +140,7 @@
                     <hr class="small">
                     <div class="row text-left">
                         <div class="col-xs-12">
-                            ${ics.Content.findWhere(name:'hotos',language:'ENGLISH',category:'MB')?.htmlContent}
+                            ${ics.Content.findWhere(name:'howtos',language:'ENGLISH',category:'MB')?.htmlContent}
                         </div>
                     </div>
                 </div>

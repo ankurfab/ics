@@ -75,6 +75,7 @@
 			<li><g:link controller="project" action="costCategoryGridlist" data-ajax="false">CostCategory/CostCenter</g:link></li>
 			<li><g:link controller="project" action="costCenterGroupGridList" data-ajax="false">VerticalHead/Department</g:link></li>
 			<li><g:link controller="project" action="ledgerHeadGridList" data-ajax="false">LedgerHead</g:link></li>
+			<li><g:link controller="project" action="locks" data-ajax="false">Locks</g:link></li>
 		    </ul>
 		</div><!-- /collapsible -->
 	</sec:ifAnyGranted>         
@@ -84,6 +85,7 @@
 		    <h3>Dashboard</h3>
 		    <ul data-role="listview">
 		        <li><g:link controller="project" action="expenseSummary" data-ajax="false">ExpenseSummary</g:link></li>
+		        <li><g:link controller="project" action="reportCurrentMonthBudgetSummary" data-ajax="false">BudgetSummary</g:link></li>
 		        <li><g:link controller="costCenter" action="statement" data-ajax="false">Statement</g:link></li>
 		    </ul>
 		</div><!-- /collapsible -->
@@ -105,8 +107,10 @@
 
         <sec:ifAnyGranted roles="ROLE_ACC_USER">
 		<ul data-role="listview" data-count-theme="b" data-inset="true">
-		    <li><g:link controller="Project" action="gridlist" params="['s_status':'APPROVED_REQUEST','onlyAdv':'onlyAdv','advAmtIssued':'NO']" data-ajax="false">Advance <span class="ui-li-count">${stats['APPROVED_REQUEST']?:'0'}</span></g:link></li>
-		    <li><g:link controller="Project" action="gridlist" params="['s_status':'APPROVED_REPORT']" data-ajax="false">Settle <span class="ui-li-count">${stats['APPROVED_REPORT']?:'0'}</span></g:link></li>
+		    <li><g:link controller="Project" action="gridlist" params="['s_status':'APPROVED_REQUEST','onlyAdv':'onlyAdv','advAmtIssued':'NO','OVERDUE_CHEQUEVOUCHER':stats['OVERDUE_CHEQUEVOUCHER']?:0,'INCOMPLETE_SETTLEMENT':stats['INCOMPLETE_SETTLEMENT']?:0]" data-ajax="false">Advance <span class="ui-li-count">${stats['APPROVED_REQUEST']?:'0'}</span></g:link></li>
+		    <li><g:link controller="Project" action="gridlist" params="['s_status':'APPROVED_REPORT','OVERDUE_CHEQUEVOUCHER':stats['OVERDUE_CHEQUEVOUCHER']?:0,'INCOMPLETE_SETTLEMENT':stats['INCOMPLETE_SETTLEMENT']?:0]" data-ajax="false">Settle <span class="ui-li-count">${stats['APPROVED_REPORT']?:'0'}</span></g:link></li>
+		    <li><g:link controller="Voucher" action="list" params="['overdue':'overdue']" data-ajax="false">Overdue Cheque Vouchers <span class="ui-li-count">${stats['OVERDUE_CHEQUEVOUCHER']?:0}</span></g:link></li>
+		    <li><g:link controller="Project" action="gridlist" params="['s_status':'APPROVED_REPORT','pids':stats['INCOMPLETE_SETTLEMENT_PIDS']]" data-ajax="false">Incomplete Settlement <span class="ui-li-count">${stats['INCOMPLETE_SETTLEMENT']?:0}</span></g:link></li>
 		</ul>
 		<div data-role="collapsible" data-inset="true">
 		    <h3>Configurations</h3>

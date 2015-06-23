@@ -26,7 +26,7 @@ nav ul li:hover ul.fallback {display:block;}
     <body>
     
         <div class="nav">
-            <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
+            <span class="menuButton"><a class="home" href="${createLink(controller:'Mb',action:'home')}"><g:message code="default.home.label"/></a></span>
         </div>
 
 <nav>

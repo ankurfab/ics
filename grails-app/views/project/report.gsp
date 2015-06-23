@@ -29,6 +29,16 @@
 					<g:link class="list" action="reportMonthlyExpensesVC" controller="Project">Monthwise Expenses (VoucherCreated)</g:link>
 				    </td>
 				  </tr>
+				  <tr>
+				    <td>
+					<g:link class="list" action="reportCurrentMonthExpenses" controller="Project">Current Month Expenses</g:link>
+				    </td>
+				  </tr>
+				  <tr>
+				    <td>
+					<g:link class="list" action="reportCurrentMonthBudgetSummary" controller="Project">Current Month Budget Summary</g:link>
+				    </td>
+				  </tr>
 			      </sec:ifAnyGranted>
 		       </tbody>
 		   </table>

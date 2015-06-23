@@ -32,7 +32,7 @@
       <sec:ifLoggedIn>
 	<sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
 		<g:javascript>
-		window.location.href = "${createLink(controller:'mb',action:'index')}";
+		window.location.href = "${createLink(controller:'mb',action:'home')}";
 		</g:javascript>
 	</sec:ifAnyGranted>
 	<sec:ifAnyGranted roles="ROLE_COUNSELLOR">

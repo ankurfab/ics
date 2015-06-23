@@ -18,6 +18,10 @@
 </head>
 
 <body>
+<div class="nav">
+    <span class="menuButton"><a class="home" href="${createLink(controller:'Mb',action:'index')}"><g:message code="default.home.label"/></a></span>
+</div>
+
 <section id="services" class="services" style="background-color: #337ab7">
         <div class="container">
             <div class="row">
@@ -75,7 +79,7 @@
                                 <input type="text" name="initiatedName" placeholder="Initiated Name..." class="form-control" id="initiatedName">
                             </div>
                             <div class="form-group input-group">
-                                <input type="text" name="donorContact" required="required" placeholder="Contact Number..." class="form-control" id="donorContact" pattern="^[+]?([0-9]*[\.\s\-\(\)]|[0-9]+){3,24}$">
+                                <input type="tel" name="donorContact" required="required" placeholder="Contact Number..." class="form-control" id="donorContact" pattern="[0-9]{10,10}" maxlength="10">
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group input-group">
@@ -97,7 +101,7 @@
                                 <g:select id="refCentre" style="width: 100%;height: 50px" name="refCentre" from="${centres}" noSelection="['':'Centre...']"/>
                             </div>
                             <div class="form-group input-group">
-                                <input type="text" name="refContact" required="required" placeholder="Referrer Contact Number..." class="form-control" id="refContact" pattern="^[+]?([0-9]*[\.\s\-\(\)]|[0-9]+){3,24}$">
+                                <input type="tel" name="refContact" required="required" placeholder="Referrer Contact Number..." class="form-control" id="refContact" pattern="[0-9]{10,10}" maxlength="10">
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group input-group">

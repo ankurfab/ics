@@ -17,7 +17,7 @@
 		<g:render template="/common/mandrillemail" />
 
 		<div class="nav">
-		    <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
+		    <span class="menuButton"><a class="home" href="${createLink(controller:'Mb',action:'home')}"><g:message code="default.home.label"/></a></span>
 		    <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
 			<span class="menuButton"><g:link class="create" action="startProfile">Start Profile</g:link></span>
 		    </sec:ifAnyGranted>

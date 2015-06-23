@@ -23,7 +23,7 @@
 				<td>${ppProject.advanceIssuedTo}</td>
 				<td>${ppProject.advancePaymentVoucher?.voucherNo}</td>
 				<td>${ppProject.advancePaymentVoucher?.voucherDate?.format('dd-MM-yyyy')}</td>
-				<g:set var="ppTotalAmount" value="${ppTotalAmount+ppProject.advancePaymentVoucher?.amount}" />				
+				<g:set var="ppTotalAmount" value="${ppTotalAmount+(ppProject?.advancePaymentVoucher?.amount?:0)}" />				
 			</tr>
 		</g:each>
 		        

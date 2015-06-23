@@ -36,6 +36,26 @@
                                 </td>
                             </tr>
 
+			    <tr class="prop">
+				<td valign="top" class="name">
+				    <label for="refNo">From:</label>
+				</td>
+				<td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'refNo', 'errors')}">
+				    <g:textField name="refNo" value="${fieldValue(bean: voucherInstance, field: 'refNo')}" />
+
+				</td>
+			    </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="description">Address:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'description', 'errors')}">
+                                    <g:textField name="description" value="${fieldValue(bean: voucherInstance, field: 'description')}" />
+
+                                </td>
+                            </tr>
+
                             <tr class="prop">
                                 <td valign="top" class="name">
                                     <label for="voucherDate"><g:message code="voucher.voucherDate" default="Voucher Date" />:</label>
@@ -45,46 +65,18 @@
                                 </td>
                             </tr>
                         
-                            <!--<tr class="prop">
-                                <td valign="top" class="name">
-                                    <label for="voucherNo"><g:message code="voucher.voucherNo" default="Voucher No" />:</label>
-                                </td>
-                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'voucherNo', 'errors')}">
-                                    <g:textField name="voucherNo" value="${fieldValue(bean: voucherInstance, field: 'voucherNo')}" />
-
-                                </td>
-                            </tr>-->
-
                             <tr class="prop">
                                 <td valign="top" class="name">
-                                    <label for="ledger">Received From A/C:</label>
+                                    <label for="ledger">Received In A/C:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'ledger', 'errors')}">
-                                    <g:textField name="ledger" value="${fieldValue(bean: voucherInstance, field: 'ledger')}" />
+					<g:select id="ledger" name='ledger' value=""
+					    noSelection="${['':'Select To Department...']}"
+					    from='${ics.CostCenter.findAllByStatusIsNull([sort:'name'])}' optionKey="id"></g:select>	
 
                                 </td>
                             </tr>
                         
-                        
-                            <tr class="prop">
-                                <td valign="top" class="name">
-                                    <label for="anotherLedger">Received To A/C:</label>
-                                </td>
-                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'anotherLedger', 'errors')}">
-                                    <g:textField name="anotherLedger" value="${fieldValue(bean: voucherInstance, field: 'anotherLedger')}" />
-
-                                </td>
-                            </tr>
-
-                            <tr class="prop">
-                                <td valign="top" class="name">
-                                    <label for="description"><g:message code="voucher.description" default="Description" />:</label>
-                                </td>
-                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'description', 'errors')}">
-                                    <g:textField name="description" value="${fieldValue(bean: voucherInstance, field: 'description')}" />
-
-                                </td>
-                            </tr>
                         
                             <tr class="prop">
                                 <td valign="top" class="name">
@@ -96,26 +88,57 @@
                                 </td>
                             </tr>
                         
+                                                
                             <tr class="prop">
                                 <td valign="top" class="name">
-                                    <label for="debit"><g:message code="voucher.debit" default="Debit or Credit?" />:</label>
+                                    <label for="mode">Mode:</label>
                                 </td>
-                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'debit', 'errors')}">
-					Debit<g:radio name="debit" value="true" checked="${voucherInstance?.debit?'checked':''}" disabled="disabled"/>
-					Credit<g:radio name="debit" value="false" checked="${voucherInstance?.debit?'':'checked'}" disabled="disabled"/>
+                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'mode', 'errors')}">
+					<g:select name="mode.id" from="${ics.PaymentMode.findAllByInperson(true,[sort:'name'])}" optionKey="id" noSelection="['':'-Select Payment Mode-']" />
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="instrumentNo"><g:message code="voucher.instrumentNo" default="InstrumentNo" />:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'instrumentNo', 'errors')}">
+                                    <g:textField name="instrumentNo" value="${fieldValue(bean: voucherInstance, field: 'instrumentNo')}" />
+
+                                </td>
+                            </tr>
+                        
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="instrumentDate">Instrument Date:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'instrumentDate', 'errors')}">
+                                    <g:textField name="instrumentDate" value="${fieldValue(bean: voucherInstance, field: 'instrumentDate')}" />
+
                                 </td>
                             </tr>
 
-			    <tr class="prop">
-				<td valign="top" class="name">
-				    <label for="refNo"><g:message code="voucher.refNo" default="Reference" />:</label>
-				</td>
-				<td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'refNo', 'errors')}">
-				    <g:textField name="refNo" value="${fieldValue(bean: voucherInstance, field: 'refNo')}" />
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="bankName">Bank Name:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'bankName', 'errors')}">
+                                    <g:textField name="bankName" value="${fieldValue(bean: voucherInstance, field: 'bankName')}" />
 
-				</td>
-			    </tr>
-                                                
+                                </td>
+                            </tr>
+
+                            <tr class="prop">
+                                <td valign="top" class="name">
+                                    <label for="bankBranch">Bank Branch:</label>
+                                </td>
+                                <td valign="top" class="value ${hasErrors(bean: voucherInstance, field: 'bankBranch', 'errors')}">
+                                    <g:textField name="bankBranch" value="${fieldValue(bean: voucherInstance, field: 'bankBranch')}" />
+
+                                </td>
+                            </tr>
+
+
                         </tbody>
                     </table>
                 </div>
@@ -128,8 +151,12 @@
     <script type="text/javascript">
         $(document).ready(function()
         {
-          $("#voucherDate").datepicker({yearRange: "-5:+5",changeMonth: true,changeYear: true,
+          $("#voucherDate").datepicker({yearRange: "-1:+1",changeMonth: true,changeYear: true,
 			dateFormat: 'dd-mm-yy'});
+
+          $("#instrumentDate").datepicker({yearRange: "-1:+1",changeMonth: true,changeYear: true,
+			dateFormat: 'dd-mm-yy'});
+
 	}
 	);
     </script>

@@ -764,6 +764,11 @@ class MbService {
 		def series = []
 		result.each{series.add([it[0],it[1]])}
 		return [series]
-	}	
+	}
+	
+	def getCentre() {
+		def loggedIndividual = Individual.findByLoginid(springSecurityService?.principal?.username)
+		return loggedIndividual?.iskconCentre?:''
+	}
 
 }

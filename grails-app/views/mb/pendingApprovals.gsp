@@ -28,19 +28,10 @@
             <a href="#"  onclick = $("#menu-close").click(); >ICS MB</a>
         </li>
         <li>
-            <a href="#" onclick = $("#menu-close").click(); >Home</a>
+            <a href="${createLink(controller:'Mb',action:'home')}" onclick = $("#menu-close").click(); >Home</a>
         </li>
         <li>
-            <a href="#" onclick = $("#menu-close").click(); >About</a>
-        </li>
-        <li>
-            <a href="#" onclick = $("#menu-close").click(); >Services</a>
-        </li>
-        <li>
-            <a href="#" onclick = $("#menu-close").click(); >Portfolio</a>
-        </li>
-        <li>
-            <a href="#" onclick = $("#menu-close").click(); >Others</a>
+            <a href="${createLink(controller:'Mb',action:'manage')}" onclick = $("#menu-close").click(); >Manage</a>
         </li>
     </ul>
 </nav>

@@ -9,7 +9,7 @@
     </head>
     <body>
         <div class="nav">
-            <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message code="home" default="Home" /></a></span>
+            <span class="menuButton"><a class="home" href="${createLink(controller:'Mb',action:'home')}"><g:message code="home" default="Home" /></a></span>
         </div>
         <div class="body">
             <div>

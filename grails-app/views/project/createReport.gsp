@@ -78,7 +78,7 @@
 				<td>${ppProject.advancePaymentVoucher?.voucherNo}</td>
 				<td>${ppProject.advancePaymentVoucher?.voucherDate?.format('dd-MM-yyyy')}</td>
 				
-				<g:set var="ppTotalAmount" value="${ppTotalAmount+ppProject.advancePaymentVoucher?.amount}" />
+				<g:set var="ppTotalAmount" value="${ppTotalAmount+(ppProject?.advancePaymentVoucher?.amount?:0)}" />
 			</tr>
 		</g:each>
 		
@@ -206,7 +206,7 @@
 	</div>
 		
 	<div>
-		<g:submitButton name="save" value="Submit" />
+		<g:submitButton name="btnSubmit" value="Submit" />
 	</div>
 
 </g:form>
@@ -271,8 +271,13 @@
 
 		      $("#expenseReimbursementForm").submit(function(e){
 
-			if(!validate())
+			 $("#btnSubmit").hide();
+
+			if(!validate()) {
+			 $("#btnSubmit").show();
 			    return false;
+			}
+			    
 
 			return true;
 

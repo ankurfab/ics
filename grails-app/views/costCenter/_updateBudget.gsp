@@ -8,10 +8,10 @@
 
 	    <tr class="prop">
 		<td valign="top" class="name">
-		    <label for="amount">Amount</label>
+		    <label for="amount">Add/Reduce Amount</label>
 		</td>
 		<td valign="top" class="value">
-		    <g:textField name="amount"/>
+		    <g:textField name="amount" placeholder="Increase/Reduce by.."/>
 		</td>
 	    </tr>
 
