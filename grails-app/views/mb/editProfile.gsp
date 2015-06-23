@@ -259,7 +259,7 @@
     <td valign="top" class="value">
         <g:select name="candidateIncome"
                   from="${1..100}"
-                  value="${Integer.parseInt(mbProfile?.candidate?.income.split(' ')[0])}" noSelection="['':'Select One']"/>
+                  value="${mbProfile?.candidate?.income ? Integer.parseInt(mbProfile?.candidate?.income.split[0]):''}" noSelection="['':'Select One']"/>
         <span>Lakhs per Annum</span>
     </td>
 </tr>

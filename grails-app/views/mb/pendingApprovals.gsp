@@ -73,7 +73,7 @@
                             </div>
                             <div class="col-sm-4">
                                 <button type="submit" class="btn btn-success">Approve</button>
-                                <g:link action="deleteTempProfile" params="['profId': it.objId,'profDenied': true,'donorName':it.donorName,'donorEmail':it.donorEmail]" class="btn btn-danger" style="margin-left: 20px">Deny</g:link>
+                                <g:link action="deleteTempProfile" params="['profId': it.objId,'profDenied': true,'donorName':it.donorName,'donorEmail':it.donorEmail,'donorContact':it.donorContact]" class="btn btn-danger" style="margin-left: 20px">Deny</g:link>
                             </div>
                         </div>
                         </g:form>
