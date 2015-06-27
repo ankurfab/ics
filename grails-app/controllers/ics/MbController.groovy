@@ -166,8 +166,15 @@ class MbController {
             }
 		def retVal = MbService.updateProfile(params)
 		if (retVal>0) {
-		    flash.message = "Profile updated succesfully..."
-	            redirect(action: "editProfile")
+            if(params.formSubmit){
+                markProfileComplete()
+                flash.message = "Profile Submitted succesfully..."
+                redirect(action: "editProfile")
+            }
+            else {
+                flash.message = "Profile updated succesfully..."
+                redirect(action: "editProfile")
+            }
 		}
 		else {
 		    flash.message = "Some error occurred..Pls contact admin with errorcode MB"+retVal
@@ -291,7 +298,6 @@ def showImage = {
     	mbProfile.profileStatus = "SUBMITTED"
     	if(!mbProfile.save())
     		mbProfile.errors.allErrors.each {println it}
-    	render(view: "editProfile", model: [mbProfile: mbProfile])
     }
 
 

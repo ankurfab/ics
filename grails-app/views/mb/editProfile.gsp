@@ -14,11 +14,10 @@
 
 <body>
 <div class="nav">
-    <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message default="Home"/></a></span>
     <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
         <g:hiddenField name="finishShow" id="finishShow" value="true"/>
         <g:if test="${mbProfile?.profileStatus == 'STARTED' || mbProfile?.profileStatus == 'INCOMPLETE'}">
-            <span class="menuButton"><g:link class="create" action="markProfileComplete">Submit Profile to MB</g:link></span>
+            <span class="menuButton"><a class="create" href="javascript:void(0);" onclick="processSubmit();">Submit Profile to MB</a></span>
         </g:if>
     </sec:ifAnyGranted>
     <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
@@ -37,15 +36,18 @@
 </div>
 
 <div id="show-administrator" class="content scaffold-show" role="main">
-<g:if test="${flash.message}">
-    <div class="message" role="status">${flash.message}</div>
-</g:if>
+<div class="errMsgWrap">
+    <g:if test="${flash.message}">
+         <div class="message" role="status">${flash.message}</div>
+    </g:if>
+</div>
 
 
 <g:form action="updateProfile" name="mainForm">
 <g:hiddenField name="id" value="${mbProfile?.id}"/>
 <g:hiddenField name="version" value="${mbProfile?.version}"/>
-<input type="submit" hidden="hidden" id="formSubmit"/>
+<input type="submit" hidden="hidden" name="formSubmitSilent" id="formSubmitSilent"/>
+<input type="submit" hidden="hidden" name="formSubmit" id="formSubmit"/>
 <g:set var="candAddr" value="${ics.Address.findByIndividualAndCategory(mbProfile.candidate,'PresentAddress')}"/>
 
 <table align="center" border="0" cellpadding="0" cellspacing="0">
@@ -259,7 +261,7 @@
     <td valign="top" class="value">
         <g:select name="candidateIncome"
                   from="${1..100}"
-                  value="${mbProfile?.candidate?.income ? Integer.parseInt(mbProfile?.candidate?.income.split[0]):''}" noSelection="['':'Select One']"/>
+                  value="${mbProfile?.candidate?.income ? Integer.parseInt(mbProfile?.candidate?.income.split(' ')[0]):''}" noSelection="['':'Select One']"/>
         <span>Lakhs per Annum</span>
     </td>
 </tr>
@@ -454,7 +456,7 @@
         <label for="houseIs">Above House is:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="houseIs"  from="${['Owned', 'Rented', 'Others']}" value="${mbProfile?.houseIs}" noSelection="['':'Select One']"/>
+        <g:select name="houseIs"  from="${['Owned', 'Rented', 'Govt/Company povided', 'Others']}" value="${mbProfile?.houseIs}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="houseArea">Area of House:</label>
@@ -876,7 +878,7 @@
             <tbody>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="introductionYear">Year of Introduction:</label>
+                    <label for="introductionYear">Year of Introduction to KC:</label>
                 </td>
                 <td valign="top" class="value">
                     <g:select name="introductionYear" from="${1965..2099}" value="${mbProfile?.introductionYear}" noSelection="['':'Select One']"/>
@@ -906,7 +908,7 @@
                                  value="${mbProfile?.currentlyVisiting}"/>
                 </td>
                 <td valign="top" class="name">
-                    <label for="regularSince">Since when are you<br>associated regularly:</label>
+                    <label for="regularSince">Since when are you<br>associated regularly with KC:</label>
                 </td>
                 <td valign="top" class="value">
                     <g:select name="regularSince" from="${1965..2099}" value="${mbProfile?.regularSince}" noSelection="['':'Select One']"/>
@@ -1620,10 +1622,44 @@
 </div>
 
 <script type="text/javascript">
+    function processSubmit(){
+        validateAllSteps();
+    }
+    function validateStep(validateSection) {
+        var isStepValid = true;
+        $("[name='mainForm']").validate();
+        validateSection.find('input').each(function(){
+            if(!$(this).valid()){
+                isStepValid=false;
+            }
+        });
+        $("[name='mainForm']").validate();
+        validateSection.find('textarea').each(function(){
+            if(!$(this).valid()){
+                isStepValid=false;
+            }
+        });
+        return isStepValid;
+    }
+
+    function validateAllSteps() {
+        var formValid = true;
+        $('.anchor li a').each(function(){
+            formValid = validateStep($($(this).attr('href')));
+            return formValid
+        })
+        if(formValid) {
+            $('#formSubmit').click();
+        }
+        else{
+            $('.errMsgWrap').empty().append('<div class="message" role="status" style="color:red">Some of the Mandatory fields are not filled out. Please fill the same to complete your profile.</div>')
+        }
+    }
+
     $(document).ready(function () {
         // Smart Wizard
         $('#wizard').smartWizard({
-            onLeaveStep: leaveAStepCallback,
+            labelFinish: 'Save',
             onFinish: onFinishCallback
         });
 
@@ -1633,7 +1669,6 @@
             else
                 $('.buttonFinish').hide();
         },0);
-
         $('.multiple').multiselect({
             noneSelectedText: 'Select One/More option',
             menuWidth: 225,
@@ -1644,45 +1679,11 @@
 
         initSliders();
 
-        function leaveAStepCallback(obj, context) {
-            var stepSec=$(obj.attr('href'));
-            var status=validateStep(stepSec); // return false to stay on step and true to continue navigation
-            if(status)
-                $('label.error').remove();
-            return status;
-        }
+        $('#mainForm').removeAttr('novalidate');
 
-        function onFinishCallback(objs, context) {
-          <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
-            validateAllSteps();
-            </sec:ifAnyGranted>
-        }
-
-        function validateStep(validateSection) {
-            var isStepValid = true;
-            $("[name='mainForm']").validate();
-            validateSection.find('input').each(function(){
-                if(!$(this).valid()){
-                    isStepValid=false;
-                }
-            });
-            $("[name='mainForm']").validate();
-            validateSection.find('textarea').each(function(){
-                if(!$(this).valid()){
-                    isStepValid=false;
-                }
-            });
-            return isStepValid;
-        }
-
-        function validateAllSteps() {
-            var formValid = true;
-            $('.anchor li a').each(function(){
-                formValid = validateStep($($(this).attr('href')));
-                return formValid
-            })
-            if(formValid)
-                $('#formSubmit').click();
+        function onFinishCallback() {
+            $('#mainForm').attr('novalidate','novalidate');
+            $('#formSubmitSilent').click();
         }
 
         $('#imgFileFV').live('change', function () {
