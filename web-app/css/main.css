@@ -137,7 +137,7 @@ div.errors li {
 td.errors select {
     border: 2px solid red;
 }
-td.errors input, input.error {
+input.error, select.error, textarea.error {
     border: 2px solid red;
 }
 
