@@ -170,36 +170,36 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="originState">State Of Birth</label>
+        <label for="originState">State Of Birth</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="originState"
+        <g:select name="originState" class="required"
                   from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.candidate?.origin}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="currentCountry">Are you currently settled in India or Abroad : </label>
+        <label for="currentCountry">Are you currently settled in India or Abroad : </label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="currentCountry" style="width: 100%"
+        <g:select name="currentCountry" style="width: 100%" class="required"
                   from="${['India','Abroad']}"
                   value="${mbProfile?.currentCountry}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="culturalInfluence">Primary Cultural Background:</label>
+        <label for="culturalInfluence">Primary Cultural Background:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="culturalInfluence"
+        <g:select name="culturalInfluence" class="required"
                   from="${['Assamese','Andhraite','Bengali','Bihari','Gujarati','Himachal Pradesh','Kannadiga','Kasmiri','Konkani','Keralite','Madhya Pradesh','Manipuri','Maharashtrian','Marwari','Nepali','Oriyan','Punjabi','Sindhi','Tamilian','Typical North Indian','Typical South Indian','Typical Cosmopolitan','Typical Village','Uttar Pradesh','Urdu','Western']}"
                   value="${mbProfile?.culturalInfluence}" noSelection="['':'Select One']"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="scstCategory">Category:</label>
+        <label for="scstCategory">Category:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="scstCategory"
+        <g:select name="scstCategory" class="required"
                   from="${['Open','Other Backward Class','Backward Class','Scheduled Caste','Scheduled Tribe','Nomadic Tribes']}"
                   value="${mbProfile?.scstCategory ?: 'Open'}" noSelection="['':'Select One']"/>
     </td>
@@ -220,18 +220,18 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="varna">Varna, if you<br>are aware:</label>
+        <label for="varna">Varna, if you<br>are aware:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="varna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra', 'Not Known']}"
+        <g:select name="varna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra', 'Not Known']}" class="required"
                   value="${mbProfile?.candidate?.varna ?: 'Not Known'}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="heightInFt">Height</label>
+        <label for="heightInFt">Height</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="heightInFt" from="${2..7}" value="${(mbProfile?.candidate?.height?: 2)/12}"/><span>&nbsp;ft</span>
-        <g:select name="heightInInch" from="${0..11}" value="${(mbProfile?.candidate?.height?: 0)%12}"/><span>&nbsp;inches</span>
+        <g:select class="required" name="heightInFt" from="${2..7}" value="${(mbProfile?.candidate?.height?: 2)/12}"/><span>&nbsp;ft</span>
+        <g:select class="required" name="heightInInch" from="${0..11}" value="${(mbProfile?.candidate?.height?: 0)%12}"/><span>&nbsp;inches</span>
     </td>
     <td valign="top" class="name">
         <label for="weight">Weight</label>
@@ -242,24 +242,24 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="motherTongue">Mother Tongue:</label>
+        <label for="motherTongue">Mother Tongue:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="motherTongue"
+        <g:select name="motherTongue" class="required"
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
                   value="${mbProfile?.candidate?.motherTongue ?: 'Marathi'}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="nationality">Nationality:</label>
+        <label for="nationality">Nationality:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="nationality" from="${['Indian', 'Others']}" value="${mbProfile?.candidate?.nationality}"/>
+        <g:select name="nationality" class="required" from="${['Indian', 'Others']}" value="${mbProfile?.candidate?.nationality}"/>
     </td>
     <td valign="top" class="name">
-        <label for="candidateIncome">Candidate's <br>Income(p.a):</label>
+        <label for="candidateIncome">Candidate's <br>Income(p.a):</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="candidateIncome"
+        <g:select name="candidateIncome" class="required"
                   from="${1..100}"
                   value="${mbProfile?.candidate?.income ? Integer.parseInt(mbProfile?.candidate?.income.split(' ')[0]):''}" noSelection="['':'Select One']"/>
         <span>Lakhs per Annum</span>
@@ -267,17 +267,17 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="horoscopeToBeMatched">Horoscope<br> to be matched:</label>
+        <label for="horoscopeToBeMatched">Horoscope<br> to be matched:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="horoscopeToBeMatched" from="${['Yes', 'No', 'No Specific Choice']}"
+        <g:select name="horoscopeToBeMatched" from="${['Yes', 'No', 'No Specific Choice']}" class="required"
                   value="${mbProfile?.horoscopeToBeMatched}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="manglik">Manglik:</label>
+        <label for="manglik">Manglik:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="manglik"  from="${['No', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}" noSelection="['':'Select One']"/>
+        <g:select name="manglik" class="required" from="${['No', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="maritalStatus">Marital Status:</label><span class="mand">*</span>
@@ -304,10 +304,10 @@
                      value="${candAddr?.city}"/>
     </td>
     <td valign="top" class="name">
-        <label for="state">State:</label>
+        <label for="state">State:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="state"
+        <g:select name="state" class="required"
                   from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${candAddr?.state?.name}" noSelection="['':'Select One']"/>
     </td>
@@ -321,18 +321,18 @@
                      value="${candAddr?.pincode}"/>
     </td>
     <td valign="top" class="name">
-        <label for="residenceType">Above Residence is:</label>
+        <label for="residenceType">Above Residence is:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="residenceType"
+        <g:select name="residenceType" class="required"
                   from="${['Rented','Owned','Company provided','BACE / VOICE']}"
                   value="${mbProfile?.residenceType}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="areaCurrHouse">Area (in sq.ft):</label>
+        <label for="areaCurrHouse">Area (in sq.ft):</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="areaCurrHouse" maxLength="6" placeholder="Enter the area value"
+        <g:textField name="areaCurrHouse" maxLength="6" placeholder="Enter the area value" required="required"
                      value="${mbProfile?.areaCurrHouse}"/>
     </td>
 </tr>
