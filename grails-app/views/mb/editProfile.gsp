@@ -14,6 +14,7 @@
 
 <body>
 <div class="nav">
+    <span class="menuButton"><a class="home" href="${createLink(controller:'Mb',action:'home')}"><g:message code="default.home.label"/></a></span>
     <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
         <g:hiddenField name="finishShow" id="finishShow" value="true"/>
         <g:if test="${mbProfile?.profileStatus == 'STARTED' || mbProfile?.profileStatus == 'INCOMPLETE'}">
