@@ -1466,13 +1466,13 @@
             <tbody>
             <tr class="prop">
                 <td valign="top" class="value">
-                <div style="text-align: center"><img id="fvimage" name="fvimage" class="avatar"
-                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'fv'])}"/><br><br>
-                    <g:form name="uploadImageFV" action="uploadImage" method="post"
+                <div style="text-align: center"><img id="closeUpPrim" name="closeUpPrim" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': 'closePrim', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="closeUpPrimForm" action="uploadImage" method="post"
                             enctype="multipart/form-data">
-                        <g:hiddenField name="type" value="fv"/>
-                        <label><b>Passport Image (max 100K)</b></label><br><br>
-                        <input type="file" name="imgFileFV" id="imgFileFV"/></div>
+                        <g:hiddenField name="imgType" value="closePrim"/>
+                        <label><b>Close Up (Primary)</b></label><br><br>
+                        <input type="file" name="closeUpPrimInput" id="closeUpPrimInput"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
                             For best results, your image should have a width-to-height ratio of 4:5.
@@ -1481,13 +1481,13 @@
                     </g:form>
                 </td>
                 <td valign="top" class="value">
-                    <div style="text-align: center"><img id="svimage" name="svimage" class="avatar"
-                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'sv'])}"/><br><br>
-                    <g:form name="uploadImageSV" action="uploadImage" method="post"
+                    <div style="text-align: center"><img id="closeUpSec" name="closeUpSec" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': 'closeSec', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="closeUpSecForm" action="uploadImage" method="post"
                             enctype="multipart/form-data">
-                        <g:hiddenField name="type" value="sv"/>
-                        <label><b>Portfolio Image (max 500K)</b></label><br><br>
-                        <input type="file" name="imgFileSV" id="imgFileSV"/></div>
+                        <g:hiddenField name="imgType" value="closeSec"/>
+                        <label><b>Close Up (Secondary)</b></label><br><br>
+                        <input type="file" name="closeUpSecInput" id="closeUpSecInput"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
                             For best results, your image should have a width-to-height ratio of 4:5.
@@ -1496,7 +1496,38 @@
                     </g:form>
                 </td>
             </tr>
+            <tr class="prop">
+                <td valign="top" class="value">
+                <div style="text-align: center"><img id="fullPrim" name="fullPrim" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': 'fullPrim', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="fullPrimForm" action="uploadImage" method="post"
+                            enctype="multipart/form-data">
+                        <g:hiddenField name="imgType" value="fullPrim"/>
+                        <label><b>Full Profile (Primary)</b></label><br><br>
+                        <input type="file" name="fullPrimInput" id="fullPrimInput"/></div>
 
+                        <div style="font-size:0.8em; margin: 1.0em;">
+                            For best results, your image should have a width-to-height ratio of 4:5.
+                            For example, if your image is 80 pixels wide, it should be 100 pixels high.
+                        </div>
+                    </g:form>
+                </td>
+                <td valign="top" class="value">
+                    <div style="text-align: center"><img id="fullSec" name="fullSec" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': 'fullSec', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="fullSecForm" action="uploadImage" method="post"
+                            enctype="multipart/form-data">
+                        <g:hiddenField name="imgType" value="fullSec"/>
+                        <label><b>Full Profile (Secondary)</b></label><br><br>
+                        <input type="file" name="fullSecInput" id="fullSecInput"/></div>
+
+                        <div style="font-size:0.8em; margin: 1.0em;">
+                            For best results, your image should have a width-to-height ratio of 4:5.
+                            For example, if your image is 80 pixels wide, it should be 100 pixels high.
+                        </div>
+                    </g:form>
+                </td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -1704,18 +1735,34 @@
             $('#formSubmitSilent').click();
         }
 
-        $('#imgFileFV').live('change', function () {
-            $("#uploadImageFV").ajaxForm({
+        $('#closeUpPrimInput').live('change', function () {
+            $("#closeUpPrimForm").ajaxForm({
                 success: function(){
-                    $("#fvimage").attr('src',$("#fvimage").attr('src')+'&timestamp='+new Date().getTime());
+                    $("#closeUpPrim").attr('src',$("#closeUpPrim").attr('src')+'&timestamp='+new Date().getTime());
                 }
             }).submit();
         });
 
-        $('#imgFileSV').live('change', function () {
-            $("#uploadImageSV").ajaxForm({
+        $('#closeUpSecInput').live('change', function () {
+            $("#closeUpSecForm").ajaxForm({
                 success: function () {
-                    $("#svimage").attr('src',$("#svimage").attr('src')+'&timestamp='+new Date().getTime());
+                    $("#closeUpSec").attr('src',$("#closeUpSec").attr('src')+'&timestamp='+new Date().getTime());
+                }
+            }).submit();
+        });
+
+        $('#fullPrimInput').live('change', function () {
+            $("#fullPrimForm").ajaxForm({
+                success: function(){
+                    $("#fullPrim").attr('src',$("#fullPrim").attr('src')+'&timestamp='+new Date().getTime());
+                }
+            }).submit();
+        });
+
+        $('#fullSecInput').live('change', function () {
+            $("#fullSecForm").ajaxForm({
+                success: function () {
+                    $("#fullSec").attr('src',$("#fullSec").attr('src')+'&timestamp='+new Date().getTime());
                 }
             }).submit();
         });

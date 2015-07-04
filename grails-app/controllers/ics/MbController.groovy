@@ -1,12 +1,15 @@
 package ics
 
 import grails.converters.JSON
-import java.util.zip.ZipOutputStream  
+
+import javax.imageio.ImageIO
+import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry  
 import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
 import groovy.time.TimeCategory
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
+import org.grails.plugins.imagetools.*
 
 
 class MbController {
@@ -225,69 +228,102 @@ class MbController {
 def uploadImage = {
     	log.debug("Inside uploadImage with params: "+params)
     	Individual cand = Individual.get(session.individualid)
-    	def mbProfile = MbProfile.findByCandidate(cand)
-	  def individual = cand
-	  // Get the avatar file from the multi-part request
-	  def f
+        def imageObj
+        def mbProfile = MbProfile.findByCandidate(cand)
+        def imageTool = new ImageTool()
+        def appDir = servletContext.getRealPath("/")
+        File fileDest = new File(appDir,"images/tempImg"+session.individualid+".jpg")
 	  // Save the image and mime type
-	  switch (params.type) {
-	  case 'fv':
-		  f = request.getFile('imgFileFV')
-		  individual.avatar = f.getBytes()
-		  individual.avatarType = f.getContentType()
-		  log.info("fv File uploaded: " + individual.avatarType)
-		  // Validation works, will check if the image is too big
-		  if (!individual.save()) {
-		    log.debug("Some error")
-		    return;
-		  }
-		  break
-	  case 'sv':
-		  f = request.getFile('imgFileSV')
-		  mbProfile.photo = f.getBytes()
-		  mbProfile.photoType = f.getContentType()
-		  log.info("sv File uploaded: " + mbProfile.photoType)
-		  if (!mbProfile.save()) {
-		    log.debug("Some error")
-		    return;
-		  }
-		  break
-	  default:
-	  	break
-	  }
-	render([status:1, msg:"Image uploaded succesfully!!"] as JSON)
+	    render([status:1, msg:"Image uploaded succesfully!!"] as JSON)
+    switch (params.imgType) {
+        case 'closePrim':
+            imageObj = Image.findByImageTypeAndEntityId('closePrim',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('closeUpPrimInput')
+            temp.transferTo(fileDest)
+            break
+        case 'closeSec':
+            imageObj = Image.findByImageTypeAndEntityId('closeSec',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('closeUpSecInput')
+            temp.transferTo(fileDest)
+            break
+        case 'fullPrim':
+            imageObj = Image.findByImageTypeAndEntityId('fullPrim',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('fullPrimInput')
+            temp.transferTo(fileDest)
+            break
+        case 'fullSec':
+            imageObj = Image.findByImageTypeAndEntityId('fullSec',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('fullSecInput')
+            temp.transferTo(fileDest)
+            break
+    }
+        imageTool.load(fileDest.getBytes())
+        imageTool.thumbnail(640)
+        imageTool.writeResult(appDir+"/images/tempImgSmall"+session.individualid+".jpg","JPEG")
+        def f = new File(appDir+"/images/tempImgSmall"+session.individualid+".jpg")
+        imageObj.imageData = f.getBytes()
+        imageObj.creator = imageObj.updator = springSecurityService.principal.username
+        imageObj.imageType = params.imgType
+        imageObj.entityId = mbProfile.id
+        imageObj.entity = 'mbProfile'
+        imageObj.type = 'image/jpeg'
+        fileDest.delete()
+        f.delete()
+        // Validation works, will check if the image is too big
+        if (!imageObj.save()) {
+            log.debug("Some error")
+            return;
+        }
 }
 
 def showImage = {
-  def mbProfile = MbProfile.get(params.id)
-  if(!mbProfile)
+  def image = Image.findByImageTypeAndEntityId(params.imgType,params.entityId)
+  if(!image)
   	{
 	    response.sendError(404)
 	    return;
   	}
-  switch(params.imgtype) {
-  	case 'sv':
-	  if(mbProfile.photoType) {
-		  response.setContentType(mbProfile.photoType)
-		  response.setContentLength(mbProfile.photo.size())
+  switch(image.imageType) {
+  	case 'closePrim':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
 		  OutputStream out = response.getOutputStream();
-		  out.write(mbProfile.photo);
+		  out.write(image.imageData);
 		  out.close();
-	  }
 	  break
-  	case 'fv':
-	default:
-	  def avatarUser = mbProfile.candidate
-	  if (!avatarUser || !avatarUser.avatar || !avatarUser.avatarType) {
-	    response.sendError(404)
-	    return;
-	  }
-	  response.setContentType(avatarUser.avatarType)
-	  response.setContentLength(avatarUser.avatar.size())
-	  OutputStream out = response.getOutputStream();
-	  out.write(avatarUser.avatar);
-	  out.close();
-  	  break
+  	case 'closeSec':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
+		  OutputStream out = response.getOutputStream();
+		  out.write(image.imageData);
+		  out.close();
+	  break
+  	case 'fullPrim':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
+		  OutputStream out = response.getOutputStream();
+		  out.write(image.imageData);
+		  out.close();
+	  break
+  	case 'fullSec':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
+		  OutputStream out = response.getOutputStream();
+		  out.write(image.imageData);
+		  out.close();
+	  break
   }
   return
 }
