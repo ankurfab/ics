@@ -100,7 +100,7 @@ class MbService {
     try{         mbProfile.weight=Integer.parseInt(params.weight) } catch(Exception e){}
     try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
     try{         mbProfile.languagesKnown=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.languagesKnown)} catch(Exception e){}
-	try{         mbProfile.candidate.income=params.candidateIncome + ' Lakhs' //change the type of the column in db
+	try{         mbProfile.candidate.income=params.candidateIncome ? params.candidateIncome + ' Lakhs' : '' //change the type of the column in db
 	} catch(Exception e){}
 	try{         mbProfile.horoscopeToBeMatched=params.horoscopeToBeMatched } catch(Exception e){}
 	try{         mbProfile.manglik=params.manglik } catch(Exception e){}

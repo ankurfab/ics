@@ -270,7 +270,7 @@ def uploadImage = {
             break
     }
         imageTool.load(fileDest.getBytes())
-        imageTool.thumbnail(640)
+        imageTool.thumbnail(500)
         imageTool.writeResult(appDir+"/images/tempImgSmall"+session.individualid+".jpg","JPEG")
         def f = new File(appDir+"/images/tempImgSmall"+session.individualid+".jpg")
         imageObj.imageData = f.getBytes()

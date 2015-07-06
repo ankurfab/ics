@@ -69,10 +69,10 @@
                         </div>
                     </div>
                     <div class="form-bottom" id="registrationFrom">
-                        <g:form action="startProfile" class="registration-form">
+                        <g:form action="startProfile" class="registration-form" onsubmit="return validateSelect();">
                             <h4 style="color: white;font-weight: 600">Candidate Details : </h4>
                             <div class="form-group input-group">
-                                <input type="text" name="donorName" required="required" placeholder="Legal Name..." class="form-control" id="donorName"/>
+                                <input type="text" name="donorName" required="required" placeholder="Legal Name (Full Name with Surname)..." class="form-control" id="donorName"/>
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group">
@@ -98,7 +98,7 @@
                             <g:set var="attr" value="${ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','Centre','Config')}" />
                             <g:set var="centres" value="${ics.AttributeValue.findAllByAttribute(attr)?.collect{it.value}}" />
                             <div class="form-group">
-                                <g:select id="refCentre" style="width: 100%;height: 50px" name="refCentre" from="${centres}" noSelection="['':'Centre...']"/>
+                                <g:select id="refCentre" style="width: 100%;height: 50px" name="refCentre" from="${centres}" noSelection="['':'Centre...']" class="required"/>
                             </div>
                             <div class="form-group input-group">
                                 <input type="tel" name="refContact" required="required" placeholder="Referrer Contact Number..." class="form-control" id="refContact" pattern="[0-9]{10,10}" maxlength="10">
@@ -109,7 +109,7 @@
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group">
-                                <g:select id="refReln" style="width: 100%;height: 50px" name="refReln" from="${['Counsellor/Mentor','Spiritual Master','Friend','Relative','Acquaintance']}" noSelection="['':'Relationship to Candidate...']"/>
+                                <g:select id="refReln" style="width: 100%;height: 50px" name="refReln" from="${['Counsellor/Mentor','Spiritual Master','Friend','Relative','Acquaintance']}" noSelection="['':'Relationship to Candidate...']" class="required"/>
                             </div>
                             <button type="submit" class="btn btn-success">Register</button>
                         </g:form>
@@ -121,6 +121,21 @@
     </section>
 <r:layoutResources />
 <script type="text/javascript">
+    function validateSelect(){
+        var isStepValid = true;
+        $('#registrationFrom').find('select').each(function(){
+            if(!$(this).valid()){
+                isStepValid=false;
+            }
+        });
+        $('#refCentre').select2({
+            minimumResultsForSearch: -1
+        });
+        $('#refReln').select2({
+            minimumResultsForSearch: -1
+        });
+        return isStepValid;
+    }
     function resetPwd(){
         $('#loginFrmWrapper').hide();
         $('#forgotPwdWrapper').show();

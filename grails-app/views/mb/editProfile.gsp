@@ -47,6 +47,7 @@
 <g:form action="updateProfile" name="mainForm">
 <g:hiddenField name="id" value="${mbProfile?.id}"/>
 <g:hiddenField name="version" value="${mbProfile?.version}"/>
+<g:hiddenField name="stat" value="${mbProfile?.profileStatus}"/>
 <input type="submit" hidden="hidden" name="formSubmitSilent" id="formSubmitSilent"/>
 <input type="submit" hidden="hidden" name="formSubmit" id="formSubmit"/>
 <g:set var="candAddr" value="${ics.Address.findByIndividualAndCategory(mbProfile.candidate,'PresentAddress')}"/>
@@ -119,7 +120,7 @@
 </td>
 <!-- Checking for adding comments -->
 <td valign="top" class="value">
-    <g:select name="isMale" required="required" from="${['MALE', 'FEMALE']}" value="${mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE'}"/>
+    <g:select name="isMale" required="required" from="${['FEMALE','MALE']}" value="${mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE'}"/>
 </td>
 </tr>
 <tr class="prop">
@@ -797,7 +798,7 @@
                     <label for="eduQual">Qualifications:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="eduQual" maxlength="40" placeholder="Enter your qualification here" required="required"
+                    <g:textField name="eduQual" maxlength="30" placeholder="Enter your qualification here" required="required"
                                  value="${mbProfile?.eduQual}"/>
                 </td>
             </tr>
@@ -1027,14 +1028,14 @@
                             <label for="likesInKc">Which aspect of Krishna<br>Consciousness<br> you like most:</label>
                         </td>
                         <td valign="top" class="value" colspan="2">
-                            <g:textArea name="likesInKc" maxlength="80" placeholder="Enter different aspects of KC you like"
+                            <g:textArea name="likesInKc" maxlength="255" placeholder="Enter different aspects of KC you like"
                                         value="${mbProfile?.likesInKc}"/>
                         </td>
                         <td valign="top" class="name">
                             <label for="dislikesInKc">Which aspect of Krishna<br>Consciousness<br>you do not like:</label>
                         </td>
                         <td valign="top" class="value" colspan="2">
-                            <g:textArea name="dislikesInKc" maxlength="80"
+                            <g:textArea name="dislikesInKc" maxlength="255"
                                         placeholder="Enter different aspects of KC you don't like"
                                         value="${mbProfile?.dislikesInKc}"/>
                         </td>
@@ -1044,7 +1045,7 @@
                             <label for="services">Various services rendered:</label><span class="mand">*</span>
                         </td>
                         <td valign="top" class="value" colspan="5">
-                            <g:textArea name="services" maxlength="80" required="required"
+                            <g:textArea name="services" required="required" maxlength="255"
                                          placeholder="Please mention the various services rendered by you"
                                          value="${mbProfile?.services}"/>
                         </td>
@@ -1054,7 +1055,7 @@
                             <label for="interests">Main Interests & Activities:</label><span class="mand">*</span>
                         </td>
                         <td valign="top" class="value" colspan="5">
-                            <g:textArea name="interests" maxlength="80" placeholder="Please mention any interests" required="required"
+                            <g:textArea name="interests" maxlength="255" placeholder="Please mention any interests" required="required"
                                          value="${mbProfile?.interests}"/>
                         </td>
                     </tr>
@@ -1063,7 +1064,7 @@
                             <label for="remarks">Remarks (Anything else <br> you would like us to know):</label>
                         </td>
                         <td valign="top" class="value" colspan="5">
-                            <g:textArea name="remarks" maxlength="200"
+                            <g:textArea name="remarks" maxlength="255"
                                          placeholder="Please mention any remarks or any information you would like the Marriage Board to know"
                                          value="${mbProfile?.remarks}"/>
                         </td>
@@ -1109,7 +1110,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleChanting" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleChanting}">
+                      value="${mbProfile?.flexibleChanting ? mbProfile?.flexibleChanting : false }">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1128,7 +1129,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleSpMaster" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleSpMaster}">
+                      value="${mbProfile?.flexibleSpMaster ? mbProfile?.flexibleSpMaster : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1145,7 +1146,7 @@
     </td>
     <td>
         <g:radioGroup name='flexibleOnCentre' labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCentre}">
+                      value="${mbProfile?.flexibleCentre ? mbProfile?.flexibleCentre : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1163,7 +1164,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleNationality" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleNationality}">
+                      value="${mbProfile?.flexibleNationality ? mbProfile?.flexibleNationality : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1180,7 +1181,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCurrentCountry" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCurrentCountry}">
+                      value="${mbProfile?.flexibleCurrentCountry ? mbProfile?.flexibleCurrentCountry : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1199,7 +1200,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCulturalInfluence" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCulturalInfluence}">
+                      value="${mbProfile?.flexibleCulturalInfluence ? mbProfile?.flexibleCulturalInfluence : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1217,7 +1218,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleVarna" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleVarna}">
+                      value="${mbProfile?.flexibleVarna ? mbProfile?.flexibleVarna : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1236,7 +1237,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCategory" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCategory}">
+                      value="${mbProfile?.flexibleCategory ? mbProfile?.flexibleCategory : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1253,7 +1254,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCaste}">
+                      value="${mbProfile?.flexibleCaste ? mbProfile?.flexibleCaste : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1270,7 +1271,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleSubcaste" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleSubcaste}">
+                      value="${mbProfile?.flexibleSubcaste ? mbProfile?.flexibleSubcaste : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1291,7 +1292,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleEducationCat" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleEducationCat}">
+                      value="${mbProfile?.flexibleEducationCat ? mbProfile?.flexibleEducationCat : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1309,7 +1310,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleQualifications" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleQualifications}">
+                      value="${mbProfile?.flexibleQualifications ? mbProfile?.flexibleQualifications : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1328,7 +1329,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleAgediff" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleAgediff}">
+                      value="${mbProfile?.flexibleAgediff ? mbProfile?.flexibleAgediff : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1346,7 +1347,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleHeight" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleHeight}">
+                      value="${mbProfile?.flexibleHeight ? mbProfile?.flexibleHeight : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1364,7 +1365,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleLooks" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleLooks}">
+                      value="${mbProfile?.flexibleLooks ? mbProfile?.flexibleLooks : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1382,7 +1383,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCandidateIncome" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCandidateIncome}">
+                      value="${mbProfile?.flexibleCandidateIncome ? mbProfile?.flexibleCandidateIncome : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1401,7 +1402,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleLangknown" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleLangknown}">
+                      value="${mbProfile?.flexibleLangknown ? mbProfile?.flexibleLangknown : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1419,7 +1420,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleManglik" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleManglik}">
+                      value="${mbProfile?.flexibleManglik ? mbProfile?.flexibleManglik : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1699,7 +1700,9 @@
     $(document).ready(function () {
         // Smart Wizard
         $('#wizard').smartWizard({
-            onLeaveStep: leaveAStepCallback,
+            enableFinishButton : true,
+            keyNavigation : false,
+            enableAllSteps : true,
             labelFinish: 'Save',
             onFinish: onFinishCallback
         });
@@ -1722,17 +1725,14 @@
 
         $('#mainForm').removeAttr('novalidate');
 
-        function leaveAStepCallback(obj, context) {
-            var stepSec=$(obj.attr('href'));
-            var status=validateStep(stepSec); // return false to stay on step and true to continue navigation
-            if(status)
-                $('label.error').remove();
-            return status;
-        }
-
         function onFinishCallback() {
-            $('#mainForm').attr('novalidate','novalidate');
-            $('#formSubmitSilent').click();
+            if($('#stat').val() == 'STARTED') {
+                $('#mainForm').attr('novalidate', 'novalidate');
+                $('#formSubmitSilent').click();
+            }
+            else{
+                processSubmit();
+            }
         }
 
         $('#closeUpPrimInput').live('change', function () {

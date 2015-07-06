@@ -247,3 +247,7 @@ hr.small {
         height: 75%;
     }
 }
+
+.error{
+    color: red;
+}

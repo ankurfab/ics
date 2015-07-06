@@ -228,6 +228,8 @@ grails.resources.modules = {
         resource url:'/js/jquery.backstretch.min.js'
         resource url:'/css/select2.min.css'
         resource url:'/js/select2.full.min.js'
+        resource url:'/js/jquery.validate.min.js'
+        resource url:'/js/additional-methods.min.js'
     }
 
     jqui1114 {
