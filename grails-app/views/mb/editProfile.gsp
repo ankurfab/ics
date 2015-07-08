@@ -458,7 +458,7 @@
         <label for="houseIs">Above House is:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="houseIs"  class="required" from="${['Owned', 'Rented', 'Govt/Company povided', 'Others']}" value="${mbProfile?.houseIs}" noSelection="['':'Select One']"/>
+        <g:select name="houseIs"  class="required" from="${['Owned', 'Rented', 'Govt/Company provided', 'Others']}" value="${mbProfile?.houseIs}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="houseArea">Area of House:</label>

@@ -114,7 +114,7 @@ class MbService {
 			    helperService.updateAddress([id:candAddr?.id,individual:mbProfile.candidate,category:'PresentAddress',addressLine1:params.addrline1,addressLine2:'',addressLine3:'','cityname':params.city,'statename':params.state,pincode:params.pincode])
 		}
          } catch(Exception e){}
-        mbProfile.referrer=params.references
+        mbProfile.referrer=params.referrer
         def contactno = VoiceContact.findByIndividual(mbProfile.candidate)
         contactno?.number = params.contact
         contactno?.save()
@@ -151,7 +151,7 @@ class MbService {
 	try{         mbProfile.parentsChanting = params.parentsChanting } catch(Exception e){}
 	try{         mbProfile.parentsInitiation = params.parentsInitiation } catch(Exception e){}
 	try{         mbProfile.parentsSpMaster = org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.parentsSpMaster)} catch(Exception e){}
-	try{         mbProfile.yourFamily = params.youFamily } catch(Exception e){}
+	try{         mbProfile.yourFamily = params.yourFamily } catch(Exception e){}
 
         //step3
 	try{         mbProfile.eduCat = params.eduCat } catch(Exception e){}

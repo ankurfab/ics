@@ -27,7 +27,7 @@ class MbProfile {
 	referrerRelation(nullable: true, maxSize: 30)
 	manglik(nullable: true,maxSize: 20)
 	horoscopeToBeMatched(nullable: true, maxSize: 10)
-	houseIs(nullable: true, maxSize: 10)
+	houseIs(nullable: true, maxSize: 20)
 	houseArea(nullable: true)
 	otherProperty(nullable: true)
 	fatherIncome(nullable: true,maxSize: 30)

@@ -170,9 +170,17 @@ class MbController {
 		def retVal = MbService.updateProfile(params)
 		if (retVal>0) {
             if(params.formSubmit){
-                markProfileComplete()
-                flash.message = "Profile Submitted succesfully..."
-                redirect(action: "editProfile")
+                def img1 = Image.findByImageTypeAndEntityId('closePrim',mbProfile.id)
+                def img2 = Image.findByImageTypeAndEntityId('fullPrim',mbProfile.id)
+                if(img1 && img2) {
+                    markProfileComplete()
+                    flash.message = "Profile Submitted succesfully..."
+                    redirect(action: "editProfile")
+                }
+                else{
+                    flash.message = '<div class=\"message\" role=\"status\" style=\"color:red\">Either your closeup or full profile primary image is missing. Please upload these to be able to submit your profile.</div>'
+                    redirect(action: "editProfile")
+                }
             }
             else {
                 flash.message = "Profile updated succesfully..."
