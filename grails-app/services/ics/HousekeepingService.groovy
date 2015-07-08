@@ -1910,6 +1910,11 @@ def config = ConfigurationHolder.config
 			{
 			return individual
 			}
+		else 
+			return null
+			
+		//@TODO: For preserving golden master, below code is not needed
+		
 		//need to create a new one
 		individual = new Individual()
 		individual.legalName = name
@@ -2205,6 +2210,27 @@ def config = ConfigurationHolder.config
 		return false
 	}
 	
+    def loginChange(Object tokens) {
+	def message=""
+	def ind = Individual.findByLoginid(tokens[0])
+	def icsUser = IcsUser.findByUsername(tokens[0])
+	def newLogin = tokens[1]?.trim()?:''
+
+	if(ind && icsUser && newLogin) {
+		icsUser.username = newLogin
+		if(!icsUser.save())
+			icsUser.errors.allErrors.each {log.debug("loginChange:Exception in icsUser update:"+it)}
+		else {
+		ind.loginid = newLogin
+		if(!ind.save())
+			ind.errors.allErrors.each {log.debug("loginChange:Exception in ind loginid update:"+it)}
+		else
+			message = tokens[0]+"->"+newLogin+";"
+		}
+	}
+	
+	return message
+    }
 
 
 }

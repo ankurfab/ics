@@ -27,9 +27,10 @@
     jQuery("#feedback_list").jqGrid({
       url:'jq_feedback_list?eid='+$('#event').val(),
       datatype: "json",
-      colNames:['Name','Loginid','Regcode','Language','Date','TimeTaken','Score','Grade','Item1','Item2','Item3','Item4','Item5','Item6','Item7','Item8','Item9','Item10','Item11','Item12','Item13','Item14','Item15','Id'],
+      colNames:['Name','Gender','Loginid','Regcode','Language','Date','TimeTaken','Score','Grade','Item1','Item2','Item3','Item4','Item5','Item6','Item7','Item8','Item9','Item10','Item11','Item12','Item13','Item14','Item15','Id'],
       colModel:[
 	{name:'name', search:true,editable: false},
+	{name:'gender', search:true,editable: false},
 	{name:'loginid', search:true,editable: false},
 	{name:'regCode', search:true,editable: false},
 	{name:'language', search:true,editable: false,stype:'select', searchoptions: { value: ':ALL;English:English;Hindi:Hindi;Marathi:Marathi;Telugu:Telugu'}},

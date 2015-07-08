@@ -2468,6 +2468,13 @@ def jq_donation_list = {
 	}
 	
 
+	def acceptFromRecord() {
+		log.debug("Inside acceptFromRecord with params:"+params)
+		def num = 0
+		num = donationService.acceptFromRecord(params.idList)
+		render([message:num+" Acknowledgement Receipts accepted!!"] as JSON)
+	}
+	
     def uploadbulkdonation() {
 	    log.debug("Inside uploadbulkdonation")
 	    

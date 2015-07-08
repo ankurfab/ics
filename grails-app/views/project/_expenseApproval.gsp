@@ -98,6 +98,8 @@ text-align: center;
 
  <div class="page">
  
+<div id="barCode"></div>
+
  <div class="subpageTop">
  
   <fieldset>
@@ -252,3 +254,15 @@ text-align: center;
                     </div>   <!-- End of subpageBottom Div -->  
                 </div>    <!-- End of Page Div --> 
 </div>                    <!-- End of allBody Div --> 
+
+<script>
+$(document).ready(function()
+{
+	<g:if test="${projectInstance.advancePaymentVoucher}">
+	$("#barCode").barcode(
+		"${projectInstance.advancePaymentVoucher.voucherNo}", // Value barcode (dependent on the type of barcode)
+		"code39" // type (string)
+	);
+	</g:if>
+});
+</script>

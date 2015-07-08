@@ -2884,7 +2884,8 @@ def merge = {
 	mergedIndividual.legalName	 = housekeepingService.createUniqueString(individual1.legalName , individual2.legalName)
 	mergedIndividual.initiatedName	 = housekeepingService.createUniqueString(individual1.initiatedName , individual2.initiatedName)
 	mergedIndividual.sanyasName	 = housekeepingService.createUniqueString(individual1.sanyasName , individual2.sanyasName)
-	mergedIndividual.category	 = housekeepingService.createUniqueString(individual1.category , individual2.category)
+	//mergedIndividual.category	 = housekeepingService.createUniqueString(individual1.category , individual2.category)
+	mergedIndividual.category	 = 'NVCC' //@TODO: hardcoded
 	mergedIndividual.status	 = housekeepingService.createUniqueString(individual1.status , individual2.status)
 	mergedIndividual.ashram	 = housekeepingService.createUniqueString(individual1.ashram , individual2.ashram)
 	mergedIndividual.varna	 = housekeepingService.createUniqueString(individual1.varna , individual2.varna)
@@ -3518,15 +3519,30 @@ def selfContact() {
 	def individual = Individual.get(session.individualid)
 	def phone = VoiceContact.findAllByIndividualAndCategory(individual,'CellPhone').collect{it.number}.join(',')
 	def email = EmailContact.findAllByIndividualAndCategory(individual,'Personal').collect{it.emailAddress}.join(',')
-	[phone:phone,email:email]
+	def numLogins = AccessLog.createCriteria().get(){
+			eq('loginid',springSecurityService.principal.username)
+			projections {
+				rowCount('id')
+			}
+    		}
+    	
+
+	[phone:phone,email:email,numLogins:numLogins]
 }
 
 def selfContactUpdate() {
 	log.debug("selfContactUpdate:"+params) 
 	def individual = Individual.get(session.individualid)
 	individualService.contactUpdate(individual,params)
+	if(params.newLoginid) {
+		session.invalidate()
+		redirect(uri:'/') 	
+	}
+	else
+	{
 	flash.message = "Contacts updated..."
-	forward(action: "selfContact")	
+	forward(action: "selfContact")
+	}
 }
 
 
@@ -5012,6 +5028,19 @@ def updateCultivator = {
 			zipOutputStream << "\n"
 		}
 	}    	    	
+    }
+    
+    def createTempProfile() {[type:params.type]}
+    
+    def saveTempProfile() {
+    	params.individualid = session.individualid
+    	def person = individualService.saveTempProfile(params)
+    	if(person)
+	    	flash.message = person.name + " recorded successfully. Shortly the data would be verified by the DQ team and then the record would be visibile in the appropriate section!"
+	else
+		flash.message = "Some error occured while saving the record. Please contact admin!!"
+	redirect(action: "cleelist")
+	
     }
 
 

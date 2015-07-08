@@ -76,7 +76,7 @@
                                     <label for="scheme"><g:message code="donationRecord.scheme" default="Scheme" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: donationRecordInstance, field: 'scheme', 'errors')}">
-                                    <g:select name="scheme.id" from="${schemes}" optionKey="id" value="${donationRecordInstance?.scheme?.id}" noSelection="['null': '']" />
+                                    <g:select name="scheme.id" from="${schemes}" optionKey="id" value="${donationRecordInstance?.scheme?.id}" />
 
                                 </td>
                             </tr>
@@ -144,7 +144,7 @@
                                     <label for="mode"><g:message code="donationRecord.receiptReceivedStatus" default="Receipt Received Status" />:</label>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: donationRecordInstance, field: 'receiptReceivedStatus', 'errors')}">
-                                    <g:select name="receiptReceivedStatus" from="${['','NOTGENERATED','GENERATED','SENT','RECEIVED']}" value="${donationRecordInstance?.receiptReceivedStatus}" noSelection="['null': '']" />
+                                    <g:select name="receiptReceivedStatus" from="${['ACKONLY','NOTGENERATED']}" value="${donationRecordInstance?.receiptReceivedStatus}" />
 
                                 </td>
                             </tr>

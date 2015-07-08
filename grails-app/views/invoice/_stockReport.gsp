@@ -25,7 +25,7 @@
 			<td>${itemstock['SALES'][1]?:0}</td>
 			<g:set var="bq" value="${(itemstock['PURCHASE'][0]?:0) - (itemstock['SALES'][0]?:0)}" />
 			<td>${bq}</td>
-			<g:set var="bw" value="${new Double(bq*item.rate*(1+(((item.taxRate?:0))/100))).round(2)}" />
+			<g:set var="bw" value="${new Double(bq*(item.rate?:0)*(1+(((item.taxRate?:0))/100)))?.round(2)}" />
 			<td>${bw}</td>
 			<g:set var="totalPQ" value="${totalPQ+(itemstock['PURCHASE'][0]?:0)}" />
 			<g:set var="totalPW" value="${totalPW+(itemstock['PURCHASE'][1]?:0)}" />

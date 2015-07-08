@@ -18,7 +18,11 @@ class ProjectController {
     	def stats
     	stats = financeService.stats(springSecurityService?.principal.username?:'')
     	//log.debug("stats:"+stats)
-    	[stats:stats]
+    	if(!session.ProjectIndexFirstTime)
+    		session.ProjectIndexFirstTime = 'yes'
+    	else
+    		session.ProjectIndexFirstTime = 'no'
+    	[stats:stats,ProjectIndexFirstTime:session.ProjectIndexFirstTime]
     }
 
     // the delete, save and update actions only accept POST requests
@@ -196,8 +200,20 @@ class ProjectController {
             try {
                 Expense.findAllByProject(projectInstance).each{it.delete()}
                 projectInstance.status='APPROVED_REQUEST'
+                projectInstance.submitStatus='SUBMITTED_REQUEST'
                 if(!projectInstance.save())
                 	projectInstance.errors.allErrors.each {log.debug("Exception in deleteReport"+e)}
+                else {
+                	//in case of CREDIT project, change the status of the linked pps also
+                	if(projectInstance.type=='CREDIT') {
+                		Project.findAllByMainProject(projectInstance).each{pp->
+					pp.status='APPROVED_REQUEST'
+			                pp.submitStatus='SUBMITTED_REQUEST'
+					if(!pp.save())
+						pp.errors.allErrors.each {log.debug("Exception in deleteReport resetting pp status:"+e)}
+                		}
+                	}
+                }
                 flash.message = "Expense items deleted!!"
                 redirect(action: "index")
             }
@@ -408,7 +424,9 @@ def jq_project_list =
 			'in'('id',pidList)
 
    	   	if(SpringSecurityUtils.ifAllGranted('ROLE_CC_OWNER'))
-   	   	eq('costCenter',financeService.getCostCenter(session.individualid))
+   	   		eq('costCenter',financeService.getCostCenter(session.individualid))
+   	   	else if(SpringSecurityUtils.ifAllGranted('ROLE_CG_OWNER'))
+   	   		costCenter{costCenterGroup{owner{eq('loginid',springSecurityService?.principal.username)}}}
    	   	else if (params.costCenter)
     	   		costCenter{eq('id', new Long(params.costCenter))}
     	   
@@ -1072,7 +1090,7 @@ def jq_project_list =
 
 	def validSelection=false
 	if(!editScenario) {
-		if(creditProjects.size()==1 && projects.size()==0) {
+		if(creditProjects.size()==1 && ppProjects.size()>0 && projects.size()==0) {
 			projectInstance = creditProjects[0]
 			log.debug("Vendors before unq:"+vendors)
 			vendors.unique { a, b -> a <=> b }
@@ -2441,7 +2459,7 @@ def jq_approvedProject_list =
         
 	def reportMonthlyExpensesVC() {
 		response.contentType = 'application/zip'
-		def query = "select ccat.name costcategory,cc.name ccname, year(p.submit_date) expyear,month(p.submit_date) expmonth, l.name ledgerhead, sum(e.amount) expamount from project p, cost_center cc, cost_category ccat, expense e, ledger_head l where p.cost_center_id=cc.id and cc.cost_category_id=ccat.id and e.project_id=p.id and e.ledger_head_id=l.id and e.status='VOUCHER_CREATED' group by ccat.name, cc.name, year(p.submit_date),month(p.submit_date),l.name"
+		def query = "select ccat.name costcategory,cc.name ccname, year(p.submit_date) expyear,month(p.submit_date) expmonth, l.name ledgerhead, sum(e.amount) expamount,p.ref,p.type,p.status,v.type voucher_type,v.voucher_no,v.status voucher_status from project p, cost_center cc, cost_category ccat, expense e, ledger_head l,voucher v where p.cost_center_id=cc.id and cc.cost_category_id=ccat.id and e.project_id=p.id and e.ledger_head_id=l.id and e.status='VOUCHER_CREATED' and e.payment_voucher_id=v.id group by ccat.name, cc.name, year(p.submit_date),month(p.submit_date),l.name union select ccat.name costcategory,cc.name ccname, year(p.submit_date) expyear,month(p.submit_date) expmonth, '' ledgerhead, sum(p.advance_amount_issued) expamount,p.ref,p.type,p.status,v.type voucher_type,v.voucher_no,v.status voucher_status from project p, cost_center cc, cost_category ccat, voucher v where p.cost_center_id=cc.id and cc.cost_category_id=ccat.id and p.status not in ('APPROVED_REPORT','SETTLED_REPORT') and p.advance_payment_voucher_id=v.id group by ccat.name, cc.name, year(p.submit_date),month(p.submit_date)"
 		def sql = new Sql(dataSource)
 		new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
 			def fileName = "month_wise_expenses_vc_"+new Date().format('ddMMyyHHmmss')+".csv"
@@ -2636,6 +2654,43 @@ def jq_approvedProject_list =
 		render jsonData as JSON
         }
         
+	def jq_budgetupload_list = {
+		def sortIndex = "id"
+		def sortOrder  = params.sord ?: 'desc'
+
+		def maxRows = Integer.valueOf(params.rows)
+		def currentPage = Integer.valueOf(params.page) ?: 1
+
+		def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+		def result = AttributeValue.createCriteria().list(max:maxRows, offset:rowOffset) {
+			eq('objectClassName','CostCenter')
+			eq('objectId',new Long(params.ccid?:0))
+			attribute{
+				eq('name','BudgetAuditTrail')
+				or{
+					eq('type','InitialBudgetUploadAuditTrail')
+					eq('type','UnsettledExpenseBudgetUploadAuditTrail')
+				}
+				}		
+			order(sortIndex, sortOrder)
+		}
+
+		def totalRows = result.totalCount
+		def numberOfPages = Math.ceil(totalRows / maxRows)
+
+		def jsonCells = result.collect {
+			[cell: [
+				it.dateCreated.format('dd-MM-yyyy HH:mm:ss'),
+				it.creator,
+				it.value,
+			    ], id: it.id]
+		}
+					
+		def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+		render jsonData as JSON
+        }
+
 	def jq_manualupdates_list = {
 		def sortIndex = "id"
 		def sortOrder  = params.sord ?: 'desc'
@@ -2812,6 +2867,85 @@ def jq_approvedProject_list =
 		render jsonData as JSON
         }
         
+	def jq_donationRecordsummary_list = {
+		def sortIndex = "id"
+		def sortOrder  = params.sord ?: 'desc'
+
+		def maxRows = Integer.valueOf(params.rows)
+		def currentPage = Integer.valueOf(params.page) ?: 1
+
+		def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+		def cc = CostCenter.get(params.ccid?:-1)
+		if(cc && !cc.isServiceCenter)
+			cc = null
+
+		def now = new Date()
+		def result = DonationRecord.createCriteria().list() {
+			eq('receiptReceivedStatus','ACCEPTED')
+			//eq('donationDate',Date.parse('MM-yyyy', currentMonth))
+			scheme{eq('cc',cc)}
+			createAlias('mode','mode')
+			projections{
+				groupProperty("mode.name", 'mode.name')
+				sum("amount")
+			}
+			sqlRestriction "month(donation_date) = "+((now.month).toInteger()+(1*1).toInteger())*1
+		}
+		
+		def totalRows = 1
+		def numberOfPages = Math.ceil(totalRows / maxRows)
+
+		def jsonCells = result.collect {
+		[cell: [
+			it[0],
+			it[1]
+		    ], id: -1]
+		}
+					
+		def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+		render jsonData as JSON
+        }
+
+	def jq_donationRecords_list = {
+		def sortIndex = "id"
+		def sortOrder  = params.sord ?: 'desc'
+
+		def maxRows = Integer.valueOf(params.rows)
+		def currentPage = Integer.valueOf(params.page) ?: 1
+
+		def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+
+		def cc = CostCenter.get(params.ccid?:-1)
+		if(cc && !cc.isServiceCenter)
+			cc = null
+		def now = new Date()
+		def result = DonationRecord.createCriteria().list(max:maxRows, offset:rowOffset) {
+			scheme{eq('cc',cc)}
+			eq('receiptReceivedStatus','ACCEPTED')
+			sqlRestriction "month(donation_date) = "+((now.month).toInteger()+(1*1).toInteger())*1
+			order(sortIndex, sortOrder)
+		}
+
+		def totalRows = result.totalCount
+		def numberOfPages = Math.ceil(totalRows / maxRows)
+
+		def jsonCells = result.collect {
+		[cell: [
+			it.reference,
+			it.amount,
+			it.mode?.name,
+			it.dateCreated?.format('dd-MM-yyyy'),
+			it.donationDate?.format('dd-MM-yyyy'),
+			it.rbno,
+			it.rno
+		    ], id: it.id]
+		}
+					
+		def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+		render jsonData as JSON
+        }
+
         def locks(){}
         
         def updateLocks() {
