@@ -93,10 +93,17 @@ class MbController {
 	    dataService.storeHeader('TempMbProfile',params.keySet())
 	    def objId = System.currentTimeMillis()
         def result = AttributeValue.createCriteria().list{
-            eq("objectClassName",'TempMbProfile')
+            attribute{
+            	eq('domainClassName','TempMbProfile')
+            	eq('name','donorContact')
+            }
             eq("value",params.donorContact)
         }
         def result1 = AttributeValue.createCriteria().list{
+            attribute{
+            	eq('domainClassName','TempMbProfile')
+            	eq('name','donorEmail')
+            }
             eq("value",params.donorEmail)
         }
         if(result.isEmpty() && result1.isEmpty()) {

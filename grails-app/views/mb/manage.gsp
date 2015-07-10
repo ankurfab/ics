@@ -81,7 +81,7 @@
 			{
 			name: 'photo',
 			formatter: function (cellvalue, options, rowObject) {
-				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>'; 
+				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?imgType=closePrim&entity=mbProfile&entityId='+rowObject[0]+'"/>';
 				}
 			},				
 			{name:'icsid', search:true},

@@ -24,10 +24,9 @@
     <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
         <g:if test="${mbProfile?.profileStatus == 'SUBMITTED'}">
             <g:hiddenField name="finishShow" id="finishShow" value="false"/>
+            <span class="menuButton"><a href="javascript:void(0);" onclick='$( "#MarkIncomleteForm" ).dialog("open")' class="create">Mark Incomplete</a></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
-                                             params="['status': 'INCOMPLETE']">Mark InComplete</g:link></span>
-            <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
-                                             params="['status': 'COMPLETE']">Mark Completed</g:link></span>
+                                             params="['status': 'COMPLETE']">Mark Complete</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
                                              params="['status': 'REJECTED']">Mark Rejected</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
@@ -43,6 +42,12 @@
     </g:if>
 </div>
 
+<div id="MarkIncomleteForm" title="Reason for marking incomplete">
+    <div id="msgWrap">
+        <g:hiddenField name="id" value="${mbProfile?.id}"/>
+        <textarea id="msgArea"></textarea>
+    </div>
+</div>
 
 <g:form action="updateProfile" name="mainForm">
 <g:hiddenField name="id" value="${mbProfile?.id}"/>
@@ -1705,6 +1710,35 @@
             enableAllSteps : true,
             labelFinish: 'Save',
             onFinish: onFinishCallback
+        });
+
+
+        $( "#MarkIncomleteForm" ).dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: {
+                "Done": function() {
+                    var url = "${createLink(controller:'Mb',action:'updateProfileStatus')}";
+
+                    // post data
+                    $.post(url, {
+                        mbMessage: $('#msgArea').val(),
+                        id: $('#id').val(),
+                        status: 'INCOMPLETE'
+                        } , function(returnData){
+                        //alert(returnData);
+                        $( "#MarkIncomleteForm" ).dialog( "close" )
+                    });
+
+                    $( this ).dialog( "close" );
+                },
+                "Cancel": function() {
+                    $( this ).dialog( "close" );
+                }
+            },
+            close: function() {
+
+            }
         });
 
         setTimeout(function(){

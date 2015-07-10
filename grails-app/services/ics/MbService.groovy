@@ -290,8 +290,8 @@ class MbService {
     		return "Profile not found!!"	//MbProfile not found
     		
     	//check for ownership of profile..i.e. who can modify the status
-    	//admin can modify for any centre but sec only for theire centre
-    	def allow = false
+    	//admin can modify for any centre but sec only for their centre
+    	def allow = true
     	if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
     		def secCentre = Individual.findByLoginid(username)?.iskconCentre
     		if(secCentre && secCentre==mbProfile.referrerCenter)
@@ -303,8 +303,16 @@ class MbService {
     	//now update the fields
     	mbProfile.profileStatus = params.status
     	
-    	if(mbProfile.profileStatus=='COMPLETE')
-		mbProfile.workflowStatus='UNASSIGNED'
+    	if(mbProfile.profileStatus=='COMPLETE'){
+            mbProfile.workflowStatus='UNASSIGNED'
+            def contentParams = []
+            commsService.sendComms('MarriageBoard', "PROFILE_MARK_COMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
+        }
+        else if(mbProfile.profileStatus=='INCOMPLETE'){
+            def contentParams = [params.mbMessage]
+            commsService.sendComms('MarriageBoard', "PROFILE_MARK_INCOMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
+        }
+
 	
 	mbProfile.updator = username
 	if(!mbProfile.save()) {
