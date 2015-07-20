@@ -168,10 +168,10 @@
                          value="${mbProfile?.candCounsellor}"/>
     </td>
     <td valign="top" class="name">
-        <label for="counselorAshram">Counselor is a:</label>
+        <label for="counselorAshram">Counselor is a:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="counselorAshram" from="${['NA', 'Grihastha', 'Brahmacari']}"
+        <g:select name="counselorAshram" from="${['NA', 'Grihastha', 'Brahmacari']}" class="required"
                   value="${mbProfile?.candCounsellorAshram}" noSelection="['':'Select One']"/>
     </td>
 </tr>
@@ -397,7 +397,7 @@
         <label for="personalInfo">Any Personal or Important information you would like us to know:</label>
     </td>
     <td colspan="4" valign="top" class="value">
-        <g:textArea name="personalInfo"
+        <g:textArea name="personalInfo" maxlength="500"
                     placeholder="Enter any Personal information you would like us to know as a Marriage board"
                     value="${mbProfile?.personalInfo}"/>
         <span style="display:block;text-align: center">0-500 Characters</span>
@@ -935,10 +935,10 @@
                     <g:select name="numberOfRounds" placeholder="Enter number of rounds chanting currently" class="required"
                               from="${0..16}"  value="${mbProfile?.numberOfRounds}" noSelection="['':'Select One']"/>
                 </td>
-                <td valign="top" class="name">
+                <td valign="top" class="name chantingSixteenSince">
                     <label for="chantingSixteenSince">Chanting 16 rounds since:</label><span class="mand">*</span>
                 </td>
-                <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
+                <td valign="top" class="chantingSixteenSince value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
                     <g:select name="chantingSixteenSince" from="${1965..2099}" class="required" value="${mbProfile?.chantingSixteenSince}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
@@ -1477,7 +1477,7 @@
                     <g:form name="closeUpPrimForm" action="uploadImage" method="post"
                             enctype="multipart/form-data">
                         <g:hiddenField name="imgType" value="closePrim"/>
-                        <label><b>Close Up (Primary)</b></label><br><br>
+                        <label><b>Close Up (Primary)</b></label><span class="mand">*</span><br><br>
                         <input type="file" name="closeUpPrimInput" id="closeUpPrimInput"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
@@ -1509,7 +1509,7 @@
                     <g:form name="fullPrimForm" action="uploadImage" method="post"
                             enctype="multipart/form-data">
                         <g:hiddenField name="imgType" value="fullPrim"/>
-                        <label><b>Full Profile (Primary)</b></label><br><br>
+                        <label><b>Full Profile (Primary)</b></label><span class="mand">*</span><br><br>
                         <input type="file" name="fullPrimInput" id="fullPrimInput"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
@@ -1747,6 +1747,7 @@
             else
                 $('.buttonFinish').hide();
         },0);
+
         $('.multiple').multiselect({
             noneSelectedText: 'Select One/More option',
             menuWidth: 225,
@@ -1754,6 +1755,17 @@
             uncheckAllText: 'Select None',
             selectedList: 40
         });
+
+        $('#numberOfRounds').change(function(){
+           if($(this).val() == 16 ){
+               $('.chantingSixteenSince').show();
+               $('#chantingSixteenSince').addClass('required');
+           }
+            else{
+               $('#chantingSixteenSince').val('Select One').removeClass('required');
+               $('.chantingSixteenSince').hide();
+           }
+        }).trigger('change');
 
         initSliders();
 
