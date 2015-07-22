@@ -1824,26 +1824,26 @@
             yearRange: '1975:2050',
             dateFormat: 'dd/mm/yy',
             minDate: new Date(1975, 10 - 1, 25)
+        }).change(function(){
+            var birthDate = $(this).datepicker('getDate');
+            var nowDate = new Date();
+            $("#firstInitiation,#secondInitiation").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                maxDate: nowDate,
+                minDate: birthDate,
+                dateFormat: 'dd/mm/yy'
+            });
+            $('#introductionYear,#regularSince,#chantingSince,#regulatedSince,#chantingSixteenSince').empty().append($('<option />').val('').html('Select One'));
+            for(var i = birthDate.getFullYear();i <= nowDate.getFullYear(); i++){
+                $('#introductionYear,#regularSince,#chantingSince,#regulatedSince,#chantingSixteenSince').append($('<option />').val(i).html(i));
+            }
         });
         $('#tob').timepicker({
             timeFormat: 'hh:mm:ss',
             controlType: 'select',
             showSecond: true,
             showButtonPanel: false
-        });
-        $("#firstInitiation").datepicker({
-            changeMonth: true,
-            changeYear: true,
-            yearRange: '1975:2050',
-            dateFormat: 'dd/mm/yy',
-            minDate: new Date(1965,10 - 1, 25)
-        });
-        $("#secondInitiation").datepicker({
-            changeMonth: true,
-            changeYear: true,
-            yearRange: '1975:2050',
-            dateFormat: 'dd/mm/yy',
-            minDate: new Date(1975, 10 - 1, 25)
         });
 
         $("#isMale").change(function(){
