@@ -119,13 +119,14 @@
 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'initiatedName', 'errors')}">
     <g:textField name="initiatedName" maxlength="40" placeholder="Enter Initiated Name here" pattern=".{10,}"
                  value="${mbProfile?.candidate?.initiatedName}"/>
+    <div>&nbsp;&nbsp;&nbsp;(Blank if not initiated)</div>
 </td>
 <td valign="top" class="name">
     <label for="isMale">Gender:</label><span class="mand">*</span>
 </td>
 <!-- Checking for adding comments -->
 <td valign="top" class="value">
-    <g:select name="isMale" required="required" from="${['FEMALE','MALE']}" value="${mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE'}"/>
+    <g:select name="isMale" required="required" from="${['FEMALE','MALE']}" value="${mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE'}" noSelection="['':'Select One']"/>
 </td>
 </tr>
 <tr class="prop">
@@ -822,7 +823,7 @@
                     <label for="companyName">Organisation Name:</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="companyName" placeholder="Enter Company Name here"
+                    <g:textField name="companyName" placeholder="Enter Company Name here" maxlength="60"
                                  value="${mbProfile?.companyName}"/>
                 </td>
             </tr>
@@ -831,7 +832,7 @@
                     <label for="designation">Designation:</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="designation" placeholder="Enter your current designation here"
+                    <g:textField name="designation" placeholder="Enter your current designation here" maxlength="30"
                                  value="${mbProfile?.designation}"/>
                 </td>
             </tr>
@@ -888,13 +889,13 @@
                     <label for="introductionYear">Year of Introduction to KC:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="introductionYear" from="${1965..2099}" class="required" value="${mbProfile?.introductionYear}" noSelection="['':'Select One']"/>
+                    <g:select name="introductionYear" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" class="required" value="${mbProfile?.introductionYear}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="introductionCentre">Introduced in which<br> Temple/ Centre:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="introductionCentre" placeholder="Enter ISKCON Centre Name here" required="required"
+                    <g:textField name="introductionCentre" placeholder="Enter ISKCON Centre Name here" required="required" maxlength="30"
                                  value="${mbProfile?.introductionCentre}"/>
                 </td>
                 <td valign="top" class="name">
@@ -911,14 +912,14 @@
                     <label for="currentlyVisiting">Which ISKCON Temple<br>do you regularly visit:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="currentlyVisiting" placeholder="Enter ISKCON Centre Name here of connectivity " required="required"
+                    <g:textField name="currentlyVisiting" placeholder="Enter ISKCON Centre Name here of connectivity " required="required" maxlength="30"
                                  value="${mbProfile?.currentlyVisiting}"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="regularSince">Since when are you<br>associated regularly with KC:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="regularSince" class="required" from="${1965..2099}" value="${mbProfile?.regularSince}" noSelection="['':'Select One']"/>
+                    <g:select name="regularSince" class="required" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" value="${mbProfile?.regularSince}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
@@ -926,7 +927,7 @@
                     <label for="chantingSince">Chanting since:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
-                    <g:select name="chantingSince" class="required" from="${1965..2099}" value="${mbProfile?.chantingSince}" noSelection="['':'Select One']"/>
+                    <g:select name="chantingSince" class="required" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" value="${mbProfile?.chantingSince}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="numberOfRounds">No.of Rounds currently<br>Chanting(Daily):</label><span class="mand">*</span>
@@ -939,7 +940,7 @@
                     <label for="chantingSixteenSince">Chanting 16 rounds since:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="chantingSixteenSince value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
-                    <g:select name="chantingSixteenSince" from="${1965..2099}" class="required" value="${mbProfile?.chantingSixteenSince}" noSelection="['':'Select One']"/>
+                    <g:select name="chantingSixteenSince" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" class="required" value="${mbProfile?.chantingSixteenSince}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
@@ -977,7 +978,7 @@
                     <label for="regulatedSince">If yes, since when:</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="regulatedSince" from="${1965..2099}" value="${mbProfile?.regulatedSince}" noSelection="['':'Select One']"/>
+                    <g:select name="regulatedSince" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" value="${mbProfile?.regulatedSince}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="teacoffee">Do you take<br>tea/coffee:</label>
@@ -1827,17 +1828,25 @@
         }).change(function(){
             var birthDate = $(this).datepicker('getDate');
             var nowDate = new Date();
-            $("#firstInitiation,#secondInitiation").datepicker({
+            $("#firstInitiation,#secondInitiation").datepicker('destroy').datepicker({
                 changeMonth: true,
                 changeYear: true,
                 maxDate: nowDate,
                 minDate: birthDate,
+                yearRange: birthDate.getFullYear() + ':' + nowDate.getFullYear(),
                 dateFormat: 'dd/mm/yy'
             });
             $('#introductionYear,#regularSince,#chantingSince,#regulatedSince,#chantingSixteenSince').empty().append($('<option />').val('').html('Select One'));
             for(var i = birthDate.getFullYear();i <= nowDate.getFullYear(); i++){
                 $('#introductionYear,#regularSince,#chantingSince,#regulatedSince,#chantingSixteenSince').append($('<option />').val(i).html(i));
             }
+        });
+        $("#firstInitiation,#secondInitiation").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            maxDate: new Date(),
+            minDate: $('#dob').datepicker('getDate') || new Date(),
+            dateFormat: 'dd/mm/yy'
         });
         $('#tob').timepicker({
             timeFormat: 'hh:mm:ss',

@@ -98,7 +98,7 @@
                             <g:set var="attr" value="${ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','Centre','Config')}" />
                             <g:set var="centres" value="${ics.AttributeValue.findAllByAttribute(attr)?.collect{it.value}}" />
                             <div class="form-group">
-                                <g:select id="refCentre" style="width: 100%;height: 50px" name="refCentre" from="${centres}" noSelection="['':'Centre...']" class="required"/>
+                                <g:select id="refCentre" style="width: 100%;height: 50px" name="refCentre" from="${centres}" noSelection="['':'Referrer Centre...']" class="required"/>
                             </div>
                             <div class="form-group input-group">
                                 <input type="tel" name="refContact" required="required" placeholder="Referrer Contact Number..." class="form-control" id="refContact" pattern="[0-9]{10,10}" maxlength="10">
@@ -109,7 +109,7 @@
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group">
-                                <g:select id="refReln" style="width: 100%;height: 50px" name="refReln" from="${['Counsellor/Mentor','Spiritual Master','Friend','Relative','Acquaintance']}" noSelection="['':'Relationship to Candidate...']" class="required"/>
+                                <g:select id="refReln" style="width: 100%;height: 50px" name="refReln" from="${['Counsellor/Mentor','Spiritual Master','Friend','Relative','Acquaintance']}" noSelection="['':'Referrer Relationship to Candidate...']" class="required"/>
                             </div>
                             <button type="submit" class="btn btn-success">Register</button>
                         </g:form>
