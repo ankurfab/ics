@@ -72,7 +72,7 @@ class MbProfile {
         prefSpMaster(nullable: true,maxSize: 500)
         flexibleSpMaster(nullable: true)
         otherPreference(nullable: true)
-        prefCentre(nullable: true,maxSize: 100)
+        prefCentre(nullable: true,maxSize: 500)
         flexibleCentre(nullable: true)
         prefNationality(nullable: true, maxSize: 40)
         flexibleNationality(nullable: true)

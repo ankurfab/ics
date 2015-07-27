@@ -56,6 +56,8 @@
 <input type="submit" hidden="hidden" name="formSubmitSilent" id="formSubmitSilent"/>
 <input type="submit" hidden="hidden" name="formSubmit" id="formSubmit"/>
 <g:set var="candAddr" value="${ics.Address.findByIndividualAndCategory(mbProfile.candidate,'PresentAddress')}"/>
+<g:set var="iskconCentres" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','iskcon_centre','Config'))?.collect{it.value}}" />
+<g:set var="spiritualMasters" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','sp_master','Config'))?.collect{it.value}}" />
 
 <table align="center" border="0" cellpadding="0" cellspacing="0">
 <tr><td> 
@@ -158,8 +160,8 @@
         <label for="iskconCentre">ISKCON Centre:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="iskconCentre" placeholder="Enter ISKCON Centre Name here" required="required"
-                     value="${mbProfile?.candidate?.iskconCentre}"/>
+        <g:select name="iskconCentre" from="${iskconCentres}" class="required"
+                  value="${mbProfile?.candidate?.iskconCentre}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="counselor">Counselor / Mentor:</label><span class="mand">*</span>
@@ -895,8 +897,8 @@
                     <label for="introductionCentre">Introduced in which<br> Temple/ Centre:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="introductionCentre" placeholder="Enter ISKCON Centre Name here" required="required" maxlength="30"
-                                 value="${mbProfile?.introductionCentre}"/>
+                    <g:select name="introductionCentre" from="${iskconCentres}" class="required"
+                              value="${mbProfile?.introductionCentre}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="frequencyOfTempleVisits">Frequency of <br>visiting the Temple:</label><span class="mand">*</span>
@@ -912,8 +914,8 @@
                     <label for="currentlyVisiting">Which ISKCON Temple<br>do you regularly visit:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="currentlyVisiting" placeholder="Enter ISKCON Centre Name here of connectivity " required="required" maxlength="30"
-                                 value="${mbProfile?.currentlyVisiting}"/>
+                    <g:select name="currentlyVisiting" from="${iskconCentres}" class="required"
+                              value="${mbProfile?.currentlyVisiting}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="regularSince">Since when are you<br>associated regularly with KC:</label><span class="mand">*</span>
@@ -949,8 +951,8 @@
                 </td>
                 <td valign="top" class="value">
                     <g:select name="spiritualMaster"
-                              from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
-                              value="${mbProfile?.spiritualMaster}"/>
+                              from="${spiritualMasters}"
+                              value="${mbProfile?.spiritualMaster}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="firstInitiation">Date of 1st Initiation:</label>
@@ -1127,7 +1129,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefSpMaster" class="multiple" multiple="multiple"
-                  from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
+                  from="${spiritualMasters}"
                   value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefSpMaster).toList()}"/>
     </td>
     <td valign="top" class="name">
@@ -1145,7 +1147,8 @@
         <label for="prefCentre">Preferred Centre:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="prefCentre" placeholder="Enter ISKCON Centre Name here" value="${mbProfile?.prefCentre}"/>
+        <g:select name="prefCentre" from="${iskconCentres}" class="required multiple" multiple="multiple"
+                  value="${mbProfile?.prefCentre}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="flexibleOnCentre">I am flexible  on Centre:</label>
