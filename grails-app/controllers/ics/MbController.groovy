@@ -923,7 +923,7 @@ def showImage = {
     def fullProfile() {
     	log.debug("Inside fullProfile:"+params)
     	def match = MbProfileMatch.get(params.matchid)
-    	if(match && match.mbStatus=='FULLPROFILE' && match.candidate.candidate.loginid==springSecurityService.principal.username) {
+    	if(match && match.mbStatus=='FULLPROFILE') {
             render(template: "fullProfile", model: [profile: match.prospect])
     	}
     	else

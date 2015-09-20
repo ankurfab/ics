@@ -511,7 +511,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="parentsSpMaster" class="multiple" multiple="multiple"
-                  from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
+                  from="${spiritualMasters}"
                   value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.parentsSpMaster).toList()}"/>
     </td>
 </tr>
@@ -1147,7 +1147,7 @@
         <label for="prefCentre">Preferred Centre:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefCentre" from="${iskconCentres}" class="required multiple" multiple="multiple"
+        <g:select name="prefCentre" from="${iskconCentres}" class="multiple" multiple="multiple"
                   value="${mbProfile?.prefCentre}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
@@ -1524,7 +1524,7 @@
                 </td>
                 <td valign="top" class="value">
                     <div style="text-align: center"><img id="fullSec" name="fullSec" class="avatar"
-                         src="${createLink(action: 'showImage', params: ['imgType': 'fullSec', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                         src="${createLink(action: 'showImage', params: ['imgType': '`', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
                     <g:form name="fullSecForm" action="uploadImage" method="post"
                             enctype="multipart/form-data">
                         <g:hiddenField name="imgType" value="fullSec"/>
