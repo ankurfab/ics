@@ -1298,7 +1298,9 @@ def showImage = {
     def forgotPassword ()    {
 
     }
-    def activityStream() {}    
+    def activityStream() {}
+    
+    def resources() {}
 
     
 }

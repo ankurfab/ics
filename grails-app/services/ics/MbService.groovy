@@ -278,6 +278,7 @@ class MbService {
     }
     
     def updateProfileStatus(Map params) {
+         log.debug("updateProfileStatus:"+params)
          def username=''
          try{
 		 username = springSecurityService.principal.username
@@ -291,12 +292,15 @@ class MbService {
     		
     	//check for ownership of profile..i.e. who can modify the status
     	//admin can modify for any centre but sec only for their centre
-    	def allow = true
+    	def allow = false
     	if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
     		def secCentre = Individual.findByLoginid(username)?.iskconCentre
     		if(secCentre && secCentre==mbProfile.referrerCenter)
     			allow = true
+    	} else if(SpringSecurityUtils.ifAllGranted('ROLE_MB_ADMIN')) {
+    		allow = true
     	}
+    	
     	if(!allow)
     		return "Can not review as profile from other centre."
     	
@@ -305,11 +309,11 @@ class MbService {
     	
     	if(mbProfile.profileStatus=='COMPLETE'){
             mbProfile.workflowStatus='UNASSIGNED'
-            def contentParams = []
+            def contentParams = [mbProfile.candidate?.toString()]
             commsService.sendComms('MarriageBoard', "PROFILE_MARK_COMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
         }
         else if(mbProfile.profileStatus=='INCOMPLETE'){
-            def contentParams = [params.mbMessage]
+            def contentParams = [mbProfile.candidate?.toString(),params.mbMessage,mbProfile.candidate?.loginid]
             commsService.sendComms('MarriageBoard', "PROFILE_MARK_INCOMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
         }
 
@@ -669,7 +673,7 @@ class MbService {
     		}
     	def map = [:]
     	result.each{map.put(it[0],it[1])}
-    	log.debug('ProfileStats:'+map)
+    	//log.debug('ProfileStats:'+map)
     	stats.put('ProfileStats',map)
     	
     	//workflow stats
@@ -681,7 +685,7 @@ class MbService {
     		}
     	def wmap = [:]
     	result.each{wmap.put(it[0],it[1])}
-    	log.debug('WorkflowStats:'+wmap)
+    	//log.debug('WorkflowStats:'+wmap)
     	stats.put('WorkflowStats',wmap)
 
     	//last 10 logins    	
@@ -696,14 +700,14 @@ class MbService {
             	llist.add(rowMap)
         	}
         
-    	log.debug('LoginStats:'+llist)
+    	//log.debug('LoginStats:'+llist)
     	stats.put('LoginStats',llist)
 
     	//match stats
     	result = MbProfileMatch.createCriteria().list(max:10){
     			order('id','desc')
     		}
-    	log.debug('MatchStats:'+result)
+    	//log.debug('MatchStats:'+result)
     	stats.put('MatchStats',result)
     	
     	sql.close()
