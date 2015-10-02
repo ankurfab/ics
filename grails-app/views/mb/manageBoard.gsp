@@ -13,7 +13,7 @@
         </div>
         <div class="body">
             <div>
-			<!-- table tag will hold our grid -->
+			<!--    table tag will hold our grid -->
 			<table id="mb_list" class="scroll jqTable" cellpadding="0" cellspacing="0"></table>
 			<!-- pager will hold our paginator -->
 			<div id="mb_list_pager" class="scroll" style="text-align:center;"></div>

@@ -564,29 +564,16 @@ def showImage = {
                 it.prospect.id,
                 it.candidateStatus,
                 it.prospect?.workflowStatus,
-                //it.lastUpdated?.format('dd-MM-yyyy HH:mm:ss'),
                 it.prospect?.candidate?.legalName,
-                //it.prospect?.candidate?.initiatedName,
                 it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
                 it.prospect?.candidate?.pob,
                 it.prospect?.candidate?.dob?.format('HH:mm:ss'),
-                //it.prospect?.candidate?.iskconCentre,
-                //it.prospect.candCounsellor,
-                //it.prospect?.candidate?.origin,
-                //it.prospect?.candidate?.varna,
-                //it.prospect.scstCategory,
                 it.prospect.candidate?.caste,
-                //it.prospect.candidate?.subCaste,
                 it.prospect.candidate?.height,
-                //it.prospect.candidate?.motherTongue,
                 it.prospect.candidate?.income,
-                //it.prospect.eduCat,
-                //it.prospect.eduQual,
-                //it.prospect.regulated,
-                //it.prospect.numberOfRounds,
-                //it.prospect.chantingSixteenSince,
                 it.candidateStatus,
-                it.mbStatus
+                it.mbStatus,
+                it.id
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
@@ -613,13 +600,12 @@ def showImage = {
             	    it.prospect.id,
             	    it.prospect?.candidate?.toString(),
             	    it.prospect?.workflowStatus,
-            	    it.stage,
             	    it.candidateStatus,
             	    it.candidateReason,
-            	    it.candidateDate?.format('dd-MM-yyyy HH:mm-ss'),
+            	    it.candidateDate?.format('dd-MM-yyyy HH:mm:ss'),
             	    it.mbStatus,
             	    it.mbReason,
-            	    it.mbDate?.format('dd-MM-yyyy HH:mm-ss')            	    
+            	    it.mbDate?.format('dd-MM-yyyy HH:mm:ss')
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
@@ -676,7 +662,7 @@ def showImage = {
 	render([status:"OK"] as JSON)    	
     }
     
-    def propose() {
+    /*def propose() {
     log.debug("proposing.."+params)
 	mbService.propose(params)
 	render([status:"OK"] as JSON)    	
@@ -686,76 +672,154 @@ def showImage = {
     	log.debug("announcing.."+params)
 	mbService.announce(params)
 	render([status:"OK"] as JSON)    	
-    }
+    }*/
 
     def prospects() {
     }
     
     def prospectsNextStep() {
     	def match = MbProfileMatch.get(params.matchid)
-    	switch(params.status) {
-    		case 'MEET_PROSPECT':
-    			match.candidateStatus='MEET_PROSPECT'
-    			match.candidateReason=''
-    			//check from the other party
-    			def otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
-    			if(otherMatch && otherMatch.candidateStatus=='MEET_PROSPECT') {
-    				//update workflow status for both
-    				match.candidate.workflowStatus = 'BOYGIRLMEET'
-    				if(!match.candidate.save())
-    					match.candidate.errors.allErrors.each {log.debug("BOYGIRLMEET:"+it)}
-    				otherMatch.candidate.workflowStatus = 'BOYGIRLMEET'
-    				if(!otherMatch.candidate.save())
-    					otherMatch.candidate.errors.allErrors.each {log.debug("BOYGIRLMEET:"+it)}
-    			}    				
-    			break
-    		case 'MEET_PARENT':
-    			match.candidateStatus='MEET_PARENT'
-    			match.candidateReason=''
-    			//check from the other party
-    			def otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
-    			if(otherMatch && otherMatch.candidateStatus=='MEET_PARENT') {
-    				//update workflow status for both
-    				match.candidate.workflowStatus = 'PARENTSMEET'
-    				if(!match.candidate.save())
-    					match.candidate.errors.allErrors.each {log.debug("PARENTSMEET:"+it)}
-    				otherMatch.candidate.workflowStatus = 'PARENTSMEET'
-    				if(!otherMatch.candidate.save())
-    					otherMatch.candidate.errors.allErrors.each {log.debug("PARENTSMEET:"+it)}
-    			}    				
-    			break
-    		case 'AGREE_PROPOSAL':
-    			match.candidateStatus='AGREE_PROPOSAL'
-    			match.candidateReason=''
-    			//check from the other party
-    			def otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
-    			if(otherMatch && otherMatch.candidateStatus=='AGREE_PROPOSAL') {
-    				//update workflow status for both
-    				match.candidate.workflowStatus = 'PROPOSALAGREED'
-    				if(!match.candidate.save())
-    					match.candidate.errors.allErrors.each {log.debug("PROPOSALAGREED:"+it)}
-    				otherMatch.candidate.workflowStatus = 'PROPOSALAGREED'
-    				if(!otherMatch.candidate.save())
-    					otherMatch.candidate.errors.allErrors.each {log.debug("PROPOSALAGREED:"+it)}
-    			}    				
-    			break
-    		case 'PROCEED':
-    			match.candidateStatus='PROCEED'
-    			match.candidateReason=''
-    			break
-    		case 'DECLINE':
-    			match.candidateStatus='DECLINE'
-    			match.candidateReason = params.reason
-    			break
-    		default:
-    			break
-    	}
-    	match.candidateDate = new Date()
-    	if(!match.save())
-		match.errors.each { log.debug("match:"+it)}  
-	else
-		render([status:"OK"] as JSON)
-    	
+        if(match.candidateStatus == match.mbStatus) {
+            switch (match.candidateStatus) {
+                case 'LIMITED PROFILE':
+                    match.candidateStatus = 'FULL PROFILE'
+                    break
+                case 'FULL PROFILE':
+                    match.candidateStatus = 'BOY GIRL MEET'
+                    break
+                case 'BOY GIRL MEET':
+                    match.candidateStatus = 'PARENTS MEET'
+                    break
+                case 'PARENTS MEET':
+                    match.candidateStatus = 'PROPOSAL AGREED'
+                    break
+                case 'PROPOSAL AGREED':
+                    render([status: "Cannot go Further than proposal Agreed!!"] as JSON)
+                default:
+                    break
+            }
+            match.candidateDate = new Date()
+            if (!match.save())
+                match.errors.each { log.debug("match:" + it) }
+        }
+        else if(match.mbStatus == 'DECLINED'){
+            render([status: "Sorry You Cannot Move Further. Match with this candidate is declined because: \n"+match.mbReason] as JSON)
+        }
+        else{
+            render([status: "Sorry You Cannot Move Further. Your advance to next stage is still pending for approval with marriage board!!"] as JSON)
+        }
+    }
+
+    def mbNextStep(){
+        def match = MbProfileMatch.get(params.matchid)
+        def otherMatch
+        if(match.candidateStatus == 'DECLINED'){
+            render([status: "Sorry! Cannot approve as candidate has declined. Please click on decline and close the match with proper reason."] as JSON)
+        }
+        else {
+            switch (match.mbStatus) {
+                case 'LIMITED PROFILE':
+                    if (match.candidateStatus == 'FULL PROFILE') {
+                        match.mbStatus = 'FULL PROFILE'
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        if (otherMatch && otherMatch.mbStatus == 'FULL PROFILE') {
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSED"
+                            otherMatch.mbDate = new Date()
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in Limited profile stage"] as JSON)
+                    }
+                    break
+                case 'FULL PROFILE':
+                    if (match.candidateStatus == 'BOY GIRL MEET') {
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+
+                        if (otherMatch && otherMatch.mbStatus == 'BOY GIRL MEET') {
+                            match.mbStatus = 'BOY GIRL MEET'
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "BOYGIRLMEET"
+                            otherMatch.mbDate = new Date()
+                        } else {
+                            render([status: "Cannot approve as the other candidate is not yet suggested this profile."] as JSON)
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in full profile stage"] as JSON)
+                    }
+                    break
+                case 'BOY GIRL MEET':
+                    if (match.candidateStatus == 'PARENTS MEET') {
+                        match.mbStatus = 'PARENTS MEET'
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        if (otherMatch && otherMatch.mbStatus == 'PARENTS MEET') {
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PARENTSMEET"
+                            otherMatch.mbDate = new Date()
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in boy girl meet stage"] as JSON)
+                    }
+                    break
+                case 'PARENTS MEET':
+                    if (match.candidateStatus == 'PROPOSAL AGREED') {
+                        match.mbStatus = 'PROPOSAL AGREED'
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        if (otherMatch && otherMatch.mbStatus == 'PROPOSAL AGREED') {
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSALAGREED"
+                            otherMatch.mbDate = new Date()
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in parents meet stage"] as JSON)
+                    }
+                    break
+                case 'PROPOSAL AGREED':
+                    match.mbStatus = 'ANNOUNCE'
+                    otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                    otherMatch.mbStatus = 'ANNOUNCE'
+                    otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = 'ANNOUNCE'
+                    otherMatch.mbDate = new Date()
+                    break
+                case 'ANNOUNCE':
+                    match.mbStatus = 'MARRIED THROUGH MB'
+                    otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                    otherMatch.mbStatus = 'MARRIED THROUGH MB'
+                    otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = 'MARRIEDTHRUMB'
+                    otherMatch.mbDate = new Date()
+                    break
+            }
+            match.mbDate = new Date()
+            if (!match.save())
+                match.errors.each { log.debug("match:" + it) }
+            render([status: ""] as JSON)
+        }
+    }
+
+    def decline = {
+        def match = MbProfileMatch.get(params.matchid)
+        def otherMatch
+        switch(params.origin) {
+            case 'candidate':
+                match.candidateStatus = 'DECLINED'
+                match.candidateReason = params.reason
+                match.candidateDate = new Date()
+                break
+            case 'mb':
+                otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
+                if(otherMatch){
+                    otherMatch.candidateStatus = 'DECLINED'
+                    otherMatch.mbStatus = 'DECLINED'
+                    otherMatch.mbReason = params.reason
+                    otherMatch.mbDate = new Date()
+                    if(!otherMatch.save())
+                        match.errors.each { log.debug("match:"+it)}
+                }
+                match.candidateStatus = 'DECLINED'
+                match.mbStatus = 'DECLINED'
+                match.mbReason = params.reason
+                match.candidate.workflowStatus = match.prospect.workflowStatus = 'AVAILABLE'
+                match.mbDate = new Date()
+                break
+        }
+        if(!match.save())
+            match.errors.each { log.debug("match:"+it)}
+        render([status:""] as JSON)
     }
     
     def manageBoard()  {}
@@ -919,26 +983,21 @@ def showImage = {
     	def retmsg = MbService.assignProfile(params)
 	render ([message:retmsg] as JSON)
     }
-    
-    def fullProfile() {
-    	log.debug("Inside fullProfile:"+params)
-    	def match = MbProfileMatch.get(params.matchid)
-    	if(match && match.mbStatus=='FULLPROFILE') {
-            render(template: "fullProfile", model: [profile: match.prospect])
-    	}
-    	else
-    		render "Unavailable!!"
-    	
-    }
-    def limitedProfile() {
-    	log.debug("Inside limitedProfile:"+params)
-    	def match = MbProfileMatch.get(params.matchid)
-    	if(match && match.candidate.candidate.loginid==springSecurityService.principal.username) {
-            render(template: "limitedProfile", model: [profile: match.prospect])
-    	}
-    	else
-    		render "Unavailable!!"
 
+    def getProfileByStage(params){
+        log.debug("Inside get profile by stage: "+params)
+        def match = MbProfileMatch.get(params.matchid)
+        if(match && match.candidate.candidate.loginid==springSecurityService.principal.username){
+           if(match.mbStatus=='FULL PROFILE') {
+               render(template: "fullProfile", model: [profile: match.prospect])
+           }
+           else if(match.mbStatus=='LIMITED PROFILE'){
+               render(template: "limitedProfile", model: [profile: match.prospect])
+           }
+        }
+        else{
+            render "Error. The Profile is currently not available for view. Please get in touch with marriage board admin for more details or wite to rk.mb.system@gmail.com."
+        }
     }
     
     def dashboard() {

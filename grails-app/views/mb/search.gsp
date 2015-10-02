@@ -11,6 +11,12 @@
         <r:require module="jqval"/>
         <r:require module="ajaxform"/>
         <r:require module="multiselect"/>
+        <style>
+            .ui-jqgrid .ui-state-highlight { background: #FFFF99 !important; }
+            .ui-jqgrid tr.jqgrow td {
+                white-space: normal !important;
+            }
+        </style>
 	</head>
 	<body>
 		<div class="nav">
@@ -23,9 +29,16 @@
 
 
 		<div id="dialogSuggest" title="Suggest">
-		</div>            
-
-		<div id='message' class="message" style="display:none;"></div>
+		</div>
+        <div id="dialogMbReason" title="Reason">
+            <span>By specifying a reason and submitting you shall decline any further progress for this match. In future to Reinstate the match please re-suggest the same prospect to the candidate.</span>
+            <br><br>
+            <strong>Reason: </strong>
+            <g:textArea name="mbReason" value="" rows="5" cols="40"/>
+        </div>
+    <div id='dialogMessage' title="Information">
+        <strong><span class="dialogMsgContent"></span></strong>
+    </div>
 	<h1>Match making for ${mbProfile?.candidate}</h1>
 		
 		%{--<div>
@@ -66,7 +79,7 @@
                                   value="${mbProfile?.prefChanting}"/>
                     </td>
                     <td valign="top" class="name">
-                        <label for="flexibleChanting">Flexible :</label>
+                        <label for="Chanting">Flexible :</label>
                     </td>
                     <td>
                         <g:radioGroup name="flexibleChanting" labels="['No', 'Yes']" values="[false, true]"
@@ -115,7 +128,7 @@
                         <g:select name="prefCurrentCountry" from="${['India', 'Abroad']}" value="${mbProfile?.prefCurrentCountry}"/>
                     </td>
                     <td valign="top" class="name">
-                        <label for="flexibleCurrentCountry">I am flexible on prospect's Current Country:</label>
+                        <label for="flexibleCurrentCountry">Flexible:</label>
                     </td>
                     <td>
                         <g:radioGroup name="flexibleCurrentCountry" labels="['No', 'Yes']" values="[false, true]"
@@ -390,22 +403,21 @@
       jQuery("#prospect_list").jqGrid({
           url:'jq_mbProspect_list',
           postData:{
-              candidateid:function(){return $('#mbprofileid').val();},
+              candidateid:function(){return $('#mbprofileid').val();}
           },
           datatype: "json",
-          colNames:['Photo','Name','WorkflowStatus','Stage','CandidateStatus','CandidateReason','CandidateDate','MbStatus','MbReason','MbDate','Id'],
+          colNames:['Photo','Name','WorkflowStatus','CandidateStatus','CandidateReason','CandidateDate','MbStatus','MbReason','MbDate','Id'],
           colModel:[
               {
                   name: 'photo',
                   formatter: function (cellvalue, options, rowObject) {
-                      return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>';
+                      return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?imgType=closePrim&entity=mbProfile&entityId='+rowObject[0]+'"/>';
                   }
               },
               {name:'name',
                   formatter:'showlink',
                   formatoptions:{baseLinkUrl:'show'}},
               {name:'workflowStatus'},
-              {name:'stage'},
               {name:'candidateStatus'},
               {name:'candidateReason'},
               {name:'candidateDate'},
@@ -426,7 +438,7 @@
           caption:"Prospect List"
       });
       $("#prospect_list").jqGrid('filterToolbar',{autosearch:true});
-      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager",{edit:false,add:false,del:true,search:false});
+      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager",{edit:false,add:false,del:false,search:false});
       $("#prospect_list").jqGrid('inlineNav',"#prospect_list_pager",
               {
                   edit: false,
@@ -434,10 +446,10 @@
                   save: false,
                   cancel: false
               });
-      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Propose", buttonicon:"ui-icon-person", onClickButton:propose, position: "last", title:"Propose", cursor: "pointer"});
-      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Announce", buttonicon:"ui-icon-flag", onClickButton:announce, position: "last", title:"Announce", cursor: "pointer"});
+      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Approve", buttonicon:"ui-icon-check", onClickButton:approve, position: "last", title:"Approve", cursor: "pointer"});
+      $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Decline", buttonicon:"ui-icon-close", onClickButton:decline, position: "last", title:"Decline", cursor: "pointer"});
 
-      $( "#btnSearch" )
+    $( "#btnSearch" )
 	.button()
 	.click(function( event ) {
 		event.preventDefault();
@@ -452,7 +464,7 @@
 			{
 			name: 'photo',
 			formatter: function (cellvalue, options, rowObject) {
-				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>'; 
+				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?imgType=closePrim&entity=mbProfile&entityId='+rowObject[0]+'"/>';
 				}
 			},				
                          {name:'name',
@@ -474,7 +486,7 @@
                      caption:"Profile Search Result"
                  });
                  $("#profile_list").jqGrid('filterToolbar',{autosearch:true});
-                 $("#profile_list").jqGrid('navGrid',"#profile_list_pager",{edit:false,add:false,del:true,search:false});
+                 $("#profile_list").jqGrid('navGrid',"#profile_list_pager",{edit:false,add:false,del:false,search:false});
                  $("#profile_list").jqGrid('inlineNav',"#profile_list_pager",
                          {
                              edit: false,
@@ -485,106 +497,121 @@
                  $("#profile_list").jqGrid('navGrid',"#profile_list_pager").jqGrid('navButtonAdd',"#profile_list_pager",{caption:"Suggest", buttonicon:"ui-icon-person", onClickButton:suggest, position: "last", title:"Suggest", cursor: "pointer"});
 	});
 
+    function approve(){
+        var answer = confirm("Are you sure?");
+        if (answer){
+            var id = $('#prospect_list').jqGrid('getGridParam','selrow');
+            if(id) {
+                var url = "${createLink(controller:'mb',action:'mbNextStep')}";
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: {
+                        matchid: id
+                    }
+                }).success(function(data) {
+                    !!data.status && $('.dialogMsgContent').html(data.status) && $( "#dialogMessage" ).dialog('open');
+                    jQuery("#prospect_list").trigger( 'reloadGrid' );
+                });
+            }
+            else
+                $('.dialogMsgContent').html("Please select the profile by clicking on the candidate's photo!!") && $( "#dialogMessage" ).dialog('open');
+        } else {
+            return false;
+        }
+    }
 
-	function propose() {
-		var answer = confirm("Are you sure?");
-		if (answer){
-			var ids = $('#prospect_list').jqGrid('getGridParam','selarrrow');
-			if(ids) {
-				var url = "${createLink(controller:'mb',action:'propose')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
-				$.getJSON(url, {}, function(data) {
-					alert(data.status);
-					jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
-				    });	
-			}
-			else
-				alert("Please select one or more prospects!!");
-		} else {
-		    return false;
-		}
-	}
-  
-	function announce() {
-		var answer = confirm("Are you sure?");
-		if (answer){
-			var ids = $('#prospect_list').jqGrid('getGridParam','selarrrow');
-			if(ids) {
-				var url = "${createLink(controller:'mb',action:'announce')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
-				$.getJSON(url, {}, function(data) {
-					alert(data.status);
-					jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
-				    });	
-			}
-			else
-				alert("Please select one or more prospects!!");
-		} else {
-		    return false;
-		}
-	}
+      function decline() {
+          var id = $('#prospect_list').jqGrid('getGridParam','selrow');
+          if(id) {
+              $( "#dialogMbReason" ).dialog( "open" );
+          }
+          else
+              $('.dialogMsgContent').html(data.status) && $( "#dialogMessage" ).dialog('open');
+      }
 
 	function suggest() {
-		$( "#dialogTeam" ).dialog( "open" );
 		var answer = confirm("Are you sure?");
 		if (answer){
-			var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
-			if(ids) {
-				var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
-				$.getJSON(url, {}, function(data) {
-					alert(data.status);
-					jQuery("#profile_list").jqGrid().trigger("reloadGrid");
-					jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
-				    });	
-			}
-			else
-				alert("Please select one or more profiles!!");
-		} else {
-		    return false;
+            $( "#dialogSuggest").dialog('open');
 		}
-	}
+    }
 
-		$( "#dialogSuggest" ).dialog({
-			autoOpen: false,
-			modal: true,
-			buttons: {
-				"OnlyToCandidate": function() {
-					var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
-					if(ids) {
-						var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
-						$.getJSON(url, {}, function(data) {
-							$( this ).dialog( "close" );
-							alert(data.status);
-							jQuery("#profile_list").jqGrid().trigger("reloadGrid");
-							jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
-						    });	
-					}
-					else
-						alert("Please select one or more profiles!!");
-					$( this ).dialog( "close" );
-				},
-				"ToBothCandidateAndProspect": function() {
-					var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
-					if(ids) {
-						var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids+"&type=both";
-						$.getJSON(url, {}, function(data) {
-							$( this ).dialog( "close" );
-							alert(data.status);
-							jQuery("#profile_list").jqGrid().trigger("reloadGrid");
-							jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
-						    });	
-					}
-					else
-						alert("Please select one or more profiles!!");
-					$( this ).dialog( "close" );
-				},
-				"Cancel": function() {
-					$( "#teamMembers" ).val( '' );
-					$( this ).dialog( "close" );
-				}
-			},
-			close: function() {
-				
-			}
-		});
+    $( "#dialogSuggest" ).dialog({
+        autoOpen: false,
+        modal: true,
+        buttons: {
+            "OnlyToCandidate": function() {
+                var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+                if(ids) {
+                    var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
+                    $.getJSON(url, {}, function(data) {
+                        $( this ).dialog( "close" );
+                        jQuery("#profile_list").jqGrid().trigger("reloadGrid");
+                        jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
+                        });
+                }
+                else
+                    alert("Please select one or more profiles!!");
+                $( this ).dialog( "close" );
+            },
+            "ToBothCandidateAndProspect": function() {
+                var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+                if(ids) {
+                    var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids+"&type=both";
+                    $.getJSON(url, {}, function(data) {
+                        $( this ).dialog( "close" );
+                        jQuery("#profile_list").jqGrid().trigger("reloadGrid");
+                        jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
+                        });
+                }
+                else
+                    alert("Please select one or more profiles!!");
+                $( this ).dialog( "close" );
+            },
+            "Cancel": function() {
+                $( "#teamMembers" ).val( '' );
+                $( this ).dialog( "close" );
+            }
+        },
+        close: function() {
+
+        }
+    });
+      $( "#dialogMbReason" ).dialog({
+          autoOpen: false,
+          height: 300,
+          width: 350,
+          modal: true,
+          buttons: {
+              "Submit": function() {
+                  var id = $('#prospect_list').jqGrid('getGridParam','selrow');
+                  if(id) {
+                      var url = "${createLink(controller:'mb',action:'decline')}";
+                      $.ajax({
+                          url: url,
+                          type: "POST",
+                          data: {
+                              matchid: id,
+                              origin: 'mb',
+                              reason: $( "#mbReason").val()
+                          }
+                      }).success(function(data) {
+                          $( "#dialogMbReason" ).dialog( "close" );
+                          !!data.status && alert(data.status);
+                          jQuery("#prospect_list").trigger( 'reloadGrid' );
+                      });
+                      jQuery("#prospect_list").trigger( 'reloadGrid' );
+                  }
+              },
+              "Cancel": function() {
+                  $( "#candidateReason" ).val( '' );
+                  $( this ).dialog( "close" );
+              }
+          },
+          close: function() {
+          }
+      });
 
       $('#checkboxAllFlexible').change(function() {
           if($(this).is(":checked")) {
@@ -661,6 +688,21 @@
           }
           slideInput.attr('size',slideInput.val().length);
         });
+
+      $( "#dialogMessage" ).dialog({
+          autoOpen: false,
+          height: 300,
+          width: 350,
+          modal: true,
+          buttons: {
+              "Ok": function(){
+                  $( "#dialogMessage").dialog('close');
+              },
+              "Cancel": function(){
+                  $( "#dialogMessage").dialog('close');
+              }
+          }
+      });
   
   });
 </script>

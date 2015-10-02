@@ -76,7 +76,7 @@
                                 <span class="mand input-group-addon">*</span>
                             </div>
                             <div class="form-group">
-                                <input type="text" name="initiatedName" placeholder="Initiated Name..." class="form-control" id="initiatedName">
+                                <input type="text" name="initiatedName" placeholder="Initiated Name (Leave empty if not initiated)..." class="form-control" id="initiatedName">
                             </div>
                             <div class="form-group input-group">
                                 <input type="tel" name="donorContact" required="required" placeholder="Contact Number..." class="form-control" id="donorContact" pattern="[0-9]{10,10}" maxlength="10">

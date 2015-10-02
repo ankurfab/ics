@@ -373,23 +373,27 @@ class MbService {
 		prospect = MbProfile.get(it)
 		if(prospect)
 			{
-			pmatch = new MbProfileMatch()
+			pmatch = MbProfileMatch.findByCandidateAndProspect(candidate,prospect)
+            if(!pmatch) {
+                pmatch = new MbProfileMatch()
+            }
 			pmatch.candidate = candidate
 			pmatch.prospect = prospect
-			pmatch.stage = "FIRST"
+            pmatch.candidateDate = pmatch.mbDate = new Date()
+			pmatch.candidateStatus = pmatch.mbStatus = "LIMITED PROFILE"
+            pmatch.candidateReason = pmatch.mbReason = ""
 			if(!pmatch.save())
 			    pmatch.errors.each { log.debug("pmatch:"+it)}
 			else {
-				//do the same for prospect if specified
 				if(params.type=='both') {
 					suggest([candidateid:prospect.id.toString(),prospects:candidate.id.toString()])
 				}
+            }
 			}
-			}
-    		}    	
+        }
     }
     
-    def propose(Map params) {
+    /*def propose(Map params) {
     	def candidate = MbProfile.get(params.candidateid)
     	if(!candidate)
     		return 0
@@ -423,9 +427,9 @@ class MbService {
 				}
 			}
     		}    	
-    }
+    }*/
 
-    def announce(Map params) {
+    /*def announce(Map params) {
     	def candidate = MbProfile.get(params.candidateid)
     	if(!candidate)
     		return 0
@@ -459,7 +463,7 @@ class MbService {
 				}
 			}
     		}    	
-    }
+    }*/
 
 
  /*   generic method to create family members of the candidate.

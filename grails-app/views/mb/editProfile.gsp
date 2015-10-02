@@ -128,7 +128,7 @@
 </td>
 <!-- Checking for adding comments -->
 <td valign="top" class="value">
-    <g:select name="isMale" required="required" from="${['FEMALE','MALE']}" value="${mbProfile?.candidate?.isMale==null?'Select Gender':(mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE')}" noSelection="['':'Select Gender']"/>
+    <g:select name="isMale" class="required" from="${['FEMALE','MALE']}" value="${mbProfile?.candidate?.isMale==null?'Select Gender':(mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE')}" noSelection="['':'Select Gender']"/>
 </td>
 </tr>
 <tr class="prop">
