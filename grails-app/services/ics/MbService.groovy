@@ -65,25 +65,9 @@ class MbService {
 	def ir = IcsRole.findByAuthority(indRole.role?.authority)
 	def loginid = housekeepingService.createLogin(candidate,ir)
 	
-    	//step 4
-		if(params.donorContact)
-			housekeepingService.sendSMS(params.donorContact,"Hare Krishna! Your registration for MB Profile creation is successful. Please login with "+loginid+" and complete the profile. ISKCON(MB).")
-		if(params.donorEmail)
-		{
-			//replace ; in email by ,
-			def emailStr = params.donorEmail.replaceAll(';',',')
-			List mailIds = []
-			mailIds = emailStr.split(",")
-			/*def aList = []
-			mailIds?.collect{aList.add(it)}*/
-			housekeepingService.sendEmail(mailIds,"Login created by ISKCON Marriage Board!","Hare Krishna! Your registration for MB Profile creation is successful. Please login with "+loginid+" and complete the profile. ISKCON(MB).")
-		}
-		
-	//comms
+    	//step 4: comms
 	    def contentParams = [loginid]
-	    commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), params.donorContact, params.donorEmail, contentParams)
-	
-
+	    commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), params.donorContact, params.donorEmail, contentParams)	
     	
     	return mbProfile?.id
     }
@@ -116,7 +100,7 @@ class MbService {
     try{         mbProfile.weight=Integer.parseInt(params.weight) } catch(Exception e){}
     try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
     try{         mbProfile.languagesKnown=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.languagesKnown)} catch(Exception e){}
-	try{         mbProfile.candidate.income=params.candidateIncome //change the type of the column in db
+	try{         mbProfile.candidate.income=params.candidateIncome ? params.candidateIncome + ' Lakhs' : '' //change the type of the column in db
 	} catch(Exception e){}
 	try{         mbProfile.horoscopeToBeMatched=params.horoscopeToBeMatched } catch(Exception e){}
 	try{         mbProfile.manglik=params.manglik } catch(Exception e){}
@@ -130,7 +114,7 @@ class MbService {
 			    helperService.updateAddress([id:candAddr?.id,individual:mbProfile.candidate,category:'PresentAddress',addressLine1:params.addrline1,addressLine2:'',addressLine3:'','cityname':params.city,'statename':params.state,pincode:params.pincode])
 		}
          } catch(Exception e){}
-        mbProfile.referrer=params.references
+        mbProfile.referrer=params.referrer
         def contactno = VoiceContact.findByIndividual(mbProfile.candidate)
         contactno?.number = params.contact
         contactno?.save()
@@ -140,6 +124,8 @@ class MbService {
     try{        mbProfile.maritalStatus = params.maritalStatus} catch(Exception e){}
     try{        mbProfile.personalInfo = params.personalInfo} catch(Exception e){}
     try{        mbProfile.residenceType = params.residenceType} catch(Exception e){}
+    try{        mbProfile.currentCountry = params.currentCountry} catch(Exception e){}
+    try{        mbProfile.areaCurrHouse = Integer.parseInt(params.areaCurrHouse)} catch(Exception e){}
         //step 2
         mbProfile.nativePlace=params.nativePlace
         mbProfile.nativeState=params.nativeState
@@ -165,7 +151,7 @@ class MbService {
 	try{         mbProfile.parentsChanting = params.parentsChanting } catch(Exception e){}
 	try{         mbProfile.parentsInitiation = params.parentsInitiation } catch(Exception e){}
 	try{         mbProfile.parentsSpMaster = org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.parentsSpMaster)} catch(Exception e){}
-	try{         mbProfile.yourFamily = params.youFamily } catch(Exception e){}
+	try{         mbProfile.yourFamily = params.yourFamily } catch(Exception e){}
 
         //step3
 	try{         mbProfile.eduCat = params.eduCat } catch(Exception e){}
@@ -212,6 +198,7 @@ class MbService {
 	try{         mbProfile.flexibleSpMaster = Boolean.valueOf(params.flexibleSpMaster) } catch(Exception e){}
 	try{         mbProfile.flexibleCentre = Boolean.valueOf(params.flexibleCentre) } catch(Exception e){}
 	try{         mbProfile.flexibleNationality = Boolean.valueOf(params.flexibleNationality) } catch(Exception e){}
+    try{         mbProfile.flexibleCurrentCountry = Boolean.valueOf(params.flexibleCurrentCountry) } catch(Exception e){}
 	try{         mbProfile.flexibleCulturalInfluence = Boolean.valueOf(params.flexibleCulturalInfluence) } catch(Exception e){}
 	try{         mbProfile.flexibleVarna = Boolean.valueOf(params.flexibleVarna) } catch(Exception e){}
 	try{         mbProfile.flexibleCategory = Boolean.valueOf(params.flexibleCategory) } catch(Exception e){}
@@ -230,6 +217,7 @@ class MbService {
 	try{         mbProfile.prefSpMaster=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefSpMaster)} catch(Exception e){}
 	try{         mbProfile.prefCentre=params.prefCentre } catch(Exception e){}
 	try{         mbProfile.prefNationality=params.prefNationality } catch(Exception e){}
+    try{         mbProfile.prefCurrentCountry=params.prefCurrentCountry } catch(Exception e){}
 	try{         mbProfile.prefCulturalInfluence=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCulturalInfluence) } catch(Exception e){}
 	try{         mbProfile.prefVarna=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefVarna) } catch(Exception e){}
 	try{         mbProfile.prefCategory=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCategory) } catch(Exception e){}
@@ -290,6 +278,7 @@ class MbService {
     }
     
     def updateProfileStatus(Map params) {
+         log.debug("updateProfileStatus:"+params)
          def username=''
          try{
 		 username = springSecurityService.principal.username
@@ -302,21 +291,32 @@ class MbService {
     		return "Profile not found!!"	//MbProfile not found
     		
     	//check for ownership of profile..i.e. who can modify the status
-    	//admin can modify for any centre but sec only for theire centre
+    	//admin can modify for any centre but sec only for their centre
     	def allow = false
     	if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
     		def secCentre = Individual.findByLoginid(username)?.iskconCentre
     		if(secCentre && secCentre==mbProfile.referrerCenter)
     			allow = true
+    	} else if(SpringSecurityUtils.ifAllGranted('ROLE_MB_ADMIN')) {
+    		allow = true
     	}
+    	
     	if(!allow)
     		return "Can not review as profile from other centre."
     	
     	//now update the fields
     	mbProfile.profileStatus = params.status
     	
-    	if(mbProfile.profileStatus=='COMPLETE')
-		mbProfile.workflowStatus='UNASSIGNED'
+    	if(mbProfile.profileStatus=='COMPLETE'){
+            mbProfile.workflowStatus='UNASSIGNED'
+            def contentParams = [mbProfile.candidate?.toString()]
+            commsService.sendComms('MarriageBoard', "PROFILE_MARK_COMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
+        }
+        else if(mbProfile.profileStatus=='INCOMPLETE'){
+            def contentParams = [mbProfile.candidate?.toString(),params.mbMessage,mbProfile.candidate?.loginid]
+            commsService.sendComms('MarriageBoard', "PROFILE_MARK_INCOMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
+        }
+
 	
 	mbProfile.updator = username
 	if(!mbProfile.save()) {
@@ -373,23 +373,27 @@ class MbService {
 		prospect = MbProfile.get(it)
 		if(prospect)
 			{
-			pmatch = new MbProfileMatch()
+			pmatch = MbProfileMatch.findByCandidateAndProspect(candidate,prospect)
+            if(!pmatch) {
+                pmatch = new MbProfileMatch()
+            }
 			pmatch.candidate = candidate
 			pmatch.prospect = prospect
-			pmatch.stage = "FIRST"
+            pmatch.candidateDate = pmatch.mbDate = new Date()
+			pmatch.candidateStatus = pmatch.mbStatus = "LIMITED PROFILE"
+            pmatch.candidateReason = pmatch.mbReason = ""
 			if(!pmatch.save())
 			    pmatch.errors.each { log.debug("pmatch:"+it)}
 			else {
-				//do the same for prospect if specified
 				if(params.type=='both') {
 					suggest([candidateid:prospect.id.toString(),prospects:candidate.id.toString()])
 				}
+            }
 			}
-			}
-    		}    	
+        }
     }
     
-    def propose(Map params) {
+    /*def propose(Map params) {
     	def candidate = MbProfile.get(params.candidateid)
     	if(!candidate)
     		return 0
@@ -423,9 +427,9 @@ class MbService {
 				}
 			}
     		}    	
-    }
+    }*/
 
-    def announce(Map params) {
+    /*def announce(Map params) {
     	def candidate = MbProfile.get(params.candidateid)
     	if(!candidate)
     		return 0
@@ -459,7 +463,7 @@ class MbService {
 				}
 			}
     		}    	
-    }
+    }*/
 
 
  /*   generic method to create family members of the candidate.
@@ -605,47 +609,28 @@ class MbService {
 	    	case 'MEMBER':
 			    //assign the role
 			    role = mrole
-			    if(role) {
-				def indRole = new IndividualRole()
-				indRole.individual = individual
-				indRole.role = role
-				indRole.status = 'VALID'
-				indRole.creator = indRole.updator = springSecurityService.principal.username
-				if(!indRole.save()) {
-					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
-				}
-			    }
 	    		break
 	    	case 'SECRETARY':
 			    //assign the role
-			    role = mrole
-			    if(role) {
-				def indRole = new IndividualRole()
-				indRole.individual = individual
-				indRole.role = role
-				indRole.status = 'VALID'
-				indRole.creator = indRole.updator = springSecurityService.principal.username
-				if(!indRole.save()) {
-					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
-				}
-			    }
-			    //assign the role
 			    role = srole
-			    if(role) {
-				def indRole = new IndividualRole()
-				indRole.individual = individual
-				indRole.role = role
-				indRole.status = 'VALID'
-				indRole.creator = indRole.updator = springSecurityService.principal.username
-				if(!indRole.save()) {
-					indRole.errors.allErrors.each {log.debug("indRole:"+it)}
-				}
-			    }
 	    		break
 	    	default:
 	    		break
 	    		
 	    }
+	    if(role) {
+		def indRole = new IndividualRole()
+		indRole.individual = individual
+		indRole.role = role
+		indRole.status = 'VALID'
+		indRole.creator = indRole.updator = springSecurityService.principal.username
+		if(!indRole.save()) {
+			indRole.errors.allErrors.each {log.debug("indRole:"+it)}
+		}
+		//now create the loginid
+		housekeepingService.createLogin(individual,IcsRole.findByAuthority(role.authority))
+	    }
+
 	   }
     }
     
@@ -692,7 +677,7 @@ class MbService {
     		}
     	def map = [:]
     	result.each{map.put(it[0],it[1])}
-    	log.debug('ProfileStats:'+map)
+    	//log.debug('ProfileStats:'+map)
     	stats.put('ProfileStats',map)
     	
     	//workflow stats
@@ -704,7 +689,7 @@ class MbService {
     		}
     	def wmap = [:]
     	result.each{wmap.put(it[0],it[1])}
-    	log.debug('WorkflowStats:'+wmap)
+    	//log.debug('WorkflowStats:'+wmap)
     	stats.put('WorkflowStats',wmap)
 
     	//last 10 logins    	
@@ -719,14 +704,14 @@ class MbService {
             	llist.add(rowMap)
         	}
         
-    	log.debug('LoginStats:'+llist)
+    	//log.debug('LoginStats:'+llist)
     	stats.put('LoginStats',llist)
 
     	//match stats
     	result = MbProfileMatch.createCriteria().list(max:10){
     			order('id','desc')
     		}
-    	log.debug('MatchStats:'+result)
+    	//log.debug('MatchStats:'+result)
     	stats.put('MatchStats',result)
     	
     	sql.close()
@@ -740,5 +725,66 @@ class MbService {
         def inch = Integer.parseInt(height.split('"')[1].replace("'",""))
         return (ft*12 + inch)
     }    
+
+    def unlockAndResetUser(Individual individual) {
+    	def iuser  = IcsUser.findByUsername(individual?.loginid)
+    	iuser?.accountLocked = false
+    	iuser?.setPassword('harekrishna')
+    	if(iuser)
+    		return true
+    	else
+    		return false
+    }
+
+	def genderwiseReport(Map params) {
+		def result = MbProfile.createCriteria().list{
+				if(params.centre)
+					eq('referrerCenter',params.centre)
+				candidate{
+					projections {
+					groupProperty('isMale')
+					rowCount('id')
+					}
+				}
+				}
+		def series = []
+		result.each{series.add([it[0]?'Prabhuji':'Mataji',it[1]])}
+		return [series]
+	}	
+
+	def candidateAttributeReport(Map params) {
+		def result = MbProfile.createCriteria().list{
+				if(params.centre)
+					eq('referrerCenter',params.centre)
+				candidate{
+					projections {
+					groupProperty(params.attribute)
+					rowCount('id')
+					}
+				}
+				}
+		def series = []
+		result.each{series.add([it[0],it[1]])}
+		return [series]
+	}	
+
+	def mbProfileAttributeReport(Map params) {
+		def result = MbProfile.createCriteria().list{
+				if(params.centre)
+					eq('referrerCenter',params.centre)
+				projections {
+				groupProperty(params.attribute)
+				rowCount('id')
+				}
+				}
+		def series = []
+		result.each{series.add([it[0],it[1]])}
+		return [series]
+	}
+	
+	def getCentre() {
+		def loggedIndividual = Individual.findByLoginid(springSecurityService?.principal?.username)
+		return loggedIndividual?.iskconCentre?:''
+	}
 
 }

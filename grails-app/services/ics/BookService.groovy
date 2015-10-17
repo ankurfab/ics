@@ -48,8 +48,14 @@ class BookService {
     	def order = BookOrder.get(params.orderid)
     	if(order && (order.status=='In-Progress' ||  order.status=='Submitted')) {
     		//now create challan automatically from this order
-    		def challan = createChallan(order)
-    		order.challan = challan
+    		def challan
+    		if(!order.challan) {
+			challan = createChallan(order)
+			order.challan = challan
+    		}
+    		else
+    			appendChallan(order)
+    			
     		order.status='Fulfilled'
     		order.orderDate = new Date()
     		order.save()
@@ -60,6 +66,34 @@ class BookService {
     			}
     	}
     	return order
+    }
+
+    def appendChallan(BookOrder order) {
+    	def challan = order.challan
+
+	def extraAmount = 0
+	//append challan line items, increment quantity if already exists else create new
+	order.lineItems?.each{oli->
+		//first check if already exists
+		def cli = ChallanLineItem.findByChallanAndBook(challan,oli.book)
+		if(cli) {
+			//increment quantity
+			cli.issuedQuantity += oli.requiredQuantity
+		}
+		else			
+			challan.lineItems.add(createChallanLineItem(challan,oli))
+		
+		//store amount
+		extraAmount += oli.requiredQuantity*oli.book.sellPrice
+	}
+
+	//finally update challan amount
+    	challan.updator = springSecurityService.principal.username
+    	challan.totalAmount = challan.totalAmount + extraAmount
+    	if(!challan.save())
+    		challan.errors.allErrors.each {log.debug("Exception in appendChallan:"+it)}   
+    		
+    	return challan
     }
     
     def createChallan(BookOrder order) {

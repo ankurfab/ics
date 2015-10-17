@@ -189,39 +189,35 @@ class DataService {
 	
 	//store the attribute names in a generic csv file
 	//@TODO: take care of dep,centre and other attributes
-	def storeHeader(String domainClassName,Object tokens) {
-        def attr
-		tokens.eachWithIndex{it,idx ->
-            def tempIt  = it.toString()
-            if(!Attribute.createCriteria().get{ eq("name",tempIt) })
-            {
-                attr = new Attribute()
-                attr.name = it
-                attr.position = idx
-                if (!attr.save())
-                    attr.errors.allErrors.each { log.debug("exception in saving arrr:" + it) }
-            }
+	def storeHeader(String domainClassName, Object tokens) {
+            def attr
+	    tokens.eachWithIndex{it,idx ->
+		    def tempIt  = it.toString()
+		    if(!Attribute.createCriteria().get{ eq("name",tempIt) eq("domainClassName",domainClassName)})
+		    {
+			attr = new Attribute()
+			attr.name = it
+			attr.domainClassName = domainClassName
+			attr.position = idx
+			if (!attr.save())
+			    attr.errors.allErrors.each { log.debug("storeHeader:exception in saving arrr:" + it) }
+		    }
 		}
 	}
 	
 	//store the attribute values in a generic csv file
 	def storeValues(String objectClassName,Long objectId, Object tokens) {
-		def attrList = Attribute.list()	//@TODO: hardcoded
-		def attrMap = [:]
-		attrList.each{
-			attrMap.put(it.position,it)
-		}
-		def attrValue,attr
-		tokens.eachWithIndex{it,idx ->
-            attr = attrMap.get(idx)
-            attrValue = new AttributeValue()
-            attrValue.objectClassName = objectClassName
-            attrValue.objectId = objectId
-            attrValue.attribute = attr
-            attrValue.value = it
-            attrValue.updator = attrValue.creator = 'system'
-            if(!attrValue.save())
-                attrValue.errors.allErrors.each {log.debug("exception in saving attrValue:"+ it)}
+		def attrValue,attr		
+		tokens.each{ k, v ->
+			attr = Attribute.findByDomainClassNameAndName(objectClassName,k)
+			attrValue = new AttributeValue()
+			attrValue.objectClassName = objectClassName
+			attrValue.objectId = objectId
+			attrValue.attribute = attr
+			attrValue.value = v
+			attrValue.updator = attrValue.creator = 'anonymous'
+			if(!attrValue.save())
+				attrValue.errors.allErrors.each {log.debug("storeValues:exception in saving attrValue:"+ it)}
 		}
 	}
 	
@@ -684,7 +680,7 @@ class DataService {
 		lead.each{
 			sortedPairs.add(pairsMap.get(it.id))
 		}
-		log.debug("sortedPairs:"+sortedPairs)
+		//log.debug("sortedPairs:"+sortedPairs)
 		if(!sortedPairs)
 			sortedPairs=pairs
 
@@ -696,7 +692,7 @@ class DataService {
 			def events = Event.createCriteria().list{
 						eq('category',event?.category)
 						lt('startDate',event?.startDate)
-						order('id','desc')
+						order('startDate','desc')
 					}
 			def attOn = []
 			if(events.size()>0)
@@ -705,6 +701,10 @@ class DataService {
 				attOn.add(getAttendance(events[1]))
 			if(events.size()>2)
 				attOn.add(getAttendance(events[2]))
+			if(events.size()>3)
+				attOn.add(getAttendance(events[3]))
+			if(events.size()>4)
+				attOn.add(getAttendance(events[4]))
 
 			retMap.put('attOn',attOn)
 		}
@@ -727,7 +727,7 @@ class DataService {
 		lead.each{
 			sortedPairs.add(pairsMap.get(it.id))
 		}
-		log.debug("sortedPairs:"+sortedPairs)
+		//log.debug("sortedPairs:"+sortedPairs)
 		if(!sortedPairs)
 			sortedPairs=pairs
 
@@ -771,7 +771,7 @@ class DataService {
 		//log.debug("findHusbandOrWifeRelationship Got:"+pair)
 		if(pair)
 			swappedPair = [pair[1],pair[0]]
-		log.debug("findHusbandOrWifeRelationship swappedPair:"+swappedPair)
+		//log.debug("findHusbandOrWifeRelationship swappedPair:"+swappedPair)
 		return swappedPair
 	}
 

@@ -31,7 +31,10 @@
 		 <input class="menuButton" type="BUTTON" id="mergeBtn" value="MergeRecords" />
 		 <input class="menuButton" type="BUTTON" id="cleeBtn" value="MarkAsCounsellee" />
 		 <input class="menuButton" type="BUTTON" id="wwBtn" value="MarkAsWellwisher" />
-
+		<sec:ifAnyGranted roles="ROLE_COUNSELLOR_ADMIN">
+			<div id="divDownload"/>
+			<input class="menuButton" type="BUTTON" id="dlBtn" value="Download" />
+		</sec:ifAnyGranted>
 	</div>
 
 	<script>
@@ -112,6 +115,22 @@
 			else
 				alert("Please select rows!!");
 		});
+
+	$( "#dlBtn" )
+		.button()
+		.click(function() {
+			var url = "${createLink(controller:'individual',action:'downloadCongregationData')}"
+			//$( "#divDownload" ).load( url);
+			var win = window.open(url, '_blank');
+			if(win){
+			    //Browser has allowed it to be opened
+			    win.focus();
+			}else{
+			    //Broswer has blocked it
+			    alert('Please allow popups for this site');
+			}			
+		});
+
 
 
   });

@@ -1,11 +1,15 @@
 package ics
 
 import grails.converters.JSON
-import java.util.zip.ZipOutputStream  
+
+import javax.imageio.ImageIO
+import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry  
 import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
 import groovy.time.TimeCategory
+import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
+import org.grails.plugins.imagetools.*
 
 
 class MbController {
@@ -14,13 +18,34 @@ class MbController {
     def dataService
     def individualService
     def springSecurityService
+    def commsService
     
     def index = {
 
     }
+    def mbLogin = {
 
+    }
+    
+    def home() {
+    	if(SpringSecurityUtils.ifAllGranted('ROLE_MB_CANDIDATE'))
+    		render (view: "chome")
+    	else
+    		redirect(action:"dashboard")
+    }
+    
+    
     def pendingApprovals = {
+        def centre = Individual.get(session.individualid)?.iskconCentre?:''
         def objIds = AttributeValue.withCriteria {
+            if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
+            	attribute{
+            		eq('domainClassName','TempMbProfile')
+            		eq('name','refCentre')
+            	}
+            	eq('value',centre)
+            }
+            eq('objectClassName','TempMbProfile')
             projections {
                 distinct("objectId")
             }
@@ -35,7 +60,6 @@ class MbController {
             }
             paramsArr.push(params)
         }
-        log.debug(paramsArr)
         [profiles: paramsArr]
     }
 
@@ -46,6 +70,10 @@ class MbController {
 
     def deleteTempProfile =  {
         def idToDelete = Long.parseLong(params.profId)
+        if(params.profDenied) {
+            def contentParams = [params.donorName]
+            commsService.sendComms('MarriageBoard', "PROFILE_START_DENIED", params.donorName, params.donorContact, params.donorEmail, contentParams)
+        }
         AttributeValue.executeUpdate("delete AttributeValue where objectId=:objId",[objId:idToDelete])
         redirect(action:"pendingApprovals")
     }
@@ -59,18 +87,33 @@ class MbController {
     }
 
     def startProfile = {
-        def ts = new Date().format('dd-MM-yyyy HH:mm:ss')
-        params.remove("action")
-        params.remove("controller")
-            dataService.storeHeader('MB',params.keySet())
-            def objId = AttributeValue.createCriteria().get{
-                projections {
-                    max "objectId"
-                }
-            } as Long
-            objId = objId ? objId : 0
-            dataService.storeValues('MB-'+ts,objId + 1,params.values())
-            render (view: "index",model:  [textMsg : "Your Profile has been Created Successfully and sent to Marriage board for approval. Once approved you will receive an update from us to complete your profile."])
+        log.debug("startProfile:"+params)
+	    params.remove("action")
+	    params.remove("controller")
+	    dataService.storeHeader('TempMbProfile',params.keySet())
+	    def objId = System.currentTimeMillis()
+        def result = AttributeValue.createCriteria().list{
+            attribute{
+            	eq('domainClassName','TempMbProfile')
+            	eq('name','donorContact')
+            }
+            eq("value",params.donorContact)
+        }
+        def result1 = AttributeValue.createCriteria().list{
+            attribute{
+            	eq('domainClassName','TempMbProfile')
+            	eq('name','donorEmail')
+            }
+            eq("value",params.donorEmail)
+        }
+        if(result.isEmpty() && result1.isEmpty()) {
+            dataService.storeValues('TempMbProfile', objId, params)
+            render(view: "mbLogin", model: [textMsg: "Your Profile has been created successfully and sent to Marriage Board for approval. Once approved you will receive an update from us to complete your profile."])
+        }
+        else
+        {
+            render(view: "mbLogin", model: [textMsg: "We are sorry but we already have your profile under pending approval status. Please wait while it is processed and approved."])
+        }
     }
     
     def editProfile() {
@@ -133,8 +176,23 @@ class MbController {
             }
 		def retVal = MbService.updateProfile(params)
 		if (retVal>0) {
-		    flash.message = "Profile updated succesfully..."
-	            redirect(action: "editProfile")
+            if(params.formSubmit){
+                def img1 = Image.findByImageTypeAndEntityId('closePrim',mbProfile.id)
+                def img2 = Image.findByImageTypeAndEntityId('fullPrim',mbProfile.id)
+                if(img1 && img2) {
+                    markProfileComplete()
+                    flash.message = "Profile Submitted succesfully..."
+                    redirect(action: "editProfile")
+                }
+                else{
+                    flash.message = '<div class=\"message\" role=\"status\" style=\"color:red\">Either your closeup or full profile primary image is missing. Please upload these to be able to submit your profile.</div>'
+                    redirect(action: "editProfile")
+                }
+            }
+            else {
+                flash.message = "Profile updated succesfully..."
+                redirect(action: "editProfile")
+            }
 		}
 		else {
 		    flash.message = "Some error occurred..Pls contact admin with errorcode MB"+retVal
@@ -185,69 +243,102 @@ class MbController {
 def uploadImage = {
     	log.debug("Inside uploadImage with params: "+params)
     	Individual cand = Individual.get(session.individualid)
-    	def mbProfile = MbProfile.findByCandidate(cand)
-	  def individual = cand
-	  // Get the avatar file from the multi-part request
-	  def f
+        def imageObj
+        def mbProfile = MbProfile.findByCandidate(cand)
+        def imageTool = new ImageTool()
+        def appDir = servletContext.getRealPath("/")
+        File fileDest = new File(appDir,"images/tempImg"+session.individualid+".jpg")
 	  // Save the image and mime type
-	  switch (params.type) {
-	  case 'fv':
-		  f = request.getFile('imgFileFV')
-		  individual.avatar = f.getBytes()
-		  individual.avatarType = f.getContentType()
-		  log.info("fv File uploaded: " + individual.avatarType)
-		  // Validation works, will check if the image is too big
-		  if (!individual.save()) {
-		    log.debug("Some error")
-		    return;
-		  }
-		  break
-	  case 'sv':
-		  f = request.getFile('imgFileSV')
-		  mbProfile.photo = f.getBytes()
-		  mbProfile.photoType = f.getContentType()
-		  log.info("sv File uploaded: " + mbProfile.photoType)
-		  if (!mbProfile.save()) {
-		    log.debug("Some error")
-		    return;
-		  }
-		  break
-	  default:
-	  	break
-	  }
-	render([status:1, msg:"Image uploaded succesfully!!"] as JSON)
+	    render([status:1, msg:"Image uploaded succesfully!!"] as JSON)
+    switch (params.imgType) {
+        case 'closePrim':
+            imageObj = Image.findByImageTypeAndEntityId('closePrim',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('closeUpPrimInput')
+            temp.transferTo(fileDest)
+            break
+        case 'closeSec':
+            imageObj = Image.findByImageTypeAndEntityId('closeSec',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('closeUpSecInput')
+            temp.transferTo(fileDest)
+            break
+        case 'fullPrim':
+            imageObj = Image.findByImageTypeAndEntityId('fullPrim',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('fullPrimInput')
+            temp.transferTo(fileDest)
+            break
+        case 'fullSec':
+            imageObj = Image.findByImageTypeAndEntityId('fullSec',mbProfile.id)
+            if (!imageObj) {
+                imageObj = new Image()
+            }
+            def temp = request.getFile('fullSecInput')
+            temp.transferTo(fileDest)
+            break
+    }
+        imageTool.load(fileDest.getBytes())
+        imageTool.thumbnail(500)
+        imageTool.writeResult(appDir+"/images/tempImgSmall"+session.individualid+".jpg","JPEG")
+        def f = new File(appDir+"/images/tempImgSmall"+session.individualid+".jpg")
+        imageObj.imageData = f.getBytes()
+        imageObj.creator = imageObj.updator = springSecurityService.principal.username
+        imageObj.imageType = params.imgType
+        imageObj.entityId = mbProfile.id
+        imageObj.entity = 'mbProfile'
+        imageObj.type = 'image/jpeg'
+        fileDest.delete()
+        f.delete()
+        // Validation works, will check if the image is too big
+        if (!imageObj.save()) {
+            log.debug("Some error")
+            return;
+        }
 }
 
 def showImage = {
-  def mbProfile = MbProfile.get(params.id)
-  if(!mbProfile)
+  def image = Image.findByImageTypeAndEntityId(params.imgType,params.entityId)
+  if(!image)
   	{
 	    response.sendError(404)
 	    return;
   	}
-  switch(params.imgtype) {
-  	case 'sv':
-	  if(mbProfile.photoType) {
-		  response.setContentType(mbProfile.photoType)
-		  response.setContentLength(mbProfile.photo.size())
+  switch(image.imageType) {
+  	case 'closePrim':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
 		  OutputStream out = response.getOutputStream();
-		  out.write(mbProfile.photo);
+		  out.write(image.imageData);
 		  out.close();
-	  }
 	  break
-  	case 'fv':
-	default:
-	  def avatarUser = mbProfile.candidate
-	  if (!avatarUser || !avatarUser.avatar || !avatarUser.avatarType) {
-	    response.sendError(404)
-	    return;
-	  }
-	  response.setContentType(avatarUser.avatarType)
-	  response.setContentLength(avatarUser.avatar.size())
-	  OutputStream out = response.getOutputStream();
-	  out.write(avatarUser.avatar);
-	  out.close();
-  	  break
+  	case 'closeSec':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
+		  OutputStream out = response.getOutputStream();
+		  out.write(image.imageData);
+		  out.close();
+	  break
+  	case 'fullPrim':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
+		  OutputStream out = response.getOutputStream();
+		  out.write(image.imageData);
+		  out.close();
+	  break
+  	case 'fullSec':
+		  response.setContentType(image.type)
+		  response.setContentLength(image.imageData.size())
+		  OutputStream out = response.getOutputStream();
+		  out.write(image.imageData);
+		  out.close();
+	  break
   }
   return
 }
@@ -258,7 +349,6 @@ def showImage = {
     	mbProfile.profileStatus = "SUBMITTED"
     	if(!mbProfile.save())
     		mbProfile.errors.allErrors.each {println it}
-    	render(view: "editProfile", model: [mbProfile: mbProfile])
     }
 
 
@@ -276,6 +366,8 @@ def showImage = {
 			candidate{eq('icsid',new Long(params.icsid))}
 		if(params.name)
 			candidate{ilike('legalName',params.name)}
+		if(params.loginid)
+			candidate{eq('loginid',params.loginid)}
 		if(params.referrerCenter)
 			eq('referrerCenter',params.referrerCenter)
 		if(params.contactNumber)
@@ -304,6 +396,7 @@ def showImage = {
             	    it.assignedTo?.toString(),
             	    it.profileStatus,
             	    it.workflowStatus,
+            	    it.candidate.loginid,
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -352,8 +445,8 @@ def showImage = {
                     and { candidate { 'in'('iskconCentre', valList) } }
                 }
 
-                if (params.flexibleNationality == "false" && params.prefNationality) {
-                    and { candidate { eq('nationality', params.prefNationality, [ignoreCase: true]) } }
+                if (params.flexibleCurrentCountry == "false" && params.prefCurrentCountry) {
+                    and { candidate { eq('nationality', params.prefCurrentCountry, [ignoreCase: true]) } }
                 }
 
                 if (params.flexibleCulturalInfluence == "false" && params.prefCulturalInfluence) {
@@ -383,7 +476,7 @@ def showImage = {
                 }
 
                 if (params.flexibleEducationCat == "false" && params.prefeducationCategory) {
-                    ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
+                    ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
                     def pos = categories.indexOf(params.prefeducationCategory)
                     categories = categories.subList(pos,categories.size())
                     and {'in'('eduCat',categories)}
@@ -471,29 +564,16 @@ def showImage = {
                 it.prospect.id,
                 it.candidateStatus,
                 it.prospect?.workflowStatus,
-                //it.lastUpdated?.format('dd-MM-yyyy HH:mm:ss'),
                 it.prospect?.candidate?.legalName,
-                //it.prospect?.candidate?.initiatedName,
                 it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
                 it.prospect?.candidate?.pob,
                 it.prospect?.candidate?.dob?.format('HH:mm:ss'),
-                //it.prospect?.candidate?.iskconCentre,
-                //it.prospect.candCounsellor,
-                //it.prospect?.candidate?.origin,
-                //it.prospect?.candidate?.varna,
-                //it.prospect.scstCategory,
                 it.prospect.candidate?.caste,
-                //it.prospect.candidate?.subCaste,
                 it.prospect.candidate?.height,
-                //it.prospect.candidate?.motherTongue,
                 it.prospect.candidate?.income,
-                //it.prospect.eduCat,
-                //it.prospect.eduQual,
-                //it.prospect.regulated,
-                //it.prospect.numberOfRounds,
-                //it.prospect.chantingSixteenSince,
                 it.candidateStatus,
-                it.mbStatus
+                it.mbStatus,
+                it.id
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
@@ -520,13 +600,12 @@ def showImage = {
             	    it.prospect.id,
             	    it.prospect?.candidate?.toString(),
             	    it.prospect?.workflowStatus,
-            	    it.stage,
             	    it.candidateStatus,
             	    it.candidateReason,
-            	    it.candidateDate?.format('dd-MM-yyyy HH:mm-ss'),
+            	    it.candidateDate?.format('dd-MM-yyyy HH:mm:ss'),
             	    it.mbStatus,
             	    it.mbReason,
-            	    it.mbDate?.format('dd-MM-yyyy HH:mm-ss')            	    
+            	    it.mbDate?.format('dd-MM-yyyy HH:mm:ss')
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
@@ -583,7 +662,7 @@ def showImage = {
 	render([status:"OK"] as JSON)    	
     }
     
-    def propose() {
+    /*def propose() {
     log.debug("proposing.."+params)
 	mbService.propose(params)
 	render([status:"OK"] as JSON)    	
@@ -593,76 +672,162 @@ def showImage = {
     	log.debug("announcing.."+params)
 	mbService.announce(params)
 	render([status:"OK"] as JSON)    	
-    }
+    }*/
 
     def prospects() {
     }
     
     def prospectsNextStep() {
     	def match = MbProfileMatch.get(params.matchid)
-    	switch(params.status) {
-    		case 'MEET_PROSPECT':
-    			match.candidateStatus='MEET_PROSPECT'
-    			match.candidateReason=''
-    			//check from the other party
-    			def otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
-    			if(otherMatch && otherMatch.candidateStatus=='MEET_PROSPECT') {
-    				//update workflow status for both
-    				match.candidate.workflowStatus = 'BOYGIRLMEET'
-    				if(!match.candidate.save())
-    					match.candidate.errors.allErrors.each {log.debug("BOYGIRLMEET:"+it)}
-    				otherMatch.candidate.workflowStatus = 'BOYGIRLMEET'
-    				if(!otherMatch.candidate.save())
-    					otherMatch.candidate.errors.allErrors.each {log.debug("BOYGIRLMEET:"+it)}
-    			}    				
-    			break
-    		case 'MEET_PARENT':
-    			match.candidateStatus='MEET_PARENT'
-    			match.candidateReason=''
-    			//check from the other party
-    			def otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
-    			if(otherMatch && otherMatch.candidateStatus=='MEET_PARENT') {
-    				//update workflow status for both
-    				match.candidate.workflowStatus = 'PARENTSMEET'
-    				if(!match.candidate.save())
-    					match.candidate.errors.allErrors.each {log.debug("PARENTSMEET:"+it)}
-    				otherMatch.candidate.workflowStatus = 'PARENTSMEET'
-    				if(!otherMatch.candidate.save())
-    					otherMatch.candidate.errors.allErrors.each {log.debug("PARENTSMEET:"+it)}
-    			}    				
-    			break
-    		case 'AGREE_PROPOSAL':
-    			match.candidateStatus='AGREE_PROPOSAL'
-    			match.candidateReason=''
-    			//check from the other party
-    			def otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
-    			if(otherMatch && otherMatch.candidateStatus=='AGREE_PROPOSAL') {
-    				//update workflow status for both
-    				match.candidate.workflowStatus = 'PROPOSALAGREED'
-    				if(!match.candidate.save())
-    					match.candidate.errors.allErrors.each {log.debug("PROPOSALAGREED:"+it)}
-    				otherMatch.candidate.workflowStatus = 'PROPOSALAGREED'
-    				if(!otherMatch.candidate.save())
-    					otherMatch.candidate.errors.allErrors.each {log.debug("PROPOSALAGREED:"+it)}
-    			}    				
-    			break
-    		case 'PROCEED':
-    			match.candidateStatus='PROCEED'
-    			match.candidateReason=''
-    			break
-    		case 'DECLINE':
-    			match.candidateStatus='DECLINE'
-    			match.candidateReason = params.reason
-    			break
-    		default:
-    			break
-    	}
-    	match.candidateDate = new Date()
-    	if(!match.save())
-		match.errors.each { log.debug("match:"+it)}  
-	else
-		render([status:"OK"] as JSON)
-    	
+        if(match.candidateStatus == match.mbStatus) {
+            switch (match.candidateStatus) {
+                case 'LIMITED PROFILE':
+                    match.candidateStatus = 'FULL PROFILE'
+                    break
+                case 'FULL PROFILE':
+                    match.candidateStatus = 'BOY GIRL MEET'
+                    break
+                case 'BOY GIRL MEET':
+                    match.candidateStatus = 'PARENTS MEET'
+                    break
+                case 'PARENTS MEET':
+                    match.candidateStatus = 'PROPOSAL AGREED'
+                    break
+                case 'PROPOSAL AGREED':
+                    render([status: "Cannot go Further than proposal Agreed!!"] as JSON)
+                default:
+                    break
+            }
+            match.candidateDate = new Date()
+            if (!match.save())
+                match.errors.each { log.debug("match:" + it) }
+        }
+        /*else if(match.mbStatus == 'DECLINED'){
+            render([status: "Sorry You Cannot Move Further. Match with this candidate is declined because: \n"+match.mbReason] as JSON)
+        }*/
+        else{
+            render([status: "Sorry You Cannot Move Further. Your advance to next stage is still pending for approval with marriage board!!"] as JSON)
+        }
+    }
+
+    def mbNextStep(){
+        def match = MbProfileMatch.get(params.matchid)
+        def otherMatch
+        if(match.candidateStatus == 'DECLINED'){
+            render([status: "Sorry! Cannot approve as candidate has declined. Please click on decline and close the match with proper reason."] as JSON)
+        }
+        else {
+            switch (match.mbStatus) {
+                case 'LIMITED PROFILE':
+                    if (match.candidateStatus == 'FULL PROFILE') {
+                        match.mbStatus = 'FULL PROFILE'
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        if (otherMatch && otherMatch.mbStatus == 'FULL PROFILE') {
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSED"
+                            otherMatch.mbDate = new Date()
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in Limited profile stage"] as JSON)
+                    }
+                    break
+                case 'FULL PROFILE':
+                    if (match.candidateStatus == 'BOY GIRL MEET') {
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+
+                        if (otherMatch && otherMatch.candidateStatus == 'BOY GIRL MEET') {
+                            match.mbStatus = otherMatch.mbStatus = 'BOY GIRL MEET'
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "BOYGIRLMEET"
+                            otherMatch.mbDate = new Date()
+                        } else {
+                            render([status: "Cannot approve as the other candidate has not yet agreed to meet the candidate."] as JSON)
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in full profile stage"] as JSON)
+                    }
+                    break
+                case 'BOY GIRL MEET':
+                    if (match.candidateStatus == 'PARENTS MEET') {
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+
+                        if (otherMatch && otherMatch.candidateStatus == 'PARENTS MEET') {
+                            match.mbStatus = otherMatch.mbStatus = 'PARENTS MEET'
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PARENTSMEET"
+                            otherMatch.mbDate = new Date()
+                        }
+                        else{
+                            render([status: "Cannot approve as the other candidate has not yet agreed for the parents meeting."] as JSON)
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in boy girl meet stage"] as JSON)
+                    }
+                    break
+                case 'PARENTS MEET':
+                    if (match.candidateStatus == 'PROPOSAL AGREED') {
+
+                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        if (otherMatch && otherMatch.candidateStatus == 'PROPOSAL AGREED') {
+                            match.mbStatus = otherMatch.mbStatus = 'PROPOSAL AGREED'
+                            otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSALAGREED"
+                            otherMatch.mbDate = new Date()
+                        }
+                        else{
+                            render([status: "Cannot approve as the other candidate has not yet agreed to the proposal."] as JSON)
+                        }
+                    } else {
+                        render([status: "Cannot Proceed!! Candidate still in parents meet stage"] as JSON)
+                    }
+                    break
+                case 'PROPOSAL AGREED':
+                    match.mbStatus = 'ANNOUNCE'
+                    otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                    otherMatch.mbStatus = 'ANNOUNCE'
+                    otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = 'ANNOUNCE'
+                    otherMatch.mbDate = new Date()
+                    break
+                case 'ANNOUNCE':
+                    match.mbStatus = 'MARRIED THROUGH MB'
+                    otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                    otherMatch.mbStatus = 'MARRIED THROUGH MB'
+                    otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = 'MARRIEDTHRUMB'
+                    otherMatch.mbDate = new Date()
+                    break
+            }
+            match.mbDate = new Date()
+            if (!match.save())
+                match.errors.each { log.debug("match:" + it) }
+            render([status: ""] as JSON)
+        }
+    }
+
+    def decline = {
+        def match = MbProfileMatch.get(params.matchid)
+        def otherMatch
+        switch(params.origin) {
+            case 'candidate':
+                match.candidateStatus = 'DECLINED'
+                match.candidateReason = params.reason
+                match.candidateDate = new Date()
+                break
+            case 'mb':
+                otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
+                if(otherMatch){
+                    otherMatch.candidateStatus = 'DECLINED'
+                    otherMatch.mbStatus = 'DECLINED'
+                    otherMatch.mbReason = params.reason
+                    otherMatch.mbDate = new Date()
+                    if(!otherMatch.save())
+                        match.errors.each { log.debug("match:"+it)}
+                }
+                match.candidateStatus = 'DECLINED'
+                match.mbStatus = 'DECLINED'
+                match.mbReason = params.reason
+                match.candidate.workflowStatus = match.prospect.workflowStatus = 'AVAILABLE'
+                match.mbDate = new Date()
+                break
+        }
+        if(!match.save())
+            match.errors.each { log.debug("match:"+it)}
+        render([status:""] as JSON)
     }
     
     def manageBoard()  {}
@@ -688,6 +853,8 @@ def showImage = {
 			eq('icsid',params.icsid)
 		if (params.name)
 			ilike('legalName',params.name)
+		if (params.loginid)
+			eq('loginid',params.loginid)
 		if (params.phone)
 			VoiceContact{
 				eq('category','CellPhone')
@@ -723,6 +890,7 @@ def showImage = {
             	    EmailContact.findByIndividualAndCategory(it,'Personal')?.emailAddress,
             	    it.iskconCentre,
             	    it.individualRoles?.collect{it?.role?.name},
+            	    it.loginid,
                 ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -739,7 +907,8 @@ def showImage = {
 	      // determine our action
 	      switch (params.oper) {
 		case 'add':
-		  if(mbService.addBoardMember(params)) {
+		  individual = mbService.addBoardMember(params)
+		  if(individual) {
 			    message = "Individual Saved.."
 			    id = individual.id
 			    state = "OK"
@@ -778,7 +947,7 @@ def showImage = {
 		    individual.properties = params
 			  individual.updator = springSecurityService.principal.username
 		    if (! individual.hasErrors() && individual.save()) {
-		      message = "Individual  ${individual.regNum} Updated"
+		      message = "Individual  ${individual.icsid} Updated"
 		      id = individual.id
 		      state = "OK"
 		    } else {
@@ -822,26 +991,21 @@ def showImage = {
     	def retmsg = MbService.assignProfile(params)
 	render ([message:retmsg] as JSON)
     }
-    
-    def fullProfile() {
-    	log.debug("Inside fullProfile:"+params)
-    	def match = MbProfileMatch.get(params.matchid)
-    	if(match && match.mbStatus=='FULLPROFILE' && match.candidate.candidate.loginid==springSecurityService.principal.username) {
-            render(template: "fullProfile", model: [profile: match.prospect])
-    	}
-    	else
-    		render "Unavailable!!"
-    	
-    }
-    def limitedProfile() {
-    	log.debug("Inside limitedProfile:"+params)
-    	def match = MbProfileMatch.get(params.matchid)
-    	if(match && match.candidate.candidate.loginid==springSecurityService.principal.username) {
-            render(template: "limitedProfile", model: [profile: match.prospect])
-    	}
-    	else
-    		render "Unavailable!!"
 
+    def getProfileByStage(params){
+        log.debug("Inside get profile by stage: "+params)
+        def match = MbProfileMatch.get(params.matchid)
+        if(match && match.candidate.candidate.loginid==springSecurityService.principal.username){
+           if(match.mbStatus=='FULL PROFILE') {
+               render(template: "fullProfile", model: [profile: match.prospect])
+           }
+           else if(match.mbStatus=='LIMITED PROFILE'){
+               render(template: "limitedProfile", model: [profile: match.prospect])
+           }
+        }
+        else{
+            render "Error. The Profile is currently not available for view. Please get in touch with marriage board admin for more details or wite to rk.mb.system@gmail.com."
+        }
     }
     
     def dashboard() {
@@ -856,7 +1020,7 @@ def showImage = {
     def report() {}
     
     def showReportResult() {
-    	log.debug("Inside showReportResult with params : "+params)	    	
+    	//log.debug("Inside showReportResult with params : "+params)	    	
     	render(template: params.reportName)
     }
     
@@ -949,6 +1113,261 @@ def showImage = {
             }
     }
     
+    def jq_varnaCategory_list() {
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'desc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+              
+    	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
+    				
+    		    
+    	if(params.db)
+    		eq('category',params.db)
+    	if(params.centre)
+    		eq('referrerCenter',params.centre)
+    	if(params.gender) {
+    		if(params.gender=='BOY')
+    			candidate{eq('isMale',true)}
+    		else
+    			candidate{eq('isMale',false)}
+    		}
+    	if(params.workflowStatus)
+    		eq('workflowStatus',params.workflowStatus)
+    	if(params.name)
+    		candidate{
+    			or{
+    			ilike('legalName',params.name)
+    			ilike('initiatedName',params.name)
+    			}
+    		}
+    	if(params.nationality)
+    		candidate{ilike('nationality',params.nationality)}
+    	if(params.origin)
+    		candidate{ilike('origin',params.origin)}
+    	if(params.varna)
+    		candidate{ilike('varna',params.varna)}
+    	if(params.caste)
+    		candidate{ilike('caste',params.caste)}
+    	if(params.nationality)
+    		candidate{ilike('nationality',params.nationality)}
+    	if(params.subCaste)
+    		candidate{ilike('subCaste',params.subCaste)}
+    	if(params.scstCategory)
+    		ilike('scstCategory',params.scstCategory)
+    	if(params.manglik)
+    		ilike('manglik',params.manglik)
+    
+    
+    	order(sortIndex, sortOrder)
+    	}
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+          
+         
+          def jsonCells
+          jsonCells = result.collect {
+                [cell: [
+                	    it.category,
+                	    it.referrerCenter,
+                	    it.candidate.isMale?'Boy':'Girl',
+                	    it.workflowStatus,
+                	    it.candidate.toString(),
+                	    it.candidate.nationality,
+                	    it.candidate.origin,
+                	    it.candidate.varna,
+                	    it.scstCategory,
+                	    it.candidate.caste,
+                	    it.candidate.subCaste,
+                	    it.manglik,
+                    ], id: it.id]
+            }
+            def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+            render jsonData as JSON
+    }
+
+    def jq_salientFeatures_list() {
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'desc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+              
+    	def result = MbProfile.createCriteria().list(max:maxRows, offset:rowOffset) {
+    				
+    		    
+    	if(params.db)
+    		eq('category',params.db)
+    	if(params.centre)
+    		eq('referrerCenter',params.centre)
+    	if(params.gender) {
+    		if(params.gender=='BOY')
+    			candidate{eq('isMale',true)}
+    		else
+    			candidate{eq('isMale',false)}
+    		}
+    	if(params.workflowStatus)
+    		eq('workflowStatus',params.workflowStatus)
+    	if(params.name)
+    		candidate{
+    			or{
+    			ilike('legalName',params.name)
+    			ilike('initiatedName',params.name)
+    			}
+    		}
+    	if(params.income)
+    		candidate{ilike('income',params.income)}
+    	if(params.languagesKnown)
+    		ilike('languagesKnown',params.languagesKnown)
+    	if(params.height)
+    		candidate{ilike('height',params.height)}
+    	if(params.weight)
+    		ilike('weight',params.weight)
+    	if(params.eduCat)
+    		candidate{ilike('eduCat',params.eduCat)}
+    	if(params.eduQual)
+    		candidate{ilike('eduQual',params.eduQual)}
+    	if(params.spiritualMaster)
+    		ilike('spiritualMaster',params.spiritualMaster)    
+    
+    	order(sortIndex, sortOrder)
+    	}
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+          
+         
+          def jsonCells
+          jsonCells = result.collect {
+                [cell: [
+                	    it.category,
+                	    it.referrerCenter,
+                	    it.candidate.isMale?'Boy':'Girl',
+                	    it.workflowStatus,
+                	    it.candidate.toString(),
+                	    it.candidate.income,
+                	    it.languagesKnown,
+                	    it.candidate.height,
+                	    it.weight,
+                	    it.candidate.eduCat,
+                	    it.candidate.eduQual,
+                	    it.spiritualMaster
+                    ], id: it.id]
+            }
+            def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+            render jsonData as JSON
+    }
+
+    def jq_rejectionReason_list() {
+          def sortIndex = params.sidx ?: 'id'
+          def sortOrder  = params.sord ?: 'desc'
+    
+          def maxRows = Integer.valueOf(params.rows)
+          def currentPage = Integer.valueOf(params.page) ?: 1
+    
+          def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
+          
+    	def result = MbProfileMatch.createCriteria().list(max:maxRows, offset:rowOffset) {
+    				
+    	isNotNull('candidateReason')	    
+    	if(params.db)
+    		candidate{eq('category',params.db)}
+    	if(params.centre)
+    		candidate{eq('referrerCenter',params.centre)}
+    	if(params.gender) {
+    		if(params.gender=='BOY')
+    			candidate{candidate{eq('isMale',true)}}
+    		else
+    			candidate{candidate{eq('isMale',false)}}
+    		}
+    	if(params.workflowStatus)
+    		candidate{eq('workflowStatus',params.workflowStatus)}
+    	if(params.name)
+    		candidate{candidate{
+    			or{
+    			ilike('legalName',params.name)
+    			ilike('initiatedName',params.name)
+    			}
+    		}}
+    
+    
+    	order(sortIndex, sortOrder)
+    	}
+          
+          def totalRows = result.totalCount
+          def numberOfPages = Math.ceil(totalRows / maxRows)
+          
+         
+          
+          def jsonCells
+          jsonCells = result.collect {
+                [cell: [
+                	    it.candidate.category,
+                	    it.candidate.referrerCenter,
+                	    it.candidate.candidate.isMale?'Boy':'Girl',
+                	    it.candidate.candidate.toString(),
+                	    it.candidate.workflowStatus,
+                	    it.candidateStatus,
+                	    it.candidateReason,
+                	    it.candidateDate?.format('dd-MM-yy HH:mm:ss')
+                    ], id: it.id]
+            }
+            def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
+            render jsonData as JSON
+    }
+    
+    def unlockAndResetUser() {
+	def flag
+	if(params.idlist) {
+		def idList = params.idlist.tokenize(',')
+		def individual
+		idList.each{
+			individual = Individual.get(it)
+			if(individual.category=='MB_BOARD')
+				flag = mbService.unlockAndResetUser(individual)
+			}
+    	}
+    	else if(params.mbprofile_idlist) {
+		def pidList = params.mbprofile_idlist.tokenize(',')
+		def individual
+		pidList.each{
+			individual = MbProfile.get(it)?.candidate
+			if(individual.category=='MB')
+				flag = mbService.unlockAndResetUser(individual)
+			}
+    	}
+	render([message:flag] as JSON)
+    }
+    
+    def snapshot() {[centre:params.centre]}
+    
+    def genderwiseReport() {
+		def result = mbService.genderwiseReport(params)
+		render( result as JSON)
+    }
+
+    def candidateAttributeReport() {
+		def result = mbService.candidateAttributeReport(params)
+		render( result as JSON)
+    }
+
+    def mbProfileAttributeReport() {
+		def result = mbService.mbProfileAttributeReport(params)
+		render( result as JSON)
+    }
+
+    def forgotPassword ()    {
+
+    }
+    def activityStream() {}
+    
+    def resources() {}
 
     
 }

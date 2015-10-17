@@ -6,7 +6,8 @@ import groovy.sql.Sql;
 import org.codehaus.groovy.grails.commons.ConfigurationHolder
 import org.springframework.util.ClassUtils
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
-import java.util.zip.ZipOutputStream  
+import java.util.zip.ZipOutputStream
+import groovy.time.TimeCategory
 import java.util.zip.ZipEntry  
 import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
@@ -172,7 +173,7 @@ def commsService
     	//IcsUserInstance.setPassword(springSecurityService.encodePassword(params.password))
     	IcsUserInstance.setPassword(params.password)
     	IcsUserInstance.setPasswordExpired(false)
-	render([success: true, message: 'Password changed successfully!'] as JSON)
+	    render([success: true, message: 'Password changed successfully!'] as JSON)
 	}
 
     def resetPassword = {
@@ -182,16 +183,73 @@ def commsService
 		render('No username provided')
 		return
 		}
-        
-        def IcsUserInstance = IcsUser.findByUsername(params.username)
+
+		//generic reset password
+		if(params.tokKey) {
+			def codeInst = Code.findByCodenoAndType(params.tokKey, 'MB')
+			def now = new Date()
+			String newPassword = params.password
+			String newPassword2 = params.rpassword
+			if (now > codeInst.validTill) {
+			    render([success: false, message: 'The token is no longer valid. Please request new token by clicking forgot password on login page.'] as JSON)
+			    return
+			}
+			if (newPassword != newPassword2) {
+			    //response.status = 500
+			    render([success: false, message: 'Entered Passwords donot match. Password and confirm password field should be same.'] as JSON)
+			    return
+			}
+			if (params.userName != codeInst.category) {
+			    //response.status = 500
+			    render([success: false, message: 'Invalid user name. Please enter the correct user name or contact admin.'] as JSON)
+			    return
+			}
+			def IcsUserInstance = IcsUser.findByUsername(params.userName)
+			IcsUserInstance.setPassword(newPassword)
+			render([success: true, message: 'Password Changed SuccessFully...'] as JSON)
+			return
+		}
+
+		//normal flow..hardcoded new passowrd
+		def IcsUserInstance = IcsUser.findByUsername(params.username)
+		//IcsUserInstance.setPassword(springSecurityService.encodePassword('harekrishna'))
+		if(IcsUserInstance)
+		{
+			IcsUserInstance.setPassword('harekrishna')
+			render([success: true, data: 'krishna', errors:''] as JSON)
+		}
+		else
+			render([success: false, data: 'krishna', errors:'Username '+params.username+' not found!'] as JSON)
+	}
+
+    def forgotPassword = {
+	    def IcsUserInstance = IcsUser.findByUsername(params.loginId)
     	//IcsUserInstance.setPassword(springSecurityService.encodePassword('harekrishna'))
     	if(IcsUserInstance)
     	{
-		IcsUserInstance.setPassword('harekrishna')
-		render([success: true, data: 'krishna', errors:''] as JSON)
-	}
-	else
-		render([success: false, data: 'krishna', errors:'Username '+params.username+' not found!'] as JSON)
+            def keyToken = org.apache.commons.lang.RandomStringUtils.randomAlphanumeric(10)
+            //TODO : create email link and add url parameter tokKey= keyToken value.
+            def currEntry = Code.findByCategoryAndType(params.loginId,'MB')
+
+            use (TimeCategory) {
+
+            if(!currEntry)
+            {
+                currEntry = new Code(category: params.loginId,codeno: keyToken,type: 'MB',validFrom: new Date(),validTill: new Date() + 7.days)
+                currEntry.save()
+            }
+            else
+            {
+                currEntry.codeno = keyToken
+                currEntry.validFrom = new Date()
+                currEntry.validTill = new Date() + 7.days
+                currEntry.save()
+            }
+            }
+            render([success: true, message: 'A change password link has been sent to your registered email address. Please check your mail and change your password.'] as JSON)
+	    }
+	    else
+            render([success: false, message: 'Specified username is not in the system. Please supply a valid userid or contact the admin.'] as JSON)
 	}
 	
 	def ajaxListIcsUsers = {
@@ -5517,7 +5575,7 @@ def commsService
 		params.smstext.eachWithIndex { ch, index ->
 		    decimalCodePoints += "$ch:${Character.codePointAt(params.smstext, index)} "
 		}
-		log.debug(decimalCodePoints)
+		log.debug("Sending decimalcodepoints:"+decimalCodePoints+" to nos:"+phonenos)
 		
 		commsService.sendSms(depcp?.cp,phonenos,params.smstext)
 		
@@ -5573,6 +5631,15 @@ def commsService
 							//get the department from the event
 							params.depid = event?.department?.id
 							log.debug("Set depid="+params.depid)
+							}
+						//@TODO: review, for EVENT, mail would be sent to ERs + EPs
+						EventRegistration.findAllByEvent(event)?.each{
+							val = it.email
+							if(val)
+								{
+								emails += val+","
+								count++
+								}
 							}
 						if(event)
 							{
@@ -5827,6 +5894,43 @@ def commsService
 	    render loginMap
     }	
 
+    def uploadForLoginChange() {
+	    def f = request.getFile('myFile')
+	    if (f.empty) {
+		render('file cannot be empty')
+		return
+	    	}
+
+		def icsUser
+		def ind
+		def loginMap = ''
+		def newLogin
+
+	    //file format (generic, used by EMS module as well)
+	    //@TODO: only 1st 2 cols used in this case
+	    //currentLoginid,newLoginid
+	    f.inputStream.toCsvReader(['skipLines':'1']).eachLine{ tokens ->
+	    	ind = Individual.findByLoginid(tokens[0])
+	    	icsUser = IcsUser.findByUsername(tokens[0])
+	    	newLogin = tokens[1]?.trim()?:''
+
+		if(ind && icsUser && newLogin) {
+			icsUser.username = newLogin
+			if(!icsUser.save())
+				icsUser.errors.allErrors.each {log.debug("Exception in icsUser update:"+it)}
+			else {
+			ind.loginid = newLogin
+			if(!ind.save())
+				ind.errors.allErrors.each {log.debug("Exception in ind loginid update:"+it)}
+			else
+				loginMap += tokens[0]+"->"+newLogin+";"
+			}
+		}
+	    }
+	    
+	    render loginMap
+    }	
+
 	def schemeSummaryReport() {
 		def totalmemberSummary;
 		def memberscount=[]
@@ -5901,7 +6005,7 @@ def commsService
             	membersprofileCompleteCount.add(value.getAt(1))
             	centers.add("'"+key+"'") 
             }
-            maxmembercount = memberscount.max()
+            maxmembercount = memberscount.max()?:0
             maxmembercount = maxmembercount + (10- maxmembercount%10 )
 
         }
@@ -6955,7 +7059,8 @@ def commsService
 			if(!params.reportName) {
 				response.contentType = 'application/zip'
 				new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
-					zipOutputStream.putNextEntry(new ZipEntry("Transactions.csv"))
+					def fileName = "Transactions_"+params.dtFrom.format('dd-MM-yyyy')+"_"+params.dtTill.format('dd-MM-yyyy')+"_"+(new Date()).format('ddMMyyyyHHmmss')+".csv"
+					zipOutputStream.putNextEntry(new ZipEntry(fileName))
 					//header
 					zipOutputStream << "Receipt No,Date,Ledger,Cost Category,Cost Center,Credit Amount,Transaction Type,Instrument No,Instrument Date,Bank Name,Branch,Ledger Name,Debit Amount,Narration" 
 

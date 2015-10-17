@@ -949,7 +949,9 @@ def config = ConfigurationHolder.config
 				if(it.size()>3)
 					searchStr += it +"~ "
 				}
-			println "In searchIndividualName: fuzzy search string 1st pass: " + searchStr
+			//println "In searchIndividualName: fuzzy search string 1st pass: " + searchStr
+			if(!searchStr)
+				return []
 			sresults = Individual.search(searchStr)
 			if(sresults.total>0)
 				{
@@ -964,7 +966,7 @@ def config = ConfigurationHolder.config
 					searchStr = tokens[0]+" "+tokens[tokens.size()-1]
 				else
 					searchStr = tokens[0]
-				println "In searchIndividualName: fuzzy search string 2nd pass: " + searchStr
+				//println "In searchIndividualName: fuzzy search string 2nd pass: " + searchStr
 				sresults = Individual.search(searchStr)
 				if(sresults.total>0)
 					{
@@ -979,7 +981,7 @@ def config = ConfigurationHolder.config
 						if(i>0)
 							searchStr += obj+" "
 					}
-					println "In searchIndividualName: fuzzy search string 3rd pass: " + searchStr
+					//println "In searchIndividualName: fuzzy search string 3rd pass: " + searchStr
 					sresults = Individual.search(searchStr)
 					if(sresults.total>0)
 						{
@@ -1908,6 +1910,11 @@ def config = ConfigurationHolder.config
 			{
 			return individual
 			}
+		else 
+			return null
+			
+		//@TODO: For preserving golden master, below code is not needed
+		
 		//need to create a new one
 		individual = new Individual()
 		individual.legalName = name
@@ -2203,6 +2210,27 @@ def config = ConfigurationHolder.config
 		return false
 	}
 	
+    def loginChange(Object tokens) {
+	def message=""
+	def ind = Individual.findByLoginid(tokens[0])
+	def icsUser = IcsUser.findByUsername(tokens[0])
+	def newLogin = tokens[1]?.trim()?:''
+
+	if(ind && icsUser && newLogin) {
+		icsUser.username = newLogin
+		if(!icsUser.save())
+			icsUser.errors.allErrors.each {log.debug("loginChange:Exception in icsUser update:"+it)}
+		else {
+		ind.loginid = newLogin
+		if(!ind.save())
+			ind.errors.allErrors.each {log.debug("loginChange:Exception in ind loginid update:"+it)}
+		else
+			message = tokens[0]+"->"+newLogin+";"
+		}
+	}
+	
+	return message
+    }
 
 
 }

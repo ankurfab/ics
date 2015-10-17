@@ -58,7 +58,8 @@ class DonationRecordController {
         def donationExecRole = Role.findByAuthority('ROLE_DONATION_EXECUTIVE')
         def dep = IndividualRole.findWhere('individual.id':session.individualid,role:donationExecRole,status:'VALID')?.department
         if(dep)
-            schemes = Scheme.findAllByDepartment(dep,[sort:'name'])
+        	//@TODO: dep not set for schemes for new FY..need to think and fix..FROZEN issue
+            schemes = Scheme.findAllByDepartmentAndStatusIsNull(dep,[sort:'name'])
         }
 	else if (SpringSecurityUtils.ifAnyGranted('ROLE_PATRONCARE,ROLE_PATRONCARE_USER')){
 		schemes = Scheme.createCriteria().list{
@@ -345,7 +346,7 @@ class DonationRecordController {
      println "Size: ${uploadedFile.size}"
      println "ContentType: ${uploadedFile.contentType}"
      
-    if(!(uploadedFile.contentType?.toString()=="application/vnd.ms-excel")){
+    if((uploadedFile.contentType?.toString()=="application/vnd.ms-excel")){
         flash.message = 'please upload a CVS file only.'
         redirect(action: "uploadpaymentdata")
         return
@@ -1240,8 +1241,10 @@ def donationRecordDataWithFilters(){
                   ilike("rno",'%'+params.rno+'%')
                 }
 
-
-                order(sortIndex,sortOrder)
+		if(sortIndex=='member')
+                	donatedBy{order('legalName',sortOrder)}
+                else
+                	order(sortIndex,sortOrder)
               }
         return result  
 }
@@ -1311,13 +1314,22 @@ def donationRecordDataForPC(){
                   ilike("rno",'%'+params.rno+'%')
                 }
                 
-                order(sortIndex,sortOrder)
+		if(sortIndex=='member')
+                	donatedBy{order('legalName',sortOrder)}
+                else
+                	order(sortIndex,sortOrder)
+
               }
         return result  
 }
 
 	def saveQuickCreate() {
 		log.debug("Inside saveQuickCreate with params:"+params)
+		try{
+		//remove , from amount if any
+		params.amount = params.amount?.replaceAll(',','')
+		}
+		catch(Exception e){log.debug('Exception in removing ,:'+e)}
 		def dr = donationService.createDonationRecord(params)
 		if(dr)
 			{

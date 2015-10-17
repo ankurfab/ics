@@ -45,15 +45,14 @@
                                 <td valign="top" class="value ${hasErrors(bean: roleInstance, field: 'name', 'errors')}">
 				   <div style="width: 200px">
 					<sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
-						<g:select name="costCenter.id" from="${ics.CostCenter.findAllByStatusIsNull(sort: 'name')}" optionKey="id"    noSelection="['':'-Choose Cost Center-']"/>
+						<g:select name="costCenter.id" from="${ics.CostCenter.findAllByStatusIsNull(sort: 'name')}" optionKey="id" noSelection="['':'-Choose Cost Center-']"/>
 					</sec:ifAnyGranted >
 					<sec:ifAnyGranted roles="ROLE_CC_OWNER">
-						<g:select name="costCenter.id" from="${ics.CostCenter.findAllByOwnerAndStatusIsNull(ics.Individual.get(session.individualid),[sort: 'name']	)}" optionKey="id"   noSelection="['':'-Choose Cost Center-']"/>
+						<g:select name="costCenter.id" from="${ics.CostCenter.findAllByOwnerAndStatusIsNull(ics.Individual.get(session.individualid),[sort: 'name']	)}" optionKey="id"/>
 					</sec:ifAnyGranted >
 				    </div>
                                 </td>
                             </tr>
-
                             <tr class="prop">
                                 <td valign="top" class="name">
                                     From Date

@@ -6,7 +6,7 @@
 </head>
 <body>
 <div>
-    <h1 class="pageHead">Marriage Biodata of :  ${profile.candidate.legalName}</h1>
+    <h1 class="pageHead">Marriage Biodata(Limited Profile) of :  ${profile.candidate.legalName}</h1>
     <g:set var="candAddr" value="${ics.Address.findByIndividualAndCategory(profile.candidate,'PresentAddress')}"/>
 </div>
 <div>

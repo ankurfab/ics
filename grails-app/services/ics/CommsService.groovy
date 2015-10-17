@@ -219,7 +219,7 @@ class CommsService {
 			if(number) {
 				def template = Template.findByCodeAndCategory(templateCode,"SMS")
 				if(template) {
-					def body = commsService.fillTemplate(template,contentParams)
+					def body = fillTemplate(template,contentParams)
 					sendSms(depcp_sms.cp,number,body)
 				}
 			}
@@ -239,13 +239,13 @@ class CommsService {
 			if(toEmail) {
 				def template = Template.findByCodeAndCategory(templateCode,"EMAIL")
 				if(template) {
-					def body = commsService.fillTemplate(template,contentParams)
+					def body = fillTemplate(template,contentParams)
 					sendMandrill([key:depcp?.cp?.apikey,sender:depcp.sender,toName:toName,toEmail:toEmail,emailsub:template.name,emailbody:body,type:template.type])
 				}
 			}
 			}
 	    }
-	    catch(Exception e){log.debug("sendcomms email stage:"+stage+" exception:"+e)}
+	    catch(Exception e){log.debug("sendcomms email exception:"+e)}
     }
 
 }

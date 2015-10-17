@@ -1266,8 +1266,12 @@ class BookController {
 	  catch(Exception e) {log.debug("Exception in modify contact while adding order"+e)}
 	  
 	  //check if existing distributor or new distributor
-	  if(!params.distributorid)
-	  	params.distributorid = individualService.createIndividualFromOrder(params)?.id
+	  if(!params.distributorid) {
+	  	//@TODO: DATA OWNERSHIP ISSUE..creation only from single place
+	  	//params.distributorid = individualService.createIndividualFromOrder(params)?.id
+	        render ([success:false,message:'CANNOT CREATE DISTRIBUTOR. PLEASE CONTACT CENTRAL OFFICE!!'] as JSON)
+	        return
+	  }
 	  params.orderDate = new Date()
 	  params.'placedBy.id' = params.distributorid
 	  params.status = "In-Progress"				
@@ -1279,11 +1283,21 @@ class BookController {
 	    order.orderNo = key +"/"+ receiptSequenceService.getNext(key)
 
 	    //order.orderNo = "JDORD"+housekeepingService.getFY() +"/"+ receiptSequenceService.getNext("JD-Order")
+	    
+	    //tag to previous challan, if opted
+	    if(params.appendMode) {
+	    	//find most recent unsettled challan
+	    	def challans = Challan.findAllByIssuedToAndStatus(order.placedBy,'PREPARED',[sort:'issueDate',order:'desc'])
+	    	if(challans.size()>0)
+	    		order.challan = challans[0]
+	    }
+
+	    
 	    if(!order.save())
 		    order.errors.allErrors.each {
 			log.debug(it)
 			}	    	
-	    success=true
+	    success=true	    	    
 	  } else {
 	    order.errors.allErrors.each {
 		log.debug(it)

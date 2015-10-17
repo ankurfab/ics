@@ -26,6 +26,9 @@ class LogoutController {
 		
 		
 		session.invalidate()
-		redirect uri: SpringSecurityUtils.securityConfig.logout.filterProcessesUrl // '/j_spring_security_logout'
+		if(params.logoutUri)
+			redirect uri:params.logoutUri
+		else
+			redirect uri: SpringSecurityUtils.securityConfig.logout.filterProcessesUrl // '/j_spring_security_logout'
 	}
 }

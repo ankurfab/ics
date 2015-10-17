@@ -64,3 +64,7 @@ button.btn:active { outline: 0; color: #fff; -moz-box-shadow: none; -webkit-box-
 button.btn:focus { outline: 0; background: #19b9e7; color: #fff; }
 
 button.btn:active:focus, button.btn.active:focus { outline: 0; background: #19b9e7; color: #fff; }
+
+.mand{
+    color: red;
+}

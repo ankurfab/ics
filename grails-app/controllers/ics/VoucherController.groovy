@@ -5,6 +5,7 @@ import org.grails.plugins.csv.CSVWriter
 import org.apache.commons.lang.StringEscapeUtils.*
 import org.codehaus.groovy.grails.plugins.springsecurity.*
 import grails.converters.JSON
+import groovy.time.TimeCategory
 
 class VoucherController {
     def springSecurityService
@@ -18,12 +19,7 @@ class VoucherController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def list = {
-        params.max = Math.min(params.max ? params.max.toInteger() : 10,  100)
-        if(!params.sort)
-        	params.sort='lastUpdated'
-        if(!params.order)
-        	params.order='desc'
-        [voucherInstanceList: Voucher.list(params), voucherInstanceTotal: Voucher.count()]
+    	[overdue:params.overdue]
     }
 
     def create = {
@@ -37,7 +33,14 @@ class VoucherController {
         params.updator=params.creator
 	if(params.voucherDate)
 		params.voucherDate = Date.parse('dd-MM-yyyy', params.voucherDate)
+	if(params.instrumentDate)
+		params.instrumentDate = Date.parse('dd-MM-yyyy', params.instrumentDate)
+
         def voucherInstance = new Voucher(params)
+
+	voucherInstance.departmentCode=CostCenter.get(params.ledger)
+	voucherInstance.ledger=voucherInstance.departmentCode?.costCategory.alias + voucherInstance.departmentCode?.alias
+        voucherInstance.status='CREATED'
 
 	if(!params.voucherNo)
 	try{
@@ -167,6 +170,27 @@ class VoucherController {
     
     	def result = Voucher.createCriteria().list(max:maxRows, offset:rowOffset) {
     				
+	if(params.overdue && params.overdue=='overdue') {
+		def now = new Date()
+		now = now.clearTime()
+		def cutoffdate
+		use (TimeCategory) {
+			cutoffdate = now - 2.days
+		}
+
+		//@TODO: REMOVE HARDCODED DATE
+		def currentFYStartDate = Date.parse('dd-MM-yyyy', '01-04-2015')
+
+			eq('creator',springSecurityService?.principal?.username?:'')
+			ge('dateCreated',currentFYStartDate)
+			lt('dateCreated',cutoffdate)
+			isNull('instrumentReadyStatus')
+			mode{eq('name','Cheque')}
+		
+	}
+
+	ne('status','DELETED')
+	
 	if (params.voucherDate) {
 		def voucherDate = Date.parse('dd-MM-yyyy', params.voucherDate)
 		ge('voucherDate', voucherDate)	
@@ -269,7 +293,7 @@ class VoucherController {
     	new ZipOutputStream(response.outputStream).withStream { zipOutputStream ->
     	zipOutputStream.putNextEntry(new ZipEntry(fileName))
     	
-    	zipOutputStream << "SNo,VoucherDate,VoucherNo,DepartmentCode,Description,Deposit(Dr),Withdrawal(Cr),Type,From,To,Amount,Debit/Credit,RefNo,Status" 
+    	zipOutputStream << "SNo,VoucherDate,VoucherNo,DepartmentCode,Description,Deposit(Dr),Withdrawal(Cr),Type,From,To,Amount,Debit/Credit,RefNo" 
     	def sno = 0
     	result.each{ row ->
     	sno++
@@ -290,8 +314,7 @@ class VoucherController {
     	(row.anotherLedger?.replaceAll(',',';')?:'') +","+
     	(row.amount?:'') +","+
     	(row.debit?'Dr':'Cr') +","+
-    	(row.refNo?.replaceAll(',',';')?:'') +","+
-    	(row.status?.replaceAll(',',';')?:'')
+    	(row.refNo?.replaceAll(',',';')?:'')
     	    }
     	 }    		
     	return
@@ -320,8 +343,7 @@ class VoucherController {
                 	    it.bankBranch,
                 	    it.instrumentCollected?(it.instrumentCollectedDate?.format('dd-MM-yyyy HH:mm:ss')):'',
                 	    it.dataCaptured?(it.dataCaptureDate?.format('dd-MM-yyyy HH:mm:ss')):'',
-                	    it.refNo,
-                	    it.status,
+                	    it.refNo
                     ], id: it.id]
             }
             def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -409,7 +431,24 @@ class VoucherController {
     	render([message:msg] as JSON)
     }
  
-    def printVoucher() {
+    def bounceCheque() {
+		log.debug("params from within bounceCheque:"+params)
+		def voucherInstance = Voucher.get(params.id)
+		def result = Expense.createCriteria().list(max:20, offset:0) {
+			isNotNull('paymentVoucher')
+			paymentVoucher{eq('voucherNo', voucherInstance.voucherNo)}
+		}
+		voucherInstance.refNo = null;
+		voucherInstance.status = "BOUNCED_CHEQUE";
+		result.collect {
+			it.paymentVoucher = null;
+			it.status = "BOUNCED_CHEQUE";
+		}
+		
+		return
+	}
+
+	def printVoucher() {
         def voucherInstance
         
         if(params.id) {
@@ -425,7 +464,7 @@ class VoucherController {
         	voucherInstance = Project.get(params.projectid)?.advancePaymentVoucher
         else if(params.expenseid) {
         	voucherInstance = Expense.get(params.expenseid)?.paymentVoucher
-        	if(voucherInstance.type=='Journal')
+        	if(voucherInstance?.type=='Journal')
         		params.settlement = false
         	}
 

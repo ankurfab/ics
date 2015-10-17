@@ -7,6 +7,7 @@
 	<r:require module="grid" />
 	<r:require module="ajaxform"/>
 	<r:require module="printarea" />
+    <r:require module="jqbarcode" />
 </head>
 
 <body>
@@ -185,8 +186,8 @@
 		$("#partproject_list").jqGrid('filterToolbar', {autosearch: true});
 		$("#partproject_list").jqGrid('navGrid',"#partproject_list_pager",{edit:false,add:false,del:false,search:false});
 		$("#partproject_list").jqGrid('inlineNav',"#partproject_list_pager",{edit: false,add: false,save: false,cancel: false});
-		$("#partproject_list").jqGrid('navGrid', "#partproject_list_pager").jqGrid('navButtonAdd', "#partproject_list_pager", {caption: "Remove", buttonicon: "ui-icon-cancel", onClickButton: removePP, position: "last", title: "Remove", cursor: "pointer"});
-		$("#partproject_list").jqGrid('navGrid', "#partproject_list_pager").jqGrid('navButtonAdd', "#partproject_list_pager", {caption: "Link", buttonicon: "ui-icon-extlink", onClickButton: linkPP, position: "last", title: "Link", cursor: "pointer"});
+		//$("#partproject_list").jqGrid('navGrid', "#partproject_list_pager").jqGrid('navButtonAdd', "#partproject_list_pager", {caption: "Remove", buttonicon: "ui-icon-cancel", onClickButton: removePP, position: "last", title: "Remove", cursor: "pointer"});
+		//$("#partproject_list").jqGrid('navGrid', "#partproject_list_pager").jqGrid('navButtonAdd', "#partproject_list_pager", {caption: "Link", buttonicon: "ui-icon-extlink", onClickButton: linkPP, position: "last", title: "Link", cursor: "pointer"});
 
 		function removePP() {}
 		function linkPP() {}
@@ -195,7 +196,7 @@
            
         
             jQuery("#project_list").jqGrid({
-                url: 'jq_project_list?s_status='+'${s_status}'+'&onlyAdv='+'${onlyAdv}'+'&advAmtIssued='+'${advAmtIssued}',
+                url: 'jq_project_list?s_status='+'${s_status}'+'&onlyAdv='+'${onlyAdv}'+'&advAmtIssued='+'${advAmtIssued}'+'&pids='+'${pids}',
                 editurl: 'jq_edit_project',
 		      /*postData:{
 			status:function(){return "${status?:''}";},
@@ -203,7 +204,7 @@
                 datatype: "json",
                 align: 'Center',
                 //colNames: ['CostCenter','Name', 'Description', 'Category', 'SubmitDate','Amount', 'Requested Advance Amount','Issued Advance Amount','Type','Mode','IssueTo','IssueComments','BillNo','BillDate','Voucher','MainExpense','Priority','Status','Reference', 'Id'],
-                colNames: ['CostCenter','Name', 'Description', 'SubmitDate','Amount', 'Requested Advance Amount','Issued Advance Amount','Type','Voucher','MainExpense','Priority','Status','Reference', 'Id'],
+                colNames: ['CostCenter','Name', 'Description', 'SubmitDate','Amount', 'Requested Advance Amount','Issued Advance Amount','Type','Voucher','SettleDate','SettleAmount','Status','Reference', 'Id'],
                 colModel: [
                     {name: 'costCenter', search: true, editable: false,
 	                    stype:'select', searchoptions: {value:"${':ALL;'+(ics.CostCenter.findAllByStatusIsNull([sort:'name'])?.collect{it.id+':'+it.toString()}.join(';'))}"}
@@ -229,8 +230,10 @@
 			formatter:'showlink', 
              		formatoptions:{baseLinkUrl:'${createLink(controller:'voucher',action:'showFromProject',target:'_new')}'}
 			},
-                    {name: 'mainProject', search: true, editable: true,stype:'select', searchoptions: { value: ':ALL;YES:YES;NO:NO'}},
-                    {name: 'priority', search: true, editable: true,stype:'select', searchoptions: {value:"${':ALL;'+['P1(URGENT)','P2(HIGH)','P3(MEDIUM)','P4(LOW)'].collect{it+':'+it}.join(';')}"}},
+                    /*{name: 'mainProject', search: true, editable: true,stype:'select', searchoptions: { value: ':ALL;YES:YES;NO:NO'}},
+                    {name: 'priority', search: true, editable: true,stype:'select', searchoptions: {value:"${':ALL;'+['P1(URGENT)','P2(HIGH)','P3(MEDIUM)','P4(LOW)'].collect{it+':'+it}.join(';')}"}},*/
+                    {name: 'settleDate', search: true, editable: false,stype:'select', searchoptions: { value: ':ALL;YES:YES;NO:NO'}},
+                    {name: 'settleAmount', search: true, editable: false},
                     //{name: 'status', search: true, editable: true,stype:'select', searchoptions: {value:"${':ALL;'+['SETTLED_REPORT','REJECTED_REPORT','APPROVED_REPORT','SUBMITTED_REPORT','DRAFT_REPORT','DRAFT_REQUEST','APPROVED_REQUEST','REJECTED_REQUEST','SUBMITTED_REQUEST','ESCALATED_REQUEST'].collect{it+':'+it}.join(';')}"}},
 
 		    <sec:ifAnyGranted roles="ROLE_ACC_USER">
@@ -310,7 +313,8 @@
             <sec:ifAnyGranted roles="ROLE_FINANCE">
 		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "RejectEAR", buttonicon: "ui-icon-cancel", onClickButton: rejectProject, position: "last", title: "RejectEAR", cursor: "pointer"});
 		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "RejectERR", buttonicon: "ui-icon-cancel", onClickButton: rejectExpense, position: "last", title: "RejectERR", cursor: "pointer"});
-		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "RejectCompleteEAR_ERR", buttonicon: "ui-icon-cancel", onClickButton: rejectComplete, position: "last", title: "RejectERR", cursor: "pointer"});
+		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "RejectCompleteEAR_ERR", buttonicon: "ui-icon-cancel", onClickButton: rejectComplete, position: "last", title: "RejectCompleteEAR_ERR", cursor: "pointer"});
+		$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "Export", buttonicon: "ui-icon-cancel", onClickButton: exportExpenseList, position: "last", title: "Export", cursor: "pointer"});
     	    </sec:ifAnyGranted>
 
             <sec:ifAnyGranted roles="ROLE_ACC_USER">
@@ -321,6 +325,13 @@
     		<g:if test="${s_status=='APPROVED_REPORT'}">
 	    <!--$("#project_list").jqGrid('navGrid', "#project_list_pager").jqGrid('navButtonAdd', "#project_list_pager", {caption: "Reject", buttonicon: "ui-icon-cancel", onClickButton: rejectProject, position: "last", title: "Reject", cursor: "pointer"});-->
     	    $("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"MarkSettled", buttonicon:"ui-icon-check", onClickButton:markSettled, position: "last", title:"Mark Settled", cursor: "pointer"});
+			
+			jQuery("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"Export", buttonicon:"ui-icon-disk",title:"Export",
+			   onClickButton : function () {
+			   var url = "exportExpenseList";
+				jQuery("#project_list").jqGrid('excelExport',{"url":url});
+			   }
+			});
     	    <!--$("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"PrintReimbursement", buttonicon:"ui-icon-print", onClickButton:printReimbursement, position: "last", title:"Print Expense Reimbursement Form", cursor: "pointer"});-->
     	    $("#project_list").jqGrid('navGrid',"#project_list_pager").jqGrid('navButtonAdd',"#project_list_pager",{caption:"PartPayments", buttonicon:"ui-icon-copy", onClickButton:showChildProjects, position: "last", title:"Part Payments", cursor: "pointer"});
     	    	</g:if>
@@ -456,12 +467,16 @@
 			    {name: 'amount', search:true, editable: true},
 			    {name: 'deduction', search:true, editable: false,stype:'select', searchoptions: { value: ':ALL;NO:NO;YES:YES'}},
 			    {name: 'invoiceRaisedBy', search:true, editable: true},
-			    {name: 'invoiceAvailable', search:true, editable: true,stype:'select', searchoptions: {value:"${':ALL;'+['Available','Not Available','Adjustment against previous bill','Advance against future bill'].collect{it+':'+it}.join(';')}"}},
+			    {name: 'invoiceAvailable', search:true, editable: true,
+			    	edittype:"select",editoptions: {value:"${['Available','Not Available','Adjustment against previous bill','Advance against future bill'].collect{it+':'+it}.join(';')}"},
+			    	stype:'select', searchoptions: {value:"${':ALL;'+['Available','Not Available','Adjustment against previous bill','Advance against future bill'].collect{it+':'+it}.join(';')}"}},
 			    {name: 'invoiceNo', search:true, editable: true},
 			    {name: 'invoiceDate', search:true, editable: true,
 				searchoptions: {dataInit: function(el){$(el).datepicker({dateFormat:'dd-mm-yy'});}}                    			    
 			    },
-			    {name: 'invoicePaymentMode', search:true, editable: true,stype:'select', searchoptions: { value: ':ALL;CASH:CASH;CHEQUE:CHEQUE;RTGS:RTGS;TRANSFER:TRANSFER'}},
+			    {name: 'invoicePaymentMode', search:true, editable: true,
+			    	edittype:"select",editoptions: { value: 'CASH:CASH;CHEQUE:CHEQUE;RTGS:RTGS;TRANSFER:TRANSFER'},
+			    	stype:'select', searchoptions: { value: ':ALL;CASH:CASH;CHEQUE:CHEQUE;RTGS:RTGS;TRANSFER:TRANSFER'}},
 			    {name: 'paymentVoucher', search:true, editable: false,
 					formatter:'showlink', 
 					formatoptions:{baseLinkUrl:'${createLink(controller:'voucher',action:'showFromExpense',target:'_new')}'}
@@ -470,7 +485,7 @@
 			    {name: 'ref', search:true, editable: false},
 			    {name:'id',hidden:true}
                             ],
-	                    rowNum: 10,
+	                    rowNum: 50,
 	                    rowList: [5, 10, 20, 30, 40, 50],
 	                    pager: '#expense_list_pager',
 	                    viewrecords: true,
@@ -499,7 +514,7 @@
 			    $("#expense_list").jqGrid('inlineNav',"#expense_list_pager",
 			    { 
 			       edit: true,
-			       add: false,
+			       add: true,
 			       save: true,
 			       cancel: false,
 			    }
@@ -559,7 +574,7 @@
 	
 	function payExpense() {
 		var ids = $('#expense_list').jqGrid('getGridParam','selarrrow');
-		if(ids) {
+		if(ids != '') {
 			var url = "${createLink(controller:'Voucher',action:'payExpense')}"+"?expids="+ids;
 			
 			$( "#divPayExpense" ).val("");
@@ -621,7 +636,7 @@
 
 	function ledgerHead() {
 		var ids = $('#expense_list').jqGrid('getGridParam','selarrrow');
-		if(ids) {
+		if(ids!='') {
 			$("#dialogLedgerHeadForm").dialog("open");
 		}
 		else
@@ -1131,6 +1146,12 @@
 		else
 			alert("Please select a row!!");
 
+	}
+
+	function exportExpenseList() {
+		var url = "${createLink(controller:'Project',action:'exportExpenseList')}";
+		$.post(url , function(returnData){
+	      })
 	}
 
 	function rejectExpense() {

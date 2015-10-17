@@ -3,7 +3,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name="layout" content="main" />
+        <meta name="layout" content="mainWithPanels" />
         <g:set var="entityName" value="${message(code: 'donationRecord.label', default: 'DonationRecord')}" />
         <title>Donation Record Entry</title>
 	<r:require module="jqui" />
@@ -351,6 +351,7 @@
 				optionKey="id" value="${(donationRecordInstance?.scheme?.id)?:(schemes?.size()>0?schemes[0].id:'')}" noSelection="['':'-Select-']" />
                                     
                                 </td>
+                                <g:if test="${ackrcpt}">ACKNOWLEDGEMENT RECEIPT<g:checkBox name="ackrcpt" value="${true}" /></g:if>
                             </tr>
                         </tbody>
                     </table>

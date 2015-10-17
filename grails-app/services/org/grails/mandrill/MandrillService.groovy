@@ -22,7 +22,7 @@ class MandrillService {
 	}
 
 
-	def send(String key,MandrillMessage message) {
+	/*def send(String key,MandrillMessage message) {
 
 		def path = "messages/send.json"
 		def query =  [key:key,message:message]
@@ -36,6 +36,6 @@ class MandrillService {
 			template_content:templateContent, message:message]
 		def data = JSON.parse(httpWrapperService.postText(BASE_URL, path ,query)).collect { new SendResponse(it) }
 		return data
-	}
+	}*/
 
 }

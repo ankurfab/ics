@@ -217,22 +217,37 @@
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_ACC_VE">
-				  <li><g:link controller="voucher" action="create">Voucher</g:link></li>
+				  <li><g:link controller="voucher" action="list">Voucher</g:link></li>
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN,ROLE_ACC_USER">
 				  <li><g:link controller="helper" action="costcenterReport">Transactions</g:link></li>
 			      </sec:ifAnyGranted>      
 
-			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN">
+			      <sec:ifAnyGranted roles="ROLE_ACC_ADMIN,ROLE_FINANCE">
 				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>      
 
 			      <sec:ifAnyGranted roles="ROLE_CG_OWNER,ROLE_CC_OWNER,ROLE_FINANCE,ROLE_ACC_USER">
 				  <li><g:link controller="project" action="index">Expense Management</g:link></li>
-				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
 			      </sec:ifAnyGranted>      
+				  
+				  <sec:ifAnyGranted roles="ROLE_CG_OWNER,ROLE_CC_OWNER,ROLE_ACC_USER">
+				  <li><g:link controller="costCenter" action="statement">Statement</g:link></li>
+			      </sec:ifAnyGranted>
+
 			<!-- Account Office/Finance Roles End-->
+
+			<!-- HR Based Roles Start-->
+			      <sec:ifAnyGranted roles="ROLE_FINANCE">
+            			  <li><g:link controller="Centre" action="list">Department Management</g:link></li>
+				  <li><g:link controller="IndividualDepartment" action="gridlist">HR Management</g:link></li>
+            			  <li><g:link controller="Project" action="report">Report</g:link></li>
+			      </sec:ifAnyGranted>      
+			      <sec:ifAnyGranted roles="ROLE_CC_OWNER">
+				  <li><g:link controller="IndividualDepartment" action="gridlist">HR Management</g:link></li>
+			      </sec:ifAnyGranted>      
+			<!-- HR Roles End-->
 
 			<!-- Marriage Board Based Roles Start-->
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
@@ -240,6 +255,7 @@
 					<li><g:link class="list" action="manage" controller="mb">Mb Profile Management</g:link></li>
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
+					<li><g:link controller="mb" action="pendingApprovals">PendingApprovals</g:link></li>
 					<li><g:link controller="mb" action="report">Mb Report</g:link></li>
 			      </sec:ifAnyGranted> 
 			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN">
@@ -248,6 +264,9 @@
 			      <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
 					<li><g:link controller="mb" action="editProfile">Profile</g:link></li>
 					<li><g:link controller="mb" action="prospects">Prospects</g:link></li>
+			      </sec:ifAnyGranted> 
+			      <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER,ROLE_MB_CANDIDATE">
+					<li><g:link controller="mb" action="activityStream">Activity Stream</g:link></li>
 			      </sec:ifAnyGranted> 
 			<!-- Marriage Board Roles End-->
 
@@ -278,6 +297,7 @@
 		      	      	  <li><g:link controller="book" action="scores">Scores</g:link></li>
 		      	      	  <li><g:link controller="book" action="reports">Reports</g:link></li>
 		      	      	  <li><g:link controller="book" action="dashboard">Dashboard</g:link></li>
+		      	      	  <li><g:link controller="challan" action="search">Search</g:link></li>
 		      	      </sec:ifAnyGranted>
 		      	      <sec:ifAnyGranted roles="ROLE_JIVADAYA_CLERK">
 				  <li><g:link controller="individual" action="list">Individual Master</g:link></li>		      	      	  
@@ -285,6 +305,7 @@
 		      	      	  <li><g:link controller="book" action="order">Order Management</g:link></li>
 		      	      	  <li><g:link controller="challan" action="outward">Challan Management</g:link></li>
 		      	      	  <li><g:link controller="book" action="scores">Scores</g:link></li>
+		      	      	  <li><g:link controller="challan" action="search">Search</g:link></li>
 		      	      </sec:ifAnyGranted>
 		      	      <sec:ifAnyGranted roles="ROLE_JIVADAYA_USER">
 		      	      	  <li><g:link controller="book" action="team">Team</g:link></li>
@@ -313,7 +334,13 @@
 		    <span id='loginLink' style='position: relative; margin-right: 20px; float: right'>
 			    <sec:ifLoggedIn>
 				    <g:set var="loguser" value="${new Date() + 1}" />
-				    Hare Krishna -  ${ics.Individual.findByLoginid(sec.loggedInUserInfo(field:"username"))} (<sec:username/>) ( <g:link controller='logout'><img src="${resource(dir:'images',file:'lock.png')}" alt="Logout" title="Logout"/></g:link>
+				    Hare Krishna -  ${ics.Individual.findByLoginid(sec.loggedInUserInfo(field:"username"))} (<sec:username/>) ( 
+				    <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER,ROLE_MB_CANDIDATE">
+				    	<g:link controller='logout' params="['logoutUri': '/mb']"><img src="${resource(dir:'images',file:'lock.png')}" alt="Logout" title="Logout"/></g:link>
+				    </sec:ifAnyGranted>
+				    <sec:ifNotGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER,ROLE_MB_CANDIDATE">
+				    	<g:link controller='logout'><img src="${resource(dir:'images',file:'lock.png')}" alt="Logout" title="Logout"/></g:link>
+				    </sec:ifNotGranted>
 				    <a href='#' onclick='showChangePassword(); return false;'><img src="${resource(dir:'images',file:'lock_edit.png')}"
 				    alt="Change Password" title="Change Password" /></a> 
 
@@ -322,7 +349,7 @@
 				    <img src="${resource(dir:'images',file:'lock_break.png')}" alt="Reset Password" title="Reset Password" /></a>
 				    </sec:ifAnyGranted>
 
-				    <a href='<g:createLink controller="individual" action="self" />'><img src="${resource(dir:'images',file:'profile.png')}"
+				    <a href='<g:createLink controller="individual" action="selfContact" />'><img src="${resource(dir:'images',file:'profile.png')}"
 				    alt="Profile" title="Profile" /></a> 
 
 				    )

@@ -115,7 +115,7 @@
 	       debit
 	       ${voucherInstance?.departmentCode?.id}
       status  -->
-
+<div id="barCode"></div>
    <div class="page">
     
     <div class="subpageTop">
@@ -125,7 +125,24 @@
      <div class="subpageBottom">  <!-- bottom Copy -->
       <g:render template="voucherItems"  />
      </div>   <!-- End of subpageBottom Div -->  
+
+    <g:set var="contra" value="${Voucher.findByTypeAndRefNo('Contra',voucherInstance.voucherNo)}" />
+    <g:if test="${contra}">
+    <div class="subpageTop">
+       <g:render template="voucherItems"  model="['voucherInstance':contra]"/>
+    </div> 
+    </g:if>
+     
      
    </div> 
 
-</div>                    
+</div>
+<script>
+$(document).ready(function()
+{
+	$("#barCode").barcode(
+		"${voucherInstance.voucherNo}", // Value barcode (dependent on the type of barcode)
+		"code39" // type (string)
+	);
+});
+</script>

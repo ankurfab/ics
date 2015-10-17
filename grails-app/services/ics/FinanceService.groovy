@@ -2,6 +2,7 @@ package ics
 import com.krishna.*;
 import groovy.sql.Sql;
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
+import groovy.time.TimeCategory
 
 class FinanceService {
 
@@ -218,7 +219,70 @@ class FinanceService {
     	populateStats(params)
     	return "Stats reset for year "+params.year+" !!"
     }
+	
+	def checkUploadValidityOfCC (String ccId) {
+		Boolean bRet = false
+		def result = AttributeValue.createCriteria().list() {
+			eq('objectClassName','CostCenter')
+			eq('objectId',new Long(ccId))
+			attribute{eq('name','BudgetAuditTrail')}
+			attribute{eq('type','InitialBudgetUploadAuditTrail')}
+			order('id', 'desc')
+		}
+		if (0 == result.size())
+			bRet = true
+		return bRet
+	}
 
+    def uploadCurrentBudget(Object tokens) {
+    	//tokens as per download csv format
+    	//ccId,amount
+		try{
+    		log.debug("uploadCurrentBudget..processing ccid:"+tokens[0])
+    		def cc = CostCenter.get(tokens[0])
+    		if(!cc || !tokens[1]) {
+    			log.debug("uploadCurrentBudget..got null ccid:"+tokens[0])
+    			return false
+    		}
+    		if(cc.isProfitCenter) {
+    			log.debug("uploadCurrentBudget..got profit centre ccid:"+tokens[0])
+    			return false
+    		}
+			def bValidToUpload = checkUploadValidityOfCC(tokens[0])
+    		if(true == bValidToUpload) {
+				def amount = new BigDecimal(tokens[1])
+
+				def oldBalance = cc.balance?:0
+				cc.balance = (Project.findAllByCostCenterAndStatusInList(cc,['APPROVED_REPORT','SUBMITTED_REPORT','DRAFT_REPORT','APPROVED_REQUEST','SUBMITTED_REQUEST','ESCALATED_REQUEST'])?.sum{it.amount})?:0
+
+				def oldBudget = cc.budget?:0
+				cc.budget = amount + cc.balance	//carry forward from last month
+				
+				if(!cc.save())
+					cc.errors.allErrors.each {log.debug("uploadCurrentBudget:exception in setting budget:"+it)}    	
+				else {
+					def curDate = new Date()
+					curDate.format('dd-MM-yyyy')
+					def value = "Old budget was = "+oldBudget+" , new budget is = "+cc.budget+" , upload date is "+curDate
+					addBudgetAuditTrail(cc.id, 'BudgetAuditTrail', 'InitialBudgetUploadAuditTrail', value)
+					def us_value = "Old consumption was = "+oldBalance+" , new consumption is = "+cc.balance+" , upload date is "+curDate
+					addBudgetAuditTrail(cc.id, 'BudgetAuditTrail', 'UnsettledExpenseBudgetUploadAuditTrail', us_value)
+				}
+			}
+			else {
+				log.debug("Budget has already been uploaded once for this cost center!!!")
+				return false
+			}
+		}
+    	catch(Exception e){
+    		log.debug("Exception in uploadCurrentBudget:"+tokens[0]+":"+e)
+    		return false
+    	}
+    	
+    	return true
+
+    }
+    
     def uploadBudget(String year, Object tokens) {
     	//tokens as per download csv format
     	//ccId,ccCode,costcategory,costcenter,vertical,isProfitCenter,isServiceCenter,type,month,amount
@@ -307,8 +371,9 @@ class FinanceService {
         
         params.status = params.submitStatus
         
-        if(params.billDate)
-        	params.billDate = Date.parse('dd-MM-yyyy', params.billDate)
+        if(params.billDate) {
+        		try { params.billDate = Date.parse('dd-MM-yyyy', params.billDate) } catch(Exception e){log.debug(e)}
+        	}
         
         //massage the advance details params
         
@@ -368,6 +433,27 @@ class FinanceService {
         	}
         
 
+        //adjust balance accordingly
+        //@TODO: type (revenue or credit) not handled
+        if(balCheck.allow && !(projectInstance.status=="DRAFT_REQUEST") ) {
+        	try{
+        	if(projectInstance.type!='CREDIT') {	//leads to -ve budget
+        		projectInstance.costCenter.balance += projectInstance.amount
+			try{
+				def updmsg = "EAR "+projectInstance.ref+" submission. Consumption increased  by "+projectInstance.amount+" New consumption amount is "+projectInstance.costCenter.balance
+				addBudgetAuditTrail(projectInstance.costCenter.id, 'BalanceAuditTrail', 'BalanceUpdate', updmsg)
+			}
+			catch(Exception e){log.debug(e)}
+        		}
+        	if(!projectInstance.costCenter.save())
+        		log.debug("saveProject:Exception in updating cc balance:"+projectInstance.costCenter)
+        	log.debug("saveProject:updated cc balance:"+projectInstance+":"+projectInstance.amount+":"+projectInstance.costCenter.balance)
+        	}
+        	catch(Exception e){
+        		log.debug("saveProject:FATAL Exception in updating cc balance:"+projectInstance+":"+e)
+        	}
+        }
+        
         if (!projectInstance.hasErrors() && balCheck.allow && projectInstance.save()) {
             message="Successfully saved!!"
             state = "OK"
@@ -403,7 +489,7 @@ class FinanceService {
             return finStats()
          }
          else  if (SpringSecurityUtils.ifAnyGranted('ROLE_ACC_USER') ){
-            return accStats()
+            return accStats(user)
          }
          else
          	return []
@@ -452,7 +538,7 @@ class FinanceService {
     	return map
      }
 
-     def accStats() {
+     def accStats(String user) {
     	def numForAdvance = Project.createCriteria().get(){
 			eq('status','APPROVED_REQUEST')
 			isNotNull('advanceAmount')
@@ -468,7 +554,39 @@ class FinanceService {
 				rowCount('id')
 			}
     		}
-    	return ['APPROVED_REQUEST':numForAdvance,'APPROVED_REPORT':numForSettle]
+
+        def now = new Date()
+        now = now.clearTime()
+        def cutoffdate
+        use (TimeCategory) {
+        	cutoffdate = now - 2.days
+        }
+        
+        //@TODO: REMOVE HARDCODED DATE
+        def currentFYStartDate = Date.parse('dd-MM-yyyy', '01-04-2015')
+
+    	def numOverdue = Voucher.createCriteria().get(){
+			eq('creator',user)
+			ge('dateCreated',currentFYStartDate)
+			lt('dateCreated',cutoffdate)
+			isNull('instrumentReadyStatus')
+			mode{eq('name','Cheque')}
+			projections {
+				rowCount('id')
+			}
+    		}
+    	
+    	def sql = new Sql(dataSource)
+    	def query = "select distinct e.project_id from expense e, voucher v where e.payment_voucher_id=v.id and e.project_id in (select id from (select p.id,p.ref,count(e.id) numExpLineItems, count(e.payment_voucher_id) numVoucher, count(e.id)-count(e.payment_voucher_id) numPending  from project p join expense e on e.project_id=p.id left join voucher v on e.payment_voucher_id=v.id where p.status='APPROVED_REPORT' group by p.id) q where numPending=0) and v.creator='"+user+"'"
+    	def queryResults = sql.rows(query)
+    	def numIncomplete = queryResults.size()
+    	def pidStr = ''
+    	queryResults.each{pidStr += it[0]+','}
+    	//log.debug(pidStr)
+    	
+    	sql.close() 
+    	      	
+    	return ['APPROVED_REQUEST':numForAdvance,'APPROVED_REPORT':numForSettle,'OVERDUE_CHEQUEVOUCHER':numOverdue,'INCOMPLETE_SETTLEMENT':numIncomplete,'INCOMPLETE_SETTLEMENT_PIDS':pidStr]
      }
      
      def checkBalance(CostCenter cc, String amount, String category) {
@@ -537,7 +655,7 @@ class FinanceService {
      	//find all unsettled expenses
      	def unsettledExpenses = Project.createCriteria().list{
      						eq('costCenter',cc)
-     						eq('status','APPROVED_REQUEST')
+     						not {'in'("status",['SETTLED_REPORT','REJECTED_REQUEST'])}
      						ne('type','PARTPAYMENT')
      						ne('type','CREDIT')
      						order('submitDate')
@@ -546,7 +664,7 @@ class FinanceService {
      	//find all unsettled part payments
      	def unsettledPartPaymentExpenses = Project.createCriteria().list{
      						eq('costCenter',cc)
-     						eq('status','APPROVED_REQUEST')
+     						not {'in'("status",['SETTLED_REPORT','REJECTED_REQUEST'])}
      						inList('type',['PARTPAYMENT','CREDIT'])
      						order('submitDate')
      						}
@@ -556,7 +674,7 @@ class FinanceService {
      	log.debug("check:cutoffdate:"+cutoffDate)
      	def unsettledExpensesBeyondCutoff = Project.createCriteria().list{
      						eq('costCenter',cc)
-     						eq('status','APPROVED_REQUEST')
+     						not {'in'("status",['SETTLED_REPORT','REJECTED_REQUEST'])}
      						le('submitDate',cutoffDate)     						
      						ne('type','PARTPAYMENT')
      						order('submitDate')
@@ -661,81 +779,31 @@ class FinanceService {
 			
 			//update cost center balance
 			if(!(projectInstance.type && projectInstance.type=='CREDIT')) {
-				if(projectInstance.status == 'APPROVED_REQUEST') {
+				if(projectInstance.status == 'REJECTED_REQUEST') {
 					def cc = projectInstance.costCenter
 					if(ignoreCategory || projectInstance.category=='REVENUE') {
-						cc.balance = (cc.balance?:0) +projectInstance.amount
-						cc.quarterBalance = (cc.quarterBalance?:0) + projectInstance.amount
-						cc.yearBalance = (cc.yearBalance?:0) + projectInstance.amount
+						cc.balance = (cc.balance?:0) -projectInstance.amount
+						cc.quarterBalance = (cc.quarterBalance?:0) - projectInstance.amount
+						cc.yearBalance = (cc.yearBalance?:0) - projectInstance.amount
 					}
 					if(projectInstance.category=='CAPITAL') {
-						cc.capitalBalance = (cc.capitalBalance?:0) + projectInstance.amount
-						cc.capitalQuarterBalance = (cc.capitalQuarterBalance?:0) + projectInstance.amount
-						cc.capitalYearBalance = (cc.capitalYearBalance?:0) + projectInstance.amount
+						cc.capitalBalance = (cc.capitalBalance?:0) - projectInstance.amount
+						cc.capitalQuarterBalance = (cc.capitalQuarterBalance?:0) - projectInstance.amount
+						cc.capitalYearBalance = (cc.capitalYearBalance?:0) - projectInstance.amount
 					}
 					if(!cc.save())
 					    cc.errors.allErrors.each {
 							log.debug("changeState:Exception in updating cc"+it)
 						    }
-				}
-				else if(projectInstance.status == 'APPROVED_REPORT') {
-						//if expense is less than sanctioned amount, then release back
-						def savingAmount
-						if(projectInstance.settleAmount<projectInstance.amount) {
-							savingAmount = projectInstance.amount - projectInstance.settleAmount
-							log.debug("Returning back savings of:"+savingAmount+" for pid:"+projectInstance.id)
-							def cc = projectInstance.costCenter
-							if(ignoreCategory || projectInstance.category=='REVENUE') {
-								cc.balance = (cc.balance?:0) - savingAmount
-								cc.quarterBalance = (cc.quarterBalance?:0) - savingAmount
-								cc.yearBalance = (cc.yearBalance?:0) - savingAmount
-							}
-							if(projectInstance.category=='CAPITAL') {
-								cc.capitalBalance = (cc.capitalBalance?:0) - savingAmount
-								cc.capitalQuarterBalance = (cc.capitalQuarterBalance?:0) - savingAmount
-								cc.capitalYearBalance = (cc.capitalYearBalance?:0) - savingAmount
-							}
-							if(!cc.save())
-							    cc.errors.allErrors.each {
-									log.debug("changeState:Exception in updating cc"+it)
-								    }
+					else {
+						//cc balance update audit trail
+						try{
+							def updmsg = "ERR "+projectInstance.ref+" rejection. Consumption decreased  by "+projectInstance.amount+" New consumption amount is "+projectInstance.costCenter.balance
+							addBudgetAuditTrail(projectInstance.costCenter.id, 'BalanceAuditTrail', 'BalanceUpdate', updmsg)
 						}
+						catch(Exception e){log.debug(e)}
 					}
-				
-			}
-			else {
-			//CREDIT scenario
-			//if settlement approved then, reduce budget appropriately
-				if(projectInstance.status == 'APPROVED_REPORT') {
-					//calculate correct amount 
-					def childAmount = Project.findAllByMainProject(projectInstance)?.sum{it.amount}?:0
-					log.debug("Credit balance adjustment..childAmount:"+childAmount+" for credit pid:"+projectInstance.id)
-					def amount
-					if(projectInstance.settleAmount!=null)	//&& (projectInstance.settleAmount<projectInstance.amount)
-						amount = projectInstance.settleAmount - childAmount
-					else
-						amount = projectInstance.amount - childAmount
-					
-					/*wrong
-					//when settle amount is returned back from UI
-					def amount = projectInstance.settleAmount*/
-					
-					def cc = projectInstance.costCenter
-					if(ignoreCategory || projectInstance.category=='REVENUE') {
-						cc.balance = (cc.balance?:0) + amount
-						cc.quarterBalance = (cc.quarterBalance?:0) + amount
-						cc.yearBalance = (cc.yearBalance?:0) + amount
-					}
-					if(projectInstance.category=='CAPITAL') {
-						cc.capitalBalance = (cc.capitalBalance?:0) + amount
-						cc.capitalQuarterBalance = (cc.capitalQuarterBalance?:0) + amount
-						cc.capitalYearBalance = (cc.capitalYearBalance?:0) + amount
-					}
-					if(!cc.save())
-					    cc.errors.allErrors.each {
-							log.debug("changeState:Exception in updating cc"+it)
-						    }
-				}
+				}				
 			}
 
 		    //send comms
@@ -777,6 +845,11 @@ class FinanceService {
     
     def saveReport(params) {
     	def project = Project.get(params.projectid)
+    	if(!project)
+    		return "EAR not found!!"
+    	if(project.submitStatus=='REPORTED' && project.status!='DRAFT_REPORT')
+    		return "ERR already created!!"
+    		
     	def expense,amount
  
          def username = ''
@@ -822,7 +895,10 @@ class FinanceService {
     					expense.invoiceAvailable = params.('invoiceAvailable_'+i)
     				expense.invoiceRaisedBy = params.('invoiceRaisedBy_'+i)
     				expense.invoiceNo = params.('invoiceNo_'+i)
-    				expense.invoiceDate = params.('invoiceDate_'+i)?(Date.parse('dd-MM-yyyy', params.('invoiceDate_'+i))):null
+    				try{
+    					expense.invoiceDate = params.('invoiceDate_'+i)?(Date.parse('dd-MM-yyyy', params.('invoiceDate_'+i))):null
+    				}
+    				catch(Exception e){log.debug(e)}
     				expense.invoicePaymentMode = params.('mode.id_'+i)?PaymentMode.get(params.('mode.id_'+i)):null
     				if(params.reportstatus=='SUBMIT')
     					expense.status = 'SUBMITTED'
@@ -934,8 +1010,8 @@ class FinanceService {
 			number = VoiceContact.findByCategoryAndIndividual('CellPhone',individual)?.number
 			toemail = EmailContact.findByCategoryAndIndividual('Personal',individual)?.emailAddress
 			templateCode = "EMS_PROJ_APP"
-			contentParams = [project.ref,project.amount?.toString(),project.priority.substring(0,2),project.submitDate.format('dd-MM-yyyy HH:mm:ss')]
-			subject = project.ref+" Amount:"+project.amount+" Priority:"+project.priority+" approved."
+			contentParams = [project.costCenter?.name,project.ref,project.amount?.toString(),project.priority.substring(0,2),project.submitDate.format('dd-MM-yyyy HH:mm:ss')]
+			subject = project.costCenter?.name+" "+project.ref+" Amount:"+project.amount+" Priority:"+project.priority+" approved."
 	    		break
 	    	case "ProjectRejection" :
 			individual = project.submitter
@@ -960,8 +1036,8 @@ class FinanceService {
 			number = VoiceContact.findByCategoryAndIndividual('CellPhone',individual)?.number
 			toemail = EmailContact.findByCategoryAndIndividual('Personal',individual)?.emailAddress
 			templateCode = "EMS_EXP_APP"
-			contentParams = [project.ref,project.amount?.toString(),project.priority.substring(0,2),project.submitDate.format('dd-MM-yyyy HH:mm:ss')]
-			subject = project.ref+" Amount:"+project.amount+" Priority:"+project.priority+" settlement approved."
+			contentParams = [project.costCenter?.name,project.ref,project.amount?.toString(),project.priority.substring(0,2),project.submitDate.format('dd-MM-yyyy HH:mm:ss')]
+			subject = project.costCenter?.name+" "+project.ref+" Amount:"+project.amount+" Priority:"+project.priority+" settlement approved."
 	    		break
 	    	case "ExpenseRejection" :
 			individual = project.submitter
@@ -1111,7 +1187,7 @@ class FinanceService {
          catch(Exception e){username='unknown'}
 
     	def flag=false
-    	def expidList = params.expids.tokenize(',').collect{new Long(it)}
+    	def expidList = params.expids?.tokenize(',').collect{new Long(it)}
     	log.debug("expidList:"+expidList)
     	def expenseInstanceList = []
     	if(expidList.size()>0) 
@@ -1123,8 +1199,11 @@ class FinanceService {
     		voucher.voucherDate=new Date()
     		voucher.departmentCode = expenseInstanceList[0].costCenter    		
     		voucher.ledger=expenseInstanceList[0].costCenter?.costCategory?.alias+expenseInstanceList[0].costCenter?.alias
-    		if(voucher.type=="Journal")
-	    		voucher.anotherLedger=params.anotherLedger
+    		voucher.mode=expenseInstanceList[0].invoicePaymentMode
+    		if(voucher.type=="Journal" && params.anotherLedger) {
+	    		voucher.anotherDepartmentCode=CostCenter.get(params.anotherLedger)
+	    		voucher.anotherLedger=voucher.anotherDepartmentCode?.toString()
+	    	}
 	    	else
 	    		voucher.anotherLedger=expenseInstanceList[0].invoiceRaisedBy
     		voucher.amount=expenseInstanceList.sum{it.amount}
@@ -1152,22 +1231,61 @@ class FinanceService {
 			if(!expenseInstance.save())
 				expenseInstance.errors.allErrors.each {log.debug("payExpenseSave save expenseInstance:"+it)}			
 		}
+		//create contra for Journal and diff bank a/c
+		if(voucher.type=="Journal")
+			createContra(voucher)
+    	}
+    }
+    
+    def createContra(Voucher voucher) {
+    	def contra
+    	def chequeMode = PaymentMode.findByNameAndInperson('Cheque',true)
+    	def fromBank = CostCategoryPaymentMode.findByCostCategoryAndPaymentMode(voucher.departmentCode.costCategory,chequeMode)?.bankCode
+    	def toBank = CostCategoryPaymentMode.findByCostCategoryAndPaymentMode(voucher.anotherDepartmentCode.costCategory,chequeMode)?.bankCode
+    	log.debug('createContra:voucher"+voucher+" fromBank:'+(fromBank?:'NOTFOUND')+' toBank:'+(toBank?:'NOTFOUND'))
+    	if(fromBank && toBank && fromBank!=toBank) {
+    		//Create Contra
+    		contra = new Voucher()
+    		contra.type='Contra'
+    		contra.voucherDate=new Date()
+    		contra.departmentCode = voucher.departmentCode 
+    		contra.ledger=voucher.departmentCode.costCategory.alias+voucher.departmentCode.alias
+    		contra.mode=chequeMode
+		contra.anotherDepartmentCode=voucher.anotherDepartmentCode
+		contra.anotherLedger=voucher.anotherDepartmentCode?.toString()
+    		contra.amount=voucher.amount
+    		contra.debit=false
+    		contra.refNo=voucher.voucherNo
+    		contra.description='Autocreated for Journal Voucher:'+voucher.voucherNo
+    		contra.status="CREATED"
+    		contra.creator = contra.updator = springSecurityService.principal.username
+		try{
+			def voucherCode = voucherKeyCode(contra,false,chequeMode.name)
+			def key = housekeepingService?.getFY() +'-'+ voucherCode
+			contra.voucherNo = key+'-'+receiptSequenceService.getNext(key)
+		}
+		catch(Exception e){log.debug("createContra:CANT GET VOUCHER NO:"+e)}
+		if(!contra.save())
+			contra.errors.allErrors.each {log.debug("createContra save voucher:"+it)}
+		else
+			log.debug("createContra:created:"+contra)
+    		
     	}
     }
     
     def saveRejectProject(Map params) {
-         def reviewer3 = null
+         def reviewer2 = null
          def username=''
          try{
 		 username = springSecurityService.principal.username
-		 reviewer3 = Individual.findByLoginid(username)
+		 reviewer2 = Individual.findByLoginid(username)
          }
          catch(Exception e){username='unknown'}
     	def project = Project.get(params.projectId)
     	if(project && project.status=='APPROVED_REQUEST' && !project.advancePaymentVoucher) {
-    		project.reviewer3 = reviewer3
-    		project.review3Date = new Date()
-    		project.review3Comments = params.review3Comments
+    		project.reviewer2 = reviewer2
+    		project.review2Date = new Date()
+    		project.review2Comments = params.review2Comments
     		project.status = 'REJECTED_REQUEST'
 		if(!project.save())
 			project.errors.allErrors.each {log.debug("saveRejectProject:"+it)}
@@ -1188,27 +1306,33 @@ class FinanceService {
 			    cc.errors.allErrors.each {
 					log.debug("saveRejectProject:Exception in updating cc"+it)
 				    }
-			else
-					log.debug("saveRejectProject:Updated balance for cc:"+cc)			
+			else {
+				log.debug("saveRejectProject:Updated balance for cc:"+cc)
+				try{
+					def updmsg = "EAR Rejection "+project.ref+" Consumption decreased  by "+project.amount+" New consumption amount is "+project.costCenter.balance
+					addBudgetAuditTrail(project.costCenter.id, 'BalanceAuditTrail', 'BalanceUpdate', updmsg)
+				}
+				catch(Exception e){log.debug(e)}
+			}
 		}
     	}
     	return "DONE"
     }
 
     def saveRejectExpense(Map params) {
-         def reviewer3 = null
+         def reviewer2 = null
          def username=''
          try{
 		 username = springSecurityService.principal.username
-		 reviewer3 = Individual.findByLoginid(username)
+		 reviewer2 = Individual.findByLoginid(username)
          }
          catch(Exception e){username='unknown'}
     	def project = Project.get(params.err_projectId)
     	def expensesWithVouchers = Expense.findAllByProjectAndPaymentVoucherIsNotNull(project)
     	if(project && project.status=='APPROVED_REPORT' && !(expensesWithVouchers.size()>0)) {
-    		project.reviewer3 = reviewer3
-    		project.review3Date = new Date()
-    		project.review3Comments = params.review3Comments
+    		project.reviewer2 = reviewer2
+    		project.review2Date = new Date()
+    		project.review2Comments = params.review2Comments
     		project.status = 'REJECTED_REPORT'
 		if(!project.save())
 			project.errors.allErrors.each {log.debug("saveRejectExpense:"+it)}			    		
@@ -1235,11 +1359,11 @@ class FinanceService {
     	//delete all expenses first
     	Expense.findAllByProject(project).each{it.delete()}
 
-         def reviewer3 = null
+         def reviewer2 = null
          def username=''
          try{
 		 username = springSecurityService.principal.username
-		 reviewer3 = Individual.findByLoginid(username)
+		 reviewer2 = Individual.findByLoginid(username)
          }
          catch(Exception e){username='unknown'}
 
@@ -1247,9 +1371,9 @@ class FinanceService {
     	def returnBudget = false
 	if(project.status=='APPROVED_REQUEST' || project.status.endsWith('_REPORT'))
 		returnBudget = true    	
-	project.reviewer3 = reviewer3
-	project.review3Date = new Date()
-	project.review3Comments = params.review3Comments
+	project.reviewer2 = reviewer2
+	project.review2Date = new Date()
+	project.review2Comments = params.review2Comments
 	project.status = 'REJECTED_REQUEST'
 	if(!project.save())
 		project.errors.allErrors.each {log.debug("saveCompleteReject:excep in upd project:"+it)}
@@ -1272,6 +1396,14 @@ class FinanceService {
 			    cc.errors.allErrors.each {
 					log.debug("saveCompleteReject:Exception in updating cc"+it)
 				    }
+			else {
+				//audit trail
+				try{
+					def updmsg = "ERR Complete Rejection "+project.ref+" Consumption decreased  by "+project.amount+" New consumption amount is "+project.costCenter.balance
+					addBudgetAuditTrail(project.costCenter.id, 'BalanceAuditTrail', 'BalanceUpdate', updmsg)
+				}
+				catch(Exception e){log.debug(e)}
+			}
 		}
     	}
     	
@@ -1300,17 +1432,24 @@ class FinanceService {
     	try{
 		if(donation?.scheme?.cc?.isProfitCenter) {
 			def cc = donation.scheme.cc
-			log.debug("Updating budget for "+cc+" from "+(cc.budget?:0)+" adding"+(donation.amount?:0))
+			def donationStr = (donation?.nvccReceiptBookNo?:'')+"/"+(donation?.nvccReceiptNo?:'')
+			def msg = "Updating budget by donation "+donationStr+" for "+cc+" from "+(cc.budget?:0)+" adding"+(donation.amount?:0)
+			log.debug(msg)
 			if(donation.amount>0) {
 				cc.budget = (cc.budget?:0) + donation.amount
 				if(!cc.save())
 					cc.errors.allErrors.each {log.debug("updateProfitCenterBudget:"+it)}
-				else
+				else {
+					try{
+						addBudgetAuditTrail(cc.id, 'BudgetAuditTrail', 'AutoBudgetUpdateByDonation', msg)
+					}
+					catch(Exception e){log.debug("updateProfitCenterBudget"+e)}
 					return true
+				}
 			}
 		}
     	}
-    	catch(Exception e) { log.debug("updateBudget"+e) } 
+    	catch(Exception e) { log.debug("updateProfitCenterBudget"+e) } 
     	return false
     }
     
@@ -1356,9 +1495,11 @@ class FinanceService {
     		voucher.ledger=project.costCenter?.costCategory?.alias+project.costCenter?.alias
     		voucher.anotherLedger=project.advanceIssuedTo?.toString()?:'CASH'
     		voucher.amount=new BigDecimal(params.advanceAmountIssued)
+    		voucher.mode=project.advancePaymentMode
     		voucher.debit=false
     		voucher.refNo='project/show/'+project.id
     		voucher.description="Advance payment to "+(project.advanceIssuedTo?:project.submitter)+" for Expense Ref:"+project.ref
+    		voucher.instrumentCollectedComments = params.comments
     		voucher.status="CREATED"
     		voucher.creator = voucher.updator = username
 
@@ -1416,8 +1557,9 @@ class FinanceService {
     		voucher.instrumentReadyComments = params.instrumentReadyComments
     		if(params.instrumentNo && !voucher.instrumentNo)
     			voucher.instrumentNo = params.instrumentNo
-    		if(params.instrumentDate && !voucher.instrumentDate)
-    			voucher.instrumentDate = Date.parse('dd-MM-yyyy', params.instrumentDate)
+    		if(params.instrumentDate && !voucher.instrumentDate) {    			
+    			try { voucher.instrumentDate = Date.parse('dd-MM-yyyy', params.instrumentDate) } catch(Exception e){log.debug(e)}
+    			}
     		if(params.bankName && !voucher.bankName)
     			voucher.bankName = params.bankName
     		if(params.bankBranch && !voucher.bankBranch)
@@ -1642,6 +1784,9 @@ class FinanceService {
 		case "RECEIPT":
 			typeCode = "RPT"
 			break
+		case "CONTRA":
+			typeCode = "CTR"
+			break
 		default:
 			typeCode = "TYP"
 			break		
@@ -1651,6 +1796,8 @@ class FinanceService {
 		voucherCode = "ADV-"+modeCode+ccatCode
 	else if(voucher.type=="Journal")
 		voucherCode = "JV"
+	else if(voucher.type=="Contra")
+		voucherCode = "CT"
 	else if(voucher.type=="Payment")
 		voucherCode = modeCode+ccatCode
 	else
@@ -1682,6 +1829,7 @@ class FinanceService {
     def getMonthSummaryStats(CostCenter cc) {
 	def stats = [:]
 	def totalExpense
+	def submittedExpense
 	def approvedExpense
 	def underSettlementExpense
 	def draftSettlement
@@ -1689,10 +1837,23 @@ class FinanceService {
 	def submittedSettlement
 	def approvedSettlement
 	def settledExpense
+	def advanceIssued
 	
+	def now = new Date()
+	
+	submittedExpense = Project.createCriteria().get{
+			    eq('costCenter',cc)
+			    eq('status','SUBMITTED_REQUEST')
+			    ne('type','CREDIT')
+			    projections {
+				sum "amount"
+			    }
+			}
+
 	approvedExpense = Project.createCriteria().get{
 			    eq('costCenter',cc)
 			    eq('status','APPROVED_REQUEST')
+			    ne('type','CREDIT')
 			    projections {
 				sum "amount"
 			    }
@@ -1734,7 +1895,7 @@ class FinanceService {
 			    eq('costCenter',cc)
 			    eq('status','APPROVED_REPORT')
 			    projections {
-				sum "settleAmount"
+				sum "amount"
 			    }
 			}
 
@@ -1744,12 +1905,24 @@ class FinanceService {
 			    projections {
 				sum "settleAmount"
 			    }
+			    if(!cc.isProfitCenter)
+			    	sqlRestriction "month(review3date) = "+((now.month).toInteger()+(1*1).toInteger())*1
 			}
 		
+	advanceIssued = Project.createCriteria().get{
+			    eq('costCenter',cc)
+			    isNotNull('advanceAmountIssued')
+			    ne('status','SETTLED_REPORT')
+			    projections {
+				sum "advanceAmountIssued"
+			    }
+			}
+
 	//totalExpense = (approvedExpense?:0) + (underSettlementExpense?:0) + (approvedSettlement?:0) + (settledExpense?:0)
-	totalExpense = (approvedExpense?:0) + (draftSettlement?:0) + (rejectedSettlement?:0) + (submittedSettlement?:0) + (approvedSettlement?:0) + (settledExpense?:0)
+	totalExpense = (submittedExpense?:0) + (approvedExpense?:0) + (draftSettlement?:0) + (rejectedSettlement?:0) + (submittedSettlement?:0) + (approvedSettlement?:0) + (settledExpense?:0)
 	
 	stats.put('totalExpense',totalExpense)
+	stats.put('submittedExpense',submittedExpense)
 	stats.put('approvedExpense',approvedExpense)
 	stats.put('underSettlementExpense',underSettlementExpense)
 	stats.put('draftSettlement',draftSettlement)
@@ -1757,10 +1930,63 @@ class FinanceService {
 	stats.put('submittedSettlement',submittedSettlement)
 	stats.put('approvedSettlement',approvedSettlement)
 	stats.put('settledExpense',settledExpense)
+	stats.put('advanceIssued',advanceIssued)
 	
 	return stats    	
     }
     
+    def getBudgetSummaryStats(CostCenter cc) {
+	def stats = [:]
+	def initialBudget
+	def initialBudgetDesc
+	def manualUpdates
+	def donations
+	def previousMonthUnsettledExpenses
+	def previousMonthUnsettledExpensesDesc
+	def result
+	def idx
+	def str
+	
+	def now = new Date()
+	
+	donations = Donation.createCriteria().get{
+			    scheme{eq('cc',cc)}
+			    projections {
+				sum "amount"
+			    }
+			}
+
+	result = AttributeValue.createCriteria().get{
+			    eq('objectClassName','CostCenter')
+			    eq('objectId',cc.id)
+			    attribute{
+			    	eq('name','BudgetAuditTrail')
+			    	eq('type','InitialBudgetUploadAuditTrail')
+			    }
+			    sqlRestriction "month(date_created) = "+((now.month).toInteger()+(1*1).toInteger())*1
+			}
+	if(result?.size()>0)
+		initialBudgetDesc = result[0].value
+	log.debug("getBudgetSummaryStats:CC:"+cc+":initialBudgetDesc="+initialBudgetDesc)
+	//parse it to get the correct value
+	if(initialBudgetDesc) {
+		str = ',new budget is'
+		idx = initialBudgetDesc.indexOf(str)
+		
+		initialBudget = initialBudgetDesc.substring(idx+str.size())
+		log.debug(initialBudget)
+	}
+		
+	
+	stats.put('initialBudget',initialBudget?:0)
+	stats.put('manualUpdates',manualUpdates?:0)
+	stats.put('donations',donations?:0)
+	stats.put('previousMonthUnsettledExpenses',previousMonthUnsettledExpenses?:0)
+	
+	return stats    	
+    }
+    
+
     def getIncomeSummaryStats(CostCenter cc) {
     	def stats=[:]
 
@@ -1851,6 +2077,502 @@ class FinanceService {
     	}
     	return false        	
     }
-
     
+    def deleteExpense(String id) {
+	  // check if exists
+	  def expense  = Expense.get(id)
+	  def voucher = expense.paymentVoucher
+	  def project = expense.project
+	  if (expense && (!expense.paymentVoucher || !expense.paymentVoucher.dataCaptured)) {
+	    def expDetails = "Expid:"+expense.id+" ref:"+(expense.ref?:'')
+	    log.debug("deleteExpense:"+expDetails)
+	    // delete
+	    def expAmt = expense.amount
+	    try{
+	    	expense.delete()
+	    }
+	    catch(Exception e) {
+	    	log.debug("In deleteExpense: exception in deleting exp:"+ e)
+	    	return false
+	    	}
+
+	    log.debug("deleteExpense deleted.."+expDetails)
+	    /**** NO NEED TO MAKE BUDGET CHANGES HERE SINCE IT GETS RECALCULATED DURING  MARKSETTLED
+	    // release back the budget
+	    if(project.status == 'APPROVED_REPORT') {
+		def cc = project.costCenter
+		def oldbalance = cc.balance?:0
+		cc.balance = oldbalance - expAmt
+		if(!cc.save())
+			cc.errors.allErrors.each {log.debug("deleteExpense:exception in releasing budget:"+it)}
+		else {
+			log.debug("deleteExpense:budget released for cc:"+expAmt+":oldbalance:"+oldbalance+" :newbalance:"+cc.balance)
+			try{
+				def updmsg = "Expense deletion "+expDetails+" Consumption decreased  by "+expAmt+" New consumption amount is "+cc.balance
+				addBudgetAuditTrail(cc.id, 'BalanceAuditTrail', 'BalanceUpdate', updmsg)
+			}
+			catch(Exception e){log.debug(e)}
+		}
+
+	    }
+	    ************/
+
+	    //soft-delete paymentVoucher, if exists
+	    if(voucher) {
+		voucher.status='DELETED'
+		if(!voucher.save())
+			voucher.errors.allErrors.each {log.debug("deleteExpense:excp in sofdel voucher:"+it)}
+		else {
+			log.debug("deleteExpense voucher soft deleted.."+voucher)
+			//remove from other expenses
+			try{
+				def otherExpenses = Expense.findAllByPaymentVoucher(voucher)
+				otherExpenses.each{otherExpense ->
+					otherExpense.paymentVoucher = null
+					if(!otherExpense.save())
+						otherExpense.errors.allErrors.each {log.debug("deleteExpense:exception in removing payment voucher:"+it)}
+					else
+						log.debug("deleteExpense removed payment voucher from.."+otherExpense)
+
+				}
+			}
+			catch(Exception e){log.debug("Exception in remove from other expenses:"+e )}
+			return true
+		}					    
+	    }
+	  }
+	  return false
+    }
+
+	def updateBudget(Map params) {
+		def cc = CostCenter.get(params.ccid_updatebudget)
+		def oldBudget = cc.budget
+		def amount = null
+		try {
+			amount = new BigDecimal(params.amount)
+		}
+		catch(Exception e){}
+		
+		if(amount) {
+			cc.budget = cc.budget + amount
+			if(!cc.save())
+				cc.errors.allErrors.each {log.debug("updateBudget:exception:"+it)}
+			else {
+				def details = 'old='+oldBudget+' new='+cc.budget+' details = '+params.details
+				addBudgetAuditTrail(cc.id, 'BudgetAuditTrail', 'BudgetUpdateAuditTrail', details)
+			}
+		}
+	}
+
+	def addBudgetAuditTrail (Long ccId, String attrName, String attrType, String value) {
+		//now record for audit
+		//1st create attribute , if not exists
+		def attr = Attribute.findByDomainClassNameAndDomainClassAttributeNameAndNameAndType('CostCenter',ccId.toString(),attrName,attrType)
+		if(!attr) {
+			attr = new Attribute()
+			attr.domainClassName = 'CostCenter'
+			attr.domainClassAttributeName = ccId.toString()
+			attr.name = attrName
+			attr.type = attrType
+			if(!attr.save())
+			attr.errors.allErrors.each {log.debug("updateBudget:create attr:exception:"+it)}
+		}
+		//now store the change
+		def username = ''
+		try{
+			username = springSecurityService.principal.username
+		}
+		catch(Exception e){username='unknown'}
+		def av = new AttributeValue()
+		if (!attr.type) {
+			attr.type = attrType
+			if(!attr.save()){
+				attr.errors.allErrors.each{log.debug("attr.type save exception:"+it)}
+			}
+		}
+		av.attribute = attr
+		av.objectClassName  = 'CostCenter'
+		av.objectId = ccId
+		av.value = value
+		av.updator = av.creator = username
+		if(!av.save())
+		av.errors.allErrors.each {log.debug("updateBudget:create av:exception:"+it)}
+	}
+
+	def getAllDonationByDonorNameIncomeSummaryStats(String donorName) {
+		def stats=[:]
+
+    	def year = new Date().format('yyyy')
+    	year = new Integer(year)
+    	def start,end,ts='-01 00:00:00'
+    	
+    	//for 1st 8 months, Apr-Nov
+    	for(Integer month=4;month<12;month++) {
+			if(month<10)
+				start = year+'-0'+month+'-01 00:00:00'
+			else
+				start = year+'-'+month+'-01 00:00:00'
+			if((month+1)<10)
+				end = year+'-0'+(month+1)+'-01 00:00:00'
+			else
+				end = year+'-'+(month+1)+'-01 00:00:00'
+
+			stats.put('month_'+month,getDonationIncomeStatsForMonthByDonor(donorName, start, end))
+    	}
+    	
+    	//for Dec
+    	start = year+'-12-01 00:00:00'
+    	end = (year+1)+'-01-01 00:00:00'
+    	stats.put('month_12',getDonationIncomeStatsForMonthByDonor(donorName, start, end))
+
+    	//for last 3 months, Jan-Mar
+    	for(Integer month=1;month<4;month++) {
+			start = (year+1)+'-0'+month+'-01 00:00:00'
+			end = (year+1)+'-0'+(month+1)+'-01 00:00:00'
+			stats.put('month_'+month,getDonationIncomeStatsForMonthByDonor(donorName, start, end))
+    	}
+
+    	return stats
+	}
+	
+	def getAllDonationBySchemeNameIncomeSummaryStats(String schemeName) {
+		def stats=[:]
+
+    	def year = new Date().format('yyyy')
+    	year = new Integer(year)
+    	def start,end,ts='-01 00:00:00'
+    	
+    	//for 1st 8 months, Apr-Nov
+    	for(Integer month=4;month<12;month++) {
+			if(month<10)
+				start = year+'-0'+month+'-01 00:00:00'
+			else
+				start = year+'-'+month+'-01 00:00:00'
+			if((month+1)<10)
+				end = year+'-0'+(month+1)+'-01 00:00:00'
+			else
+				end = year+'-'+(month+1)+'-01 00:00:00'
+
+			stats.put('month_'+month,getDonationIncomeStatsForMonthByScheme(schemeName, start, end))
+    	}
+    	
+    	//for Dec
+    	start = year+'-12-01 00:00:00'
+    	end = (year+1)+'-01-01 00:00:00'
+    	stats.put('month_12',getDonationIncomeStatsForMonthByScheme(schemeName, start, end))
+    	
+    	//for last 3 months, Jan-Mar
+    	for(Integer month=1;month<4;month++) {
+			start = (year+1)+'-0'+month+'-01 00:00:00'
+			end = (year+1)+'-0'+(month+1)+'-01 00:00:00'
+			stats.put('month_'+month,getDonationIncomeStatsForMonthByScheme(schemeName, start, end))
+    	}
+
+    	return stats
+	}
+
+    def getDonationIncomeStatsForMonthByDonor(String donorName, String start, String end) {
+    	def donationTotal = Donation.createCriteria().get {
+			ge('fundReceiptDate',Date.parse('yyyy-MM-dd HH:mm:ss', start))
+			lt('fundReceiptDate',Date.parse('yyyy-MM-dd HH:mm:ss', end))
+			donatedBy{ilike('legalName',donorName)}
+			projections {
+				sum "amount"
+			}
+		}
+
+		return (donationTotal?:0)
+    }
+	
+	def getDonationIncomeStatsForMonthByScheme(String schemeName, String start, String end) {
+    	def donationTotal = Donation.createCriteria().get{
+			ge('fundReceiptDate',Date.parse('yyyy-MM-dd HH:mm:ss', start))
+			lt('fundReceiptDate',Date.parse('yyyy-MM-dd HH:mm:ss', end))
+			scheme {
+				cc {
+					ilike('name',schemeName)
+				}
+			}
+			projections {
+				sum "amount"
+			}
+		}
+
+		return (donationTotal?:0)
+    }
+    
+	def getDonationIncomeStatsForMonthByCostCategory(String ccatName, String start, String end) {
+    	def donationTotal = Donation.createCriteria().get{
+			ge('fundReceiptDate',Date.parse('yyyy-MM-dd HH:mm:ss', start))
+			lt('fundReceiptDate',Date.parse('yyyy-MM-dd HH:mm:ss', end))
+			scheme {
+				cc {
+					costCategory{ilike('name',ccatName)}
+				}
+			}
+			projections {
+				sum "amount"
+			}
+		}
+
+		return (donationTotal?:0)
+    }
+
+	def getAllDonationByCostCategoryNameIncomeSummaryStats(String ccatName) {
+		def stats=[:]
+
+    	def year = new Date().format('yyyy')
+    	year = new Integer(year)
+    	def start,end,ts='-01 00:00:00'
+    	
+    	//for 1st 8 months, Apr-Nov
+    	for(Integer month=4;month<12;month++) {
+			if(month<10)
+				start = year+'-0'+month+'-01 00:00:00'
+			else
+				start = year+'-'+month+'-01 00:00:00'
+			if((month+1)<10)
+				end = year+'-0'+(month+1)+'-01 00:00:00'
+			else
+				end = year+'-'+(month+1)+'-01 00:00:00'
+
+			stats.put('month_'+month,getDonationIncomeStatsForMonthByCostCategory(ccatName, start, end))
+    	}
+    	
+    	//for Dec
+    	start = year+'-12-01 00:00:00'
+    	end = (year+1)+'-01-01 00:00:00'
+    	stats.put('month_12',getDonationIncomeStatsForMonthByCostCategory(ccatName, start, end))
+    	
+    	//for last 3 months, Jan-Mar
+    	for(Integer month=1;month<4;month++) {
+			start = (year+1)+'-0'+month+'-01 00:00:00'
+			end = (year+1)+'-0'+(month+1)+'-01 00:00:00'
+			stats.put('month_'+month,getDonationIncomeStatsForMonthByCostCategory(ccatName, start, end))
+    	}
+
+    	return stats
+	}
+    
+	def adjustBudgetAfterSettlement(Project projectInstance) {
+		def ignoreCategory = true
+		//normal scenario
+		if(!(projectInstance.type && projectInstance.type=='CREDIT')) {
+				def savingAmount
+				//if expense is less than sanctioned amount, then release back
+				if(projectInstance.settleAmount<projectInstance.amount) {
+					savingAmount = projectInstance.amount - projectInstance.settleAmount
+					log.debug("Returning back savings of:"+savingAmount+" for pid:"+projectInstance.id+" :ccbalance="+projectInstance?.costCenter?.balance)
+					def cc = projectInstance.costCenter
+					if(ignoreCategory || projectInstance.category=='REVENUE') {
+						cc.balance = (cc.balance?:0) - savingAmount
+						cc.quarterBalance = (cc.quarterBalance?:0) - savingAmount
+						cc.yearBalance = (cc.yearBalance?:0) - savingAmount
+					}
+					if(projectInstance.category=='CAPITAL') {
+						cc.capitalBalance = (cc.capitalBalance?:0) - savingAmount
+						cc.capitalQuarterBalance = (cc.capitalQuarterBalance?:0) - savingAmount
+						cc.capitalYearBalance = (cc.capitalYearBalance?:0) - savingAmount
+					}
+					if(!cc.save())
+					    cc.errors.allErrors.each {
+							log.debug("adjustBudgetAfterSettlement:Exception in updating cc"+it)
+						    }
+					else {
+						try{
+							def updmsg = "Final NORMAL Settlement "+projectInstance.ref+" Consumption decreased  by "+savingAmount+" New consumption amount is "+projectInstance.costCenter.balance
+							addBudgetAuditTrail(projectInstance.costCenter.id, 'BalanceAuditTrail', 'BalanceUpdate', updmsg)
+						}
+						catch(Exception e){log.debug(e)}
+					}
+				}
+			}
+		else {
+		//CREDIT scenario
+		//if settlement approved then, reduce budget appropriately
+				//calculate correct amount 
+				def childAmount = Project.findAllByMainProject(projectInstance)?.sum{it.amount}?:0
+				log.debug("Credit balance adjustment..childAmount:"+childAmount+" for credit pid:"+projectInstance.id)
+				def amount
+				if(projectInstance.settleAmount!=null)	//&& (projectInstance.settleAmount<projectInstance.amount)
+					amount = projectInstance.settleAmount - childAmount
+				else
+					amount = projectInstance.amount - childAmount
+
+				/*wrong
+				//when settle amount is returned back from UI
+				def amount = projectInstance.settleAmount*/
+
+				def cc = projectInstance.costCenter
+				if(ignoreCategory || projectInstance.category=='REVENUE') {
+					cc.balance = (cc.balance?:0) + amount
+					cc.quarterBalance = (cc.quarterBalance?:0) + amount
+					cc.yearBalance = (cc.yearBalance?:0) + amount
+				}
+				if(projectInstance.category=='CAPITAL') {
+					cc.capitalBalance = (cc.capitalBalance?:0) + amount
+					cc.capitalQuarterBalance = (cc.capitalQuarterBalance?:0) + amount
+					cc.capitalYearBalance = (cc.capitalYearBalance?:0) + amount
+				}
+				if(!cc.save())
+				    cc.errors.allErrors.each {
+						log.debug("adjustBudgetAfterSettlement:Exception in updating cc"+it)
+					    }
+				else {
+					try{
+						def updmsg = "Final CREDIT Settlement "+projectInstance.ref+" Consumption increased  by "+amount+" New consumption amount is "+projectInstance.costCenter.balance
+						addBudgetAuditTrail(projectInstance.costCenter.id, 'BalanceAuditTrail', 'BalanceUpdate', updmsg)
+					}
+					catch(Exception e){log.debug(e)}
+				}
+		}
+	}
+	
+	//utility method to create departments for the cost centers
+	//@TODO: take care of cc mods + manuals dep creation + fin year change related issues
+	//@TODO: add multitenancy logic
+	def createDepartments() {
+		def dep
+		def ccList = CostCenter.findAllByStatusIsNull()
+		ccList.each{cc->
+			//check if there is a corresponing dep
+			dep = Department.findByCostCenterAndName(cc,cc.name)
+			if(!dep) {
+				//no associated dep found, create and associate
+				dep = new Department()
+				dep.name = cc.name	//@TODO: problematic when name changes
+				dep.centre = cc.centre
+				dep.costCenter = cc
+				dep.description = "Autocreated for related cost center"
+				dep.creator = dep.updator = "system"
+				if(!dep.save())
+				    dep.errors.allErrors.each {log.debug("createDepartments:Exception in saving dep"+it)}
+					
+			}
+		}
+	}
+	
+	def markSettleLinkedPP(Project project) {
+   		if(project.type=='CREDIT') {
+   			def linkedPPList = Project.findAllByMainProject(project)
+   			linkedPPList.each{pp->
+				 pp.status='SETTLED_REPORT'
+				 pp.reviewer3 = project.reviewer3
+				 pp.review3Date = new Date()
+				 if(!pp.save()) {
+				    pp.errors.allErrors.each {
+					log.debug("Exception in markSettleLinkedPP:"+it)
+					}
+				}
+   			}
+   		}
+	}
+	
+	def parseBudgetUpdateAuditTrailValue(String value) {
+		Map retVal = [:]
+		if(!value)
+			return retVal
+		def pos = value.indexOf(' details = ')
+		def valueStr = value.substring(0,pos)
+		//log.debug(value+"=>"+valueStr)
+		
+		def tokens = valueStr.split()
+		def oldTokens = tokens[0].split('=')
+		retVal.put('old',new BigDecimal(oldTokens[1]))
+
+		def newTokens = tokens[1].split('=')
+		retVal.put('new',new BigDecimal(newTokens[1]))
+		
+		//log.debug(retVal)
+		
+		return retVal
+	}
+	
+	def parseAutoBudgetUpdateByDonationAuditTrailValue(String value) {
+		//Updating budget for GUEST HOUSE BUILDING(03404) from 11636353 adding2100.00
+		Map retVal = [:]
+		if(!value)
+			return retVal
+		def searchStr = ' from '
+		def pos = value.indexOf(searchStr)
+		def valueStr = value.substring(pos+searchStr.size())
+		//log.debug(value+"=>"+valueStr)
+		
+		def tokens = valueStr.split(' adding')
+		retVal.put('oldBudget',new BigDecimal(tokens[0]))
+		retVal.put('differenceBudget',new BigDecimal(tokens[1]))
+		
+		//log.debug(retVal)
+		
+		return retVal
+	}
+
+	def parseBalanceUpdateAuditTrailValue(String value) {
+		//Final NORMAL Settlement EXP-FY1516-03402-86 Consumption decreased  by 45.00 New consumption amount is 3507078.00
+		//EAR EXP-FY1516-01139-35 submission. Consumption increased  by 2000 New consumption amount is 45703.00
+		Map retVal = [:]
+		if(!value)
+			return retVal
+		def searchStr = ' New consumption amount is '
+		def pos = value.indexOf(searchStr)
+		def valueStr = value.substring(pos+searchStr.size())
+		//log.debug(value+"=>"+valueStr)
+		retVal.put('newConsumption',new BigDecimal(valueStr))
+		
+		valueStr = value.substring(0,pos)
+		searchStr = ' Consumption '
+		pos = valueStr.indexOf(searchStr)
+		def consumptionStr = valueStr.substring(pos+searchStr.size())
+		//log.debug(consumptionStr)
+		
+		searchStr = 'decreased  by '
+		def consumptionAmountStr = consumptionStr.substring(searchStr.size())
+		//log.debug(consumptionAmountStr)
+		def consumptionAmount = new BigDecimal(consumptionAmountStr)
+		
+		if(consumptionStr.startsWith(searchStr))
+			consumptionAmount = consumptionAmount * -1 //decrease case
+			
+		retVal.put('differenceConsumption',consumptionAmount)
+		
+		//log.debug(retVal)
+		
+		return retVal
+	}
+	
+	def updateLocks(Map params) {
+		def lockAttr = Attribute.findByNameAndType('EMS_ACCUSER_LOCK','LOCK')
+		if(!lockAttr) {
+			lockAttr = new Attribute()
+			lockAttr.name='EMS_ACCUSER_LOCK'
+			lockAttr.type='LOCK'
+			if(!lockAttr.save()) {
+			    lockAttr.errors.allErrors.each {log.debug("updateLocks:Exception in saving attr"+it)}
+			}			
+		}
+		if(lockAttr) {
+			def attributeValue = AttributeValue.findByAttribute(lockAttr)
+			if(!attributeValue) {
+				attributeValue = new AttributeValue()			
+				attributeValue.attribute  = lockAttr
+				attributeValue.objectClassName = lockAttr.name
+				attributeValue.objectId = 0
+				attributeValue.value = 'NOTSET'
+				attributeValue.creator = springSecurityService?.principal?.username?:'system'
+			}
+			if(attributeValue) {
+				attributeValue.value = params.lockValue?:'NOTSET'
+				attributeValue.updator = springSecurityService?.principal?.username?:'system'
+				if(!attributeValue.save())
+				    attributeValue.errors.allErrors.each {
+						log.debug("updateLocks:Exception in saving attrv"+it)
+					    }
+				else
+					return "LOCK "+(params.lockValue?:'NOTSET')
+			}
+		}
+		return "Something is not correct while setting lock.."
+	}
+
 }
+

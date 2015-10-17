@@ -6,7 +6,7 @@
 </head>
 <body>
 <div>
-    <h1 class="pageHead">Marriage Biodata of :  ${profile.candidate.legalName}</h1>
+    <h1 class="pageHead">Marriage Biodata(Full Profile) of :  ${profile.candidate.legalName}</h1>
     <g:set var="candAddr" value="${ics.Address.findByIndividualAndCategory(profile.candidate,'PresentAddress')}"/>
 </div>
 <div>
@@ -50,6 +50,10 @@
     <div class="inforow">
         <p>Nationality : </p>
         <p>${profile?.candidate?.nationality ?: '-'}</p>
+    </div>
+    <div class="inforow">
+        <p>Currently settled in : </p>
+        <p>${profile?.currentCountry ?: '-'}</p>
     </div>
     <div class="inforow">
         <p>State Of Birth : </p>
@@ -110,7 +114,7 @@
     <div class="inforow">
         <p>Present Address : </p>
         <p>${candAddr?.addressLine1}<br>${candAddr?.city}<br>${candAddr?.state?.name} - ${candAddr?.pincode}
-            <br>( This residence is : ${profile?.residenceType} )
+            <br>( This residence is : ${profile?.residenceType} and is ${profile?.areaCurrHouse} sq.ft in area.)
         </p>
     </div>
     %{--<div class="inforow">
@@ -444,14 +448,24 @@
 <div>
     <h3 style="font-family: sans-serif;text-decoration: underline;margin: 20px 0 20px 10px"> Photos </h3>
     <div style="width: 30%;float: left;margin-left: 15%">
-        <img id="fvimage" name="fvimage" class="avatar" style="width: 100%;height: auto"
-         src="${createLink(action: 'showImage', id: profile?.id, params: ['imgtype': 'fv'])}"/>
-        <div style="text-align: center"><b>Passport size Photo</b></div>
+        <img
+             src="${createLink(action: 'showImage', params: ['imgType': 'closePrim', entity: 'mbProfile', entityId: profile?.id])}"/>
+        <div style="text-align: center"><b>Passport size (Primary)</b></div>
     </div>
-    <div style="width: 30%;float: right;margin-right: 15%">
-        <img id="svimage" name="svimage" class="avatar" style="width: 100%;height: auto"
-         src="${createLink(action: 'showImage', id: profile?.id, params: ['imgtype': 'sv'])}"/>
-        <div style="text-align: center"><b>Full profile Potrait Photo</b></div>
+    <div style="width: 30%;float: left;margin-left: 15%">
+        <img
+             src="${createLink(action: 'showImage', params: ['imgType': 'closeSec', entity: 'mbProfile', entityId: profile?.id])}"/>
+        <div style="text-align: center"><b>Passport size (Secondary)</b></div>
+    </div>
+    <div style="width: 30%;float: left;margin-left: 15%">
+        <img
+             src="${createLink(action: 'showImage', params: ['imgType': 'fullPrim', entity: 'mbProfile', entityId: profile?.id])}"/>
+        <div style="text-align: center"><b>Full Profile (Primary)</b></div>
+    </div>
+    <div style="width: 30%;float: left;margin-left: 15%">
+        <img
+             src="${createLink(action: 'showImage', params: ['imgType': 'fullSec', entity: 'mbProfile', entityId: profile?.id])}"/>
+        <div style="text-align: center"><b>Full Profile (Secondary)</b></div>
     </div>
 </div>
 </body>

@@ -25,6 +25,7 @@ class CostCenter {
 	    costCenterGroup(nullable:true)
 	    donationAccepted(nullable:true)
 	    status(nullable:true)
+	    centre(nullable:true)
 	    
 	    dateCreated()
 	    creator()
@@ -53,6 +54,7 @@ class CostCenter {
     Boolean isServiceCenter	//can provide services to other cost centers against payment
     Boolean donationAccepted	//whether the cost center can accept donations
     String status
+    Centre centre
 
     Date dateCreated
     Date lastUpdated

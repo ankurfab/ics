@@ -543,15 +543,14 @@ var $dialog = $('<div></div>')
 						<g:select name="motherTongue" from="${ics.Language.list(sort:'name')}"  optionKey="name" value="${individualInstance?.motherTongue}" noSelection="['':'-Choose Mother Tongue-']"/>
 					</td>
 
-            <!--<sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+            <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
 					<td valign="top" class="name" width="8%" rowspan="4">
 					  <label for="category"><b><g:message code="individual.category.label" default="Category" /></b></label>
 					</td>
 					<td valign="top" class="value ${hasErrors(bean: individualInstance, field: 'category', 'errors')}" width="11%" rowspan="4">
 						<g:textField name="category" value="${individualInstance?.category}" />
-						<g:select multiple="multiple" name="category"  optionKey="name" from="${ics.DevoteeCategory.list(sort:'name')}" value="${individualInstance?.category?.tokenize(',')}" noSelection="['':'-Choose Category-']"/>
 					</td>
-	    </sec:ifAnyGranted>-->
+	    </sec:ifAnyGranted>
 
             <sec:ifAnyGranted roles="ROLE_PATRONCARE,ROLE_PATRONCARE_USER">
 					<td valign="top" class="name" width="8%" rowspan="4">

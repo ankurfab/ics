@@ -463,7 +463,7 @@
 	function downloadPairSheet() {
 		var id = $('#event_list').jqGrid('getGridParam','selrow');
 		if(id) {
-				var url = "${createLink(controller:'Event',action:'sheet')}"+"?eventid="+id+"&pair=true";
+				/*var url = "${createLink(controller:'Event',action:'sheet')}"+"?eventid="+id+"&pair=true";
 				$( "#divToPrintSheet" ).val("");
 				$( "#divToPrintSheet" ).load( url, function(responseTxt,statusTxt,xhr){
 				    if(statusTxt=="success")
@@ -472,7 +472,19 @@
 				    }
 				    if(statusTxt=="error")
 				      alert("Error: "+xhr.status+": "+xhr.statusText);
-				  });
+				  });*/
+				  
+				//@TODO: HARDCODED for cboard
+				var url = "${createLink(controller:'Role',action:'pairs')}"+"?eid="+id+"&roleids=51,64";
+				var win = window.open(url, '_blank');
+				if(win){
+				    //Browser has allowed it to be opened
+				    win.focus();
+				}else{
+				    //Broswer has blocked it
+				    alert('Please allow popups for this site');
+				}			
+				  
 		}
 		else
 			alert("Please select a row!!");

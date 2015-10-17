@@ -142,6 +142,13 @@
 				    </g:uploadForm>
 				</div>
 	        		<div>
+				Bulk login change: <br />
+				    <g:uploadForm action="uploadForLoginChange">
+					<input type="file" name="myFile" />
+					<input type="submit" value="Upload"/>
+				    </g:uploadForm>
+				</div>
+	        		<div>
 				Upload Custom Form Template: <br />
 				    <g:uploadForm action="uploadCustomForm">
 					<input type="file" name="myFile" />

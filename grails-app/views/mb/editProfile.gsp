@@ -14,20 +14,19 @@
 
 <body>
 <div class="nav">
-    <span class="menuButton"><a class="home" href="${createLinkTo(dir: '')}"><g:message default="Home"/></a></span>
+    <span class="menuButton"><a class="home" href="${createLink(controller:'Mb',action:'home')}"><g:message code="default.home.label"/></a></span>
     <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
         <g:hiddenField name="finishShow" id="finishShow" value="true"/>
         <g:if test="${mbProfile?.profileStatus == 'STARTED' || mbProfile?.profileStatus == 'INCOMPLETE'}">
-            <span class="menuButton"><g:link class="create" action="markProfileComplete">Submit Profile to MB</g:link></span>
+            <span class="menuButton"><a class="create" href="javascript:void(0);" onclick="processSubmit();">Submit Profile to MB</a></span>
         </g:if>
     </sec:ifAnyGranted>
     <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC">
         <g:if test="${mbProfile?.profileStatus == 'SUBMITTED'}">
             <g:hiddenField name="finishShow" id="finishShow" value="false"/>
+            <span class="menuButton"><a href="javascript:void(0);" onclick='$( "#MarkIncomleteForm" ).dialog("open")' class="create">Mark Incomplete</a></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
-                                             params="['status': 'INCOMPLETE']">Mark InComplete</g:link></span>
-            <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
-                                             params="['status': 'COMPLETE']">Mark Completed</g:link></span>
+                                             params="['status': 'COMPLETE']">Mark Complete</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
                                              params="['status': 'REJECTED']">Mark Rejected</g:link></span>
             <span class="menuButton"><g:link class="create" action="updateProfileStatus" id="${mbProfile?.id}"
@@ -37,16 +36,28 @@
 </div>
 
 <div id="show-administrator" class="content scaffold-show" role="main">
-<g:if test="${flash.message}">
-    <div class="message" role="status">${flash.message}</div>
-</g:if>
+<div class="errMsgWrap">
+    <g:if test="${flash.message}">
+         <div class="message" role="status">${flash.message}</div>
+    </g:if>
+</div>
 
+<div id="MarkIncomleteForm" title="Reason for marking incomplete">
+    <div id="msgWrap">
+        <g:hiddenField name="id" value="${mbProfile?.id}"/>
+        <textarea id="msgArea"></textarea>
+    </div>
+</div>
 
 <g:form action="updateProfile" name="mainForm">
 <g:hiddenField name="id" value="${mbProfile?.id}"/>
 <g:hiddenField name="version" value="${mbProfile?.version}"/>
-<input type="submit" hidden="hidden" id="formSubmit"/>
+<g:hiddenField name="stat" value="${mbProfile?.profileStatus}"/>
+<input type="submit" hidden="hidden" name="formSubmitSilent" id="formSubmitSilent"/>
+<input type="submit" hidden="hidden" name="formSubmit" id="formSubmit"/>
 <g:set var="candAddr" value="${ics.Address.findByIndividualAndCategory(mbProfile.candidate,'PresentAddress')}"/>
+<g:set var="iskconCentres" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','iskcon_centre','Config'))?.collect{it.value}}" />
+<g:set var="spiritualMasters" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','sp_master','Config'))?.collect{it.value}}" />
 
 <table align="center" border="0" cellpadding="0" cellspacing="0">
 <tr><td> 
@@ -97,7 +108,7 @@
                         <tbody>
                             <tr class="prop">
                                 <td valign="top" class="name">
-                                    <label for="legalName">Legal Name:</label>
+                                    <label for="legalName">Legal Name:</label><span class="mand">*</span>
                                 </td>
                                 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'legalName', 'errors')}">
 <g:textField name="legalName" maxlength="40" placeholder="Enter Full name (first name middle name last name)"
@@ -110,32 +121,33 @@
 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'initiatedName', 'errors')}">
     <g:textField name="initiatedName" maxlength="40" placeholder="Enter Initiated Name here" pattern=".{10,}"
                  value="${mbProfile?.candidate?.initiatedName}"/>
+    <div>&nbsp;&nbsp;&nbsp;(Blank if not initiated)</div>
 </td>
 <td valign="top" class="name">
-    <label for="isMale">Gender:</label>
+    <label for="isMale">Gender:</label><span class="mand">*</span>
 </td>
 <!-- Checking for adding comments -->
 <td valign="top" class="value">
-    <g:select name="isMale" required="required" from="${['MALE', 'FEMALE']}" value="${mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE'}"/>
+    <g:select name="isMale" class="required" from="${['FEMALE','MALE']}" value="${mbProfile?.candidate?.isMale==null?'Select Gender':(mbProfile?.candidate?.isMale ? 'MALE' : 'FEMALE')}" noSelection="['':'Select Gender']"/>
 </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="dob">Date of Birth:</label>
+        <label for="dob">Date of Birth:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
         <g:textField name="dob" id="dob" placeholder="Format of DD/MM/YYYY"
                      value="${mbProfile?.candidate?.dob?.format('dd/MM/yyyy')}" required="required"/>
     </td>
     <td valign="top" class="name">
-        <label for="pob">Place of Birth:</label>
+        <label for="pob">Place of Birth:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
-        <g:textField name="pob" placeholder="Enter Actual Region with State" required="required"
+        <g:textField name="pob" placeholder="Actual City/Village" required="required"
                          value="${mbProfile?.candidate?.pob}"/>
     </td>
     <td valign="top" class="name">
-        <label for="tob">Time of Birth:</label>
+        <label for="tob">Time of Birth:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
 
@@ -145,62 +157,64 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="iskconCentre">ISKCON Centre:</label>
+        <label for="iskconCentre">ISKCON Centre:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="iskconCentre" placeholder="Enter ISKCON Centre Name here" required="required"
-                     value="${mbProfile?.candidate?.iskconCentre}"/>
+        <g:select name="iskconCentre" from="${iskconCentres}" class="required"
+                  value="${mbProfile?.candidate?.iskconCentre}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="counselor">Counselor / Mentor:</label>
+        <label for="counselor">Counselor / Mentor:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="counselor" placeholder="Enter Counselor Name here" required="required"
                          value="${mbProfile?.candCounsellor}"/>
     </td>
     <td valign="top" class="name">
-        <label for="counselorAshram">Counselor is a:</label>
+        <label for="counselorAshram">Counselor is a:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="counselorAshram" from="${['NA', 'Grihastha', 'Brahmacari']}"
+        <g:select name="counselorAshram" from="${['NA', 'Grihastha', 'Brahmacari']}" class="required"
                   value="${mbProfile?.candCounsellorAshram}" noSelection="['':'Select One']"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="nationality">Nationality:</label>
+        <label for="originState">State Of Birth</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="nationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.candidate?.nationality}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="originState">State Of Birth</label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="originState"
+        <g:select name="originState" class="required"
                   from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.candidate?.origin}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="culturalInfluence">Primary Cultural Background:</label>
+        <label for="currentCountry">Are you currently settled in India or Abroad : </label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="culturalInfluence"
+        <g:select name="currentCountry" style="width: 100%" class="required"
+                  from="${['India','Abroad']}"
+                  value="${mbProfile?.currentCountry}" noSelection="['':'Select One']"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="culturalInfluence">Primary Cultural Background:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="culturalInfluence" class="required"
                   from="${['Assamese','Andhraite','Bengali','Bihari','Gujarati','Himachal Pradesh','Kannadiga','Kasmiri','Konkani','Keralite','Madhya Pradesh','Manipuri','Maharashtrian','Marwari','Nepali','Oriyan','Punjabi','Sindhi','Tamilian','Typical North Indian','Typical South Indian','Typical Cosmopolitan','Typical Village','Uttar Pradesh','Urdu','Western']}"
                   value="${mbProfile?.culturalInfluence}" noSelection="['':'Select One']"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="scstCategory">Category:</label>
+        <label for="scstCategory">Category:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="scstCategory"
+        <g:select name="scstCategory" class="required"
                   from="${['Open','Other Backward Class','Backward Class','Scheduled Caste','Scheduled Tribe','Nomadic Tribes']}"
                   value="${mbProfile?.scstCategory ?: 'Open'}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="caste">Caste:</label>
+        <label for="caste">Caste:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="caste" placeholder="Enter the Actual Caste here" required="required"
@@ -216,18 +230,18 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="varna">Varna, if you<br>are aware:</label>
+        <label for="varna">Varna, if you<br>are aware:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="varna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra', 'Not Known']}"
+        <g:select name="varna" from="${['Brahmin', 'Kshatriya', 'Vaishya', 'Sudra', 'Not Known']}" class="required"
                   value="${mbProfile?.candidate?.varna ?: 'Not Known'}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="heightInFt">Height</label>
+        <label for="heightInFt">Height</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="heightInFt" from="${2..7}" value="${(mbProfile?.candidate?.height?: 2)/12}"/><span>&nbsp;ft</span>
-        <g:select name="heightInInch" from="${0..11}" value="${(mbProfile?.candidate?.height?: 0)%12}"/><span>&nbsp;inches</span>
+        <g:select class="required" name="heightInFt" from="${2..7}" value="${(mbProfile?.candidate?.height?: 2)/12}"/><span>&nbsp;ft</span>
+        <g:select class="required" name="heightInInch" from="${0..11}" value="${(mbProfile?.candidate?.height?: 0)%12}"/><span>&nbsp;inches</span>
     </td>
     <td valign="top" class="name">
         <label for="weight">Weight</label>
@@ -238,12 +252,116 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="motherTongue">Mother Tongue:</label>
+        <label for="motherTongue">Mother Tongue:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="motherTongue"
+        <g:select name="motherTongue" class="required"
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
                   value="${mbProfile?.candidate?.motherTongue ?: 'Marathi'}" noSelection="['':'Select One']"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="nationality">Nationality:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="nationality" class="required" from="${['Indian', 'Others']}" value="${mbProfile?.candidate?.nationality}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="candidateIncome">Candidate's <br>Income(p.a):</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="candidateIncome" class="required"
+                  from="${1..100}"
+                  value="${mbProfile?.candidate?.income ? Integer.parseInt(mbProfile?.candidate?.income.split(' ')[0]):''}" noSelection="['':'Select One']"/>
+        <span>Lakhs per Annum</span>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="horoscopeToBeMatched">Horoscope<br> to be matched:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="horoscopeToBeMatched" from="${['Yes', 'No', 'No Specific Choice']}" class="required"
+                  value="${mbProfile?.horoscopeToBeMatched}" noSelection="['':'Select One']"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="manglik">Manglik:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="manglik" class="required" from="${['No', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}" noSelection="['':'Select One']"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="maritalStatus">Marital Status:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="maritalStatus" required="required"
+                  from="${['Never Married','Divorcee','Divorcee with children', 'Divorcee without children', 'Widow with children', 'Widow without children', 'Widower with children', 'Widower without children']}"
+                  value="${mbProfile?.maritalStatus?: 'Never Married'}"/>`
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="addrline1">Present Address : </label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:textArea name="addrline1" placeholder="Enter Address here" required="required" maxLength="100"
+                     value="${candAddr?.addressLine1}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="city">City:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="city" maxLength="20" placeholder="Enter City here" required="required"
+                     value="${candAddr?.city}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="state">State:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="state" class="required"
+                  from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
+                  value="${candAddr?.state?.name}" noSelection="['':'Select One']"/>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="pincode">Pin Code:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="pincode" maxLength="6" placeholder="Enter Pin Code here" required="required"
+                     value="${candAddr?.pincode}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="residenceType">Above Residence is:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="residenceType" class="required"
+                  from="${['Rented','Owned','Company provided','BACE / VOICE']}"
+                  value="${mbProfile?.residenceType}" noSelection="['':'Select One']"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="areaCurrHouse">Area (in sq.ft):</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value">
+        <g:textField name="areaCurrHouse" maxLength="6" placeholder="Enter the area value" required="required"
+                     value="${mbProfile?.areaCurrHouse}"/>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="contact">Contact Number:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'contact', 'errors')}">
+        <g:textField name="contact" type="tel"
+                     value="${VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile?.candidate)?.number}"
+                     required="required"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="email">Email Address:</label><span class="mand">*</span>
+    </td>
+    <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'email', 'errors')}">
+        <g:textField name="email" type="email"
+                     value="${EmailContact.findByCategoryAndIndividual('Personal', mbProfile?.candidate)?.emailAddress}"
+                     required="required"/>
     </td>
     <td valign="top" class="name">
         <label for="languagesKnown">Languages <br>Known:</label>
@@ -252,37 +370,6 @@
         <g:select class="multiple" name="languagesKnown" multiple="multiple"
                   from="${['Assamese', 'Bengali', 'English', 'Gujarati', 'Hindi', 'Kannada', 'Kashmiri', 'Konkani', 'Malayalam', 'Manipuri', 'Marathi', 'Marwari', 'Nepali', 'Oriya', 'Punjabi', 'Sanskrit', 'Sindhi', 'Tamil', 'Telugu', 'Urdu', 'Other Indian languages', 'Foreign languages']}"
                   value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.languagesKnown).toList()}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="candidateIncome">Candidate's <br>Income(p.a):</label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="candidateIncome"
-                  from="${['1 Lakhs','2 Lakhs','3 Lakhs','4 Lakhs','5 Lakhs','6 Lakhs','7 Lakhs','8 Lakhs','9 Lakhs','10 Lakhs','11 Lakhs','12 Lakhs','13 Lakhs','14 Lakhs','15 Lakhs','16 Lakhs','17 Lakhs','18 Lakhs','19 Lakhs','20 Lakhs']}"
-                  value="${mbProfile?.candidate?.income}" noSelection="['':'Select One']"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="horoscopeToBeMatched">Horoscope<br> to be matched:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="horoscopeToBeMatched" from="${['Yes', 'No', 'No Specific Choice']}"
-                  value="${mbProfile?.horoscopeToBeMatched}" noSelection="['':'Select One']"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="manglik">Manglik:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="manglik"  from="${['No', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}" noSelection="['':'Select One']"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="maritalStatus">Marital Status:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="maritalStatus" required="required"
-                  from="${['Never Married','Divorcee','Married & Separated','Widow / Widower','Divorcee with Children']}"
-                  value="${mbProfile?.maritalStatus?: 'Never Married'}"/>
     </td>
 </tr>
 <tr class="prop">
@@ -310,67 +397,10 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="addrline1">Present Address : </label>
-    </td>
-    <td valign="top" class="value">
-        <g:textArea name="addrline1" placeholder="Enter Address here" required="required" maxLength="100"
-                     value="${candAddr?.addressLine1}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="city">City:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="city" maxLength="20" placeholder="Enter City here" required="required"
-                     value="${candAddr?.city}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="state">State:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="state"
-                  from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
-                  value="${candAddr?.state?.name}" noSelection="['':'Select One']"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="pincode">Pin Code:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="pincode" maxLength="6" placeholder="Enter Pin Code here" required="required"
-                     value="${candAddr?.pincode}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="contact">Contact Number:</label>
-    </td>
-    <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'contact', 'errors')}">
-        <g:textField name="contact" type="tel"
-                     value="${VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile?.candidate)?.number}"
-                     required="required"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="email">Email Address:</label>
-    </td>
-    <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'email', 'errors')}">
-        <g:textField name="email" type="email"
-                     value="${EmailContact.findByCategoryAndIndividual('Personal', mbProfile?.candidate)?.emailAddress}"
-                     required="required"/>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="residenceType">Above Residence is : </label>
-    </td>
-    <td valign="top" class="value">
-        <g:select name="residenceType"
-                  from="${['Rented','Owned','Company provided','BACE / VOICE']}"
-                  value="${mbProfile?.residenceType}" noSelection="['':'Select One']"/>
-    </td>
-    <td valign="top" class="name">
         <label for="personalInfo">Any Personal or Important information you would like us to know:</label>
     </td>
-    <td colspan="3" valign="top" class="value">
-        <g:textArea name="personalInfo"
+    <td colspan="4" valign="top" class="value">
+        <g:textArea name="personalInfo" maxlength="500"
                     placeholder="Enter any Personal information you would like us to know as a Marriage board"
                     value="${mbProfile?.personalInfo}"/>
         <span style="display:block;text-align: center">0-500 Characters</span>
@@ -388,14 +418,14 @@
 <tbody>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="nativePlace">Native Place:</label>
+        <label for="nativePlace">Native Place:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="nativePlace" maxLength="40" placeholder="Enter Region of Native place" required="required"
                          value="${mbProfile?.nativePlace}"/>
     </td>
     <td valign="top" class="name">
-        <label for="nativeState">Native(State):</label>
+        <label for="nativeState">Native(State):</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:select name="nativeState" required="required"
@@ -405,38 +435,38 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="famaddrline1">Present Address<br>of family:</label>
+        <label for="famaddrline1">Present Address<br>of family:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textArea name="famaddrline1" maxLength="100" placeholder="Enter Address here" required="required" value="${mbProfile?.familyAddress?.addressLine1}"/>
     </td>
     <td valign="top" class="name">
-        <label for="permcity">City:</label>
+        <label for="permcity">City:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="permcity" maxLength="20" placeholder="Enter City here" required="required" value="${mbProfile?.familyAddress?.city}"/>
     </td>
     <td valign="top" class="name">
-        <label for="familystate">State:</label>
+        <label for="familystate">State:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="familystate"
+        <g:select name="familystate" class="required"
                   from="${['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadara and Nagar Haveli', 'Daman and Diu', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'NCT of Delhi', 'Orissa', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Foreign State']}"
                   value="${mbProfile?.familyAddress?.state?.name}" noSelection="['':'Select One']"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="permpincode">Pin Code:</label>
+        <label for="permpincode">Pin Code:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
         <g:textField name="permpincode" maxLength="6" placeholder="Enter Pin Code here" required="required" value="${mbProfile?.familyAddress?.pincode}"/>
     </td>
     <td valign="top" class="name">
-        <label for="houseIs">Above House is:</label>
+        <label for="houseIs">Above House is:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="houseIs"  from="${['Owned', 'Rented', 'Others']}" value="${mbProfile?.houseIs}" noSelection="['':'Select One']"/>
+        <g:select name="houseIs"  class="required" from="${['Owned', 'Rented', 'Govt/Company provided', 'Others']}" value="${mbProfile?.houseIs}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="houseArea">Area of House:</label>
@@ -481,32 +511,32 @@
     </td>
     <td valign="top" class="value">
         <g:select name="parentsSpMaster" class="multiple" multiple="multiple"
-                  from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
+                  from="${spiritualMasters}"
                   value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.parentsSpMaster).toList()}"/>
     </td>
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="fatherIncome">Father's Income (p.a):</label>
+        <label for="fatherIncome">Father's Income (p.a):</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="fatherIncome"
+        <g:select name="fatherIncome" class="required"
         from="${['NA', 'Retired', 'Receiving Pension', 'Less than 2 lakhs', 'Between 2 to 3.99 lakhs', 'Between 4 to 5.99 lakhs', 'Between 6 to 7.99 lakhs', 'Between 8 to 9.99 lakhs', 'Between 10 to 11.99 lakhs', 'Between 12 to 13.99 lakhs', 'Between 14 to 15.99 lakhs', 'Above 16 lakhs']}"
         value="${mbProfile?.fatherIncome}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="otherIncome">Other Family members Income (p.a):</label>
+        <label for="otherIncome">Other Family members Income (p.a):</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="otherIncome"
+        <g:select name="otherIncome" class="required"
         from="${['NA', 'Less than 2 lakhs', 'Between 2 to 4.99 lakhs', 'Between 5 to 7.99 lakhs', 'Between 8 to 11.99 lakhs', 'Between 12 to 15.99 lakhs', 'Between 16 to 19.99 lakhs', 'Between 20 to 24.99 lakhs', 'Between 25 to 29.99 lakhs', 'Above 30 lakhs']}"
         value="${mbProfile?.otherIncome}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="noFamilyMembers">No. of family members <br> staying at home:</label>
+        <label for="noFamilyMembers">No. of family members <br> staying at home:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="noFamilyMembers" from="${0..30}" value="${mbProfile?.noFamilyMembers}"/>
+        <g:select class="required" name="noFamilyMembers" from="${0..30}" value="${mbProfile?.noFamilyMembers}"/>
     </td>
 </tr>
 
@@ -515,26 +545,26 @@
 <!-- Start of family details comment-->
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="relativeName1">Father's Name:</label>
+        <label for="relativeName1">Father's Name:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="relativeName1" placeholder="Legal Name"
+        <g:textField name="relativeName1" placeholder="Legal Name" required="required"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.legalName}"/>
         <g:textField name="relativeIName1" placeholder="Initiated Name(If applicable)"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="relativeEducation1">Education:</label>
+        <label for="relativeEducation1">Education:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="relativeEducation1" placeholder="Enter Father's Education Name"
+        <g:textField name="relativeEducation1" placeholder="Enter Father's Education Name" required="required"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.education}"/>
     </td>
     <td valign="top" class="name">
-        <label for="relativeProfession1">Occupation:</label>
+        <label for="relativeProfession1">Occupation:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="relativeProfession1" placeholder="Enter Father's Occupation here"
+        <g:textField name="relativeProfession1" placeholder="Enter Father's Occupation here" required="required"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Father'))[0]?.individual1?.profession}"/>
     </td>
     <g:hiddenField name="relationName1" value="Father"/>
@@ -542,26 +572,26 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="relativeName2">Mother's Name:</label>
+        <label for="relativeName2">Mother's Name:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="relativeName2" placeholder="Legal Name"
+        <g:textField name="relativeName2" placeholder="Legal Name" required="required"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.legalName}"/>
         <g:textField name="relativeIName2" placeholder="Initiated Name(If Applicable)"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.initiatedName}"/>
     </td>
     <td valign="top" class="name">
-        <label for="relativeEducation2">Education:</label>
+        <label for="relativeEducation2">Education:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="relativeEducation2" placeholder="Enter Mother's Education Name"
+        <g:textField name="relativeEducation2" placeholder="Enter Mother's Education Name" required="required"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.education}"/>
     </td>
     <td valign="top" class="name">
-        <label for="relativeProfession2">Occupation:</label>
+        <label for="relativeProfession2">Occupation:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="relativeProfession2" placeholder="Enter Mother's Occupation here"
+        <g:textField name="relativeProfession2" placeholder="Enter Mother's Occupation here" required="required"
                      value="${Relationship.findAllByIndividual2AndRelation(mbProfile?.candidate,Relation.findByName('Mother'))[0]?.individual1?.profession}"/>
     </td>
     <g:hiddenField name="relationName2" value="Mother"/>
@@ -763,29 +793,29 @@
             <tbody>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="eduCat">Education Category:</label>
+                    <label for="eduCat">Education Category:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="eduCat"
-                              from="${['Below SSC','SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
+                    <g:select name="eduCat" class="required"
+                              from="${['Below SSC','SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                               value="${mbProfile?.eduCat}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="eduQual">Qualifications:</label>
+                    <label for="eduQual">Qualifications:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="eduQual" maxlength="40" placeholder="Enter your qualification here"
+                    <g:textField name="eduQual" maxlength="30" placeholder="Enter your qualification here" required="required"
                                  value="${mbProfile?.eduQual}"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="occupationStatus">Occupation Status:</label>
+                    <label for="occupationStatus">Occupation Status:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="occupationStatus"
+                    <g:select name="occupationStatus" class="required"
                               from="${['Diploma Student', 'Graduate Student', 'PostGraduate Student', 'Doctorate Student', 'Currently in Internship', 'Searching for Job', 'Establishing a Startup Company', 'Salaried', 'Business', 'Family Business']}"
                               value="${mbProfile?.occupationStatus}" noSelection="['':'Select One']"/>
                 </td>
@@ -795,7 +825,7 @@
                     <label for="companyName">Organisation Name:</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="companyName" placeholder="Enter Company Name here"
+                    <g:textField name="companyName" placeholder="Enter Company Name here" maxlength="60"
                                  value="${mbProfile?.companyName}"/>
                 </td>
             </tr>
@@ -804,7 +834,7 @@
                     <label for="designation">Designation:</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="designation" placeholder="Enter your current designation here"
+                    <g:textField name="designation" placeholder="Enter your current designation here" maxlength="30"
                                  value="${mbProfile?.designation}"/>
                 </td>
             </tr>
@@ -858,61 +888,61 @@
             <tbody>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="introductionYear">Year of Introduction:</label>
+                    <label for="introductionYear">Year of Introduction to KC:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="introductionYear" from="${1965..2099}" value="${mbProfile?.introductionYear}" noSelection="['':'Select One']"/>
+                    <g:select name="introductionYear" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" class="required" value="${mbProfile?.introductionYear}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
-                    <label for="introductionCentre">Introduced in which<br> Temple/ Centre:</label>
+                    <label for="introductionCentre">Introduced in which<br> Temple/ Centre:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="introductionCentre" placeholder="Enter ISKCON Centre Name here"
-                                 value="${mbProfile?.introductionCentre}"/>
+                    <g:select name="introductionCentre" from="${iskconCentres}" class="required"
+                              value="${mbProfile?.introductionCentre}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
-                    <label for="frequencyOfTempleVisits">Frequency of <br>visiting the Temple:</label>
+                    <label for="frequencyOfTempleVisits">Frequency of <br>visiting the Temple:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="frequencyOfTempleVisits"
+                    <g:select name="frequencyOfTempleVisits" class="required"
                               from="${['Almost Daily', 'Once or twice a week', 'Once or twice a month', 'Once or twice a year', 'Usually on all festivals', 'Usually on Sundays', 'Only specific programs']}"
                               value="${mbProfile?.frequencyOfTempleVisits}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="currentlyVisiting">Which ISKCON Temple<br>do you regularly visit:</label>
+                    <label for="currentlyVisiting">Which ISKCON Temple<br>do you regularly visit:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:textField name="currentlyVisiting" placeholder="Enter ISKCON Centre Name here of connectivity "
-                                 value="${mbProfile?.currentlyVisiting}"/>
+                    <g:select name="currentlyVisiting" from="${iskconCentres}" class="required"
+                              value="${mbProfile?.currentlyVisiting}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
-                    <label for="regularSince">Since when are you<br>associated regularly:</label>
+                    <label for="regularSince">Since when are you<br>associated regularly with KC:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="regularSince" from="${1965..2099}" value="${mbProfile?.regularSince}" noSelection="['':'Select One']"/>
+                    <g:select name="regularSince" class="required" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" value="${mbProfile?.regularSince}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="chantingSince">Chanting since:</label>
+                    <label for="chantingSince">Chanting since:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
-                    <g:select name="chantingSince" from="${1965..2099}" value="${mbProfile?.chantingSince}" noSelection="['':'Select One']"/>
+                    <g:select name="chantingSince" class="required" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" value="${mbProfile?.chantingSince}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
-                    <label for="numberOfRounds">No.of Rounds currently<br>Chanting(Daily):</label>
+                    <label for="numberOfRounds">No.of Rounds currently<br>Chanting(Daily):</label><span class="mand">*</span>
                 </td>
                 <td>
-                    <g:select name="numberOfRounds" placeholder="Enter number of rounds chanting currently"
+                    <g:select name="numberOfRounds" placeholder="Enter number of rounds chanting currently" class="required"
                               from="${0..16}"  value="${mbProfile?.numberOfRounds}" noSelection="['':'Select One']"/>
                 </td>
-                <td valign="top" class="name">
-                    <label for="chantingSixteenSince">Chanting 16 rounds since:</label>
+                <td valign="top" class="name chantingSixteenSince">
+                    <label for="chantingSixteenSince">Chanting 16 rounds since:</label><span class="mand">*</span>
                 </td>
-                <td valign="top" class="value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
-                    <g:select name="chantingSixteenSince" from="${1965..2099}" value="${mbProfile?.chantingSixteenSince}" noSelection="['':'Select One']"/>
+                <td valign="top" class="chantingSixteenSince value ${hasErrors(bean: mbProfile, field: 'dob', 'errors')}">
+                    <g:select name="chantingSixteenSince" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" class="required" value="${mbProfile?.chantingSixteenSince}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
@@ -921,8 +951,8 @@
                 </td>
                 <td valign="top" class="value">
                     <g:select name="spiritualMaster"
-                              from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
-                              value="${mbProfile?.spiritualMaster}"/>
+                              from="${spiritualMasters}"
+                              value="${mbProfile?.spiritualMaster}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="firstInitiation">Date of 1st Initiation:</label>
@@ -950,7 +980,7 @@
                     <label for="regulatedSince">If yes, since when:</label>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="regulatedSince" from="${1965..2099}" value="${mbProfile?.regulatedSince}" noSelection="['':'Select One']"/>
+                    <g:select name="regulatedSince" from="${(mbProfile?.candidate?.dob ? Integer.parseInt(mbProfile?.candidate?.dob.format('yyyy')) : 1980)..Integer.parseInt(new Date().format('yyyy'))}" value="${mbProfile?.regulatedSince}" noSelection="['':'Select One']"/>
                 </td>
                 <td valign="top" class="name">
                     <label for="teacoffee">Do you take<br>tea/coffee:</label>
@@ -1006,34 +1036,34 @@
                             <label for="likesInKc">Which aspect of Krishna<br>Consciousness<br> you like most:</label>
                         </td>
                         <td valign="top" class="value" colspan="2">
-                            <g:textArea name="likesInKc" maxlength="80" placeholder="Enter different aspects of KC you like"
+                            <g:textArea name="likesInKc" maxlength="255" placeholder="Enter different aspects of KC you like"
                                         value="${mbProfile?.likesInKc}"/>
                         </td>
                         <td valign="top" class="name">
                             <label for="dislikesInKc">Which aspect of Krishna<br>Consciousness<br>you do not like:</label>
                         </td>
                         <td valign="top" class="value" colspan="2">
-                            <g:textArea name="dislikesInKc" maxlength="80"
+                            <g:textArea name="dislikesInKc" maxlength="255"
                                         placeholder="Enter different aspects of KC you don't like"
                                         value="${mbProfile?.dislikesInKc}"/>
                         </td>
                     </tr>
                     <tr class="prop">
                         <td valign="top" class="name">
-                            <label for="services">Various services rendered:</label>
+                            <label for="services">Various services rendered:</label><span class="mand">*</span>
                         </td>
                         <td valign="top" class="value" colspan="5">
-                            <g:textArea name="services" maxlength="80"
+                            <g:textArea name="services" required="required" maxlength="255"
                                          placeholder="Please mention the various services rendered by you"
                                          value="${mbProfile?.services}"/>
                         </td>
                     </tr>
                     <tr class="prop">
                         <td valign="top" class="name">
-                            <label for="interests">Main Interests & Activities:</label>
+                            <label for="interests">Main Interests & Activities:</label><span class="mand">*</span>
                         </td>
                         <td valign="top" class="value" colspan="5">
-                            <g:textArea name="interests" maxlength="80" placeholder="Please mention any interests"
+                            <g:textArea name="interests" maxlength="255" placeholder="Please mention any interests" required="required"
                                          value="${mbProfile?.interests}"/>
                         </td>
                     </tr>
@@ -1042,7 +1072,7 @@
                             <label for="remarks">Remarks (Anything else <br> you would like us to know):</label>
                         </td>
                         <td valign="top" class="value" colspan="5">
-                            <g:textArea name="remarks" maxlength="200"
+                            <g:textArea name="remarks" maxlength="255"
                                          placeholder="Please mention any remarks or any information you would like the Marriage Board to know"
                                          value="${mbProfile?.remarks}"/>
                         </td>
@@ -1066,11 +1096,11 @@
 <tbody>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="devotionalCulture">Devotional & Cultural:</label>
+        <label for="devotionalCulture">Devotional & Cultural:</label><span class="mand">*</span>
 
     </td>
     <td valign="top" class="value">
-        <g:textArea name="devotionalCulture" maxLength="200"
+        <g:textArea name="devotionalCulture" maxLength="200" required="required"
                     value="${mbProfile?.devotionalCulture}"/>
     </td>
 </tr>
@@ -1088,7 +1118,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleChanting" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleChanting}">
+                      value="${mbProfile?.flexibleChanting ? mbProfile?.flexibleChanting : false }">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1099,7 +1129,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefSpMaster" class="multiple" multiple="multiple"
-                  from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
+                  from="${spiritualMasters}"
                   value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefSpMaster).toList()}"/>
     </td>
     <td valign="top" class="name">
@@ -1107,7 +1137,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleSpMaster" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleSpMaster}">
+                      value="${mbProfile?.flexibleSpMaster ? mbProfile?.flexibleSpMaster : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1117,14 +1147,15 @@
         <label for="prefCentre">Preferred Centre:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="prefCentre" placeholder="Enter ISKCON Centre Name here" value="${mbProfile?.prefCentre}"/>
+        <g:select name="prefCentre" from="${iskconCentres}" class="multiple" multiple="multiple"
+                  value="${mbProfile?.prefCentre}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="flexibleOnCentre">I am flexible  on Centre:</label>
     </td>
     <td>
         <g:radioGroup name='flexibleOnCentre' labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCentre}">
+                      value="${mbProfile?.flexibleCentre ? mbProfile?.flexibleCentre : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1135,14 +1166,31 @@
         <label for="prefNationality">Preferred Nationality:</label>
     </td>
     <td valign="top" class="value">
-        <g:select name="prefNationality" from="${['Indian', 'Abroad']}" value="${mbProfile?.prefNationality}"/>
+        <g:select name="prefNationality" from="${['Indian', 'Others']}" value="${mbProfile?.prefNationality}"/>
     </td>
     <td valign="top" class="name">
         <label for="flexibleNationality">I am flexible  on Nationality:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleNationality" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleNationality}">
+                      value="${mbProfile?.flexibleNationality ? mbProfile?.flexibleNationality : false}">
+            <span>${it.radio} ${it.label}</span>
+        </g:radioGroup>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="prefCurrentCountry">Preferred Current Country:</label>
+    </td>
+    <td valign="top" class="value">
+        <g:select name="prefCurrentCountry" from="${['India', 'Abroad']}" value="${mbProfile?.prefCurrentCountry}"/>
+    </td>
+    <td valign="top" class="name">
+        <label for="flexibleCurrentCountry">I am flexible on prospect's Current Country:</label>
+    </td>
+    <td>
+        <g:radioGroup name="flexibleCurrentCountry" labels="['No', 'Yes']" values="[false, true]"
+                      value="${mbProfile?.flexibleCurrentCountry ? mbProfile?.flexibleCurrentCountry : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1161,7 +1209,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCulturalInfluence" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCulturalInfluence}">
+                      value="${mbProfile?.flexibleCulturalInfluence ? mbProfile?.flexibleCulturalInfluence : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1179,7 +1227,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleVarna" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleVarna}">
+                      value="${mbProfile?.flexibleVarna ? mbProfile?.flexibleVarna : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1198,7 +1246,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCategory" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCategory}">
+                      value="${mbProfile?.flexibleCategory ? mbProfile?.flexibleCategory : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1215,7 +1263,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCaste}">
+                      value="${mbProfile?.flexibleCaste ? mbProfile?.flexibleCaste : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1232,7 +1280,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleSubcaste" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleSubcaste}">
+                      value="${mbProfile?.flexibleSubcaste ? mbProfile?.flexibleSubcaste : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1244,7 +1292,7 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefeducationCategory"
-                  from="${['SSC (or equivalent)', 'HSC (or equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
+                  from="${['SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate']}"
                   value="${mbProfile?.prefeducationCategory}"/>
         <span> & above</span>
     </td>
@@ -1253,7 +1301,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleEducationCat" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleEducationCat}">
+                      value="${mbProfile?.flexibleEducationCat ? mbProfile?.flexibleEducationCat : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1271,7 +1319,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleQualifications" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleQualifications}">
+                      value="${mbProfile?.flexibleQualifications ? mbProfile?.flexibleQualifications : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1290,7 +1338,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleAgediff" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleAgediff}">
+                      value="${mbProfile?.flexibleAgediff ? mbProfile?.flexibleAgediff : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1308,7 +1356,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleHeight" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleHeight}">
+                      value="${mbProfile?.flexibleHeight ? mbProfile?.flexibleHeight : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1326,7 +1374,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleLooks" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleLooks}">
+                      value="${mbProfile?.flexibleLooks ? mbProfile?.flexibleLooks : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1336,7 +1384,7 @@
         <label for="prefCandIncome">Preferred Candidate Income:</label>
     </td>
     <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="20" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:1}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
+        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="100" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:4}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
         <div class="slider-range"></div>
     </td>
     <td valign="top" class="name">
@@ -1344,7 +1392,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleCandidateIncome" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCandidateIncome}">
+                      value="${mbProfile?.flexibleCandidateIncome ? mbProfile?.flexibleCandidateIncome : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1363,7 +1411,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleLangknown" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleLangknown}">
+                      value="${mbProfile?.flexibleLangknown ? mbProfile?.flexibleLangknown : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1381,7 +1429,7 @@
     </td>
     <td>
         <g:radioGroup name="flexibleManglik" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleManglik}">
+                      value="${mbProfile?.flexibleManglik ? mbProfile?.flexibleManglik : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1428,13 +1476,13 @@
             <tbody>
             <tr class="prop">
                 <td valign="top" class="value">
-                <div style="text-align: center"><img id="fvimage" name="fvimage" class="avatar"
-                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'fv'])}"/><br><br>
-                    <g:form name="uploadImageFV" action="uploadImage" method="post"
+                <div style="text-align: center"><img id="closeUpPrim" name="closeUpPrim" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': 'closePrim', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="closeUpPrimForm" action="uploadImage" method="post"
                             enctype="multipart/form-data">
-                        <g:hiddenField name="type" value="fv"/>
-                        <label><b>Passport Image (max 100K)</b></label><br><br>
-                        <input type="file" name="imgFileFV" id="imgFileFV"/></div>
+                        <g:hiddenField name="imgType" value="closePrim"/>
+                        <label><b>Close Up (Primary)</b></label><span class="mand">*</span><br><br>
+                        <input type="file" name="closeUpPrimInput" id="closeUpPrimInput"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
                             For best results, your image should have a width-to-height ratio of 4:5.
@@ -1443,13 +1491,13 @@
                     </g:form>
                 </td>
                 <td valign="top" class="value">
-                    <div style="text-align: center"><img id="svimage" name="svimage" class="avatar"
-                         src="${createLink(action: 'showImage', id: mbProfile?.id, params: ['imgtype': 'sv'])}"/><br><br>
-                    <g:form name="uploadImageSV" action="uploadImage" method="post"
+                    <div style="text-align: center"><img id="closeUpSec" name="closeUpSec" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': 'closeSec', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="closeUpSecForm" action="uploadImage" method="post"
                             enctype="multipart/form-data">
-                        <g:hiddenField name="type" value="sv"/>
-                        <label><b>Portfolio Image (max 500K)</b></label><br><br>
-                        <input type="file" name="imgFileSV" id="imgFileSV"/></div>
+                        <g:hiddenField name="imgType" value="closeSec"/>
+                        <label><b>Close Up (Secondary)</b></label><br><br>
+                        <input type="file" name="closeUpSecInput" id="closeUpSecInput"/></div>
 
                         <div style="font-size:0.8em; margin: 1.0em;">
                             For best results, your image should have a width-to-height ratio of 4:5.
@@ -1458,7 +1506,38 @@
                     </g:form>
                 </td>
             </tr>
+            <tr class="prop">
+                <td valign="top" class="value">
+                <div style="text-align: center"><img id="fullPrim" name="fullPrim" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': 'fullPrim', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="fullPrimForm" action="uploadImage" method="post"
+                            enctype="multipart/form-data">
+                        <g:hiddenField name="imgType" value="fullPrim"/>
+                        <label><b>Full Profile (Primary)</b></label><span class="mand">*</span><br><br>
+                        <input type="file" name="fullPrimInput" id="fullPrimInput"/></div>
 
+                        <div style="font-size:0.8em; margin: 1.0em;">
+                            For best results, your image should have a width-to-height ratio of 4:5.
+                            For example, if your image is 80 pixels wide, it should be 100 pixels high.
+                        </div>
+                    </g:form>
+                </td>
+                <td valign="top" class="value">
+                    <div style="text-align: center"><img id="fullSec" name="fullSec" class="avatar"
+                         src="${createLink(action: 'showImage', params: ['imgType': '`', entity: 'mbProfile', entityId: mbProfile?.id])}"/><br><br>
+                    <g:form name="fullSecForm" action="uploadImage" method="post"
+                            enctype="multipart/form-data">
+                        <g:hiddenField name="imgType" value="fullSec"/>
+                        <label><b>Full Profile (Secondary)</b></label><br><br>
+                        <input type="file" name="fullSecInput" id="fullSecInput"/></div>
+
+                        <div style="font-size:0.8em; margin: 1.0em;">
+                            For best results, your image should have a width-to-height ratio of 4:5.
+                            For example, if your image is 80 pixels wide, it should be 100 pixels high.
+                        </div>
+                    </g:form>
+                </td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -1477,50 +1556,50 @@
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="keenDevprofile">Are you very keen for a devotee profile:</label>
+                    <label for="keenDevprofile">Are you very keen for a devotee profile:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="keenDevprofile"
+                    <g:select name="keenDevprofile" class="required"
                               from="${['Yes,keen on devotee profile only', 'Preferably devotee, else Upcoming devotee', 'Keen on only upcoming devotee', 'Preferably upcoming devotee, else from pious cultured family']}"
                               value="${mbProfile?.keenDevProfile}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="primdepMB">Are you primarily dependent on Marriage Board(MB) for getting matches:</label>
+                    <label for="primdepMB">Are you primarily dependent on Marriage Board(MB) for getting matches:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="primdepMB"
+                    <g:select name="primdepMB" class="required"
                               from="${['Yes,very much', 'Yes, however I still have other options', 'No, MB is just one of the options', 'No, primarily searching outside']}"
                               value="${mbProfile?.primdepMB}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="regotherMB">Have you registered (will be registering) in other MB sites/Centres:</label>
+                    <label for="regotherMB">Have you registered (will be registering) in other MB sites/Centres:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="regotherMB"
+                    <g:select name="regotherMB" class="required"
                               from="${['Yes,already registered', 'Yes, will be registering soon', 'No, this is the only MB I wish to register']}"
                               value="${mbProfile?.regotherMB}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="parentsSearch">Are parents simultaneously searching for a suitable candidate:</label>
+                    <label for="parentsSearch">Are parents simultaneously searching for a suitable candidate:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="parentsSearch"
+                    <g:select name="parentsSearch" class="required"
                               from="${['Not started yet', 'Yes', 'No', 'Not as of now(On Hold)']}"
                               value="${mbProfile?.parentsSearch}" noSelection="['':'Select One']"/>
                 </td>
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
-                    <label for="profileoutsideISKCON">Are you(or your family) also searching for profiles outside of ISKCON:</label>
+                    <label for="profileoutsideISKCON">Are you(or your family) also searching for profiles outside of ISKCON:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
-                    <g:select name="profileoutsideISKCON" from="${['Yes', 'No']}"
+                    <g:select name="profileoutsideISKCON" from="${['Yes', 'No']}" class="required"
                               value="${mbProfile?.profileoutsideISKCON}"/>
                 </td>
             </tr>
@@ -1585,11 +1664,85 @@
 </div>
 
 <script type="text/javascript">
+    function processSubmit(){
+        validateAllSteps();
+    }
+    function validateStep(validateSection) {
+        var isStepValid = true;
+        $("#culturalInfluence").validate({
+            rules:{
+                name: "required"
+            }
+        });
+        validateSection.find('input').each(function(){
+            if(!$(this).valid()){
+                isStepValid=false;
+            }
+        });
+        validateSection.find('textarea').each(function(){
+            if(!$(this).valid()){
+                isStepValid=false;
+            }
+        });
+        validateSection.find('select').each(function(){
+            if(!$(this).valid()){
+                isStepValid=false;
+            }
+        });
+        return isStepValid;
+    }
+
+    function validateAllSteps() {
+        var formValid = true;
+        $('.anchor li a').each(function(){
+            formValid = validateStep($($(this).attr('href')));
+            return formValid
+        })
+        if(formValid) {
+            $('#formSubmit').click();
+        }
+        else{
+            $('.errMsgWrap').empty().append('<div class="message" role="status" style="color:red">Some of the Mandatory fields are not filled out. Please fill the same to complete your profile.</div>')
+        }
+    }
+
     $(document).ready(function () {
         // Smart Wizard
         $('#wizard').smartWizard({
-            onLeaveStep: leaveAStepCallback,
+            enableFinishButton : true,
+            keyNavigation : false,
+            enableAllSteps : true,
+            labelFinish: 'Save',
             onFinish: onFinishCallback
+        });
+
+
+        $( "#MarkIncomleteForm" ).dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: {
+                "Done": function() {
+                    var url = "${createLink(controller:'Mb',action:'updateProfileStatus')}";
+
+                    // post data
+                    $.post(url, {
+                        mbMessage: $('#msgArea').val(),
+                        id: $('#id').val(),
+                        status: 'INCOMPLETE'
+                        } , function(returnData){
+                        //alert(returnData);
+                        $( "#MarkIncomleteForm" ).dialog( "close" )
+                    });
+
+                    $( this ).dialog( "close" );
+                },
+                "Cancel": function() {
+                    $( this ).dialog( "close" );
+                }
+            },
+            close: function() {
+
+            }
         });
 
         setTimeout(function(){
@@ -1607,61 +1760,59 @@
             selectedList: 40
         });
 
+        $('#numberOfRounds').change(function(){
+           if($(this).val() == 16 ){
+               $('.chantingSixteenSince').show();
+               $('#chantingSixteenSince').addClass('required');
+           }
+            else{
+               $('#chantingSixteenSince').val('Select One').removeClass('required');
+               $('.chantingSixteenSince').hide();
+           }
+        }).trigger('change');
+
         initSliders();
 
-        function leaveAStepCallback(obj, context) {
-            var stepSec=$(obj.attr('href'));
-            var status=validateStep(stepSec); // return false to stay on step and true to continue navigation
-            if(status)
-                $('label.error').remove();
-            return status;
+        $('#mainForm').removeAttr('novalidate');
+
+        function onFinishCallback() {
+            if($('#stat').val() == 'STARTED') {
+                $('#mainForm').attr('novalidate', 'novalidate');
+                $('#formSubmitSilent').click();
+            }
+            else{
+                processSubmit();
+            }
         }
 
-        function onFinishCallback(objs, context) {
-          <sec:ifAnyGranted roles="ROLE_MB_CANDIDATE">
-            validateAllSteps();
-            </sec:ifAnyGranted>
-        }
-
-        function validateStep(validateSection) {
-            var isStepValid = true;
-            $("[name='mainForm']").validate();
-            validateSection.find('input').each(function(){
-                if(!$(this).valid()){
-                    isStepValid=false;
-                }
-            });
-            $("[name='mainForm']").validate();
-            validateSection.find('textarea').each(function(){
-                if(!$(this).valid()){
-                    isStepValid=false;
-                }
-            });
-            return isStepValid;
-        }
-
-        function validateAllSteps() {
-            var formValid = true;
-            $('.anchor li a').each(function(){
-                formValid = validateStep($($(this).attr('href')));
-                return formValid
-            })
-            if(formValid)
-                $('#formSubmit').click();
-        }
-
-        $('#imgFileFV').live('change', function () {
-            $("#uploadImageFV").ajaxForm({
+        $('#closeUpPrimInput').live('change', function () {
+            $("#closeUpPrimForm").ajaxForm({
                 success: function(){
-                    $("#fvimage").attr('src',$("#fvimage").attr('src')+'&timestamp='+new Date().getTime());
+                    $("#closeUpPrim").attr('src',$("#closeUpPrim").attr('src')+'&timestamp='+new Date().getTime());
                 }
             }).submit();
         });
 
-        $('#imgFileSV').live('change', function () {
-            $("#uploadImageSV").ajaxForm({
+        $('#closeUpSecInput').live('change', function () {
+            $("#closeUpSecForm").ajaxForm({
                 success: function () {
-                    $("#svimage").attr('src',$("#svimage").attr('src')+'&timestamp='+new Date().getTime());
+                    $("#closeUpSec").attr('src',$("#closeUpSec").attr('src')+'&timestamp='+new Date().getTime());
+                }
+            }).submit();
+        });
+
+        $('#fullPrimInput').live('change', function () {
+            $("#fullPrimForm").ajaxForm({
+                success: function(){
+                    $("#fullPrim").attr('src',$("#fullPrim").attr('src')+'&timestamp='+new Date().getTime());
+                }
+            }).submit();
+        });
+
+        $('#fullSecInput').live('change', function () {
+            $("#fullSecForm").ajaxForm({
+                success: function () {
+                    $("#fullSec").attr('src',$("#fullSec").attr('src')+'&timestamp='+new Date().getTime());
                 }
             }).submit();
         });
@@ -1677,26 +1828,34 @@
             yearRange: '1975:2050',
             dateFormat: 'dd/mm/yy',
             minDate: new Date(1975, 10 - 1, 25)
+        }).change(function(){
+            var birthDate = $(this).datepicker('getDate');
+            var nowDate = new Date();
+            $("#firstInitiation,#secondInitiation").datepicker('destroy').datepicker({
+                changeMonth: true,
+                changeYear: true,
+                maxDate: nowDate,
+                minDate: birthDate,
+                yearRange: birthDate.getFullYear() + ':' + nowDate.getFullYear(),
+                dateFormat: 'dd/mm/yy'
+            });
+            $('#introductionYear,#regularSince,#chantingSince,#regulatedSince,#chantingSixteenSince').empty().append($('<option />').val('').html('Select One'));
+            for(var i = birthDate.getFullYear();i <= nowDate.getFullYear(); i++){
+                $('#introductionYear,#regularSince,#chantingSince,#regulatedSince,#chantingSixteenSince').append($('<option />').val(i).html(i));
+            }
+        });
+        $("#firstInitiation,#secondInitiation").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            maxDate: new Date(),
+            minDate: $('#dob').datepicker('getDate') || new Date(),
+            dateFormat: 'dd/mm/yy'
         });
         $('#tob').timepicker({
             timeFormat: 'hh:mm:ss',
             controlType: 'select',
             showSecond: true,
             showButtonPanel: false
-        });
-        $("#firstInitiation").datepicker({
-            changeMonth: true,
-            changeYear: true,
-            yearRange: '1975:2050',
-            dateFormat: 'dd/mm/yy',
-            minDate: new Date(1965,10 - 1, 25)
-        });
-        $("#secondInitiation").datepicker({
-            changeMonth: true,
-            changeYear: true,
-            yearRange: '1975:2050',
-            dateFormat: 'dd/mm/yy',
-            minDate: new Date(1975, 10 - 1, 25)
         });
 
         $("#isMale").change(function(){

@@ -9,15 +9,7 @@
         <div class="body">
          
         <div class="nav">
-            <span class="menuButton"><a class="home" href="${createLink(uri: '/')}">Daily Transaction Report</a></span>
-			<g:jasperReport jasper="${reportName}" format="PDF,XLS" name="Report" >
-				<input type="hidden" name="param_receivers" value=${param_receivers} />
-				<input type="hidden" name="param_fromDate" value=${param_fromDate} />
-				<input type="hidden" name="param_toDate" value=${param_toDate} />
-				<input type="hidden" name="param_grandTotal" value=${param_grandTotal} />
-				<!--<input type="hidden" name="param_totalsByMode" value=${totalsByMode} />-->
-			</g:jasperReport>
-            
+            <span class="menuButton"><a class="home" href="${createLink(uri: '/')}">Daily Transaction Report</a></span>            
         </div>
 
 

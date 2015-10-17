@@ -129,7 +129,7 @@
     {name:'paymentDetails',search:true},
     {name:'transactionId',search:true},
     {name:'centre',search:false},
-    {name:'receiptReceivedStatus',search:true},
+    {name:'receiptReceivedStatus',search:true,stype:'select', searchoptions: { value: ':ALL;NOTGENERATED:NOTGENERATED;GENERATED:GENERATED'}},
     {name:'creator',search:true},
     {name:'rbno',search:true},
     {name:'rno',search:true},

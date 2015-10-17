@@ -168,6 +168,15 @@
                                 
                             </tr>
                             
+			<sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">
+                            <tr class="prop">
+                                <td valign="top" class="name">Linked Donation:</td>
+                                
+                                <td valign="top" class="value"><g:link controller="donation" action="show" id="${donationRecordInstance?.donation?.id}">${donationRecordInstance?.donation}</g:link></td>
+                                
+                            </tr>
+                       </sec:ifAnyGranted>
+                            
                             <tr class="prop">
                                 <td valign="top" class="name"><g:message code="donationRecord.dateCreated" default="Date Created" />:</td>
                                 
@@ -199,7 +208,7 @@
                         </tbody>
                     </table>
                 </div>
-            <g:if test="${donationRecordInstance?.receiptReceivedStatus == null || donationRecordInstance?.receiptReceivedStatus =='NOTGENERATED'}">
+            <g:if test="${donationRecordInstance?.receiptReceivedStatus == null || donationRecordInstance?.receiptReceivedStatus =='NOTGENERATED' || donationRecordInstance?.receiptReceivedStatus =='ACKONLY'}">
             <sec:ifAnyGranted roles="ROLE_DONATION_EXECUTIVE">
                 <g:if test="${disableedit==false}">
                 <div class="buttons">

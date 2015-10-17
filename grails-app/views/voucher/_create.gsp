@@ -21,7 +21,7 @@
 <div id="divAnotherLedger">
 	<g:select id="anotherLedger" name='anotherLedger' value=""
 	    noSelection="${['':'Select To Department...']}"
-	    from='${ics.CostCenter.findAllByStatusIsNull([sort:'name'])}' ></g:select>	
+	    from='${ics.CostCenter.findAllByStatusIsNull([sort:'name'])}' optionKey="id"></g:select>	
 </div>
 
 </fieldset>

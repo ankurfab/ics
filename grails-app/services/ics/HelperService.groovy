@@ -458,5 +458,38 @@ def verifyChecksum(str,cksum)
 	return loginMap
     }
 
-
+	
+    //for mapping Centre to CostCentre via department
+	    //format
+	    //centre_id	centre_name	cc_id	cc_name    
+    def uploadCostCenterMapping(Object tokens) {
+    	try{
+    		def centre = Centre.get(tokens[0])
+    		def cc
+    		if(tokens[2])
+    			cc = CostCenter.get(tokens[2])
+    		if(cc) {
+    			//first check if mapping already present, if yes update else create
+    			def department = Department.findByCentreAndName(centre,'ECS-DONATION')
+    			if(!department) {
+    				department = new Department()
+    				department.centre = centre
+    				department.name = 'ECS-DONATION'
+    				department.creator = department.updator = springSecurityService.principal.username
+    			}
+    			department.costCenter = cc
+			if(!department.save()) {
+				department.errors.allErrors.each {log.debug("uploadCostCenterMapping:create dep:exception:"+it)}
+				return false
+			}
+    			return true    			
+    		}
+    		return false
+    	}
+    	catch(Exception e){
+    		log.debug("Exception in uploadCostCenterMapping:"+e)
+    		return false
+    	}
+    	return true
+    }
 }

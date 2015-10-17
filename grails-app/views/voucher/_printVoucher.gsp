@@ -115,7 +115,7 @@
 	       debit
 	       ${voucherInstance?.departmentCode?.id}
       status  -->
-
+<div id="barCode"></div>
    <div class="page">
     
     <div class="subpageTop">
@@ -128,4 +128,13 @@
      
    </div> 
 
-</div>                    
+</div>
+<script>
+$(document).ready(function()
+{
+	$("#barCode").barcode(
+		"${voucherInstance.voucherNo}", // Value barcode (dependent on the type of barcode)
+		"code39" // type (string)
+	);
+});
+</script>

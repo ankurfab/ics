@@ -75,6 +75,7 @@
                     	<span class="button"><g:actionSubmit class="edit" action="matchdummydonor" value="MatchDummyDonor" /></span>
                     </g:if>
                     <sec:ifAnyGranted roles="ROLE_NVCC_ADMIN">	
+                    	<span class="button"><g:actionSubmit class="edit" action="matchdummydonor" value="MatchDonor" /></span>
 			<span class="button"><g:actionSubmit class="edit" action="edit" value="${message(code: 'default.button.edit.label', default: 'Edit')}" /></span>
 			<span class="button"><g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('There could be gifts issued! Are you sure?');" /></span>
 		    </sec:ifAnyGranted>

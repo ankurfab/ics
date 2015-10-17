@@ -5,17 +5,17 @@ class Loan {
     static constraints = {
     	loanDate()
     	loanedBy()
-    	reference1()
-    	reference2()
-    	nominee()
+    	reference1(nullable:true)
+    	reference2(nullable:true)
+    	nominee(nullable:true)
     	amount(min:1)
-    	term()
+    	term(nullable:true)
     	category()
     	loanReceiptNo()
     	accoutsReceiptNo(nullable:true,blank:true)
-    	mode()
-    	lotId() 
-    	fatherOrSpouse()
+    	mode(nullable:true)
+    	lotId(nullable:true) 
+    	fatherOrSpouse(nullable:true)
     	nomineeRelation(nullable:true)
     	fdNumber(nullable:true)
     	bank(nullable:true)
@@ -27,6 +27,11 @@ class Loan {
     	comments(nullable:true,blank:true)
     	loanStartDate(nullable:true)
     	loanEndDate(nullable:true)
+    	numInstallments(nullable:true)
+    	numInstallmentsOver(nullable:true)
+    	type(nullable:true)
+    	status(nullable:true)
+    	
     }
 
     Date loanDate
@@ -56,6 +61,10 @@ class Loan {
 
     Date loanStartDate
     Date loanEndDate
+    
+    Integer numInstallments
+    Integer numInstallmentsOver
+    String type		//IN or OUT; received from the person or given to the person
 
     Date dateCreated
     Date lastUpdated

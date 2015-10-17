@@ -595,6 +595,7 @@ class PersonController {
         	}
 		ind.creator = springSecurityService.principal.username
 		ind.updator = ind.creator
+		ind.category="PATRONCARE"	//@TODO: need to review the process as per golden master
         	//to do..all other fields and set cultivator
         	if(ind.save(flush:true))
         	{

@@ -172,7 +172,7 @@ grails.resources.modules = {
     }
 
     jq {
-        resource url:'/js/jquery-1.11.1.min.js'
+        resource url:'/js/jquery-2.1.3.min.js' 
     }
 
     jqmigrate {
@@ -224,13 +224,30 @@ grails.resources.modules = {
     mbHome{
         dependsOn 'bootstrap'
         resource url:'/css/form-elements.css'
-        resource url:'/css/style.css'
+        resource url:'/css/stylish-portfolio.css'
         resource url:'/js/jquery.backstretch.min.js'
-        resource url:'/js/scripts.js'
-        resource url:'/js/placeholder.js'
         resource url:'/css/select2.min.css'
         resource url:'/js/select2.full.min.js'
+        resource url:'/js/jquery.validate.min.js'
+        resource url:'/js/additional-methods.min.js'
     }
+
+    jqui1114 {
+        dependsOn 'jq'
+        resource url:'/js/jquery-ui.min-1.11.4.js'
+        resource url: '/css/jquery-ui.min-1.11.4.css'
+        resource url: '/css/jquery-ui.structure.min-1.11.4.css'
+        resource url: '/css/jquery-ui.theme.min-1.11.4.css'
+    }
+
+    grid482 {
+        dependsOn 'jqui1114'
+        resource url: '/js/grid.locale-en-4.8.2.js'
+        resource url: '/js/jquery.jqGrid-4.8.2.min.js'
+        resource url: '/css/ui.jqgrid-bootstarp-4.8.2.css'
+        resource url: '/css/ui.jqgrid-4.8.2.css'
+    }
+
 
 }
 

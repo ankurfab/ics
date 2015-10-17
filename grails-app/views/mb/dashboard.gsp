@@ -158,7 +158,7 @@
             <div class="pull-left info">
               <p>Dashboard</p>
 
-              <a class="home" href="${createLinkTo(dir: '')}"><i class="fa fa-circle text-success"></i>Home</a>
+              <a class="home" href="${createLink(controller:'Mb',action:'home')}"><i class="fa fa-circle text-success"></i>Home</a>
             </div>
           </div>
           <!-- search form -->
@@ -197,8 +197,8 @@
             <small>Version 0.1</small>
           </h1>
           <ol class="breadcrumb">
-            <li><a href="${createLinkTo(dir: '')}"><i class="fa fa-dashboard"></i> Home</a></li>
-            <li class="active">Dashboard</li>
+            <li><a href="${createLink(controller:'Mb',action:'manage')}"><i class="fa fa-dashboard"></i> Manage</a></li>
+            <!--<li class="active">Dashboard</li>-->
           </ol>
         </section>
 

@@ -92,6 +92,23 @@
     </table>
 </div>
 
+<div class="dialog">
+    <table border="0" cellspacing="0" cellpadding="0">
+	<tbody bgcolor="lavender">
+
+	    <tr class="prop">
+		<td valign="top">
+		    <label for="appendMode">Append to previous unsettled challan?</label>
+		</td>
+		<td valign="top">
+		    <g:checkBox name="appendMode" value="${false}" />
+		</td>
+	    </tr>
+
+	</tbody>
+    </table>
+</div>
+
 </g:form>
 
 

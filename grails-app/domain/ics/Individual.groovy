@@ -102,7 +102,7 @@ static searchable = { only = ['*Name','businessRemarks','remarks'] }
     String sanyasName
     Date dob
     String pob	//place of birth
-    boolean isMale = true
+    Boolean isMale
     String iskconCentre
     String category
     String status

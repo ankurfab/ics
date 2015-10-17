@@ -17,7 +17,7 @@
 		<g:render template="/common/mandrillemail" />
 
 		<div class="nav">
-		    <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
+		    <span class="menuButton"><a class="home" href="${createLink(controller:'Mb',action:'home')}"><g:message code="default.home.label"/></a></span>
 		    <sec:ifAnyGranted roles="ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER">
 			<span class="menuButton"><g:link class="create" action="startProfile">Start Profile</g:link></span>
 		    </sec:ifAnyGranted>
@@ -76,12 +76,12 @@
 		    jQuery("#mbProfile_list").jqGrid({
 		      url:'jq_mbManageProfile_list',
 		      datatype: "json",
-		      colNames:['Photo','ICSid','Name','Temple/Centre','PhoneNumber','AssignedTo','ProfileStatus','WorkflowStatus','id'],
+		      colNames:['Photo','ICSid','Name','Temple/Centre','PhoneNumber','AssignedTo','ProfileStatus','WorkflowStatus','Loginid','id'],
 		      colModel:[
 			{
 			name: 'photo',
 			formatter: function (cellvalue, options, rowObject) {
-				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?id='+rowObject[0]+ '"/>'; 
+				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?imgType=closePrim&entity=mbProfile&entityId='+rowObject[0]+'"/>';
 				}
 			},				
 			{name:'icsid', search:true},
@@ -99,6 +99,7 @@
 			{name:'workflowStatus',search:true,
 				stype:'select', searchoptions: { value: "${':ALL;'+(['UNASSIGNED','AVAILABLE','PROPOSED','BOYGIRLMEET','PARENTSMEET','PROPOSALAGREED','ANNOUNCE','MARRIEDTHRUMB','MARRIEDOSMB','UNAVAILABLE','ONHOLD','WITHDRAWN'].collect{(it?:'')+':'+(it?:'')}.join(';'))}"}						
 				},
+			{name:'loginid', search:true},
 			{name:'id',hidden:true}
 		     ],
 		    rowNum:10,
@@ -126,6 +127,26 @@
 	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Assign", buttonicon:"ui-icon-arrowthick-2-e-w", onClickButton:assign, position: "last", title:"Assign", cursor: "pointer"});
 	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"MatchHistory", buttonicon:"ui-icon-zoomin", onClickButton:match, position: "last", title:"MatchHistory", cursor: "pointer"});
 	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Status", buttonicon:"ui-icon-shuffle", onClickButton:status, position: "last", title:"Status", cursor: "pointer"});
+    	<sec:ifAnyGranted roles="ROLE_MB_ADMIN">
+	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"User", buttonicon:"ui-icon-unlocked", onClickButton:unlockUser, position: "last", title:"UnlockUser", cursor: "pointer"});
+	</sec:ifAnyGranted>      
+
+	function unlockUser() {
+		var answer = confirm("Are you sure?");
+		if (answer){
+			var idlist = $('#mbProfile_list').jqGrid('getGridParam','selrow');
+			if(idlist) {
+				var url = "${createLink(controller:'mb',action:'unlockAndResetUser')}"+"?mbprofile_idlist="+idlist
+				$.getJSON(url, {}, function(data) {
+					alert(data.message);
+				    });	
+			}
+			else
+				alert("Please select a row!!");
+		} else {
+		    return false;
+		}
+	}
 
 		 function match()  {
 			var id = $('#mbProfile_list').jqGrid('getGridParam','selrow');

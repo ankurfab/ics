@@ -15,6 +15,7 @@
 	<link rel="stylesheet" href="${resource(dir: 'css/datatable', file: 'demo_page.css')}" type="text/css" media="print, projection, screen"/>
 	<link rel="stylesheet" href="${resource(dir: 'css/datatable', file: 'demo_table.css')}" type="text/css" media="print, projection, screen"/>
 	<link rel="stylesheet" href="${resource(dir: 'css/datatable', file: 'TableTools.css')}" type="text/css" media="print, projection, screen"/>
+	<r:require module="jqui" />
     </head>
     <body>
 	<g:javascript src="datatable/jquery.dataTables.min.js" />    
@@ -89,6 +90,7 @@
                     <span class="button"><g:submitButton name="search" class="list" value="Search" /></span>
                 </div>
 		</g:form>
+		<input class="menuButton" type="BUTTON" id="dlBtn" value="Download" />
 
             <br>
             <div class="list">
@@ -171,5 +173,25 @@
                 <g:paginate total="${receiptBookIssuedInstanceTotal}" />
             </div>-->
         </div>
+        
+<script>
+  $(document).ready(function () {
+	$( "#dlBtn" )
+		.button()
+		.click(function() {
+			var url = "${createLink(action:'downloadRBIssuedData')}"
+			var win = window.open(url, '_blank');
+			if(win){
+			    //Browser has allowed it to be opened
+			    win.focus();
+			}else{
+			    //Broswer has blocked it
+			    alert('Please allow popups for this site');
+			}			
+		});
+  });
+
+</script>
+
     </body>
 </html>

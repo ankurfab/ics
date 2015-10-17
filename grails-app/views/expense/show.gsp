@@ -243,7 +243,7 @@
                             <tr class="prop">
                                 <td valign="top" class="name"><g:message code="expense.project" default="Project" />:</td>
                                 
-                                <td valign="top" class="value"><g:link controller="project" action="show" id="${expenseInstance?.project?.id}">${expenseInstance?.project?.encodeAsHTML()}</g:link></td>
+                                <td valign="top" class="value"><g:link controller="project" action="show" id="${expenseInstance?.project?.id}">${expenseInstance?.project?.encodeAsHTML()} (${expenseInstance?.project?.ref})</g:link></td>
                                 
                             </tr>
                             

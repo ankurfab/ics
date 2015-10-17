@@ -137,7 +137,7 @@ div.errors li {
 td.errors select {
     border: 2px solid red;
 }
-td.errors input, input.error {
+input.error, select.error, textarea.error {
     border: 2px solid red;
 }
 
@@ -269,7 +269,7 @@ th.desc a {
 
 #searchExpectations .prop .value {
     padding: 5px 0 0 10px;
-    text-align: left;
+    text-align: center;
     max-width: 250px;
     vertical-align: middle;
     width: auto;
@@ -457,6 +457,9 @@ height: 2.5em;
 #step-5 .prop .value{
     max-width: 25%;
 }
+#step-1 input{
+    width: 100%;
+}
 .inforow{
     margin: 10px 20px;
     display: table;
@@ -486,4 +489,8 @@ height: 2.5em;
 }
 #prospect_list_pager_left .ui-pg-button {
     padding: 1px 5px;
+}
+
+.mand{
+    color: red;
 }

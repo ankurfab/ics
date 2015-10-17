@@ -66,6 +66,7 @@
 			{addCaption:'Create New Centre',afterSubmit:afterSubmitEvent,savekey:[true,13],closeAfterAdd:true},  // add options
 			{}          // delete options
 		    );
+		$("#centre_list").jqGrid('filterToolbar',{autosearch:true});
 
 		jQuery("#department_list").jqGrid({ 
 			height: "100%",
@@ -73,11 +74,16 @@
 			url:'${createLink(controller:'department',action:'jq_depcentre_list',params:['centre.id':0])}', 
 			editurl:'${createLink(controller:'department',action:'jq_edit_depcentre',params:['centre.id':0])}', 
 			datatype: "json", 
-			colNames:['Name','Description','Alias','id'], 
+			colNames:['Name','Description','Alias','CostCenter','id'], 
 			colModel:[
 				{name:'name', editable:true},
 				{name:'description', editable:true},
 				{name:'alias', editable:true},
+				{name:'costCenter.id', search:true, editable: true, editrules:{required:false},
+					edittype:"select",
+					editoptions:{value:"${':--Please Select CostCenter--;'+(ics.CostCenter.findAllByStatusIsNull(['sort':'name'])?.collect{it.id+':'+it.toString()}?.join(';'))}"},
+					stype:'select', searchoptions: { value: "${':--Please Select CostCenter--;'+(ics.CostCenter.findAllByStatusIsNull(['sort':'name'])?.collect{it.id+':'+it.toString()}?.join(';'))}"}
+				},					
 				{name:'id',hidden:true}
 				], 
 			rowNum:5, 
@@ -91,6 +97,9 @@
 			{addCaption:'Create New Department',afterSubmit:afterSubmitEvent,savekey:[true,13],closeAfterAdd:true},  // add options
 			{}          // delete options
 			); 
+			
+			$("#department_list").jqGrid('filterToolbar',{autosearch:true});
+
 
 		  });
 

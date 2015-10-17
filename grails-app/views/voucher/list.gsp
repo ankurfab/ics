@@ -8,6 +8,7 @@
 	<r:require module="jqui" />
 	<r:require module="grid" />
 	<r:require module="printarea" />
+        <r:require module="jqbarcode" />
     </head>
     <body>
         <div class="nav">
@@ -49,9 +50,9 @@
 <script>
   $(document).ready(function () {
     jQuery("#voucher_list").jqGrid({
-      url:'jq_voucher_list',
+      url:'jq_voucher_list?overdue='+'${overdue}',
       datatype: "json",
-      colNames:['VoucherDate','VoucherNo','DepartmentCode','Description','Deposit(Dr)','Withdrawal(Cr)','Type','From','To','Amount','Debit/Credit','Ready','InstrumentNo','InstrumentDate','BankName','BankBranch','Collected','Entered','RefNo','Status','Id'],
+      colNames:['VoucherDate','VoucherNo','DepartmentCode','Description','Deposit(Dr)','Withdrawal(Cr)','Type','From','To','Amount','Debit/Credit','Ready','InstrumentNo','InstrumentDate','BankName','BankBranch','Collected','Entered','RefNo','Id'],
       colModel:[
 	{name:'voucherDate',search:true,
 		searchoptions: {dataInit: function(el){$(el).datepicker({dateFormat:'dd-mm-yy'});}}                    			    
@@ -81,7 +82,6 @@
 			formatter:'showlink', 
 			formatoptions:{target:"_new",baseLinkUrl:'${createLink(controller:'Voucher',action:'showRef')}'}
 	},	
-	{name:'status',search:true},
 	{name:'id',hidden:true}
      ],
      
@@ -109,6 +109,9 @@
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Ready", buttonicon:"ui-icon-lightbulb", onClickButton:ready, position: "last", title:"Ready", cursor: "pointer"});
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Collected", buttonicon:"ui-icon-key", onClickButton:collected, position: "last", title:"Collected", cursor: "pointer"});
     $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"Entered", buttonicon:"ui-icon-extlink", onClickButton:entered, position: "last", title:"Entered", cursor: "pointer"});
+    <sec:ifAnyGranted roles="ROLE_FINANCE">
+	    $("#voucher_list").jqGrid('navGrid',"#voucher_list_pager").jqGrid('navButtonAdd',"#voucher_list_pager",{caption:"BounceCheque", buttonicon:"ui-icon-check", onClickButton:bounceCheque, position: "last", title:"BounceCheque", cursor: "pointer"});
+    </sec:ifAnyGranted>
 
     function ready() {
 	var id = $('#voucher_list').jqGrid('getGridParam','selrow');
@@ -192,6 +195,21 @@
             
             });
 
+ function bounceCheque() {
+	var answer = confirm("Are you sure?");
+		if (!answer){
+			return false;
+			}
+		var id = $('#voucher_list').jqGrid('getGridParam','selrow');
+		if(id) {
+			var url = "${createLink(controller:'Voucher',action:'bounceCheque')}"+"?id="+id;
+			$.getJSON(url, {}, function(data) {
+				jQuery("#voucher_list").jqGrid().trigger("reloadGrid");
+			    });
+		}
+		else
+			alert("Please select a row!!");
+	}
  function printVoucher()
 	  {
 	 

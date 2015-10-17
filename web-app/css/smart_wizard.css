@@ -54,12 +54,13 @@
   margin:             3px 0 0 0;   
   border:             1px solid #CCC;
   padding:            0;    
-  color:              #5A5655;
+  color:              #5A5655;   
   background-color:   #F8F8F8;
   height:40px;
   text-align:left;
   overflow:auto;    
-  z-index:88;
+  z-index:88; 
+
   -webkit-border-radius: 5px;
   -moz-border-radius  : 5px;
   left:0;

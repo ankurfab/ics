@@ -721,6 +721,10 @@ class AssessmentController {
     				eventRegistration{event{eq('id',new Long(params.eid))}}
     				isNotNull('assessmentDate')
     				isNotNull('questionPaper')
+    				if(params.score)
+    					eq('score',0)
+    				if(params.timeTaken)
+    					isNull('timeTaken')
     			}
     	iaList.each{ia->
     		assessmentService.getResult(ia)
