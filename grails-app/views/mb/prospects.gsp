@@ -81,10 +81,7 @@
 	},				
 	{name:'candidateStatus'},
 	{name:'workflowStatus'},
-	{name:'legalName',formatter: function (cellvalue, options, rowObject) {
-        return "<a class='prospectLink' data-match-id='"+ rowObject[12] +"' href='javascript:void(0);'>"+ rowObject[3] +"</a>";
-        }
-    },
+	{name:'legalName'},
 	{name:'dob'},
 	{name:'pob'},
 	{name:'tob'},
@@ -127,10 +124,11 @@
 	       cancel: false
 	    });
     $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Proceed", buttonicon:"ui-icon-check", onClickButton:proceed, position: "last", title:"Proceed", cursor: "pointer"});
-    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Decline", buttonicon:"ui-icon-cancel", onClickButton:decline, position: "last", title:"NotSuitable", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"Decline", buttonicon:"ui-icon-cancel", onClickButton:decline, position: "last", title:"Not Suitable", cursor: "pointer"});
+    $("#prospect_list").jqGrid('navGrid',"#prospect_list_pager").jqGrid('navButtonAdd',"#prospect_list_pager",{caption:"View Profile", buttonicon:"ui-icon-person", onClickButton:viewProfile, position: "last", title:"View Profile", cursor: "pointer"});
 
-    $('body').on('click','.prospectLink',function (){
-        var id = $(this).data('match-id');
+    function viewProfile(){
+        var id = $('#prospect_list').jqGrid('getGridParam','selrow');
           if(id) {
               var url = "${createLink(controller:'Mb',action:'getProfileByStage')}"+"?matchid="+id;
               var win = window.open(url, '_blank');
@@ -144,7 +142,7 @@
           }
           else
               $('.dialogMsgContent').html("Please select a profile by clicking on the candidate's photo") && $( "#dialogMessage" ).dialog('open');
-      });
+      };
 
 	function decline(id) {
 			var id = $('#prospect_list').jqGrid('getGridParam','selrow');

@@ -702,9 +702,9 @@ def showImage = {
             if (!match.save())
                 match.errors.each { log.debug("match:" + it) }
         }
-        else if(match.mbStatus == 'DECLINED'){
+        /*else if(match.mbStatus == 'DECLINED'){
             render([status: "Sorry You Cannot Move Further. Match with this candidate is declined because: \n"+match.mbReason] as JSON)
-        }
+        }*/
         else{
             render([status: "Sorry You Cannot Move Further. Your advance to next stage is still pending for approval with marriage board!!"] as JSON)
         }
@@ -734,12 +734,12 @@ def showImage = {
                     if (match.candidateStatus == 'BOY GIRL MEET') {
                         otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
 
-                        if (otherMatch && otherMatch.mbStatus == 'BOY GIRL MEET') {
-                            match.mbStatus = 'BOY GIRL MEET'
+                        if (otherMatch && otherMatch.candidateStatus == 'BOY GIRL MEET') {
+                            match.mbStatus = otherMatch.mbStatus = 'BOY GIRL MEET'
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "BOYGIRLMEET"
                             otherMatch.mbDate = new Date()
                         } else {
-                            render([status: "Cannot approve as the other candidate is not yet suggested this profile."] as JSON)
+                            render([status: "Cannot approve as the other candidate has not yet agreed to meet the candidate."] as JSON)
                         }
                     } else {
                         render([status: "Cannot Proceed!! Candidate still in full profile stage"] as JSON)
@@ -747,11 +747,15 @@ def showImage = {
                     break
                 case 'BOY GIRL MEET':
                     if (match.candidateStatus == 'PARENTS MEET') {
-                        match.mbStatus = 'PARENTS MEET'
                         otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
-                        if (otherMatch && otherMatch.mbStatus == 'PARENTS MEET') {
+
+                        if (otherMatch && otherMatch.candidateStatus == 'PARENTS MEET') {
+                            match.mbStatus = otherMatch.mbStatus = 'PARENTS MEET'
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PARENTSMEET"
                             otherMatch.mbDate = new Date()
+                        }
+                        else{
+                            render([status: "Cannot approve as the other candidate has not yet agreed for the parents meeting."] as JSON)
                         }
                     } else {
                         render([status: "Cannot Proceed!! Candidate still in boy girl meet stage"] as JSON)
@@ -759,11 +763,15 @@ def showImage = {
                     break
                 case 'PARENTS MEET':
                     if (match.candidateStatus == 'PROPOSAL AGREED') {
-                        match.mbStatus = 'PROPOSAL AGREED'
+
                         otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
-                        if (otherMatch && otherMatch.mbStatus == 'PROPOSAL AGREED') {
+                        if (otherMatch && otherMatch.candidateStatus == 'PROPOSAL AGREED') {
+                            match.mbStatus = otherMatch.mbStatus = 'PROPOSAL AGREED'
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSALAGREED"
                             otherMatch.mbDate = new Date()
+                        }
+                        else{
+                            render([status: "Cannot approve as the other candidate has not yet agreed to the proposal."] as JSON)
                         }
                     } else {
                         render([status: "Cannot Proceed!! Candidate still in parents meet stage"] as JSON)

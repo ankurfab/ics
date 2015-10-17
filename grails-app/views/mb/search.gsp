@@ -599,9 +599,11 @@
                       }).success(function(data) {
                           $( "#dialogMbReason" ).dialog( "close" );
                           !!data.status && alert(data.status);
-                          jQuery("#prospect_list").trigger( 'reloadGrid' );
+                          setTimeout(function(){
+                              jQuery("#prospect_list").trigger( 'reloadGrid' );
+                          },10);
                       });
-                      jQuery("#prospect_list").trigger( 'reloadGrid' );
+                      jQuery("#prospect_list").jqGrid().trigger("reloadGrid");
                   }
               },
               "Cancel": function() {
