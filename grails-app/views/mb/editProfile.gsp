@@ -1148,13 +1148,13 @@
     </td>
     <td valign="top" class="value">
         <g:select name="prefCentre" from="${iskconCentres}" class="multiple" multiple="multiple"
-                  value="${mbProfile?.prefCentre}" noSelection="['':'Select One']"/>
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCentre).toList()}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleOnCentre">I am flexible  on Centre:</label>
+        <label for="flexibleCentre">I am flexible  on Centre:</label>
     </td>
     <td>
-        <g:radioGroup name='flexibleOnCentre' labels="['No', 'Yes']" values="[false, true]"
+        <g:radioGroup name='flexibleCentre' labels="['No', 'Yes']" values="[false, true]"
                       value="${mbProfile?.flexibleCentre ? mbProfile?.flexibleCentre : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>

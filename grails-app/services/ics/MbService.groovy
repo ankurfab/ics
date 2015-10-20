@@ -215,7 +215,7 @@ class MbService {
 	try{         mbProfile.settleAbroadWorkingWife = params.settleAbroadWorkingWife } catch(Exception e){}
 	try{         mbProfile.prefChanting=params.prefChanting } catch(Exception e){}
 	try{         mbProfile.prefSpMaster=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefSpMaster)} catch(Exception e){}
-	try{         mbProfile.prefCentre=params.prefCentre } catch(Exception e){}
+	try{         mbProfile.prefCentre=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCentre)} catch(Exception e){}
 	try{         mbProfile.prefNationality=params.prefNationality } catch(Exception e){}
     try{         mbProfile.prefCurrentCountry=params.prefCurrentCountry } catch(Exception e){}
 	try{         mbProfile.prefCulturalInfluence=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCulturalInfluence) } catch(Exception e){}
