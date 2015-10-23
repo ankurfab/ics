@@ -242,6 +242,7 @@
 	      var data=$(this).serialize();
 	      // post data
 	      $.post(url, data , function(returnData){
+              $('#status').val('');
 			  jQuery("#mbProfile_list").jqGrid().trigger("reloadGrid");
 	      })
 	      return false; // stops browser from doing default submit process

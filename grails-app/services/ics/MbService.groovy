@@ -646,9 +646,9 @@ class MbService {
 		//check for ownership of profile..i.e. who can modify the status
 		//admin can modify for any centre but sec only for theire centre
 		def allow = false
-		if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
-			def secCentre = Individual.findByLoginid(username)?.iskconCentre
-			if(secCentre && secCentre==profile.referrerCenter)
+		if(SpringSecurityUtils.ifAnyGranted('ROLE_MB_ADMIN,ROLE_MB_SEC,ROLE_MB_MEMBER')) {
+			/*def secCentre = Individual.findByLoginid(username)?.iskconCentre
+			if(secCentre && secCentre==profile.referrerCenter)*/
 				allow = true
 		}
 		if(!allow)
