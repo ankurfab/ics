@@ -26,39 +26,42 @@ class MbController {
     def mbLogin = {
 
     }
-    
+
     def home() {
     	if(SpringSecurityUtils.ifAllGranted('ROLE_MB_CANDIDATE'))
     		render (view: "chome")
     	else
     		redirect(action:"dashboard")
     }
-    
+
     
     def pendingApprovals = {
-        def centre = Individual.get(session.individualid)?.iskconCentre?:''
-        def objIds = AttributeValue.withCriteria {
-            if(SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
-            	attribute{
-            		eq('domainClassName','TempMbProfile')
-            		eq('name','refCentre')
-            	}
-            	eq('value',centre)
-            }
-            eq('objectClassName','TempMbProfile')
-            projections {
-                distinct("objectId")
-            }
-        }
+        log.debug("inside Pending Approvals")
         def paramsArr = []
-        objIds.each {
-            def Map params = [:]
-            params.put("objId",it)
-            def attrVals = AttributeValue.findAllByObjectId(it)
-            attrVals.each {
-                params.put(it.attribute.name,it.value)
+        def centre = Individual.get(session.individualid)?.iskconCentre?:''
+        if(SpringSecurityUtils.ifAnyGranted('ROLE_MB_ADMIN,ROLE_MB_SEC')) {
+            def objIds = AttributeValue.withCriteria {
+                if (SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
+                    attribute {
+                        eq('domainClassName', 'TempMbProfile')
+                        eq('name', 'refCentre')
+                    }
+                    eq('value', centre)
+                }
+                eq('objectClassName', 'TempMbProfile')
+                projections {
+                    distinct("objectId")
+                }
             }
-            paramsArr.push(params)
+            objIds.each {
+                def Map params = [:]
+                params.put("objId",it)
+                def attrVals = AttributeValue.findAllByObjectId(it)
+                attrVals.each {
+                    params.put(it.attribute.name,it.value)
+                }
+                paramsArr.push(params)
+            }
         }
         [profiles: paramsArr]
     }
@@ -719,14 +722,18 @@ def showImage = {
         else {
             switch (match.mbStatus) {
                 case 'LIMITED PROFILE':
-                    if (match.candidateStatus == 'FULL PROFILE') {
+                    if(match.prospect.workflowStatus != 'AVAILABLE' || match.candidate.workflowStatus != 'AVAILABLE'){
+                        render([status: "Cannot Approve as profile(s) is locked in another match"] as JSON)
+                    }
+                    else if (match.candidateStatus == 'FULL PROFILE') {
                         match.mbStatus = 'FULL PROFILE'
                         otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
                         if (otherMatch && otherMatch.mbStatus == 'FULL PROFILE') {
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSED"
                             otherMatch.mbDate = new Date()
                         }
-                    } else {
+                    }
+                    else {
                         render([status: "Cannot Proceed!! Candidate still in Limited profile stage"] as JSON)
                     }
                     break
@@ -976,7 +983,7 @@ def showImage = {
     					individualRoles{
     							role{
     								eq('category','MarriageBoard')
-    								eq('name','MEMBER')
+    								'in'('name',['ADMIN','MEMBER','SECRETARY'])
     							}
     						}
     				}
@@ -992,7 +999,7 @@ def showImage = {
 	render ([message:retmsg] as JSON)
     }
 
-    def getProfileByStage(params){
+    def showProfileByStage(params){
         log.debug("Inside get profile by stage: "+params)
         def match = MbProfileMatch.get(params.matchid)
         if(match && match.candidate.candidate.loginid==springSecurityService.principal.username){
@@ -1007,7 +1014,15 @@ def showImage = {
             render "Error. The Profile is currently not available for view. Please get in touch with marriage board admin for more details or wite to rk.mb.system@gmail.com."
         }
     }
-    
+
+    def showProfileById(params){
+        def profile = MbProfile.findById(params.id)
+        if(params.profileType == 'limited')
+            render(template: "limitedProfile", model: [profile: profile])
+        else if(params.profileType == 'full')
+            render(template: "fullProfile", model: [profile: profile])
+    }
+
     def dashboard() {
     	[stats:MbService.stats()]
     }
@@ -1368,6 +1383,31 @@ def showImage = {
     def activityStream() {}
     
     def resources() {}
+
+    def showReason(params){
+        def reasons = []
+        switch(params.candStatus){
+            case "LIMITED PROFILE":
+                reasons = ['Looks not suitable','Horoscope mismatch','Caste mismatch','State of origin mismatch',
+                           'Financial status mismatch','Age difference','Salary not suitable','Education mismatch','Others']
+            break;
+            case "FULL PROFILE":
+                reasons = ['Family background mismatch','Family financial status mismatch','Family culture mismatch',
+                            'Looks not suitable','Job / work status not suitable','Spiritual aspirations mismatch','Others']
+            break;
+            case "BOY GIRL MEET":
+                reasons = ['Looks not suitable','Nature not suitable','Personality not suitable','Compatibility issues',
+                           'Family culture mismatch','Family background mismatch','Family financial status mismatch',
+                           'Job / working status not suitable','Dowry / financial expectations','Others']
+            break;
+            case "PARENTS MEET":
+                reasons = ['Looks not suitable','Nature not suitable','Personality not suitable','Compatibility issues',
+                           'Family culture mismatch','Family background mismatch','Family financial status mismatch',
+                           'Job / working status not suitable','Dowry / financial expectations','Others']
+            break;
+        }
+        render (reasons as JSON)
+    }
 
     
 }

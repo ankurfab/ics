@@ -111,7 +111,7 @@
 <div style="clear: both"></div>
 <div>
     <h3 style="font-family: sans-serif;text-decoration: underline;margin: 20px 0 20px 10px"> Photo </h3>
-    <div style="width: 30%;float: left;margin-left: 15%">
+    <div style="width: 15%;float: left;margin-left: 15%">
         <img id="fvimage" name="fvimage" class="avatar" style="width: 100%;height: auto"
              src="${createLink(action: 'showImage', params: ['imgType': 'closePrim', entity: 'mbProfile', entityId: profile?.id])}"/>
         <div style="text-align: center"><b>Passport size Photo</b></div>

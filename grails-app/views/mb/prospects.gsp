@@ -49,6 +49,8 @@
             <span> If you decline a particular prospect suggestion you will not be able to proceed with this profile at all. Please specify a valid reason for Declining.</span>
             <br><br>
             <strong>Reason: </strong>
+            <select id="reasonSelect" style="width: 100%"></select>
+            <br><br>
 			<g:textArea name="candidateReason" value="" rows="5" cols="50"/>
 		</div>
         <div id="dialoglimitedProfile" title="Limited Profile for Horoscope Match">
@@ -130,7 +132,7 @@
     function viewProfile(){
         var id = $('#prospect_list').jqGrid('getGridParam','selrow');
           if(id) {
-              var url = "${createLink(controller:'Mb',action:'getProfileByStage')}"+"?matchid="+id;
+              var url = "${createLink(controller:'Mb',action:'showProfileByStage')}"+"?matchid="+id;
               var win = window.open(url, '_blank');
               if(win){
                   //Browser has allowed it to be opened
@@ -142,11 +144,25 @@
           }
           else
               $('.dialogMsgContent').html("Please select a profile by clicking on the candidate's photo") && $( "#dialogMessage" ).dialog('open');
-      };
+      }
 
-	function decline(id) {
+	    function decline(id) {
 			var id = $('#prospect_list').jqGrid('getGridParam','selrow');
 			if(id) {
+                $('#reasonSelect').empty();
+                $.ajax({
+                    url: '/ics/mb/showReason',
+                    method: "POST",
+                    data: {
+                        candStatus: $('#prospect_list').jqGrid ('getCell', id, 'candidateStatus')
+                    },
+                    success: function(data) {
+                        $('#reasonSelect').append('<option selected disabled>Select One</option>');
+                        for(var i=0; i < data.length ; i++){
+                            $('#reasonSelect').append('<option>'+ data[i] +'</option>');
+                        }
+                    }
+                });
 				$( "#dialogcandidateReason" ).dialog( "open" );
 			}
 			else
@@ -193,7 +209,7 @@
                     data: {
                         matchid: id,
                         origin: 'candidate',
-                        reason: $("#candidateReason").val()
+                        reason: ($('#reasonSelect').val() == 'Others') ? $("#candidateReason").val() : $('#reasonSelect').val()
                       }
                     }).success(function(data) {
                         $( "#dialogcandidateReason" ).dialog( "close" );

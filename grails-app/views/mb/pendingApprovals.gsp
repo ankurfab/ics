@@ -55,7 +55,9 @@
                             <p>Email Address : <strong>${it.donorEmail}</strong></p>
                             <p>Counsellor / Mentor : <strong>${it.refClor}</strong></p>
                             <p>Referrer Name : <strong>${it.refName}</strong></p>
-                            <p>Referrer Centre : <strong>${it.refCentre}</strong></p>
+                            <g:set var="attr" value="${ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','Centre','Config')}" />
+                            <g:set var="centres" value="${ics.AttributeValue.findAllByAttribute(attr)?.collect{it.value}}" />
+                            <p>Referrer Centre : <g:select name="refCentre" from="${centres}" value="${it.refCentre}"></g:select></p>
                             <p>Referrer Contact Number : <strong>${it.refContact}</strong></p>
                             <p>Referrer Email Address : <strong>${it.refEmail}</strong></p>
                             <p>Relation to Candidate : <strong>${it.refReln}</strong></p>
@@ -66,7 +68,6 @@
                             <g:hiddenField name="donorEmail" value="${it.donorEmail}"/>
                             <g:hiddenField name="refClor" value="${it.refClor}"/>
                             <g:hiddenField name="refName" value="${it.refName}"/>
-                            <g:hiddenField name="refCentre" value="${it.refCentre}"/>
                             <g:hiddenField name="refContact" value="${it.refContact}"/>
                             <g:hiddenField name="refEmail" value="${it.refEmail}"/>
                             <g:hiddenField name="refReln" value="${it.refReln}"/>

@@ -85,9 +85,9 @@
 				}
 			},				
 			{name:'icsid', search:true},
-			{name:'name', search:true,
-			formatter:'showlink', 
-             		formatoptions:{baseLinkUrl:'show'}},
+            {name:'name', search:true,
+              formatter:'showlink',
+              formatoptions:{baseLinkUrl:'show'}},
 			{name:'referrerCenter', search:true,
 				stype:'select', searchoptions: { value: "${':ALL;'+(ics.MbProfile.createCriteria().list{projections{distinct('referrerCenter')}}?.collect{(it?:'')+':'+(it?:'')}.join(';'))}"}						
 			},
@@ -125,8 +125,10 @@
 			{}          // delete options
 		    );
 	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Assign", buttonicon:"ui-icon-arrowthick-2-e-w", onClickButton:assign, position: "last", title:"Assign", cursor: "pointer"});
-	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"MatchHistory", buttonicon:"ui-icon-zoomin", onClickButton:match, position: "last", title:"MatchHistory", cursor: "pointer"});
+	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Match History", buttonicon:"ui-icon-zoomin", onClickButton:match, position: "last", title:"Match History", cursor: "pointer"});
 	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Status", buttonicon:"ui-icon-shuffle", onClickButton:status, position: "last", title:"Status", cursor: "pointer"});
+        $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Limited Profile", buttonicon:"ui-icon-person", onClickButton:showLimitedProfile, position: "last", title:"Limited Profile", cursor: "pointer"});
+        $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"Full Profile", buttonicon:"ui-icon-person", onClickButton:showFullProfile, position: "last", title:"Full Profile", cursor: "pointer"});
     	<sec:ifAnyGranted roles="ROLE_MB_ADMIN">
 	    $("#mbProfile_list").jqGrid('navGrid',"#mbProfile_list_pager").jqGrid('navButtonAdd',"#mbProfile_list_pager",{caption:"User", buttonicon:"ui-icon-unlocked", onClickButton:unlockUser, position: "last", title:"UnlockUser", cursor: "pointer"});
 	</sec:ifAnyGranted>      
@@ -147,6 +149,38 @@
 		    return false;
 		}
 	}
+
+        function showLimitedProfile(){
+            var id = $('#mbProfile_list').jqGrid('getGridParam','selrow');
+            if(id) {
+                var url = "${createLink(controller:'Mb',action:'showProfileById')}"+"?id="+id+"&profileType=limited";
+                var win = window.open(url, '_blank');
+                if(win){
+                    //Browser has allowed it to be opened
+                    win.focus();
+                }else{
+                    //Broswer has blocked it
+                    alert('Please allow popups for this site');
+                }
+
+            }
+        }
+
+        function showFullProfile(){
+            var id = $('#mbProfile_list').jqGrid('getGridParam','selrow');
+            if(id) {
+                var url = "${createLink(controller:'Mb',action:'showProfileById')}"+"?id="+id+"&profileType=full";
+                var win = window.open(url, '_blank');
+                if(win){
+                    //Browser has allowed it to be opened
+                    win.focus();
+                }else{
+                    //Broswer has blocked it
+                    alert('Please allow popups for this site');
+                }
+
+            }
+        }
 
 		 function match()  {
 			var id = $('#mbProfile_list').jqGrid('getGridParam','selrow');
