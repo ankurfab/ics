@@ -51,6 +51,7 @@
             <strong>Reason: </strong>
             <select id="reasonSelect" style="width: 100%"></select>
             <br><br>
+            <strong>Other Reason(if Any): </strong>
 			<g:textArea name="candidateReason" value="" rows="5" cols="50"/>
 		</div>
         <div id="dialoglimitedProfile" title="Limited Profile for Horoscope Match">
