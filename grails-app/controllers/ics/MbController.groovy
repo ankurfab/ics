@@ -41,6 +41,7 @@ class MbController {
         def centre = Individual.get(session.individualid)?.iskconCentre?:''
         if(SpringSecurityUtils.ifAnyGranted('ROLE_MB_ADMIN,ROLE_MB_SEC')) {
             def objIds = AttributeValue.withCriteria {
+
                 if (SpringSecurityUtils.ifAllGranted('ROLE_MB_SEC')) {
                     attribute {
                         eq('domainClassName', 'TempMbProfile')
@@ -81,6 +82,15 @@ class MbController {
         redirect(action:"pendingApprovals")
     }
 
+    def updateTempProfile = {
+        def idToUpdate = Long.parseLong(params.profId)
+        def centerToSet = params.newCenter
+        def recordToUpdate = AttributeValue.findByObjectIdAndAttribute(idToUpdate,Attribute.findByName('refCentre'))
+        recordToUpdate.value = centerToSet
+        if(recordToUpdate.save()) {
+            render([status: "Success"] as JSON)
+        }
+    }
     // the delete, save and update actions only accept POST requests
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -723,7 +733,7 @@ def showImage = {
             switch (match.mbStatus) {
                 case 'LIMITED PROFILE':
                     if(match.prospect.workflowStatus != 'AVAILABLE' || match.candidate.workflowStatus != 'AVAILABLE'){
-                        render([status: "Cannot Approve as profile(s) is locked in another match"] as JSON)
+                        render([status: "Cannot Approve as profile(s) is/are locked in another match"] as JSON)
                     }
                     else if (match.candidateStatus == 'FULL PROFILE') {
                         match.mbStatus = 'FULL PROFILE'

@@ -175,10 +175,9 @@
 		if (answer){
 			var id = $('#prospect_list').jqGrid('getGridParam','selrow');
 			if(id) {
-				var url = "${createLink(controller:'mb',action:'prospectsNextStep')}"+"?matchid="+id;
                 $.ajax({
-                    url: url,
-                    method: "POST",
+                    url: "/ics/mb/prospectsNextStep?matchid="+id,
+                    type: "POST",
                     dataType: "json",
                     success: function(data) {
                         !!data.status && $('.dialogMsgContent').html(data.status) && $( "#dialogMessage" ).dialog('open');
@@ -202,10 +201,9 @@
         buttons: {
             "Submit": function() {
                 var id = $('#prospect_list').jqGrid('getGridParam','selrow');
-                var url = "${createLink(controller:'mb',action:'decline')}";
                 $.ajax({
-                    url: url,
-                    method: "POST",
+                    url: "/ics/mb/decline",
+                    type: "POST",
                     dataType: "json",
                     data: {
                         matchid: id,
