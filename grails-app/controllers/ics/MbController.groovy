@@ -539,7 +539,6 @@ class MbController {
                     order(sortIndex, sortOrder)
                 }
             }
-        }
 
         def totalRows = result.totalCount
         def numberOfPages = Math.ceil(totalRows / maxRows)
@@ -548,7 +547,7 @@ class MbController {
             [cell: [
             	    it.id,
             	    it.candidate?.toString(),
-                    it.candidate?.dob.format("dd/MM/yyyy hh:mm:ss"),
+                    it.candidate?.dob?.format("dd/MM/yyyy hh:mm:ss"),
             	    it.referrerCenter,
             	    it.assignedTo?.toString(),
                 ], id: it.id]
