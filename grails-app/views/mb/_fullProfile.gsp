@@ -452,21 +452,27 @@
              src="${createLink(action: 'showImage', params: ['imgType': 'closePrim', entity: 'mbProfile', entityId: profile?.id])}"/>
         <div style="text-align: center"><b>Passport size (Primary)</b></div>
     </div>
-    <div style="width: 15%;float: left;margin-left: 10%">
-        <img
-             src="${createLink(action: 'showImage', params: ['imgType': 'closeSec', entity: 'mbProfile', entityId: profile?.id])}"/>
-        <div style="text-align: center"><b>Passport size (Secondary)</b></div>
-    </div>
-    <div style="width: 15%;float: left;margin-left: 10%">
-        <img
-             src="${createLink(action: 'showImage', params: ['imgType': 'fullPrim', entity: 'mbProfile', entityId: profile?.id])}"/>
-        <div style="text-align: center"><b>Full Profile (Primary)</b></div>
-    </div>
-    <div style="width: 15%;float: left;margin-left: 9%">
-        <img
-             src="${createLink(action: 'showImage', params: ['imgType': 'fullSec', entity: 'mbProfile', entityId: profile?.id])}"/>
-        <div style="text-align: center"><b>Full Profile (Secondary)</b></div>
-    </div>
+    <g:if test="${ics.Image.findByImageTypeAndEntityId('closeSec',profile?.id)}">
+        <div style="width: 15%;float: left;margin-left: 10%">
+            <img
+                 src="${createLink(action: 'showImage', params: ['imgType': 'closeSec', entity: 'mbProfile', entityId: profile?.id])}"/>
+            <div style="text-align: center"><b>Passport size (Secondary)</b></div>
+        </div>
+    </g:if>
+    <g:if test="${ics.Image.findByImageTypeAndEntityId('fullPrim',profile?.id)}">
+        <div style="width: 15%;float: left;margin-left: 10%">
+            <img
+                 src="${createLink(action: 'showImage', params: ['imgType': 'fullPrim', entity: 'mbProfile', entityId: profile?.id])}"/>
+            <div style="text-align: center"><b>Full Profile (Primary)</b></div>
+        </div>
+    </g:if>
+    <g:if test="${ics.Image.findByImageTypeAndEntityId('fullSec',profile?.id)}">
+        <div style="width: 15%;float: left;margin-left: 9%">
+            <img
+                 src="${createLink(action: 'showImage', params: ['imgType': 'fullSec', entity: 'mbProfile', entityId: profile?.id])}"/>
+            <div style="text-align: center"><b>Full Profile (Secondary)</b></div>
+        </div>
+    </g:if>
 </div>
 </body>
 </html>

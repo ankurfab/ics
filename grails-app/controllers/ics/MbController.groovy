@@ -459,7 +459,7 @@ class MbController {
                     }
 
                     if (params.flexibleCurrentCountry == "false" && params.prefCurrentCountry) {
-                        and { candidate { eq('nationality', params.prefCurrentCountry, [ignoreCase: true]) } }
+                        and { eq('currentCountry', params.prefCurrentCountry, [ignoreCase: true]) } }
                     }
 
                     if (params.flexibleCulturalInfluence == "false" && params.prefCulturalInfluence) {
@@ -499,11 +499,11 @@ class MbController {
                         use(TimeCategory) {
                             def dobLower, dobUpper
                             if (mbprofile.candidate?.isMale) {
-                                dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
-                                dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
-                            } else {
                                 dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
                                 dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
+                            } else {
+                                dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
+                                dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
                             }
                             and { candidate { between('dob', dobLower, dobUpper) } }
                         }
@@ -546,11 +546,12 @@ class MbController {
 
         def jsonCells = result.collect {
             [cell: [
-                    it.id,
-                    it.candidate?.toString(),
-                    it.referrerCenter,
-                    it.assignedTo?.toString(),
-            ], id: it.id]
+            	    it.id,
+            	    it.candidate?.toString(),
+                    it.candidate?.dob.format("dd/MM/yyyy hh:mm:ss"),
+            	    it.referrerCenter,
+            	    it.assignedTo?.toString(),
+                ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
         render jsonData as JSON

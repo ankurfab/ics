@@ -19,6 +19,8 @@
         </style>
 	</head>
 	<body>
+    <g:set var="iskconCentres" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','iskcon_centre','Config'))?.collect{it.value}}" />
+    <g:set var="spiritualMasters" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','sp_master','Config'))?.collect{it.value}}" />
 		<div class="nav">
 		    <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
 		</div>
@@ -39,7 +41,7 @@
     <div id='dialogMessage' title="Information">
         <strong><span class="dialogMsgContent"></span></strong>
     </div>
-	<h1>Match making for ${mbProfile?.candidate}</h1>
+	<h1>Match making for ${mbProfile?.candidate} ( ${mbProfile?.candidate?.dob?.format("dd/M/y")} )</h1>
 		
 		%{--<div>
 			Matchmaking for?<g:select name="mbprofileid"
@@ -92,7 +94,7 @@
                     </td>
                     <td valign="top" class="value">
                         <g:select name="prefSpMaster" class="multiple" multiple="multiple"
-                                  from="${['H.H.Radhanath Swami','H.H.Lokanath Swami','H.H.Goapl Krishna Goswami','H.H.Indradyumna Swami','H.H.Jayapataka Swami','H.H.Navayogendra Swami','H.H.Bhakti Vikas Swami']}"
+                                  from="${spiritualMasters}"
                                   value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefSpMaster).toList()}"/>
                     </td>
                     <td valign="top" class="name">
@@ -110,7 +112,8 @@
                         <label for="prefCentre">Preferred Centre:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:textField name="prefCentre" placeholder="Enter ISKCON Centre Name here" value="${mbProfile?.prefCentre}"/>
+                        <g:select name="prefCentre" from="${iskconCentres}" class="multiple" multiple="multiple"
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCentre).toList()}" noSelection="['':'Select One']"/>
                     </td>
                     <td valign="top" class="name">
                         <label for="flexibleCentre">Flexible :</label>
@@ -459,7 +462,7 @@
                      url:'jq_mbProfile_list',
                      postData: $('#expectationsForm').serialize()+"&sidx=id&sord=asc&rows=10&page=1",
                      datatype: "json",
-                     colNames:['Photo','Name','Centre','AssignedTo','Id'],
+                     colNames:['Photo','Name','Dob','Centre','AssignedTo','Id'],
                      colModel:[
 			{
 			name: 'photo',
@@ -469,7 +472,8 @@
 			},				
                          {name:'name',
 			formatter:'showlink', 
-             		formatoptions:{baseLinkUrl:'show'}},                         
+             		formatoptions:{baseLinkUrl:'show'}},
+                         {name:'dob'},
                          {name:'referrerCenter'},
                          {name:'assignedTo'},
                          {name:'id',hidden:true}
