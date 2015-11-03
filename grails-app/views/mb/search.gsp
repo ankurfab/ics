@@ -41,7 +41,7 @@
     <div id='dialogMessage' title="Information">
         <strong><span class="dialogMsgContent"></span></strong>
     </div>
-	<h1>Match making for ${mbProfile?.candidate} ( ${mbProfile?.candidate?.dob?.format("dd/M/y")} )</h1>
+	<h1>Match making for ${mbProfile?.candidate} ( ${mbProfile?.candidate?.dob?.format("dd/MM/y")} )</h1>
 		
 		%{--<div>
 			Matchmaking for?<g:select name="mbprofileid"

@@ -287,7 +287,7 @@
         <label for="manglik">Manglik:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="manglik" class="required" from="${['No', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}" noSelection="['':'Select One']"/>
+        <g:select name="manglik" class="required" from="${['Not Manglik', 'Low', 'Medium', 'High', 'Not aware']}" value="${mbProfile?.manglik}" noSelection="['':'Select One']"/>
     </td>
     <td valign="top" class="name">
         <label for="maritalStatus">Marital Status:</label><span class="mand">*</span>

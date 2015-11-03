@@ -446,7 +446,29 @@ class MbController {
                 if (!params.showAll) {
 
                     //check for chanting preference
-                    if (params.flexibleChanting) {
+                    if (params.flexibleChanting == "false" && params.prefChanting) {
+                        ArrayList<String> chantingList = new ArrayList<>(Arrays.asList('Any','Not Chanting', 'Sometimes', 'Upto 4 rounds', 'Between 5 to 8 rounds', 'Between 9 to 12 rounds', 'Between 13 to 15 rounds', '16 rounds'));
+                        def pos = chantingList.indexOf(params.prefChanting)
+                        switch (pos) {
+                            case 3:
+                                and{ between ('numberOfRounds',1,4)}
+                                break;
+                            case 4:
+                                and{ between ('numberOfRounds',5,8)}
+                                break;
+                            case 5:
+                                and{ between ('numberOfRounds',9,12)}
+                                break;
+                            case 6:
+                                and{ between ('numberOfRounds',13,15)}
+                                break;
+                            case 7:
+                                and{ eq ('numberOfRounds',16)}
+                                break;
+                            default:
+                                and{ eq ('numberOfRounds', 0)}
+                                break;
+                        }
                     }
 
                     if (params.flexibleSpMaster == "false" && params.prefSpMaster) {
@@ -454,8 +476,7 @@ class MbController {
                     }
 
                     if (params.flexibleCentre == "false" && params.prefCentre) {
-                        def valList = params.prefCentre.split(',')
-                        and { candidate { 'in'('iskconCentre', valList) } }
+                        and { candidate { 'in'('iskconCentre', params.prefCentre) } }
                     }
 
                     if (params.flexibleCurrentCountry == "false" && params.prefCurrentCountry) {
@@ -499,11 +520,11 @@ class MbController {
                         use(TimeCategory) {
                             def dobLower, dobUpper
                             if (mbprofile.candidate?.isMale) {
-                                dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
-                                dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
-                            } else {
                                 dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
                                 dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob + Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
+                            } else {
+                                dobLower = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[1]).years).format('dd-MM-yyyy hh:mm:ss'))
+                                dobUpper = Date.parse('dd-MM-yyyy hh:mm:ss', (mbprofile.candidate?.dob - Integer.parseInt(params.prefAgeDiff.split(" - ")[0]).years).format('dd-MM-yyyy hh:mm:ss'))
                             }
                             and { candidate { between('dob', dobLower, dobUpper) } }
                         }
@@ -527,13 +548,11 @@ class MbController {
                     }
 
                     if (params.flexibleManglik == "false" && params.prefManglik) {
-                        def valList = params.prefManglik.split(',')
-                        and { 'in'('manglik', valList) }
+                        and { 'in'('manglik', params.prefManglik) }
                     }
 
                     if (params.flexibleQualifications == "false" && params.prefqualification) {
-                        def valList = params.prefqualification.split(',')
-                        and { 'in'('eduQual', valList) }
+                        and { 'in'('eduQual', params.prefqualification) }
                     }
 
                     order(sortIndex, sortOrder)

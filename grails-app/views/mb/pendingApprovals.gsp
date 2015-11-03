@@ -38,7 +38,7 @@
 <r:img id="bg" dir="images" file="mb_bg.jpg" hidden="hidden"/>
 <!-- Top content -->
         <div class="container transback">
-            <h3 style="text-align: center;margin: 75px 0 20px"><strong>The following profiles are new and seek your approval. Once approved the repective candidate will be informed via SMS and Mail to edit their profile.</strong></h3>
+            <h3 style="text-align: center;margin: 75px 0 20px"><strong>The following profiles are new and seek your approval. Once approved the respective candidate will be informed via SMS and Mail to edit their profile.</strong></h3>
             <div class="panel-group" id="accordion">
                 <g:each in="${profiles}">
                 <div class="panel panel-default transback">
