@@ -221,13 +221,17 @@ grails.resources.modules = {
         resource url:'/css/multiselect.css'
     }
 
+    select2{
+        resource url:'/css/select2.min.css'
+        resource url:'/js/select2.full.min.js'
+    }
+
     mbHome{
         dependsOn 'bootstrap'
+        dependsOn 'select2'
         resource url:'/css/form-elements.css'
         resource url:'/css/stylish-portfolio.css'
         resource url:'/js/jquery.backstretch.min.js'
-        resource url:'/css/select2.min.css'
-        resource url:'/js/select2.full.min.js'
         resource url:'/js/jquery.validate.min.js'
         resource url:'/js/additional-methods.min.js'
     }

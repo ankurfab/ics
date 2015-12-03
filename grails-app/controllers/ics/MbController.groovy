@@ -74,11 +74,11 @@ class MbController {
 
     def deleteTempProfile =  {
         def idToDelete = Long.parseLong(params.profId)
+        AttributeValue.executeUpdate("delete AttributeValue where objectId=:objId",[objId:idToDelete])
         if(params.profDenied) {
             def contentParams = [params.donorName]
             commsService.sendComms('MarriageBoard', "PROFILE_START_DENIED", params.donorName, params.donorContact, params.donorEmail, contentParams)
         }
-        AttributeValue.executeUpdate("delete AttributeValue where objectId=:objId",[objId:idToDelete])
         redirect(action:"pendingApprovals")
     }
 
@@ -195,6 +195,8 @@ class MbController {
                     if(img1 && img2) {
                         markProfileComplete()
                         flash.message = "Profile Submitted succesfully..."
+                        def contentParams = [params.donorName]
+                        commsService.sendComms('MarriageBoard', "PROFILE_SUBMITTED", params.donorName, params.donorContact, params.donorEmail, contentParams)
                         redirect(action: "editProfile")
                     }
                     else{
@@ -378,9 +380,12 @@ class MbController {
             if(params.icsid)
                 candidate{eq('icsid',new Long(params.icsid))}
             if(params.name)
-                candidate{ilike('legalName',params.name)}
+                or{
+                    candidate{ilike('legalName','%'+params.name+'%')}
+                    candidate{ilike('initiatedName','%'+params.name+'%')}
+                }
             if(params.loginid)
-                candidate{eq('loginid',params.loginid)}
+                candidate{ilike('loginid','%'+params.loginid+'%')}
             if(params.referrerCenter)
                 eq('referrerCenter',params.referrerCenter)
             if(params.contactNumber)
@@ -476,7 +481,22 @@ class MbController {
                     }
 
                     if (params.flexibleCentre == "false" && params.prefCentre) {
-                        and { candidate { 'in'('iskconCentre', params.prefCentre) } }
+                        if(params.prospectCentre){
+                            or{
+                                and {
+                                    eq('flexibleCentre',true)
+                                    candidate { 'in'('iskconCentre', params.prefCentre) }
+                                }
+                                and{
+                                    eq('flexibleCentre',false)
+                                    ilike('prefCentre','%'+mbprofile.candidate.iskconCentre+'%')
+                                    candidate { 'in'('iskconCentre', params.prefCentre) }
+                                }
+                            }
+                        }
+                        else{
+                            and { candidate { 'in'('iskconCentre', params.prefCentre) } }
+                        }
                     }
 
                     if (params.flexibleCurrentCountry == "false" && params.prefCurrentCountry) {
@@ -484,7 +504,32 @@ class MbController {
                     }
 
                     if (params.flexibleCulturalInfluence == "false" && params.prefCulturalInfluence) {
-                        and { 'in'('culturalInfluence', params.prefCulturalInfluence) }
+                        def cultureInfluence = params.list('prefCulturalInfluence')
+                        if(params.prospectCulturalInfluence){
+                            def prospectInfluenceList = org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbprofile.culturalInfluence).toList()
+                            or{
+                                and{
+                                    eq('flexibleCulturalInfluence',true)
+                                    or {
+                                        cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                                    }
+                                }
+                                and{
+                                    eq('flexibleCulturalInfluence',false)
+                                    or {
+                                        prospectInfluenceList.each { ilike('prefCulturalInfluence', '%' + it + '%') }
+                                    }
+                                    or {
+                                        cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            or {
+                                cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                            }
+                        }
                     }
 
                     if (params.flexibleVarna == "false" && params.prefVarna) {
@@ -492,28 +537,84 @@ class MbController {
                     }
 
                     if (params.flexibleCategory == "false" && params.prefCategory) {
-                        and { 'in'('scstCategory', params.prefCategory) }
+                        if(params.prospectScStCategory){
+                            or{
+                                and{
+                                    eq('flexibleCategory',true)
+                                    'in'('scstCategory', params.prefCategory)
+                                }
+                                and{
+                                    eq('flexibleCategory',false)
+                                    ilike('prefCategory','%'+mbprofile.scstCategory+'%')
+                                    'in'('scstCategory', params.prefCategory)
+                                }
+                            }
+                        }
+                        else {
+                            and { 'in'('scstCategory', params.prefCategory) }
+                        }
                     }
 
                     if (params.flexibleCaste == "false" && params.prefCaste) {
-                        def valList = params.prefCaste.split(',')
-                        and { candidate { 'in'('caste', valList) } }
-                    }
-
-                    if (params.flexibleSubcaste == "false" && params.prefSubCaste) {
-                        def valList = params.prefSubCaste.split(',')
-                        and { candidate { 'in'('subCaste', valList) } }
+                        if(params.prospectCaste){
+                            or{
+                                and{
+                                    eq('flexibleCaste',true)
+                                    or {
+                                        candidate{'in'('caste', params.prefCaste)}
+                                        candidate{'in'('subCaste', params.prefCaste)}
+                                    }
+                                }
+                                and{
+                                    eq('flexibleCaste',false)
+                                    or{
+                                        ilike('prefCaste','%'+mbprofile.candidate.caste+'%')
+                                        ilike('prefCaste','%'+mbprofile.candidate.subCaste+'%')
+                                    }
+                                    or {
+                                        candidate{'in'('caste', params.prefCaste)}
+                                        candidate{'in'('subCaste', params.prefCaste)}
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            or {
+                                candidate{'in'('caste', params.prefCaste)}
+                                candidate{'in'('subCaste', params.prefCaste)}
+                            }
+                        }
                     }
 
                     if (params.flexibleLangknown == "false" && params.prefLangKnown) {
-                        //and {'in'('languagesKnown',params.prefLangKnown)}
+                        def languagesKnown = params.list('prefLangKnown')
+                        or {
+                            languagesKnown.each { ilike('languagesKnown', '%' + it + '%') }
+                        }
                     }
 
                     if (params.flexibleEducationCat == "false" && params.prefeducationCategory) {
                         ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
                         def pos = categories.indexOf(params.prefeducationCategory)
-                        categories = categories.subList(pos,categories.size())
-                        and {'in'('eduCat',categories)}
+                        def posProspect = categories.indexOf(mbprofile.eduCat)
+                        def categoriesCand = categories.subList(pos,categories.size())
+                        def categoriesProspect = categories.subList(0,posProspect + 1)
+                        if(params.prospectEduCat){
+                         or{
+                             and{
+                                 eq('flexibleEducationCat',true)
+                                 'in'('eduCat', categoriesCand)
+                             }
+                             and{
+                                 eq('flexibleEducationCat',false)
+                                 'in'('prefeducationCategory',categoriesProspect)
+                                 'in'('eduCat', categoriesCand)
+                             }
+                         }
+                        }
+                        else {
+                            and { 'in'('eduCat', categoriesCand) }
+                        }
                     }
 
                     if (params.flexibleAgediff == "false" && params.prefAgeDiff) {
@@ -548,11 +649,41 @@ class MbController {
                     }
 
                     if (params.flexibleManglik == "false" && params.prefManglik) {
-                        and { 'in'('manglik', params.prefManglik) }
+                        if(params.prospectManglik){
+                            or{
+                                and{
+                                    eq('flexibleManglik',true)
+                                    'in'('manglik', params.prefManglik)
+                                }
+                                and{
+                                    eq('flexibleManglik',false)
+                                    ilike('prefManglik','%'+mbprofile.manglik+'%')
+                                    'in'('manglik', params.prefManglik)
+                                }
+                            }
+                        }
+                        else {
+                            and { 'in'('manglik', params.prefManglik) }
+                        }
                     }
 
-                    if (params.flexibleQualifications == "false" && params.prefqualification) {
-                        and { 'in'('eduQual', params.prefqualification) }
+                    if (params.flexibleOccuption == "false" && params.prefOccupation) {
+                        if(params.prospectOccupation){
+                            or{
+                                and{
+                                    eq('flexibleOccuption',true)
+                                    'in'('occupation', params.prefOccupation)
+                                }
+                                and{
+                                    eq('flexibleOccupation',false)
+                                    ilike('prefOccupation','%'+mbprofile.occupation+'%')
+                                    'in'('occupation', params.prefOccupation)
+                                }
+                            }
+                        }
+                        else {
+                            and { 'in'('occupation', params.prefOccupation) }
+                        }
                     }
 
                     order(sortIndex, sortOrder)
@@ -591,13 +722,13 @@ class MbController {
         def numberOfPages = Math.ceil(totalRows / maxRows)
 
         //def jsonCells = mbprofile?.matches?.findAll{it.candidateStatus==null || it.candidateStatus!='DECLINE'}?.sort{it.prospect?.candidate?.legalName}?.collect {
-        def jsonCells = mbprofile?.matches?.sort{it.lastUpdated}?.collect {
+        def jsonCells = mbprofile?.matches?.sort{it.lastUpdated}?.reverse().collect {
             [cell: [
                     it.prospect.id,
                     it.candidateStatus,
                     it.prospect?.workflowStatus,
                     it.prospect?.candidate?.legalName,
-                    it.prospect?.candidate?.dob?.format('dd-MM-yyyy'),
+                    it.prospect?.candidate?.dob?.format('dd/MM/yyyy'),
                     it.prospect?.candidate?.pob,
                     it.prospect?.candidate?.dob?.format('HH:mm:ss'),
                     it.prospect.candidate?.caste,
@@ -622,22 +753,24 @@ class MbController {
         def rowOffset = currentPage == 1 ? 0 : (currentPage - 1) * maxRows
 
         def mbprofile = MbProfile.get(params.candidateid)
+        def matches = mbprofile?.matches?.sort{it.lastUpdated}?.reverse().findAll{it.stage == "Active"}
 
         def totalRows = mbprofile?.matches?.size()
         def numberOfPages = Math.ceil(totalRows / maxRows)
 
         //def jsonCells = mbprofile?.matches?.collect {
-        def jsonCells = mbprofile?.matches?.sort{it.lastUpdated}?.collect {
+        def jsonCells = matches.collect {
             [cell: [
                     it.prospect.id,
                     it.prospect?.candidate?.toString(),
                     it.prospect?.workflowStatus,
                     it.candidateStatus,
                     it.candidateReason,
-                    it.candidateDate?.format('dd-MM-yyyy HH:mm:ss'),
+                    it.candidateDate?.format('dd/MM/yyyy HH:mm:ss'),
                     it.mbStatus,
                     it.mbReason,
-                    it.mbDate?.format('dd-MM-yyyy HH:mm:ss')
+                    it.mbDate?.format('dd/MM/yyyy HH:mm:ss'),
+                    it.prospect.id
             ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:1,records:totalRows,total:1]
@@ -686,6 +819,15 @@ class MbController {
             mbService.createProfileFromAttrs(params.objectClassName,new Long(it))
         }
         redirect(action: "manage")
+    }
+
+    def showHistory(){
+        def inactiveMatches = MbProfileMatch.findAllByCandidateAndProspectAndMbStatus(MbProfile.get(params.candidateid),MbProfile.get(params.prospectid),'DECLINED')
+        def historyHtml = "<strong>Last Suggestions of same prospect and rejection Reasons:</strong><br><br>"
+        inactiveMatches.each {
+            historyHtml = historyHtml + "<div><span><strong>Candidate Reason: </strong>"+it.candidateReason+"</span><span style='margin-left:20px'><strong>MB Reason: </strong>"+it.mbReason+"</span><span style='margin-left:20px'><strong>Date: </strong>"+it.candidateDate.format('dd/MM/yyyy')+"</span><div>"
+        }
+        render(historyHtml)
     }
 
     def suggest() {
@@ -745,6 +887,7 @@ class MbController {
     def mbNextStep(){
         def match = MbProfileMatch.get(params.matchid)
         def otherMatch
+        def contentParams
         if(match.candidateStatus == 'DECLINED'){
             render([status: "Sorry! Cannot approve as candidate has declined. Please click on decline and close the match with proper reason."] as JSON)
         }
@@ -756,10 +899,19 @@ class MbController {
                     }
                     else if (match.candidateStatus == 'FULL PROFILE') {
                         match.mbStatus = 'FULL PROFILE'
-                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        contentParams = [match.candidate?.toString()]
+                        commsService.sendComms('MarriageBoard', "FULL_PROFILE_APPROVED", match.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', match.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', match.candidate).emailAddress, contentParams)
+                        otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect, match.candidate,'Active')
                         if (otherMatch && otherMatch.mbStatus == 'FULL PROFILE') {
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSED"
                             otherMatch.mbDate = new Date()
+                            contentParams = [otherMatch.candidate?.toString(),otherMatch.prospect?.toString(),otherMatch.candidate?.assignedTo?.toString(),VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate?.assignedTo).number,EmailContact.findByCategoryAndIndividual('Personal',otherMatch.candidate?.assignedTo).emailAddress]
+                            commsService.sendComms('MarriageBoard', "PROFILE_PROPOSED_LOCK", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.toString(),otherMatch.candidate?.toString(),otherMatch.prospect?.assignedTo?.toString(),VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect?.assignedTo).number,EmailContact.findByCategoryAndIndividual('Personal',otherMatch.prospect?.assignedTo).emailAddress]
+                            commsService.sendComms('MarriageBoard', "PROFILE_PROPOSED_LOCK", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
+                        }
+                        if(!otherMatch){
+                            render([status: "Other Candidate not yet suggested. Prospect can be suggested to candidate now.",suggestBack: true] as JSON)
                         }
                     }
                     else {
@@ -768,12 +920,19 @@ class MbController {
                     break
                 case 'FULL PROFILE':
                     if (match.candidateStatus == 'BOY GIRL MEET') {
-                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
-
-                        if (otherMatch && otherMatch.candidateStatus == 'BOY GIRL MEET') {
+                        otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect, match.candidate,'Active')
+                        if(!otherMatch){
+                            render([status: "Cannot Approve as the other candidate is not yet suggested. Please Suggest now to Prospect.",suggestBack: true] as JSON)
+                        }
+                        else if (otherMatch && otherMatch.candidateStatus == 'BOY GIRL MEET') {
                             match.mbStatus = otherMatch.mbStatus = 'BOY GIRL MEET'
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "BOYGIRLMEET"
                             otherMatch.mbDate = new Date()
+                            //send boy girl meet comm
+                            contentParams = [otherMatch.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "BOY_GIRL_MEET_APPROVED", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.toString()]
+                            commsService.sendComms('MarriageBoard', "BOY_GIRL_MEET_APPROVED", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
                         } else {
                             render([status: "Cannot approve as the other candidate has not yet agreed to meet the candidate."] as JSON)
                         }
@@ -783,12 +942,17 @@ class MbController {
                     break
                 case 'BOY GIRL MEET':
                     if (match.candidateStatus == 'PARENTS MEET') {
-                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect, match.candidate,'Active')
 
                         if (otherMatch && otherMatch.candidateStatus == 'PARENTS MEET') {
                             match.mbStatus = otherMatch.mbStatus = 'PARENTS MEET'
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PARENTSMEET"
                             otherMatch.mbDate = new Date()
+                            //send parents meet comm
+                            contentParams = [otherMatch.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "PARENTS_MEET_APPROVED", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.toString()]
+                            commsService.sendComms('MarriageBoard', "PARENTS_MEET_APPROVED", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
                         }
                         else{
                             render([status: "Cannot approve as the other candidate has not yet agreed for the parents meeting."] as JSON)
@@ -800,11 +964,15 @@ class MbController {
                 case 'PARENTS MEET':
                     if (match.candidateStatus == 'PROPOSAL AGREED') {
 
-                        otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                        otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect, match.candidate,'Active')
                         if (otherMatch && otherMatch.candidateStatus == 'PROPOSAL AGREED') {
                             match.mbStatus = otherMatch.mbStatus = 'PROPOSAL AGREED'
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSALAGREED"
                             otherMatch.mbDate = new Date()
+                            contentParams = [otherMatch.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "PROPOSAL_AGREED", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.toString()]
+                            commsService.sendComms('MarriageBoard', "PROPOSAL_AGREED", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
                         }
                         else{
                             render([status: "Cannot approve as the other candidate has not yet agreed to the proposal."] as JSON)
@@ -815,14 +983,14 @@ class MbController {
                     break
                 case 'PROPOSAL AGREED':
                     match.mbStatus = 'ANNOUNCE'
-                    otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                    otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect, match.candidate,'Active')
                     otherMatch.mbStatus = 'ANNOUNCE'
                     otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = 'ANNOUNCE'
                     otherMatch.mbDate = new Date()
                     break
                 case 'ANNOUNCE':
                     match.mbStatus = 'MARRIED THROUGH MB'
-                    otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect, match.candidate)
+                    otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect, match.candidate,'Active')
                     otherMatch.mbStatus = 'MARRIED THROUGH MB'
                     otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = 'MARRIEDTHRUMB'
                     otherMatch.mbDate = new Date()
@@ -845,14 +1013,14 @@ class MbController {
                 match.candidateDate = new Date()
                 break
             case 'mb':
-                otherMatch = MbProfileMatch.findByCandidateAndProspect(match.prospect,match.candidate)
+                otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect,match.candidate,'Active')
                 if(otherMatch){
                     otherMatch.candidateStatus = 'DECLINED'
                     otherMatch.mbStatus = 'DECLINED'
                     otherMatch.mbReason = params.reason
                     otherMatch.mbDate = new Date()
                     if(!otherMatch.save())
-                        match.errors.each { log.debug("match:"+it)}
+                        otherMatch.errors.each { log.debug("match:"+it)}
                 }
                 match.candidateStatus = 'DECLINED'
                 match.mbStatus = 'DECLINED'
@@ -1359,7 +1527,7 @@ class MbController {
                     it.candidate.workflowStatus,
                     it.candidateStatus,
                     it.candidateReason,
-                    it.candidateDate?.format('dd-MM-yy HH:mm:ss')
+                    it.candidateDate?.format('dd/MM/yy HH:mm:ss')
             ], id: it.id]
         }
         def jsonData= [rows: jsonCells,page:currentPage,records:totalRows,total:numberOfPages]
@@ -1436,6 +1604,13 @@ class MbController {
                 break;
         }
         render (reasons as JSON)
+    }
+
+    def fetchCastes () {
+        def castes = Individual.findAllByCategoryAndCasteIlike('MB','%'+params.q+'%').collect{it -> return[id:it.caste.capitalize(),text:it.caste.capitalize()]}
+        castes.addAll(Individual.findAllByCategoryAndSubCasteIlike('MB','%'+params.q+'%').collect{it -> return[id:it.subCaste.capitalize(),text:it.subCaste.capitalize()]})
+        castes.unique()
+        render (castes as JSON)
     }
 
 

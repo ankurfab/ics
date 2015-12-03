@@ -119,12 +119,15 @@ class MbProfile {
         maritalStatus(nullable:true,maxSize: 40)
         devotionalCulture(nullable: true)
         weight(nullable: true)
-        culturalInfluence(nullable: true,maxSize: 40)
+        culturalInfluence(nullable: true)
         residenceType(nullable: true,maxSize: 20)
         currentCountry(nullable: true,maxSize: 10)
         areaCurrHouse(nullable: true,maxSize: 6)
         flexibleCurrentCountry(nullable: true)
         prefCurrentCountry(nullable: true,maxSize: 10)
+        occupation(nullable: true, maxSize: 40)
+        flexibleOccupation(nullable:true)
+        prefOccupation(nullable: true)
     }
 
     static mapping={
@@ -186,6 +189,7 @@ class MbProfile {
     String occupationStatus
     String companyName
     String designation
+    String occupation
     Address companyAddress
 
     //step 4 fields
@@ -237,6 +241,8 @@ class MbProfile {
     Boolean flexibleEducationCat
     String prefqualification
     Boolean flexibleQualifications
+    String prefOccupation
+    Boolean flexibleOccupation
     String prefAgeDiff
     Boolean flexibleAgediff
     String prefHeight

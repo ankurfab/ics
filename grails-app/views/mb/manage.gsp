@@ -89,10 +89,12 @@
               formatter:'showlink',
               formatoptions:{baseLinkUrl:'show'}},
 			{name:'referrerCenter', search:true,
-				stype:'select', searchoptions: { value: "${':ALL;'+(ics.MbProfile.createCriteria().list{projections{distinct('referrerCenter')}}?.collect{(it?:'')+':'+(it?:'')}.join(';'))}"}						
+				stype:'select', searchoptions: { value: "${':ALL;'+(ics.MbProfile.createCriteria().list{projections{distinct('referrerCenter')}}?.collect{(it?:'')+':'+(it?:'')}.join(';'))}"}
 			},
 			{name:'contactNumber', search:true},
-			{name:'assignedTo', search:true},
+			{name:'assignedTo', search:true,
+                stype:'select', searchoptions: { value: "${':ALL;'+(ics.MbProfile.createCriteria().list{projections{distinct('assignedTo')}}?.collect{it.toString()+':'+it.toString()}.join(';'))}"}
+            },
 			{name:'profileStatus', search:true,
 				stype:'select', searchoptions: { value: "${':ALL;'+(ics.MbProfile.createCriteria().list{projections{distinct('profileStatus')}}?.collect{it+':'+it}.join(';'))}"}			
 				},

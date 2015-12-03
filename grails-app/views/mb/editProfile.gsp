@@ -9,6 +9,7 @@
     <r:require module="jqval"/>
     <r:require module="ajaxform"/>
     <r:require module="multiselect"/>
+    <r:require module="select2"/>
     <r:require module="dateTimePicker"/>
 </head>
 
@@ -58,6 +59,7 @@
 <g:set var="candAddr" value="${ics.Address.findByIndividualAndCategory(mbProfile.candidate,'PresentAddress')}"/>
 <g:set var="iskconCentres" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','iskcon_centre','Config'))?.collect{it.value}}" />
 <g:set var="spiritualMasters" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','sp_master','Config'))?.collect{it.value}}" />
+<g:set var="occupation" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','occupation','Config'))?.collect{it.value}}" />
 
 <table align="center" border="0" cellpadding="0" cellspacing="0">
 <tr><td> 
@@ -199,9 +201,9 @@
         <label for="culturalInfluence">Primary Cultural Background:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:select name="culturalInfluence" class="required"
+        <g:select name="culturalInfluence" class="required multiple" multiple="multiple"
                   from="${['Assamese','Andhraite','Bengali','Bihari','Gujarati','Himachal Pradesh','Kannadiga','Kasmiri','Konkani','Keralite','Madhya Pradesh','Manipuri','Maharashtrian','Marwari','Nepali','Oriyan','Punjabi','Sindhi','Tamilian','Typical North Indian','Typical South Indian','Typical Cosmopolitan','Typical Village','Uttar Pradesh','Urdu','Western']}"
-                  value="${mbProfile?.culturalInfluence}" noSelection="['':'Select One']"/>
+                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.culturalInfluence).toList()}" noSelection="['':'Select One']"/>
     </td>
 </tr>
 <tr class="prop">
@@ -217,15 +219,17 @@
         <label for="caste">Caste:</label><span class="mand">*</span>
     </td>
     <td valign="top" class="value">
-        <g:textField name="caste" placeholder="Enter the Actual Caste here" required="required"
-             value="${mbProfile?.candidate?.caste}" maxlength="40"/>
+        <select name="caste" class="required" id="caste" style="width:100%">
+            <option value="${mbProfile?.candidate?.caste}" selected="selected">${mbProfile?.candidate?.caste}</option>
+        </select>
     </td>
     <td valign="top" class="name">
         <label for="subCaste">Sub-Caste:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="subCaste" maxlength="40" placeholder="Enter a Sub Caste"
-                     value="${mbProfile?.candidate?.subCaste}"/>
+        <select name="subCaste" class="required" id="subCaste" style="width:100%">
+            <option value="${mbProfile?.candidate?.subCaste}" selected="selected">${mbProfile?.candidate?.subCaste}</option>
+        </select>
     </td>
 </tr>
 <tr class="prop">
@@ -812,6 +816,16 @@
             </tr>
             <tr class="prop">
                 <td valign="top" class="name">
+                    <label for="occupation">Current Occupation:</label><span class="mand">*</span>
+                </td>
+                <td valign="top" class="value">
+                    <g:select name="occupation" class="required"
+                              from="${occupation}"
+                              value="${mbProfile?.occupation}" noSelection="['':'Select One']"/>
+                </td>
+            </tr>
+            <tr class="prop">
+                <td valign="top" class="name">
                     <label for="occupationStatus">Occupation Status:</label><span class="mand">*</span>
                 </td>
                 <td valign="top" class="value">
@@ -1253,41 +1267,6 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefCaste">Preferred Caste:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="prefCaste" placeholder="Enter preferred Caste here" value="${mbProfile?.prefCaste}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="flexibleCaste">I am flexible  on Caste:</label>
-    </td>
-    <td>
-        <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCaste ? mbProfile?.flexibleCaste : false}">
-            <span>${it.radio} ${it.label}</span>
-        </g:radioGroup>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="prefsubCaste">Preferred Sub-Caste:</label>
-    </td>
-    <td valign="top" class="value">
-        <g:textField name="prefsubCaste" placeholder="Enter preferred Sub Caste" value="${mbProfile?.prefsubCaste}"/>
-    </td>
-    <td valign="top" class="name">
-        <label for="flexibleSubcaste">I am flexible  on Sub-Caste:</label>
-    </td>
-    <td>
-        <g:radioGroup name="flexibleSubcaste" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleSubcaste ? mbProfile?.flexibleSubcaste : false}">
-            <span>${it.radio} ${it.label}</span>
-        </g:radioGroup>
-    </td>
-</tr>
-
-<tr class="prop">
-    <td valign="top" class="name">
         <label for="prefeducationCategory">Preferred Education Category:</label>
     </td>
     <td valign="top" class="value">
@@ -1308,55 +1287,19 @@
 </tr>
 <tr class="prop">
     <td valign="top" class="name">
-        <label for="prefqualification">Preferred Qualifications:</label>
+        <label for="prefOccupation">Preferred Occupation:</label>
     </td>
     <td valign="top" class="value">
-        <g:textField name="prefqualification" placeholder="Enter your qualification here"
-                     value="${mbProfile?.prefqualification}"/>
+        <g:select name="prefOccupation" class="multiple" multiple="multiple"
+             from="${occupation}"
+             value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefOccupation).toList()}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleQualifications">I am flexible  on Qualifications:</label>
+        <label for="flexibleOccupation">I am flexible  on Qualifications:</label>
     </td>
     <td>
-        <g:radioGroup name="flexibleQualifications" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleQualifications ? mbProfile?.flexibleQualifications : false}">
-            <span>${it.radio} ${it.label}</span>
-        </g:radioGroup>
-    </td>
-</tr>
-
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="prefAgeDiff">Preferred Age difference:</label>
-    </td>
-    <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefAgeDiff" id="prefAgeDiff" readonly data-min-val="0" data-max-val="10" data-min="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[0]: 0}" data-max="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[1]:10}"><span> Years</span>
-        <div class="slider-range"></div>
-    </td>
-    <td valign="top" class="name">
-        <label for="flexibleAgediff">I am flexible  on Age difference:</label>
-    </td>
-    <td>
-        <g:radioGroup name="flexibleAgediff" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleAgediff ? mbProfile?.flexibleAgediff : false}">
-            <span>${it.radio} ${it.label}</span>
-        </g:radioGroup>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="prefHeight">Preferred Height:</label>
-    </td>
-    <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefHeight" id="prefHeight" readonly data-min-val="53" data-max-val="77" data-min="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[0]:53}" data-max="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[1]:77}">
-        <div class="slider-range"></div>
-    </td>
-    <td valign="top" class="name">
-        <label for="flexibleHeight">I am flexible  on Height:</label>
-    </td>
-    <td>
-        <g:radioGroup name="flexibleHeight" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleHeight ? mbProfile?.flexibleHeight : false}">
+        <g:radioGroup name="flexibleOccupation" labels="['No', 'Yes']" values="[false, true]"
+                      value="${mbProfile?.flexibleOccupation ? mbProfile?.flexibleOccupation : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1375,24 +1318,6 @@
     <td>
         <g:radioGroup name="flexibleLooks" labels="['No', 'Yes']" values="[false, true]"
                       value="${mbProfile?.flexibleLooks ? mbProfile?.flexibleLooks : false}">
-            <span>${it.radio} ${it.label}</span>
-        </g:radioGroup>
-    </td>
-</tr>
-<tr class="prop">
-    <td valign="top" class="name">
-        <label for="prefCandIncome">Preferred Candidate Income:</label>
-    </td>
-    <td valign="top" class="value">
-        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="100" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:4}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
-        <div class="slider-range"></div>
-    </td>
-    <td valign="top" class="name">
-        <label for="flexibleCandidateIncome">I am flexible  on Candidate Income:</label>
-    </td>
-    <td>
-        <g:radioGroup name="flexibleCandidateIncome" labels="['No', 'Yes']" values="[false, true]"
-                      value="${mbProfile?.flexibleCandidateIncome ? mbProfile?.flexibleCandidateIncome : false}">
             <span>${it.radio} ${it.label}</span>
         </g:radioGroup>
     </td>
@@ -1434,7 +1359,81 @@
         </g:radioGroup>
     </td>
 </tr>
-
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="prefAgeDiff">Preferred Age difference:</label>
+    </td>
+    <td valign="top" class="value">
+        <input type="text" class="slider-input" name="prefAgeDiff" id="prefAgeDiff" readonly data-min-val="0" data-max-val="10" data-min="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[0]: 0}" data-max="${mbProfile?.prefAgeDiff? mbProfile?.prefAgeDiff.split(" - ")[1]:10}"><span> Years</span>
+        <div class="slider-range"></div>
+    </td>
+    <td valign="top" class="name">
+        <label for="flexibleAgediff">I am flexible  on Age difference:</label>
+    </td>
+    <td>
+        <g:radioGroup name="flexibleAgediff" labels="['No', 'Yes']" values="[false, true]"
+                      value="${mbProfile?.flexibleAgediff ? mbProfile?.flexibleAgediff : false}">
+            <span>${it.radio} ${it.label}</span>
+        </g:radioGroup>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="prefHeight">Preferred Height:</label>
+    </td>
+    <td valign="top" class="value">
+        <input type="text" class="slider-input" name="prefHeight" id="prefHeight" readonly data-min-val="53" data-max-val="77" data-min="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[0]:53}" data-max="${mbProfile?.prefHeight? mbProfile?.prefHeight.split(" - ")[1]:77}">
+        <div class="slider-range"></div>
+    </td>
+    <td valign="top" class="name">
+        <label for="flexibleHeight">I am flexible  on Height:</label>
+    </td>
+    <td>
+        <g:radioGroup name="flexibleHeight" labels="['No', 'Yes']" values="[false, true]"
+                      value="${mbProfile?.flexibleHeight ? mbProfile?.flexibleHeight : false}">
+            <span>${it.radio} ${it.label}</span>
+        </g:radioGroup>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="prefCandIncome">Preferred Candidate Income:</label>
+    </td>
+    <td valign="top" class="value">
+        <input type="text" class="slider-input" name="prefCandIncome" id="prefCandIncome" readonly data-min-val="1" data-max-val="100" data-min="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[0]:4}" data-max="${mbProfile?.prefCandIncome? mbProfile?.prefCandIncome.split(" - ")[1]:16}"><span> Lakhs Per Annum</span>
+        <div class="slider-range"></div>
+    </td>
+    <td valign="top" class="name">
+        <label for="flexibleCandidateIncome">I am flexible  on Candidate Income:</label>
+    </td>
+    <td>
+        <g:radioGroup name="flexibleCandidateIncome" labels="['No', 'Yes']" values="[false, true]"
+                      value="${mbProfile?.flexibleCandidateIncome ? mbProfile?.flexibleCandidateIncome : false}">
+            <span>${it.radio} ${it.label}</span>
+        </g:radioGroup>
+    </td>
+</tr>
+<tr class="prop">
+    <td valign="top" class="name">
+        <label for="prefCaste">Preferred Caste/Sub Caste:</label>
+    </td>
+    <td valign="top" class="value">
+        <select name="prefCaste" id="prefCaste" multiple="multiple"  style="width:250px;max-width: 250px">
+            <g:each in="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCaste)}">
+                <option value="${it}" selected="selected">${it}</option>
+            </g:each>
+        </select>
+    </td>
+    <td valign="top" class="name">
+        <label for="flexibleCaste">I am flexible  on Caste/Sub Caste:</label>
+    </td>
+    <td>
+        <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
+                      value="${mbProfile?.flexibleCaste ? mbProfile?.flexibleCaste : false}">
+            <span>${it.radio} ${it.label}</span>
+        </g:radioGroup>
+    </td>
+</tr>
 <tr class="prop">
     <g:if test="${mbProfile?.candidate?.isMale}">
         <td valign="top" class="name">
@@ -1708,6 +1707,56 @@
 
     $(document).ready(function () {
         // Smart Wizard
+        $('#prefCaste').select2({
+            placeholder: "Preferred Castes",
+            minimumInputLength: 2,
+            tokenSeparators: [','],
+            ajax: {
+                url: "/ics/mb/fetchCastes",
+                dataType: 'json',
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        page: params.page
+                    };
+                },
+                processResults: function (data, params) {
+                    return {
+                        results: data
+                    }
+                },
+                cache: true
+            }
+        });
+        $('#caste,#subCaste').select2({
+            placeholder: "Caste",
+            minimumInputLength: 2,
+            ajax: {
+                url: "/ics/mb/fetchCastes",
+                dataType: 'json',
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        page: params.page
+                    };
+                },
+                processResults: function (data, params) {
+                    return {
+                        results: data
+                    }
+                },
+                cache: true
+            },
+            escapeMarkup: function (markup) { return markup; },
+            tags: true,
+            createTag: function (params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                }
+            }
+        });
         $('#wizard').smartWizard({
             enableFinishButton : true,
             keyNavigation : false,

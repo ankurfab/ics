@@ -66,8 +66,10 @@ class MbService {
 	def loginid = housekeepingService.createLogin(candidate,ir)
 	
     	//step 4: comms
-	    def contentParams = [loginid]
-	    commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), params.donorContact, params.donorEmail, contentParams)	
+	    def contentParams = [mbProfile.candidate?.toString(),loginid]
+	    commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), null, params.donorEmail, contentParams)
+        contentParams = [loginid]
+        commsService.sendComms('MarriageBoard', "PROFILE_STARTED", mbProfile.candidate?.toString(), params.donorContact, null, contentParams)
     	
     	return mbProfile?.id
     }
@@ -91,11 +93,11 @@ class MbService {
 	try{         mbProfile.candCounsellorAshram=params.counselorAshram } catch(Exception e){}
 	try{         mbProfile.candidate.nationality=params.nationality } catch(Exception e){}
 	try{         mbProfile.candidate.origin=params.originState } catch(Exception e){}
-    try{         mbProfile.culturalInfluence=params.culturalInfluence } catch(Exception e){}
+    try{         mbProfile.culturalInfluence=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.culturalInfluence)} catch(Exception e){}
 	try{         mbProfile.candidate.varna=params.varna } catch(Exception e){}
 	try{         mbProfile.scstCategory=params.scstCategory } catch(Exception e){}
-	try{         mbProfile.candidate.caste=params.caste } catch(Exception e){}
-	try{         mbProfile.candidate.subCaste=params.subCaste } catch(Exception e){}
+	try{         mbProfile.candidate.caste=params.caste.capitalize() } catch(Exception e){}
+	try{         mbProfile.candidate.subCaste=params.subCaste.capitalize() } catch(Exception e){}
 	try{         mbProfile.candidate.height=(Integer.parseInt(params.heightInFt)*12) + Integer.parseInt(params.heightInInch) } catch(Exception e){}
     try{         mbProfile.weight=Integer.parseInt(params.weight) } catch(Exception e){}
     try{         mbProfile.candidate.motherTongue=params.motherTongue } catch(Exception e){}
@@ -156,6 +158,7 @@ class MbService {
         //step3
 	try{         mbProfile.eduCat = params.eduCat } catch(Exception e){}
 	try{         mbProfile.eduQual = params.eduQual } catch(Exception e){}
+	try{         mbProfile.occupation = params.occupation } catch(Exception e){}
 	try{         mbProfile.occupationStatus = params.occupationStatus } catch(Exception e){}
 	try{         mbProfile.companyName = params.companyName } catch(Exception e){}
 	try{         mbProfile.designation = params.designation } catch(Exception e){}
@@ -203,9 +206,8 @@ class MbService {
 	try{         mbProfile.flexibleVarna = Boolean.valueOf(params.flexibleVarna) } catch(Exception e){}
 	try{         mbProfile.flexibleCategory = Boolean.valueOf(params.flexibleCategory) } catch(Exception e){}
 	try{         mbProfile.flexibleCaste = Boolean.valueOf(params.flexibleCaste) } catch(Exception e){}
-	try{         mbProfile.flexibleSubcaste = Boolean.valueOf(params.flexibleSubcaste) } catch(Exception e){}
 	try{         mbProfile.flexibleEducationCat = Boolean.valueOf(params.flexibleEducationCat) } catch(Exception e){}
-	try{         mbProfile.flexibleQualifications = Boolean.valueOf(params.flexibleQualifications) } catch(Exception e){}
+	try{         mbProfile.flexibleOccupation = Boolean.valueOf(params.flexibleOccupation) } catch(Exception e){}
 	try{         mbProfile.flexibleAgediff = Boolean.valueOf(params.flexibleAgediff) } catch(Exception e){}
 	try{         mbProfile.flexibleHeight = Boolean.valueOf(params.flexibleHeight) } catch(Exception e){}
 	try{         mbProfile.flexibleLooks = Boolean.valueOf(params.flexibleLooks) } catch(Exception e){}
@@ -214,17 +216,16 @@ class MbService {
 	try{         mbProfile.flexibleManglik = Boolean.valueOf(params.flexibleManglik) } catch(Exception e){}
 	try{         mbProfile.settleAbroadWorkingWife = params.settleAbroadWorkingWife } catch(Exception e){}
 	try{         mbProfile.prefChanting=params.prefChanting } catch(Exception e){}
-	try{         mbProfile.prefSpMaster=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefSpMaster)} catch(Exception e){}
-	try{         mbProfile.prefCentre=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCentre)} catch(Exception e){}
+	try{         mbProfile.prefSpMaster=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefSpMaster).length()<=500 ? org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefSpMaster) : ''} catch(Exception e){}
+	try{         mbProfile.prefCentre=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCentre).length()<=500 ? org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCentre):''} catch(Exception e){}
 	try{         mbProfile.prefNationality=params.prefNationality } catch(Exception e){}
     try{         mbProfile.prefCurrentCountry=params.prefCurrentCountry } catch(Exception e){}
 	try{         mbProfile.prefCulturalInfluence=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCulturalInfluence) } catch(Exception e){}
 	try{         mbProfile.prefVarna=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefVarna) } catch(Exception e){}
 	try{         mbProfile.prefCategory=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCategory) } catch(Exception e){}
-	try{         mbProfile.prefCaste=params.prefCaste } catch(Exception e){}
-	try{         mbProfile.prefsubCaste=params.prefsubCaste } catch(Exception e){}
+	try{         mbProfile.prefCaste=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefCaste) } catch(Exception e){}
 	try{         mbProfile.prefeducationCategory=params.prefeducationCategory } catch(Exception e){}
-	try{         mbProfile.prefqualification=params.prefqualification } catch(Exception e){}
+	try{         mbProfile.prefOccupation=org.springframework.util.StringUtils.arrayToCommaDelimitedString(params.prefOccupation) } catch(Exception e){}
 	try{         mbProfile.prefAgeDiff=params.prefAgeDiff } catch(Exception e){}
 	try{         mbProfile.prefHeight=getHeight(params.prefHeight.split(" - ")[0]) + " - " + getHeight(params.prefHeight.split(" - ")[1])} catch(Exception e){}
 	try{         mbProfile.prefLooks=params.prefLooks } catch(Exception e){}
@@ -313,8 +314,10 @@ class MbService {
             commsService.sendComms('MarriageBoard', "PROFILE_MARK_COMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
         }
         else if(mbProfile.profileStatus=='INCOMPLETE'){
-            def contentParams = [mbProfile.candidate?.toString(),params.mbMessage,mbProfile.candidate?.loginid]
-            commsService.sendComms('MarriageBoard', "PROFILE_MARK_INCOMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
+            def contentParams = [mbProfile.candidate?.toString(),params.mbMessage]
+            commsService.sendComms('MarriageBoard', "PROFILE_MARK_INCOMPLETE", mbProfile.candidate?.toString(), null , EmailContact.findByCategoryAndIndividual('Personal', mbProfile.candidate).emailAddress, contentParams)
+            contentParams = [mbProfile.candidate?.loginid]
+            commsService.sendComms('MarriageBoard', "PROFILE_MARK_INCOMPLETE", mbProfile.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', mbProfile.candidate).number, null, contentParams)
         }
 
 	
@@ -373,7 +376,12 @@ class MbService {
 		prospect = MbProfile.get(it)
 		if(prospect)
 			{
-			pmatch = MbProfileMatch.findByCandidateAndProspect(candidate,prospect)
+			pmatch = MbProfileMatch.findByCandidateAndProspectAndStage(candidate,prospect,'Active')
+            if(pmatch && (pmatch.mbStatus == 'DECLINED'|| pmatch.candidateStatus == 'DECLINED')){
+                pmatch.stage = 'Inactive'
+                pmatch.save()
+            }
+            pmatch = MbProfileMatch.findByCandidateAndProspectAndStage(candidate,prospect,'Active')
             if(!pmatch) {
                 pmatch = new MbProfileMatch()
             }
@@ -382,9 +390,12 @@ class MbService {
             pmatch.candidateDate = pmatch.mbDate = new Date()
 			pmatch.candidateStatus = pmatch.mbStatus = "LIMITED PROFILE"
             pmatch.candidateReason = pmatch.mbReason = ""
+            pmatch.stage = 'Active'
 			if(!pmatch.save())
 			    pmatch.errors.each { log.debug("pmatch:"+it)}
 			else {
+                def contentParams = [pmatch.candidate?.toString()]
+                commsService.sendComms('MarriageBoard', "PROFILE_SUGGESTED", pmatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', pmatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', pmatch.candidate).emailAddress, contentParams)
 				if(params.type=='both') {
 					suggest([candidateid:prospect.id.toString(),prospects:candidate.id.toString()])
 				}

@@ -104,7 +104,12 @@
             e.preventDefault();
             $("#sidebar-wrapper").toggleClass("active");
         });
-
+        $('.btn-danger').click(function(){
+           $(this).addClass('clickedOnce');
+        });
+        $('.clickedOnce').click(function(){
+           return false;
+        });
         // Opens the sidebar menu
         $("#menu-toggle").click(function(e) {
             e.preventDefault();

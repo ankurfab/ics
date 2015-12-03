@@ -11,6 +11,7 @@
         <r:require module="jqval"/>
         <r:require module="ajaxform"/>
         <r:require module="multiselect"/>
+        <r:require module="select2"/>
         <style>
             .ui-jqgrid .ui-state-highlight { background: #FFFF99 !important; }
             .ui-jqgrid tr.jqgrow td {
@@ -21,6 +22,7 @@
 	<body>
     <g:set var="iskconCentres" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','iskcon_centre','Config'))?.collect{it.value}}" />
     <g:set var="spiritualMasters" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','sp_master','Config'))?.collect{it.value}}" />
+    <g:set var="occupation" value="${ics.AttributeValue.findAllByAttribute(ics.Attribute.findByDomainClassNameAndDomainClassAttributeNameAndCategory('Mb','occupation','Config'))?.collect{it.value}}" />
 		<div class="nav">
 		    <span class="menuButton"><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></span>
 		</div>
@@ -194,38 +196,6 @@
                         </g:radioGroup>
                     </td>
                     <td valign="top" class="name">
-                        <label for="prefCaste">Preferred Caste:</label>
-                    </td>
-                    <td valign="top" class="value">
-                        <g:textField name="prefCaste" placeholder="Enter preferred Caste here" value="${mbProfile?.prefCaste}"/>
-                    </td>
-                    <td valign="top" class="name">
-                        <label for="flexibleCaste">Flexible :</label>
-                    </td>
-                    <td>
-                        <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
-                                      value="${mbProfile?.flexibleCaste}">
-                            <span>${it.radio} ${it.label}</span>
-                        </g:radioGroup>
-                    </td>
-                </tr>
-                <tr class="prop">
-                    <td valign="top" class="name">
-                        <label for="prefSubCaste">Preferred Sub-Caste:</label>
-                    </td>
-                    <td valign="top" class="value">
-                        <g:textField name="prefSubCaste" placeholder="Enter preferred Sub Caste" value="${mbProfile?.prefsubCaste}"/>
-                    </td>
-                    <td valign="top" class="name">
-                        <label for="flexibleSubcaste">Flexible :</label>
-                    </td>
-                    <td>
-                        <g:radioGroup name="flexibleSubcaste" labels="['No', 'Yes']" values="[false, true]"
-                                      value="${mbProfile?.flexibleSubcaste}">
-                            <span>${it.radio} ${it.label}</span>
-                        </g:radioGroup>
-                    </td>
-                    <td valign="top" class="name">
                         <label for="prefeducationCategory">Preferred Education Category:</label>
                     </td>
                     <td valign="top" class="value">
@@ -315,18 +285,19 @@
                 </tr>
                 <tr class="prop">
                     <td valign="top" class="name">
-                        <label for="prefqualification">Preferred Qualifications:</label>
+                        <label for="prefOccupation">Preferred Occupation:</label>
                     </td>
                     <td valign="top" class="value">
-                        <g:textField name="prefqualification" placeholder="Enter your qualification here"
-                                     value="${mbProfile?.prefqualification}"/>
+                        <g:select name="prefOccupation" class="multiple" multiple="multiple"
+                                  from="${occupation}"
+                                  value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefOccupation).toList()}"/>
                     </td>
                     <td valign="top" class="name">
-                        <label for="flexibleQualifications">Flexible :</label>
+                        <label for="flexibleOccupation">Flexible :</label>
                     </td>
                     <td>
-                        <g:radioGroup name="flexibleQualifications" labels="['No', 'Yes']" values="[false, true]"
-                                      value="${mbProfile?.flexibleQualifications}">
+                        <g:radioGroup name="flexibleOccupation" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleOccupation}">
                             <span>${it.radio} ${it.label}</span>
                         </g:radioGroup>
                     </td>
@@ -378,12 +349,46 @@
                         <g:select name="settleAbroadWorkingWife" from="${['Flexible','Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
                     </td>
                 </tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefCaste">Preferred Caste/Sub Caste:</label>
+                    </td>
+                    <td valign="top" class="value" colspan="5">
+                        <select name="prefCaste" id="prefCaste" multiple="multiple">
+                            <g:each in="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefCaste)}">
+                                <option value="${it}" selected="selected">${it}</option>
+                            </g:each>
+                        </select>
+                    </td>
+                    <td valign="top" class="name">
+                        <label for="flexibleCaste">Flexible :</label>
+                    </td>
+                    <td>
+                        <g:radioGroup name="flexibleCaste" labels="['No', 'Yes']" values="[false, true]"
+                                      value="${mbProfile?.flexibleCaste}">
+                            <span>${it.radio} ${it.label}</span>
+                        </g:radioGroup>
+                    </td>
+                </tr>
+                <tr style="height: 15px"></tr>
+                <tr>
+                    <td colspan="8" style="border: 2px solid black;padding: 20px">
+                        <strong>Match Prospects Expectation on: </strong>
+                        <input type="checkbox" id="prospectCentre" name="prospectCentre" value="true" style="margin-left:4%">&nbsp;Centre
+                        <input type="checkbox" id="prospectManglik" name="prospectManglik" value="true" style="margin-left:4%">&nbsp;Manglik
+                        <input type="checkbox" id="prospectCulturalInfluence" name="prospectCulturalInfluence" value="true" style="margin-left:4%">&nbsp;Cultural Influence
+                        <input type="checkbox" id="prospectScStCategory" name="prospectScStCategory" value="true" style="margin-left:4%">&nbsp;Govt. Category
+                        <input type="checkbox" id="prospectCaste" name="prospectCaste" value="true" style="margin-left:4%">&nbsp;Caste
+                        <input type="checkbox" id="prospectEduCat" name="prospectEduCat" value="true" style="margin-left:4%">&nbsp;Education Category
+                        <input type="checkbox" id="prospectOccupation" name="prospectOccupation" value="true" style="margin-left:4%">&nbsp;Occupation
+                    </td>
+                </tr>
+                <tr style="height: 15px"></tr>
 </g:form>
                 <tr>
                     <td>
-                        <input id="btnSearch" type="submit" value="Search">
+                        <input id="btnSearch" type="submit" value="Search"/>
                     </td>
-                    <td></td>
                 </tr>
             </table>
 			</fieldset>
@@ -397,6 +402,27 @@
 
 <script type="text/javascript">
   $(document).ready(function () {
+      $('#prefCaste').select2({
+          placeholder: "Preferred Castes",
+          minimumInputLength: 2,
+          tokenSeparators: [','],
+          ajax: {
+              url: "/ics/mb/fetchCastes",
+              dataType: 'json',
+              data: function (params) {
+                  return {
+                      q: params.term, // search term
+                      page: params.page
+                  };
+              },
+              processResults: function (data, params) {
+                  return {
+                      results: data
+                  }
+              },
+              cache: true
+          }
+      });
       $('#mbprofileid').change(function() {
           $.ajax({
              url:'/ics/mb/search',
@@ -409,7 +435,7 @@
               candidateid:function(){return $('#mbprofileid').val();}
           },
           datatype: "json",
-          colNames:['Photo','Name','WorkflowStatus','CandidateStatus','CandidateReason','CandidateDate','MbStatus','MbReason','MbDate','Id'],
+          colNames:['Photo','Name','Workflow Status','Candidate Request','Candidate Reason','Candidate Date','MB Status','MB Reason','MB Date','prospectId','Id'],
           colModel:[
               {
                   name: 'photo',
@@ -427,6 +453,7 @@
               {name:'mbStatus'},
               {name:'mbReason'},
               {name:'mbDate'},
+              {name:'prospectId',hidden:true},
               {name:'id',hidden:true}
           ],
           rowNum:10,
@@ -470,9 +497,9 @@
 				    return '<img height="70" width="70" src="${createLink(controller:'Mb',action:'showImage')}?imgType=closePrim&entity=mbProfile&entityId='+rowObject[0]+'"/>';
 				}
 			},				
-                         {name:'name',
+            {name:'name',
 			formatter:'showlink', 
-             		formatoptions:{baseLinkUrl:'show'}},
+            formatoptions:{baseLinkUrl:'show'}},
                          {name:'dob'},
                          {name:'referrerCenter'},
                          {name:'assignedTo'},
@@ -484,9 +511,10 @@
                      viewrecords: true,
                      sortname: 'id',
                      sortorder: "asc",
+                     sopt:['eq','ne','cn','bw','bn', 'ilike'],
                      width: 1200,
                      height: "100%",
-                     multiselect: true,
+                     multiselect: false,
                      caption:"Profile Search Result"
                  });
                  $("#profile_list").jqGrid('filterToolbar',{autosearch:true});
@@ -505,6 +533,7 @@
         var answer = confirm("Are you sure?");
         if (answer){
             var id = $('#prospect_list').jqGrid('getGridParam','selrow');
+            var prospectId = $('#prospect_list').jqGrid ('getCell', id, 'prospectId');
             if(id) {
                 var url = "${createLink(controller:'mb',action:'mbNextStep')}";
                 $.ajax({
@@ -514,6 +543,20 @@
                         matchid: id
                     }
                 }).success(function(data) {
+                    if(data.suggestBack){
+                        var buttons = $( "#dialogMessage" ).dialog("option", "buttons");
+                        $.extend(buttons,{
+                           suggestToProspect: function(){
+                               var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+prospectId+"&prospects="+$('#mbprofileid').val();
+                               $.getJSON(url, {}, function() {
+                                   delete buttons.suggestToProspect
+                                   $( "#dialogMessage" ).dialog("option", "buttons", buttons);
+                                   $( "#dialogMessage" ).dialog( "close" );
+                               });
+                             }
+                           });
+                        $( "#dialogMessage" ).dialog("option", "buttons",buttons);
+                    }
                     !!data.status && $('.dialogMsgContent').html(data.status) && $( "#dialogMessage" ).dialog('open');
                     jQuery("#prospect_list").trigger( 'reloadGrid' );
                 });
@@ -537,6 +580,16 @@
 	function suggest() {
 		var answer = confirm("Are you sure?");
 		if (answer){
+            var id = $('#profile_list').jqGrid('getGridParam','selrow');
+            if(id) {
+                var url = "${createLink(controller:'mb',action:'showHistory')}"+"?candidateid="+$('#mbprofileid').val()+"&prospectid="+id;
+                $.ajax({
+                    url: url,
+                    type: "POST"
+                }).success(function(data) {
+                    $( "#dialogSuggest").html(data);
+                });
+            }
             $( "#dialogSuggest").dialog('open');
 		}
     }
@@ -544,9 +597,11 @@
     $( "#dialogSuggest" ).dialog({
         autoOpen: false,
         modal: true,
+        resizable: false,
+        width:'auto',
         buttons: {
             "OnlyToCandidate": function() {
-                var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+                var ids = $('#profile_list').jqGrid('getGridParam','selrow');
                 if(ids) {
                     var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids;
                     $.getJSON(url, {}, function(data) {
@@ -560,7 +615,7 @@
                 $( this ).dialog( "close" );
             },
             "ToBothCandidateAndProspect": function() {
-                var ids = $('#profile_list').jqGrid('getGridParam','selarrrow');
+                var ids = $('#profile_list').jqGrid('getGridParam','selrow');
                 if(ids) {
                     var url = "${createLink(controller:'mb',action:'suggest')}"+"?candidateid="+$('#mbprofileid').val()+"&prospects="+ids+"&type=both";
                     $.getJSON(url, {}, function(data) {
@@ -579,7 +634,7 @@
             }
         },
         close: function() {
-
+            $( "#dialogSuggest").html("");
         }
     });
       $( "#dialogMbReason" ).dialog({
