@@ -87,6 +87,10 @@
         <p>${profile?.eduQual ?: '-'}</p>
     </div>
     <div class="inforow">
+        <p>Occupation : </p>
+        <p>${profile?.occupation ?: '-'}</p>
+    </div>
+    <div class="inforow">
         <p>Chanting since(year) : </p>
         <p>${profile?.chantingSince ?: '-'}</p>
     </div>
