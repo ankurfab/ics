@@ -1698,7 +1698,12 @@
             return formValid
         })
         if(formValid) {
-            $('#formSubmit').click();
+            if($('#stat').val() == 'SUBMITTED') {
+                $('#formSubmitSilent').click();
+            }
+            else {
+                $('#formSubmit').click();
+            }
         }
         else{
             $('.errMsgWrap').empty().append('<div class="message" role="status" style="color:red">Some of the Mandatory fields are not filled out. Please fill the same to complete your profile.</div>')

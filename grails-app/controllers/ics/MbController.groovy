@@ -481,21 +481,21 @@ class MbController {
                     }
 
                     if (params.flexibleCentre == "false" && params.prefCentre) {
-                        if(params.prospectCentre){
-                            or{
-                                and {
-                                    eq('flexibleCentre',true)
-                                    candidate { 'in'('iskconCentre', params.prefCentre) }
-                                }
-                                and{
-                                    eq('flexibleCentre',false)
-                                    ilike('prefCentre','%'+mbprofile.candidate.iskconCentre+'%')
-                                    candidate { 'in'('iskconCentre', params.prefCentre) }
-                                }
-                            }
-                        }
-                        else{
+
                             and { candidate { 'in'('iskconCentre', params.prefCentre) } }
+                    }
+
+                    if(params.prospectCentre == "true"){
+                        or{
+                            and {
+                                eq('flexibleCentre',true)
+                                candidate { 'in'('iskconCentre', params.prefCentre) }
+                            }
+                            and{
+                                eq('flexibleCentre',false)
+                                ilike('prefCentre','%'+mbprofile.candidate.iskconCentre+'%')
+                                candidate { 'in'('iskconCentre', params.prefCentre) }
+                            }
                         }
                     }
 
@@ -503,31 +503,30 @@ class MbController {
                         and { eq('currentCountry', params.prefCurrentCountry, [ignoreCase: true]) } }
                     }
 
+                    def cultureInfluence = params.list('prefCulturalInfluence')
+                    def prospectInfluenceList = org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbprofile.culturalInfluence).toList()
                     if (params.flexibleCulturalInfluence == "false" && params.prefCulturalInfluence) {
-                        def cultureInfluence = params.list('prefCulturalInfluence')
-                        if(params.prospectCulturalInfluence){
-                            def prospectInfluenceList = org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbprofile.culturalInfluence).toList()
-                            or{
-                                and{
-                                    eq('flexibleCulturalInfluence',true)
-                                    or {
-                                        cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
-                                    }
-                                }
-                                and{
-                                    eq('flexibleCulturalInfluence',false)
-                                    or {
-                                        prospectInfluenceList.each { ilike('prefCulturalInfluence', '%' + it + '%') }
-                                    }
-                                    or {
-                                        cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
-                                    }
+                        or {
+                            cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                        }
+                    }
+
+                    if(params.prospectCulturalInfluence == "true"){
+                        or{
+                            and{
+                                eq('flexibleCulturalInfluence',true)
+                                or {
+                                    cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
                                 }
                             }
-                        }
-                        else {
-                            or {
-                                cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                            and{
+                                eq('flexibleCulturalInfluence',false)
+                                or {
+                                    prospectInfluenceList.each { ilike('prefCulturalInfluence', '%' + it + '%') }
+                                }
+                                or {
+                                    cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                                }
                             }
                         }
                     }
@@ -537,51 +536,49 @@ class MbController {
                     }
 
                     if (params.flexibleCategory == "false" && params.prefCategory) {
-                        if(params.prospectScStCategory){
-                            or{
-                                and{
-                                    eq('flexibleCategory',true)
-                                    'in'('scstCategory', params.prefCategory)
-                                }
-                                and{
-                                    eq('flexibleCategory',false)
-                                    ilike('prefCategory','%'+mbprofile.scstCategory+'%')
-                                    'in'('scstCategory', params.prefCategory)
-                                }
+                        and { 'in'('scstCategory', params.prefCategory) }
+                    }
+
+                    if(params.prospectScStCategory == "true"){
+                        or{
+                            and{
+                                eq('flexibleCategory',true)
+                                'in'('scstCategory', params.prefCategory)
                             }
-                        }
-                        else {
-                            and { 'in'('scstCategory', params.prefCategory) }
+                            and{
+                                eq('flexibleCategory',false)
+                                ilike('prefCategory','%'+mbprofile.scstCategory+'%')
+                                'in'('scstCategory', params.prefCategory)
+                            }
                         }
                     }
 
                     if (params.flexibleCaste == "false" && params.prefCaste) {
-                        if(params.prospectCaste){
-                            or{
-                                and{
-                                    eq('flexibleCaste',true)
-                                    or {
-                                        candidate{'in'('caste', params.prefCaste)}
-                                        candidate{'in'('subCaste', params.prefCaste)}
-                                    }
-                                }
-                                and{
-                                    eq('flexibleCaste',false)
-                                    or{
-                                        ilike('prefCaste','%'+mbprofile.candidate.caste+'%')
-                                        ilike('prefCaste','%'+mbprofile.candidate.subCaste+'%')
-                                    }
-                                    or {
-                                        candidate{'in'('caste', params.prefCaste)}
-                                        candidate{'in'('subCaste', params.prefCaste)}
-                                    }
+                        or {
+                            candidate{'in'('caste', params.prefCaste)}
+                            candidate{'in'('subCaste', params.prefCaste)}
+                        }
+                    }
+
+                    if(params.prospectCaste == "true"){
+                        or{
+                            and{
+                                eq('flexibleCaste',true)
+                                or {
+                                    candidate{'in'('caste', params.prefCaste)}
+                                    candidate{'in'('subCaste', params.prefCaste)}
                                 }
                             }
-                        }
-                        else {
-                            or {
-                                candidate{'in'('caste', params.prefCaste)}
-                                candidate{'in'('subCaste', params.prefCaste)}
+                            and{
+                                eq('flexibleCaste',false)
+                                or{
+                                    ilike('prefCaste','%'+mbprofile.candidate.caste+'%')
+                                    ilike('prefCaste','%'+mbprofile.candidate.subCaste+'%')
+                                }
+                                or {
+                                    candidate{'in'('caste', params.prefCaste)}
+                                    candidate{'in'('subCaste', params.prefCaste)}
+                                }
                             }
                         }
                     }
@@ -593,27 +590,27 @@ class MbController {
                         }
                     }
 
+                    ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
+                    def pos = categories.indexOf(params.prefeducationCategory)
+                    def posProspect = categories.indexOf(mbprofile.eduCat)
+                    def categoriesCand = categories.subList(pos,categories.size())
+                    def categoriesProspect = categories.subList(0,posProspect + 1)
+
                     if (params.flexibleEducationCat == "false" && params.prefeducationCategory) {
-                        ArrayList<String> categories = new ArrayList<>(Arrays.asList('SSC (10th equivalent)', 'HSC (12th equivalent)', 'Undergraduate', 'Diploma(or equivalent)', 'Graduate', 'Post Graduate', 'Doctorate'));
-                        def pos = categories.indexOf(params.prefeducationCategory)
-                        def posProspect = categories.indexOf(mbprofile.eduCat)
-                        def categoriesCand = categories.subList(pos,categories.size())
-                        def categoriesProspect = categories.subList(0,posProspect + 1)
-                        if(params.prospectEduCat){
-                         or{
-                             and{
-                                 eq('flexibleEducationCat',true)
-                                 'in'('eduCat', categoriesCand)
-                             }
-                             and{
-                                 eq('flexibleEducationCat',false)
-                                 'in'('prefeducationCategory',categoriesProspect)
-                                 'in'('eduCat', categoriesCand)
-                             }
-                         }
-                        }
-                        else {
-                            and { 'in'('eduCat', categoriesCand) }
+                        and { 'in'('eduCat', categoriesCand) }
+                    }
+
+                    if(params.prospectEduCat == "true"){
+                        or{
+                            and{
+                                eq('flexibleEducationCat',true)
+                                'in'('eduCat', categoriesCand)
+                            }
+                            and{
+                                eq('flexibleEducationCat',false)
+                                'in'('prefeducationCategory',categoriesProspect)
+                                'in'('eduCat', categoriesCand)
+                            }
                         }
                     }
 
@@ -649,43 +646,40 @@ class MbController {
                     }
 
                     if (params.flexibleManglik == "false" && params.prefManglik) {
-                        if(params.prospectManglik){
-                            or{
-                                and{
-                                    eq('flexibleManglik',true)
-                                    'in'('manglik', params.prefManglik)
-                                }
-                                and{
-                                    eq('flexibleManglik',false)
-                                    ilike('prefManglik','%'+mbprofile.manglik+'%')
-                                    'in'('manglik', params.prefManglik)
-                                }
+                        and { 'in'('manglik', params.prefManglik) }
+                    }
+
+                    if(params.prospectManglik == "true"){
+                        or{
+                            and{
+                                eq('flexibleManglik',true)
+                                'in'('manglik', params.prefManglik)
                             }
-                        }
-                        else {
-                            and { 'in'('manglik', params.prefManglik) }
+                            and{
+                                eq('flexibleManglik',false)
+                                ilike('prefManglik','%'+mbprofile.manglik+'%')
+                                'in'('manglik', params.prefManglik)
+                            }
                         }
                     }
 
                     if (params.flexibleOccuption == "false" && params.prefOccupation) {
-                        if(params.prospectOccupation){
-                            or{
-                                and{
-                                    eq('flexibleOccuption',true)
-                                    'in'('occupation', params.prefOccupation)
-                                }
-                                and{
-                                    eq('flexibleOccupation',false)
-                                    ilike('prefOccupation','%'+mbprofile.occupation+'%')
-                                    'in'('occupation', params.prefOccupation)
-                                }
-                            }
-                        }
-                        else {
-                            and { 'in'('occupation', params.prefOccupation) }
-                        }
+                        and { 'in'('occupation', params.prefOccupation) }
                     }
 
+                    if(params.prospectOccupation == "true"){
+                        or{
+                            and{
+                                eq('flexibleOccuption',true)
+                                'in'('occupation', params.prefOccupation)
+                            }
+                            and{
+                                eq('flexibleOccupation',false)
+                                ilike('prefOccupation','%'+mbprofile.occupation+'%')
+                                'in'('occupation', params.prefOccupation)
+                            }
+                        }
+                    }
                     order(sortIndex, sortOrder)
                 }
             }
