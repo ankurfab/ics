@@ -394,11 +394,16 @@ class MbService {
 			if(!pmatch.save())
 			    pmatch.errors.each { log.debug("pmatch:"+it)}
 			else {
+		try{
                 def contentParams = [pmatch.candidate?.toString()]
-                commsService.sendComms('MarriageBoard', "PROFILE_SUGGESTED", pmatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', pmatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', pmatch.candidate).emailAddress, contentParams)
+                commsService.sendComms('MarriageBoard', "PROFILE_SUGGESTED", pmatch.candidate?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', pmatch.candidate?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', pmatch.candidate?.candidate).emailAddress, contentParams)
 				if(params.type=='both') {
 					suggest([candidateid:prospect.id.toString(),prospects:candidate.id.toString()])
 				}
+		}
+		catch(Exception e){
+			log.debug("Exception in mbService:suggest:"+e)
+		}
             }
 			}
         }

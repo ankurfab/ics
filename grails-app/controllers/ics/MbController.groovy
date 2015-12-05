@@ -893,16 +893,16 @@ class MbController {
                     }
                     else if (match.candidateStatus == 'FULL PROFILE') {
                         match.mbStatus = 'FULL PROFILE'
-                        contentParams = [match.candidate?.toString()]
-                        commsService.sendComms('MarriageBoard', "FULL_PROFILE_APPROVED", match.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', match.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', match.candidate).emailAddress, contentParams)
+                        contentParams = [match.candidate?.candidate?.toString()]
+                        commsService.sendComms('MarriageBoard', "FULL_PROFILE_APPROVED", match.candidate?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', match.candidate?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', match.candidate?.candidate).emailAddress, contentParams)
                         otherMatch = MbProfileMatch.findByCandidateAndProspectAndStage(match.prospect, match.candidate,'Active')
                         if (otherMatch && otherMatch.mbStatus == 'FULL PROFILE') {
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSED"
                             otherMatch.mbDate = new Date()
-                            contentParams = [otherMatch.candidate?.toString(),otherMatch.prospect?.toString(),otherMatch.candidate?.assignedTo?.toString(),VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate?.assignedTo).number,EmailContact.findByCategoryAndIndividual('Personal',otherMatch.candidate?.assignedTo).emailAddress]
-                            commsService.sendComms('MarriageBoard', "PROFILE_PROPOSED_LOCK", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
-                            contentParams = [otherMatch.prospect?.toString(),otherMatch.candidate?.toString(),otherMatch.prospect?.assignedTo?.toString(),VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect?.assignedTo).number,EmailContact.findByCategoryAndIndividual('Personal',otherMatch.prospect?.assignedTo).emailAddress]
-                            commsService.sendComms('MarriageBoard', "PROFILE_PROPOSED_LOCK", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
+                            contentParams = [otherMatch.candidate?.candidate?.toString(),otherMatch.prospect?.candidate?.toString(),otherMatch.candidate?.assignedTo?.toString(),VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate?.assignedTo).number,EmailContact.findByCategoryAndIndividual('Personal',otherMatch.candidate?.assignedTo).emailAddress]
+                            commsService.sendComms('MarriageBoard', "PROFILE_PROPOSED_LOCK", otherMatch.candidate?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate?.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.candidate?.toString(),otherMatch.candidate?.candidate?.toString(),otherMatch.prospect?.assignedTo?.toString(),VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect?.assignedTo).number,EmailContact.findByCategoryAndIndividual('Personal',otherMatch.prospect?.assignedTo).emailAddress]
+                            commsService.sendComms('MarriageBoard', "PROFILE_PROPOSED_LOCK", otherMatch.prospect?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect?.candidate).emailAddress, contentParams)
                         }
                         if(!otherMatch){
                             render([status: "Other Candidate not yet suggested. Prospect can be suggested to candidate now.",suggestBack: true] as JSON)
@@ -923,10 +923,10 @@ class MbController {
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "BOYGIRLMEET"
                             otherMatch.mbDate = new Date()
                             //send boy girl meet comm
-                            contentParams = [otherMatch.candidate?.toString()]
-                            commsService.sendComms('MarriageBoard', "BOY_GIRL_MEET_APPROVED", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
-                            contentParams = [otherMatch.prospect?.toString()]
-                            commsService.sendComms('MarriageBoard', "BOY_GIRL_MEET_APPROVED", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
+                            contentParams = [otherMatch.candidate?.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "BOY_GIRL_MEET_APPROVED", otherMatch.candidate?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate?.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "BOY_GIRL_MEET_APPROVED", otherMatch.prospect?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect?.candidate).emailAddress, contentParams)
                         } else {
                             render([status: "Cannot approve as the other candidate has not yet agreed to meet the candidate."] as JSON)
                         }
@@ -943,10 +943,10 @@ class MbController {
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PARENTSMEET"
                             otherMatch.mbDate = new Date()
                             //send parents meet comm
-                            contentParams = [otherMatch.candidate?.toString()]
-                            commsService.sendComms('MarriageBoard', "PARENTS_MEET_APPROVED", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
-                            contentParams = [otherMatch.prospect?.toString()]
-                            commsService.sendComms('MarriageBoard', "PARENTS_MEET_APPROVED", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
+                            contentParams = [otherMatch.candidate?.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "PARENTS_MEET_APPROVED", otherMatch.candidate?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate?.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "PARENTS_MEET_APPROVED", otherMatch.prospect?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect?.candidate).emailAddress, contentParams)
                         }
                         else{
                             render([status: "Cannot approve as the other candidate has not yet agreed for the parents meeting."] as JSON)
@@ -963,10 +963,10 @@ class MbController {
                             match.mbStatus = otherMatch.mbStatus = 'PROPOSAL AGREED'
                             otherMatch.candidate.workflowStatus = otherMatch.prospect.workflowStatus = "PROPOSALAGREED"
                             otherMatch.mbDate = new Date()
-                            contentParams = [otherMatch.candidate?.toString()]
-                            commsService.sendComms('MarriageBoard', "PROPOSAL_AGREED", otherMatch.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate).emailAddress, contentParams)
-                            contentParams = [otherMatch.prospect?.toString()]
-                            commsService.sendComms('MarriageBoard', "PROPOSAL_AGREED", otherMatch.prospect?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect).emailAddress, contentParams)
+                            contentParams = [otherMatch.candidate?.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "PROPOSAL_AGREED", otherMatch.candidate?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.candidate?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.candidate?.candidate).emailAddress, contentParams)
+                            contentParams = [otherMatch.prospect?.candidate?.toString()]
+                            commsService.sendComms('MarriageBoard', "PROPOSAL_AGREED", otherMatch.prospect?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', otherMatch.prospect?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', otherMatch.prospect?.candidate).emailAddress, contentParams)
                         }
                         else{
                             render([status: "Cannot approve as the other candidate has not yet agreed to the proposal."] as JSON)
