@@ -395,7 +395,7 @@ class MbService {
 			    pmatch.errors.each { log.debug("pmatch:"+it)}
 			else {
 		try{
-                def contentParams = [pmatch.candidate?.toString()]
+                def contentParams = [pmatch.candidate?.candidate?.toString()]
                 commsService.sendComms('MarriageBoard', "PROFILE_SUGGESTED", pmatch.candidate?.candidate?.toString(), VoiceContact.findByCategoryAndIndividual('CellPhone', pmatch.candidate?.candidate).number, EmailContact.findByCategoryAndIndividual('Personal', pmatch.candidate?.candidate).emailAddress, contentParams)
 				if(params.type=='both') {
 					suggest([candidateid:prospect.id.toString(),prospects:candidate.id.toString()])

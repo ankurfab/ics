@@ -1295,7 +1295,7 @@
              value="${org.springframework.util.StringUtils.commaDelimitedListToStringArray(mbProfile?.prefOccupation).toList()}"/>
     </td>
     <td valign="top" class="name">
-        <label for="flexibleOccupation">I am flexible  on Qualifications:</label>
+        <label for="flexibleOccupation">I am flexible on Occupation:</label>
     </td>
     <td>
         <g:radioGroup name="flexibleOccupation" labels="['No', 'Yes']" values="[false, true]"
@@ -1699,10 +1699,10 @@
         })
         if(formValid) {
             if($('#stat').val() == 'SUBMITTED') {
-                $('#formSubmitSilent').click();
+                $('#formSubmit').click();
             }
             else {
-                $('#formSubmit').click();
+                $('#formSubmitSilent').click();
             }
         }
         else{

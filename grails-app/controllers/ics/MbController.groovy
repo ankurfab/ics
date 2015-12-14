@@ -663,14 +663,14 @@ class MbController {
                         }
                     }
 
-                    if (params.flexibleOccuption == "false" && params.prefOccupation) {
+                    if (params.flexibleOccupation == "false" && params.prefOccupation) {
                         and { 'in'('occupation', params.prefOccupation) }
                     }
 
                     if(params.prospectOccupation == "true"){
                         or{
                             and{
-                                eq('flexibleOccuption',true)
+                                eq('flexibleOccupation',true)
                                 'in'('occupation', params.prefOccupation)
                             }
                             and{

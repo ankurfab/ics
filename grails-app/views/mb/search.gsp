@@ -302,24 +302,6 @@
                         </g:radioGroup>
                     </td>
                     <td valign="top" class="name">
-                        <label for="prefLooks">Preferred Looks:</label>
-                    </td>
-                    <td valign="top" class="value">
-                        <g:textField name="prefLooks" placeholder="Enter any specific looks you prefer"
-                                     value="${mbProfile?.prefLooks}"/>
-                    </td>
-                    <td valign="top" class="name">
-                        <label for="flexibleLooks">Flexible :</label>
-                    </td>
-                    <td>
-                        <g:radioGroup name="flexibleLooks" labels="['No', 'Yes']" values="[false, true]"
-                                      value="${mbProfile?.flexibleLooks}">
-                            <span>${it.radio} ${it.label}</span>
-                        </g:radioGroup>
-                    </td>
-                </tr>
-                <tr class="prop">
-                    <td valign="top" class="name">
                         <label for="prefManglik">Manglik preferences:</label>
                     </td>
                     <td valign="top" class="value">
@@ -334,19 +316,6 @@
                                       value="${mbProfile?.flexibleManglik}">
                             <span>${it.radio} ${it.label}</span>
                         </g:radioGroup>
-                    </td>
-                    <g:if test="${mbProfile?.candidate?.isMale}">
-                        <td valign="top" class="name">
-                            <label for="settleAbroadWorkingWife">Do you want a working wife</label>
-                        </td>
-                    </g:if>
-                    <g:else>
-                        <td valign="top" class="name">
-                            <label for="settleAbroadWorkingWife">Are you open to Settle Abroad after marriage</label>
-                        </td>
-                    </g:else>
-                    <td valign="top" class="value">
-                        <g:select name="settleAbroadWorkingWife" from="${['Flexible','Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
                     </td>
                 </tr>
                 <tr class="prop">
@@ -368,6 +337,29 @@
                                       value="${mbProfile?.flexibleCaste}">
                             <span>${it.radio} ${it.label}</span>
                         </g:radioGroup>
+                    </td>
+                </tr>
+                <tr style="height: 15px"></tr>
+                <tr class="prop">
+                    <td valign="top" class="name">
+                        <label for="prefLooks">Preferred Looks:</label>
+                    </td>
+                    <td valign="top" class="value" colspan="3">
+                        <g:textField name="prefLooks" placeholder="Enter any specific looks you prefer"
+                                     value="${mbProfile?.prefLooks}"/>
+                    </td>
+                    <g:if test="${mbProfile?.candidate?.isMale}">
+                        <td valign="top" class="name">
+                            <label for="settleAbroadWorkingWife">Do you want a working wife</label>
+                        </td>
+                    </g:if>
+                    <g:else>
+                        <td valign="top" class="name">
+                            <label for="settleAbroadWorkingWife">Are you open to Settle Abroad after marriage</label>
+                        </td>
+                    </g:else>
+                    <td valign="top" class="value" colspan="2">
+                        <g:select name="settleAbroadWorkingWife" from="${['Flexible','Yes', 'No']}" value="${mbProfile?.settleAbroadWorkingWife}"/>
                     </td>
                 </tr>
                 <tr style="height: 15px"></tr>
