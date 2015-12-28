@@ -104,7 +104,7 @@
             e.preventDefault();
             $("#sidebar-wrapper").toggleClass("active");
         });
-        $('.btn-danger').click(function(){
+        $('.btn-success,.btn-danger').click(function(){
            $(this).addClass('clickedOnce');
         });
         $('.clickedOnce').click(function(){

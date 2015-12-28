@@ -482,19 +482,23 @@ class MbController {
 
                     if (params.flexibleCentre == "false" && params.prefCentre) {
 
-                            and { candidate { 'in'('iskconCentre', params.prefCentre) } }
+                        and { candidate { 'in'('iskconCentre', params.prefCentre) } }
                     }
 
                     if(params.prospectCentre == "true"){
                         or{
                             and {
                                 eq('flexibleCentre',true)
-                                candidate { 'in'('iskconCentre', params.prefCentre) }
+                                if(params.prefCentre) {
+                                    candidate { 'in'('iskconCentre', params.prefCentre) }
+                                }
                             }
                             and{
                                 eq('flexibleCentre',false)
                                 ilike('prefCentre','%'+mbprofile.candidate.iskconCentre+'%')
-                                candidate { 'in'('iskconCentre', params.prefCentre) }
+                                if(params.prefCentre) {
+                                    candidate { 'in'('iskconCentre', params.prefCentre) }
+                                }
                             }
                         }
                     }
@@ -515,8 +519,10 @@ class MbController {
                         or{
                             and{
                                 eq('flexibleCulturalInfluence',true)
-                                or {
-                                    cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                                if(params.prefCulturalInfluence) {
+                                    or {
+                                        cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                                    }
                                 }
                             }
                             and{
@@ -524,8 +530,10 @@ class MbController {
                                 or {
                                     prospectInfluenceList.each { ilike('prefCulturalInfluence', '%' + it + '%') }
                                 }
-                                or {
-                                    cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                                if(params.prefCulturalInfluence) {
+                                    or {
+                                        cultureInfluence.each { ilike('culturalInfluence', '%' + it + '%') }
+                                    }
                                 }
                             }
                         }
@@ -543,12 +551,16 @@ class MbController {
                         or{
                             and{
                                 eq('flexibleCategory',true)
-                                'in'('scstCategory', params.prefCategory)
+                                if(params.prefCategory) {
+                                    'in'('scstCategory', params.prefCategory)
+                                }
                             }
                             and{
                                 eq('flexibleCategory',false)
                                 ilike('prefCategory','%'+mbprofile.scstCategory+'%')
-                                'in'('scstCategory', params.prefCategory)
+                                if(params.prefCategory) {
+                                    'in'('scstCategory', params.prefCategory)
+                                }
                             }
                         }
                     }
@@ -564,9 +576,11 @@ class MbController {
                         or{
                             and{
                                 eq('flexibleCaste',true)
-                                or {
-                                    candidate{'in'('caste', params.prefCaste)}
-                                    candidate{'in'('subCaste', params.prefCaste)}
+                                if(params.prefCaste) {
+                                    or {
+                                        candidate { 'in'('caste', params.prefCaste) }
+                                        candidate { 'in'('subCaste', params.prefCaste) }
+                                    }
                                 }
                             }
                             and{
@@ -575,9 +589,11 @@ class MbController {
                                     ilike('prefCaste','%'+mbprofile.candidate.caste+'%')
                                     ilike('prefCaste','%'+mbprofile.candidate.subCaste+'%')
                                 }
-                                or {
-                                    candidate{'in'('caste', params.prefCaste)}
-                                    candidate{'in'('subCaste', params.prefCaste)}
+                                if(params.prefCaste) {
+                                    or {
+                                        candidate { 'in'('caste', params.prefCaste) }
+                                        candidate { 'in'('subCaste', params.prefCaste) }
+                                    }
                                 }
                             }
                         }
@@ -604,12 +620,16 @@ class MbController {
                         or{
                             and{
                                 eq('flexibleEducationCat',true)
-                                'in'('eduCat', categoriesCand)
+                                if(params.prefeducationCategory) {
+                                    'in'('eduCat', categoriesCand)
+                                }
                             }
                             and{
                                 eq('flexibleEducationCat',false)
                                 'in'('prefeducationCategory',categoriesProspect)
-                                'in'('eduCat', categoriesCand)
+                                if(params.prefeducationCategory) {
+                                    'in'('eduCat', categoriesCand)
+                                }
                             }
                         }
                     }
@@ -653,12 +673,16 @@ class MbController {
                         or{
                             and{
                                 eq('flexibleManglik',true)
-                                'in'('manglik', params.prefManglik)
+                                if(params.prefManglik) {
+                                    'in'('manglik', params.prefManglik)
+                                }
                             }
                             and{
                                 eq('flexibleManglik',false)
                                 ilike('prefManglik','%'+mbprofile.manglik+'%')
-                                'in'('manglik', params.prefManglik)
+                                if(params.prefManglik) {
+                                    'in'('manglik', params.prefManglik)
+                                }
                             }
                         }
                     }
@@ -671,12 +695,16 @@ class MbController {
                         or{
                             and{
                                 eq('flexibleOccupation',true)
-                                'in'('occupation', params.prefOccupation)
+                                if(params.prefOccupation) {
+                                    'in'('occupation', params.prefOccupation)
+                                }
                             }
                             and{
                                 eq('flexibleOccupation',false)
                                 ilike('prefOccupation','%'+mbprofile.occupation+'%')
-                                'in'('occupation', params.prefOccupation)
+                                if(params.prefOccupation) {
+                                    'in'('occupation', params.prefOccupation)
+                                }
                             }
                         }
                     }
